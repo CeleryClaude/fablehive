@@ -48,6 +48,7 @@ function start(port,htmlPath){
     if(s){s.bot=false;s.name=(''+(m.n||'Queen')).slice(0,16).replace(/[<>&"']/g,'');delete s.forceAim;}
     ws.send(JSON.stringify({k:'init',you:team,world:G.netWorldInit()}));
    } else if(m.k==='cmd'&&team!==null){try{G.applyInput(team,m.c||{});}catch(e){}}
+   else if(m.k==='p'){try{ws.send(JSON.stringify({k:'p',t:m.t}));}catch(e){}}
   });
   ws.on('close',()=>{if(team!==null){delete seats[team];
    const s=G.swarms.find(z=>z.team===team&&!z.ally);
@@ -57,9 +58,10 @@ function start(port,htmlPath){
  const simI=setInterval(()=>{const now=Date.now();acc+=(now-last)/1000;last=now;
   if(acc>0.25)acc=0.25;let n=0;
   while(acc>=DT&&n<5){G.step(DT);acc-=DT;n++;}},8);
- const netI=setInterval(()=>{
-  let f;try{f=JSON.stringify({k:'f',...G.netDyn()});}catch(e){return;}
-  for(const t in seats){try{seats[t].send(f);}catch(e){}}},66);
+ let fN=0;
+ const netI=setInterval(()=>{ /* 20Hz heartbeat: souls every beat, the slow world every third */
+  let f;try{f=JSON.stringify({k:'f',...((fN++%3===0)?G.netDyn():G.netDynLite())});}catch(e){return;}
+  for(const t in seats){try{seats[t].send(f);}catch(e){}}},50);
  httpSrv.listen(port,()=>console.log('FABLEHIVE room + page on :'+port));
  return {close(){clearInterval(simI);clearInterval(netI);try{wss.close();}catch(e){}try{httpSrv.close();}catch(e){}},G,seats};
 }

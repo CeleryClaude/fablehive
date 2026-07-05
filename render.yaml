@@ -2,6 +2,7 @@ services:
   - type: web
     name: fablehive
     runtime: node
+    region: singapore
     plan: starter
     buildCommand: npm install
     startCommand: npm start

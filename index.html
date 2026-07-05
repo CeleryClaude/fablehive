@@ -3175,7 +3175,7 @@ function draw(){
   bg.addColorStop(1,'hsl('+(hZ-12+hueDrift)+','+sZ+'%,'+(Math.max(8,lZ-6)+gold*3)+'%)');
   draw._bg=bg;}
  ctx.fillStyle=draw._bg;ctx.fillRect(0,0,W,H);
- const M=me();
+ const M=me()||{x:cam.x,y:cam.y,vx:0,vy:1,spdNow:0,dead:true,units:[],hp:0,maxHp:300,honey:0,R:36,team:0,war:null,exposed:false,gulp:0}; /* the ORPHAN WINDOW: the world may arrive before its queens do */
  const look=Math.min(120,(M.spdNow||0)*0.3);
  const lv=Math.hypot(M.vx,M.vy)||1;
  cam.x=lerp(cam.x,M.x+M.vx/lv*look,0.09);cam.y=lerp(cam.y,M.y+M.vy/lv*look,0.09);
@@ -3928,7 +3928,7 @@ function draw(){
 const hudEl=document.getElementById('hud'),lbEl=document.getElementById('lb');
 let barT=0;
 function hud(){
- const M=me();
+ const M=me();if(!M)return; /* no queen yet, no numbers yet */
  const total=teamSize(0);if(total>peak)peak=total;
  let st;
  if(!M.war)hud._wh=null;
@@ -3970,9 +3970,10 @@ let last=performance.now();
 let perfS=0,perfD=0,perfN=0,perfT=0;
 function loop(){const now=performance.now();let dt=(now-last)/1000;last=now;if(dt>.05)dt=.05;
  const t1=performance.now();
- if(running){if(NET.on)netTick(dt);else step(dt);}
+ if(running){try{if(NET.on)netTick(dt);else step(dt);}catch(e){if(!loop._e1){loop._e1=1;console.error('sim wound:',e);}}}
  const t2=performance.now();
- draw();hud();
+ try{draw();}catch(e){if(!loop._e2){loop._e2=1;console.error('draw wound:',e);}}
+ try{hud();}catch(e){if(!loop._e3){loop._e3=1;console.error('hud wound:',e);}}
  const t3=performance.now();
  perfS+=t2-t1;perfD+=t3-t2;perfN++;perfT+=dt;
  if(perfT>0.5&&perfN){const pl=document.getElementById('perfLine');
@@ -4066,12 +4067,12 @@ function netTick(dt){ /* between truths: YOUR queen is PREDICTED, all else extra
    s2.spdNow=Math.hypot(s2.vx,s2.vy);}
   else if(s2.tx!==undefined){
    s2.tx+=(s2.ivx||0)*dt;s2.ty+=(s2.ivy||0)*dt; /* the truth keeps walking between frames */
-   const k9=Math.min(1,8*dt);
+   const k9=Math.min(1,6*dt);
    s2.vx=(s2.tx-s2.x)*8;s2.vy=(s2.ty-s2.y)*8;s2.x+=(s2.tx-s2.x)*k9;s2.y+=(s2.ty-s2.y)*k9;
    s2.spdNow=Math.hypot(s2.vx,s2.vy);}
   for(const u of s2.units){
    u.tx+=(u.ivx||0)*dt;u.ty+=(u.ivy||0)*dt;
-   const k9=Math.min(1,8*dt);
+   const k9=Math.min(1,6*dt);
    u.vx=(u.tx-u.x)*8;u.vy=(u.ty-u.y)*8;u.x+=(u.tx-u.x)*k9;u.y+=(u.ty-u.y)*k9;}
   if(s2.sayT>0)s2.sayT-=dt;}
  NET.pingT-=dt;if(NET.pingT<=0){NET.pingT=2;NET.cmd&&NET.ws&&NET.ws.readyState===1&&NET.ws.send(JSON.stringify({k:'p',t:Date.now()}));}
@@ -4083,7 +4084,8 @@ function netTick(dt){ /* between truths: YOUR queen is PREDICTED, all else extra
   if(kv.on){ax=M9.x+kv.x*600;ay=M9.y+kv.y*600;dr=true;}
   else if(input.joy){const m2=Math.hypot(input.joy.dx,input.joy.dy);if(m2>10){ax=M9.x+input.joy.dx*5;ay=M9.y+input.joy.dy*5;dr=true;}}
   else if(input.mDown){ax=cam.x+(input.mx*DPR-W/2)/cam.z;ay=cam.y+(input.my*DPR-H/2)/cam.z;dr=Math.hypot(ax-M9.x,ay-M9.y)>30;}
-  if(ax!==null)NET.cmd({aim:[ax|0,ay|0,dr]});}
+  if(ax!==null){NET.cmd({aim:[ax|0,ay|0,dr]});NET.wasDrv=dr;}
+  else if(NET.wasDrv){NET.wasDrv=false;NET.cmd({aim:[M9.x|0,M9.y|0,false]});}} /* release the reins and the room reins in */
  if(M9&&M9.dead&&!NET.deadShown){NET.deadShown=true;const ov=document.getElementById('over');if(ov)ov.style.display='flex';}
  if(M9&&!M9.dead&&NET.deadShown){NET.deadShown=false;const ov=document.getElementById('over');if(ov)ov.style.display='none';}}
 function netSnapshot(){ /* THE WIRE: one compact frame of truth (server -> clients) */
@@ -4107,10 +4109,12 @@ function netWorldInit(){ /* the STATIC world, sent once at the door */
   oa:OASIS?{x:OASIS.x,y:OASIS.y,r:OASIS.r,lilies:OASIS.lilies,reeds:OASIS.reeds,fish:OASIS.fish,stones:OASIS.stones}:null,
   dc:decor.map(d=>[d.x|0,d.y|0,d.ty==='tuft'?0:d.ty==='rubble'?1:2,+d.ph.toFixed(2)]),
   th:thorns};}
-function netDynLite(){ /* the fast heartbeat: souls, honey and shots only */
+function netDynLite(){ /* the fast heartbeat: souls, honey, shots - and everything that MOVES */
  return {t:+tnow.toFixed(3),g:goldT>=0?1:0,
   dr:drops.map(d=>[d.x|0,d.y|0,+d.amt.toFixed(1)]),
   sh:shots.map(x=>[x.x|0,x.y|0,x.vx|0,x.vy|0]),
+  ob:orbs.map(o=>[o.x|0,o.y|0,o.hue,+o.r.toFixed(1),+o.ph.toFixed(2)]),
+  wp:wasps.map(w=>[w.x|0,w.y|0,w.vx|0,w.vy|0,w.trio||0]),
   sw:netSnapshot().sw};}
 function netDyn(){ /* the LIVING world, streamed */
  return {t:+tnow.toFixed(3),g:goldT>=0?1:0,
@@ -4134,7 +4138,7 @@ function applyInput(team,cmd){ /* THE HAND: remote players ride the same reins t
  if(cmd.recall)recallAll(team);
  if(cmd.say)s.say=(''+cmd.say).slice(0,80),s.sayT=8;
  return true;}
-window.__G={netSnapshot,netWorldInit,netDyn,netDynLite,applyInput,NET,
+window.__G={netSnapshot,netWorldInit,netDyn,netDynLite,applyInput,NET,netApplyWorld,netApplyFrame,netTick,
  get swarms(){return swarms;},get groves(){return groves;},get boulders(){return boulders;},get coves(){return coves;},
  get ways(){return ways;},get drops(){return drops;},get elder(){return elder;},get tnow(){return tnow;},get shots(){return shots;},get goldT(){return goldT;},set goldT(v){goldT=v;},get FAIRY(){return FAIRY;},get dews(){return dews;},get comboN(){return comboN;},get spider(){return spider;},get webshots(){return webshots;},killSpider,get grottos(){return grottos;},get wasps(){return wasps;},get fieldMaws(){return fieldMaws;},get eyes(){return eyes;},get orbs(){return orbs;},get OASIS(){return OASIS;},realmOf,get ambient(){return ambient;},BOTS,get decor(){return decor;},get thorns(){return thorns;},honeyCap,
  get unlocked(){return unlocked;},get evoPending(){return evoPending;},get META(){return META;},

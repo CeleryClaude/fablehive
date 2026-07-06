@@ -462,6 +462,14 @@ function gridBuild(){UGRID.clear(); /* THE GRID: one pass, every soul indexed - 
 function gridNear(x,y,r,fn){const x0=((x-r)/128)|0,x1=((x+r)/128)|0,y0=((y-r)/128)|0,y1=((y+r)/128)|0;
  for(let cx=x0;cx<=x1;cx++)for(let cy=y0;cy<=y1;cy++){const c=UGRID.get(cx*100000+cy);if(!c)continue;
   for(let i=0;i<c.length;i++)fn(c[i]);}}
+/* THE STONE GRID: boulders never move once placed - index them once per tick, not scanned whole per soul per frame */
+let BGRID=new Map();
+function boulderGridBuild(){BGRID.clear();
+ for(const b of boulders){const k=((b.x/128)|0)*100000+((b.y/128)|0);
+  let c=BGRID.get(k);if(!c){c=[];BGRID.set(k,c);}c.push(b);}}
+function boulderNear(x,y,r,fn){const x0=((x-r)/128)|0,x1=((x+r)/128)|0,y0=((y-r)/128)|0,y1=((y+r)/128)|0;
+ for(let cx=x0;cx<=x1;cx++)for(let cy=y0;cy<=y1;cy++){const c=BGRID.get(cx*100000+cy);if(!c)continue;
+  for(let i=0;i<c.length;i++)fn(c[i]);}}
 function honeyCap(s){let f9=0;for(const u of s.units)if(u.role==='forager')f9++;return 500+40*f9;} /* THE LARDER LAW: the queen carries 500 herself; all beyond lives in forager bellies */
 function swarmMass(s){const us=s.units;if(!us||!us.length)return 0;
  if(!us[0]||!us[0].role)return us.length;
@@ -871,11 +879,13 @@ function makeWorld(){
 function collideBoulders(o,rad){
  /* resolve ONLY the deepest overlap per frame: in a seam of two rocks this slides you out
     along the compound wall instead of ping-ponging you into a stone tomb */
+ /* THE STONE GRID: no boulder anywhere exceeds r~150, so a fixed 160+rad net always catches every real overlap */
+ const BR=rad+160;
  let bb=null,bd=0,bdist=0;
- for(const b of boulders){
+ boulderNear(o.x,o.y,BR,b=>{
   const dx=o.x-b.x,dy=o.y-b.y,d=Math.hypot(dx,dy),pen=b.r+rad-d;
   if(pen>bd){bd=pen;bb=b;bdist=d;}
- }
+ });
  if(!bb)return;
  const nx=(o.x-bb.x)/(bdist||1),ny=(o.y-bb.y)/(bdist||1);
  o.x+=nx*bd;o.y+=ny*bd;
@@ -883,9 +893,11 @@ function collideBoulders(o,rad){
  if(vn<0){o.vx-=nx*vn;o.vy-=ny*vn;} /* slide, never stick */
  /* CONCAVE CORNERS: still inside a second rock? two opposing walls eat all velocity —
     eject along the seam's bisector so no soul is ever entombed */
- for(const b of boulders){if(b===bb)continue;
+ let done=false;
+ boulderNear(o.x,o.y,BR,b=>{if(done||b===bb)return;
   const dx=o.x-b.x,dy=o.y-b.y,d=Math.hypot(dx,dy),pen=b.r+rad-d;
-  if(pen<=0)continue;
+  if(pen<=0)return;
+  done=true;
   const n2x=dx/(d||1),n2y=dy/(d||1);
   o.x+=n2x*pen;o.y+=n2y*pen;
   let px=nx+n2x,py=ny+n2y;const pl=Math.hypot(px,py);
@@ -894,8 +906,7 @@ function collideBoulders(o,rad){
    const pv=o.vx*px+o.vy*py;
    if(pv<70){o.vx+=px*(70-pv);o.vy+=py*(70-pv);}
   } else {o.vx+=-ny*90;o.vy+=nx*90;} /* perfectly opposed: squirt sideways */
-  break;
- }
+ });
 }
 function grovePos(){let best=null,bd=-1;return best;}
 function groveNear(g,x,y,sp){ /* move a grove near (x,y) onto CLEAR ground — a granted flower never sleeps under a rock */
@@ -1026,6 +1037,7 @@ function step(dt){
   for(const u of s.units)u.cl=0;
  }
  gridBuild();
+ boulderGridBuild(); /* rebuilt every tick like THE GRID above - cheap (boulders.length is small) and immune to anything that mutates boulders[] outside setup() */
  for(const s of swarms){
   if(s.dead)continue;
   const n=s.units.length;

@@ -542,8 +542,8 @@ function mergeInto(main,a){
 }
 
 /* ============ world ============ */
-let moths=[],moss=[],pollen=[],starT=30,star=null,dews=[],comboN=0,comboT=0,comboBest=0,gnats=[],wasps=[],waspT=30,grottos=[],geodeIn=null,geodeA=0,fieldMaws=[],eyes=[],eyeT=75,OASIS=null,orbs=[],orbT=6;
-const FLOWER_T={sprout:28,bloom:30,grand:10,rock:24,bell:8,spray:8,puff:8,tumble:5,night:4,comb:8}; /* fewer specks, more LARGE flora - and the maws own the bite */
+let moths=[],moss=[],pollen=[],starT=30,star=null,dews=[],comboN=0,comboT=0,comboBest=0,gnats=[],wasps=[],waspT=30,grottos=[],geodeIn=null,geodeA=0,fieldMaws=[],eyes=[],eyeT=75,OASIS=null,orbs=[],orbT=6,puffDecor=[],tumbleDecor=[]; /* puffDecor/tumbleDecor: pure client-side ambiance, see clientDecorTick */
+const FLOWER_T={sprout:28,bloom:30,grand:10,rock:24,bell:8,spray:8,night:4,comb:8}; /* fewer specks, more LARGE flora - and the maws own the bite. puff/tumble moved to client-side ambiance (clientDecorTick), no longer part of the grove economy */
 let FAIRY={next:1,rings:{}}; /* fairy ring registry: clear all six in time -> jackpot */
 const POPPABLE={sprout:1,bloom:1,grand:1,rock:1,bell:1,snap:1,fairy:1,night:1};
 function flowerSpot(edgeBias){
@@ -726,8 +726,7 @@ function makeWorld(){
  for(let g=0;g<24;g++)spawnFlower('rock',true);
  for(let g=0;g<6;g++)spawnFlower('bell',true);
  for(let g=0;g<8;g++)spawnFlower('spray',true);
- for(let g=0;g<10;g++)spawnFlower('puff',true);
- for(let g=0;g<5;g++)spawnFlower('tumble',true);
+ /* puff/tumble no longer seeded server-side - client-side ambiance instead */
  for(let g=0;g<4;g++)spawnFlower('night',true);
  FAIRY={next:1,rings:{}};
  /* two GILDED BLOOMS: rare, radiant, worth a pilgrimage — and a fight */
@@ -828,8 +827,7 @@ function makeWorld(){
  }
  moss=[];for(let i=0;i<30;i++){const b=boulders[(Math.random()*boulders.length)|0];
   if(b){const a=rand(0,TAU);moss.push({x:b.x+Math.cos(a)*(b.r*rand(0.2,0.85)),y:b.y+Math.sin(a)*(b.r*rand(0.2,0.85)),r:rand(9,20),ph:rand(0,TAU),glow:0});}}
- moths=[];for(let i=0;i<12;i++)moths.push({x:rand(300,WORLD.w-300),y:rand(300,WORLD.h-300),vx:0,vy:0,wa:rand(0,TAU),t:0,kind:'moth'});
- for(let i=0;i<6;i++)moths.push({x:rand(300,WORLD.w-300),y:rand(300,WORLD.h-300),vx:0,vy:0,wa:rand(0,TAU),t:0,kind:'drag'});
+ moths=[]; /* DECOR MOVE: moths/dragonflies are now pure client-side ambiance (wisp dropped entirely, per Section K's own recommendation) */
  gnats=[];for(let i=0;i<6;i++){const p9={x:rand(500,WORLD.w-500),y:rand(WORLD.h*0.58,WORLD.h-400)};gnats.push({x:p9.x,y:p9.y,n:rand(8,13)|0,wa:rand(0,TAU),cd:0});}
  /* no stone may cling to the dome's face */
  if(grottos.length)boulders=boulders.filter(b=>b.hide||!grottos.some(g9=>d2(b.x,b.y,g9.x,g9.y)<(g9.r+b.r+26)*(g9.r+b.r+26)));
@@ -865,16 +863,12 @@ function makeWorld(){
   groves.push({x:OASIS.x+Math.cos(aa)*rr9,y:OASIS.y+Math.sin(aa)*rr9,amt:150,max:170,vx:0,vy:0,sp:6,kind:'grand',grand:true});}
  for(let k=0;k<8;k++){const aa=rand(0,TAU),rr9=rand(40,OASIS.r*0.8);
   dews.push({x:OASIS.x+Math.cos(aa)*rr9,y:OASIS.y+Math.sin(aa)*rr9,ph:rand(0,TAU),big:Math.random()<0.5});}
- /* PRISM ORBS: saturated iridescent treasures - dense at the heart, scattered wide */
+ /* DECOR MOVE: prism orbs are now pure client-side ambiance - see clientDecorTick */
  orbs=[];
- {const OH=[300,175,95,262,16,205];
-  for(let k=0;k<12;k++){const aa=rand(0,TAU),rr9=rand(50,OASIS.r*0.9);
-   orbs.push({x:OASIS.x+Math.cos(aa)*rr9,y:OASIS.y+Math.sin(aa)*rr9,hue:OH[k%6],r:rand(6.5,10),ph:rand(0,TAU),vx:0,vy:0});}
-  for(let k=0;k<26;k++)orbs.push({x:rand(400,WORLD.w-400),y:rand(400,WORLD.h-400),hue:OH[k%6],r:rand(6,9.5),ph:rand(0,TAU),vx:0,vy:0});}
  wasps=[];for(let t9=0;t9<3;t9++){const p9={x:rand(WORLD.w*0.55,WORLD.w-420),y:rand(420,WORLD.h*0.44)}; /* stingers of the BADLANDS */
   for(let k=0;k<3;k++)wasps.push({x:p9.x+rand(-40,40),y:p9.y+rand(-40,40),vx:0,vy:0,wa:rand(0,TAU),hp:60,atk:0,trio:t9,ax:p9.x,ay:p9.y});}
  grass=[];for(let i=0;i<300;i++)grass.push({x:rand(0,WORLD.w),y:rand(0,WORLD.h),a:rand(0,TAU),l:rand(8,18),s:rand(0.14,0.36)});
- dews=[];for(let i=0;i<380;i++){const p9=flowerSpot(false);dews.push({x:p9.x,y:p9.y,ph:rand(0,TAU),big:Math.random()<0.1});} /* an abundance — the meadow is strewn with light */
+ dews=[];for(let i=0;i<380;i++){const p9=flowerSpot(false);dews.push({x:p9.x,y:p9.y,ph:rand(0,TAU),big:Math.random()<0.1});} /* an abundance — the meadow is strewn with light. KEPT server-side (unlike orbs/moths) - dews are the only thing that feeds the combo/"dopamine ladder" system (feedCombo()), a real design pillar, not just ambient clutter */
  pollen=[];for(let i=0;i<80;i++)pollen.push({x:rand(0,WORLD.w),y:rand(0,WORLD.h),vx:rand(-7,7),vy:rand(-5,9),ph:rand(0,TAU),r:rand(0.8,1.8)});
  flies=[];for(let i=0;i<60;i++)flies.push({x:rand(0,WORLD.w),y:rand(0,WORLD.h),ph:rand(0,TAU),r:rand(1,2.2)});
 }
@@ -1756,30 +1750,7 @@ function step(dt){
     if(d2(dr.x,dr.y,px,py)<w.w*w.w){dr.vx+=w.dx*130*dt;dr.vy+=w.dy*130*dt;break;}}
    dr.x=clamp(dr.x,60,WORLD.w-60);dr.y=clamp(dr.y,60,WORLD.h-60);}
   if(dr.t<=0)drops.splice(i,1);}
- /* dew-moths: harmless, delicious */
- for(let i=moths.length-1;i>=0;i--){const m3=moths[i];
-  m3.wa+=rand(-0.5,0.5)*dt*3;
-  for(const s2 of swarms){if(s2.dead)continue;const q=d2(m3.x,m3.y,s2.x,s2.y);
-   if(q<170*170){const a2=Math.atan2(m3.y-s2.y,m3.x-s2.x);m3.wa=a2+rand(-0.4,0.4);break;}}
-  const spd4=m3.kind==='drag'?150+Math.sin(tnow*3+m3.wa)*90:m3.kind==='wisp'?30:46;
-  m3.vx=Math.cos(m3.wa)*spd4;m3.vy=Math.sin(m3.wa)*spd4;
-  m3.x=clamp(m3.x+m3.vx*dt,260,WORLD.w-260);m3.y=clamp(m3.y+m3.vy*dt,260,WORLD.h-260);
-  if(m3.kind==='wisp'&&goldT<0){addP(m3.x,m3.y,'#ffe9a0',4,60);moths.splice(i,1);continue;}
-  let eaten=false;
-  for(const s2 of swarms){if(s2.dead)continue;
-   if(d2(m3.x,m3.y,s2.x,s2.y)<(16+14)**2)eaten=true;
-   else if(d2(m3.x,m3.y,s2.x,s2.y)<(s2.R+140)**2){
-    for(const u2 of s2.units){if(d2(m3.x,m3.y,u2.x,u2.y)<(u2.r+6)**2){eaten=true;break;}}}
-   if(eaten){
-    const nug=m3.kind==='drag'?3:m3.kind==='wisp'?2:2;
-    const worth=m3.kind==='wisp'?rand(3,5):m3.kind==='drag'?rand(2,4):rand(1.5,3);
-    addP(m3.x,m3.y,m3.kind==='wisp'?'#ffe9a0':'#e8f0d8',5,90);
-    for(let k=0;k<nug;k++)dropAt(m3.x+rand(-8,8),m3.y+rand(-8,8),worth,8);
-    if(s2.team===0)gainXP(m3.kind==='drag'?2:1);
-    moths.splice(i,1);break;}}
- }
- if(moths.filter(m4=>m4.kind==='moth').length<12&&Math.random()<dt*0.4)moths.push({x:rand(300,WORLD.w-300),y:rand(300,WORLD.h-300),vx:0,vy:0,wa:rand(0,TAU),t:0,kind:'moth'});
- if(moths.filter(m4=>m4.kind==='drag').length<6&&Math.random()<dt*0.25)moths.push({x:rand(300,WORLD.w-300),y:rand(300,WORLD.h-300),vx:0,vy:0,wa:rand(0,TAU),t:0,kind:'drag'});
+ /* DEW-MOTHS/DRAGONFLIES: fully moved to client-side ambiance (clientDecorTick) - no server simulation, not collectible */
  /* GNAT CLOUDS: harmless swarms the army bursts through and harvests */
  for(let i=gnats.length-1;i>=0;i--){const gn=gnats[i];
   gn.wa+=rand(-0.4,0.4)*dt*2;gn.cd-=dt;
@@ -1854,18 +1825,7 @@ function step(dt){
      if(u2.hp<=0)killUnit(s2,u2,null);break;}}
     if(hit){pk.cd=0.5;addSpark(pk.x,pk.y,3);break;}}}}
  /* WASP TRIOS: they wander, they resent you, they are made of honey */
- for(let i=orbs.length-1;i>=0;i--){const ob=orbs[i];
-  let mag=null,md=140*140;
-  for(const s2 of swarms){if(s2.dead)continue;const q=d2(ob.x,ob.y,s2.x,s2.y);if(q<md){md=q;mag=s2;}}
-  if(mag){const d9=Math.sqrt(md)||1;ob.vx+=(mag.x-ob.x)/d9*640*dt;ob.vy+=(mag.y-ob.y)/d9*640*dt;}
-  ob.vx*=0.92;ob.vy*=0.92;ob.x+=ob.vx*dt;ob.y+=ob.vy*dt;
-  if(mag&&d2(ob.x,ob.y,mag.x,mag.y)<26*26){mag.honey+=rand(3,7);if(mag.team===0)gainXP(1.5);
-   addP(ob.x,ob.y,'hsl('+ob.hue+',90%,70%)',6,120);if(near(mag))sfx('pop');
-   orbs.splice(i,1);continue;}}
- if(orbs.length<38&&swarms.some(s2=>s2.bot&&!s2.ally&&!s2.dead)){orbT-=dt;if(orbT<=0){orbT=6;
-  const oh=[300,175,95,262,16,205][(Math.random()*6)|0];
-  if(Math.random()<0.35&&OASIS)orbs.push({x:OASIS.x+Math.cos(rand(0,TAU))*rand(50,OASIS.r*0.9),y:OASIS.y+Math.sin(rand(0,TAU))*rand(50,OASIS.r*0.9),hue:oh,r:rand(6.5,10),ph:rand(0,TAU),vx:0,vy:0});
-  else orbs.push({x:rand(400,WORLD.w-400),y:rand(400,WORLD.h-400),hue:oh,r:rand(6,9.5),ph:rand(0,TAU),vx:0,vy:0});}}
+ /* PRISM ORBS: fully moved to client-side ambiance (clientDecorTick) - no server simulation, not collectible, not networked */
  for(let i=eyes.length-1;i>=0;i--){const ey=eyes[i];
   ey.wa+=rand(-0.5,0.5)*dt;ey.x=clamp(ey.x+Math.cos(ey.wa)*22*dt,320,1280);ey.y=clamp(ey.y+Math.sin(ey.wa)*22*dt,320,1280);
   if(ey.cd>0)ey.cd-=dt;if(ey.blink>0)ey.blink-=dt;else if(Math.random()<dt*0.25)ey.blink=0.22;
@@ -3223,6 +3183,35 @@ function drawMaw(mw){ /* THE MAW: a deliberate garden horror - hinged V-jaws, th
  ctx.beginPath();ctx.arc(0,-3,2.4,0,TAU);ctx.fill();
  ctx.restore();
 }
+function clientDecorTick(){ /* AMBIANCE, NOT SIMULATION: dews/orbs/moths/puffDecor/tumbleDecor are pure
+   client-side flavor from here on - each client generates and animates its own copy independently, with no
+   server truth behind any of it, nothing sent over the wire, and nothing collectible. On purpose, no two
+   players' screens show the same dews/orbs/moths in the same places - that's fine because NOTHING about them
+   can ever affect an outcome (no honey, no XP, no combat). Anything that DOES affect an outcome (pricklers,
+   drops, real flowers) stays server-authoritative and synced instead - see THE CAVE FIX near netDynLite for
+   a concrete example of why that distinction matters. */
+ /* dews stay server-side (see setup()/step()) - they power the combo/"dopamine ladder" mechanic, not just ambiance */
+ while(orbs.length<38){const oh=[300,175,95,262,16,205][(Math.random()*6)|0];
+  if(Math.random()<0.35&&OASIS)orbs.push({x:OASIS.x+Math.cos(rand(0,TAU))*rand(50,OASIS.r*0.9),y:OASIS.y+Math.sin(rand(0,TAU))*rand(50,OASIS.r*0.9),hue:oh,r:rand(6.5,10),ph:rand(0,TAU),vx:0,vy:0});
+  else orbs.push({x:rand(400,WORLD.w-400),y:rand(400,WORLD.h-400),hue:oh,r:rand(6,9.5),ph:rand(0,TAU),vx:0,vy:0});}
+ for(const ob of orbs){ob.x+=Math.cos(tnow*0.6+ob.ph)*0.25;ob.y+=Math.sin(tnow*0.5+ob.ph*1.3)*0.25;} /* a gentle float, going nowhere - no magnetize, nothing to chase */
+ while(moths.length<18){const kind=moths.filter(m4=>m4.kind==='moth').length<12?'moth':'drag'; /* wisp dropped entirely - Section K already recommended cutting it as redundant with orbs */
+  moths.push({x:rand(300,WORLD.w-300),y:rand(300,WORLD.h-300),vx:0,vy:0,wa:rand(0,TAU),t:0,kind});}
+ for(const m3 of moths){m3.wa+=rand(-0.5,0.5)*0.05;
+  for(const s2 of swarms){if(s2.dead)continue;const q=d2(m3.x,m3.y,s2.x,s2.y);
+   if(q<170*170){const a2=Math.atan2(m3.y-s2.y,m3.x-s2.x);m3.wa=a2+rand(-0.4,0.4);break;}}
+  const spd4=m3.kind==='drag'?150+Math.sin(tnow*3+m3.wa)*90:46;
+  m3.vx=Math.cos(m3.wa)*spd4;m3.vy=Math.sin(m3.wa)*spd4;
+  m3.x=clamp(m3.x+m3.vx*0.0167,260,WORLD.w-260);m3.y=clamp(m3.y+m3.vy*0.0167,260,WORLD.h-260);}
+ while(puffDecor.length<8)puffDecor.push({x:rand(300,WORLD.w-300),y:rand(300,WORLD.h-300),sw:rand(0,TAU)});
+ while(tumbleDecor.length<5){const aa=rand(0,TAU);
+  tumbleDecor.push({x:rand(300,WORLD.w-300),y:rand(300,WORLD.h-300),vx:Math.cos(aa)*rand(62,92),vy:Math.sin(aa)*rand(62,92),roll:rand(0,TAU)});}
+ for(const tb of tumbleDecor){tb.roll+=0.0167*4;
+  tb.x+=tb.vx*0.0167;tb.y+=tb.vy*0.0167;
+  if(tb.x<300||tb.x>WORLD.w-300)tb.vx*=-1;if(tb.y<300||tb.y>WORLD.h-300)tb.vy*=-1;
+  for(const b of boulders){const ddx=tb.x-b.x,ddy=tb.y-b.y;
+   if(ddx*ddx+ddy*ddy<(b.r+20)**2){const dl=Math.hypot(ddx,ddy)||1;tb.vx=ddx/dl*Math.hypot(tb.vx,tb.vy);tb.vy=ddy/dl*Math.hypot(tb.vx,tb.vy);break;}}}
+}
 function draw(){
  ctx.setTransform(1,0,0,1,0,0);
  const hueDrift=Math.sin(tnow*0.006)*10; /* the dusk itself slowly breathes */
@@ -3250,6 +3239,7 @@ function draw(){
  heat=lerp(heat,(M.war||(elder&&elder.provoked>0&&d2(M.x,M.y,elder.x,elder.y)<800*800))?1:0,0.03);
  ctx.translate(W/2+(Math.random()-.5)*shake*0.6,H/2+(Math.random()-.5)*shake*0.6);ctx.scale(cam.z,cam.z);ctx.translate(-cam.x,-cam.y);
  const vx0=cam.x-W/2/cam.z-90,vx1=cam.x+W/2/cam.z+90,vy0=cam.y-H/2/cam.z-90,vy1=cam.y+H/2/cam.z+90;
+ clientDecorTick(); /* pure client ambiance - dews/orbs/moths/puffDecor/tumbleDecor, see the function itself */
  const LOD=cam.z<0.48?2:cam.z<0.66?1:0; /* 0 near · 1 mid · 2 far — the livery persists further out */
  ctx.strokeStyle='rgba(72,52,64,.85)';ctx.lineWidth=1.5;
  const M9=me();
@@ -3409,6 +3399,26 @@ function draw(){
   ctx.beginPath();ctx.arc(ob.x,ob.y,ob.r+1.5,0,TAU);ctx.stroke();
   ctx.fillStyle='rgba(255,255,255,'+(0.75*tw).toFixed(3)+')';
   ctx.beginPath();ctx.arc(ob.x-ob.r*0.35,ob.y-ob.r*0.35,ob.r*0.3,0,TAU);ctx.fill();}
+ /* PUFFCAP/TUMBLEBLOOM, now pure decoration - same look as the old collectible versions, just no burst/catch */
+ for(const g of puffDecor){if(g.x<vx0||g.x>vx1||g.y<vy0||g.y>vy1)continue; /* a dandelion globe, gently swaying */
+  const sway=Math.sin(tnow*0.4+g.sw)*1.4;
+  ctx.strokeStyle='rgba(255,253,244,.55)';ctx.lineWidth=1;
+  for(let p5=0;p5<10;p5++){const aa=p5/10*TAU+g.x*0.01+sway*0.02;
+   ctx.beginPath();ctx.moveTo(g.x,g.y);
+   ctx.lineTo(g.x+Math.cos(aa)*11,g.y+Math.sin(aa)*11);ctx.stroke();
+   ctx.beginPath();ctx.arc(g.x+Math.cos(aa)*11,g.y+Math.sin(aa)*11,1.6,0,TAU);ctx.stroke();}
+  ctx.fillStyle='#e8e0c8';ctx.beginPath();ctx.arc(g.x,g.y,3,0,TAU);ctx.fill();}
+ for(const g of tumbleDecor){if(g.x<vx0||g.x>vx1||g.y<vy0||g.y>vy1)continue; /* rolling, trailing motion lines */
+  ctx.save();ctx.translate(g.x,g.y);ctx.rotate(g.roll);
+  ctx.strokeStyle='#a8c86a';ctx.lineWidth=2;
+  for(let p5=0;p5<5;p5++){const aa=p5/5*TAU;
+   ctx.beginPath();ctx.moveTo(0,0);
+   ctx.quadraticCurveTo(Math.cos(aa+0.5)*8,Math.sin(aa+0.5)*8,Math.cos(aa)*13,Math.sin(aa)*13);ctx.stroke();}
+  ctx.fillStyle='#cfe08a';ctx.beginPath();ctx.arc(0,0,4,0,TAU);ctx.fill();
+  ctx.restore();
+  const dl=Math.hypot(g.vx,g.vy)||1;
+  ctx.strokeStyle='rgba(207,224,138,.3)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(g.x-g.vx/dl*16,g.y-g.vy/dl*16);ctx.lineTo(g.x-g.vx/dl*28,g.y-g.vy/dl*28);ctx.stroke();}
  /* boulders — big, friendly, solid */
  for(const b of boulders){if(b.hide)continue;if(b.x<vx0-b.r||b.x>vx1+b.r||b.y<vy0-b.r||b.y>vy1+b.r)continue;
   ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,TAU);
@@ -4086,8 +4096,10 @@ function netApplyFrame(F){ /* the LIVING world flows in - stamped by OUR clock, 
   rock:!!(g[6]&1),rich:!!(g[6]&2),grand:!!(g[6]&4),gild:!!(g[6]&8),mother:!!(g[6]&16),web:!!(g[6]&32),lumen:!!(g[6]&64),closed:!!(g[6]&128),gilt:!!(g[6]&256),openT:g[7],surge:0,vx:0,vy:0}));
  if(F.dr)drops=F.dr.map(d=>({x:d[0],y:d[1],amt:d[2],t:9}));
  if(F.sh)shots=F.sh.map(x=>({x:x[0],y:x[1],vx:x[2],vy:x[3],t:1,team:-9,dmg:0,col:'#8fe0c0'}));
- if(F.ob)orbs=F.ob.map(o=>({x:o[0],y:o[1],hue:o[2],r:o[3],ph:o[4],vx:0,vy:0}));
  if(F.wp)wasps=F.wp.map(w=>({x:w[0],y:w[1],vx:w[2],vy:w[3],trio:w[4],hp:60,atk:0,wa:0,ax:w[0],ay:w[1]}));
+ /* THE CAVE FIX: pricklers actually update position now - matched to grotto/prickler INDEX (they never spawn/despawn individually, so index is a stable, safe key here) */
+ if(F.gp)for(let gi9=0;gi9<F.gp.length&&gi9<grottos.length;gi9++){const pr9=grottos[gi9].pricks;if(!pr9)continue;
+  for(let pi9=0;pi9<F.gp[gi9].length&&pi9<pr9.length;pi9++){pr9[pi9].x=F.gp[gi9][pi9][0];pr9[pi9].y=F.gp[gi9][pi9][1];}}
  if(F.ey)eyes=F.ey.map(e=>({x:e[0],y:e[1],r:e[2],hp:e[3],maxHp:e[4],blink:e[5],dread:e[6]?1:0,wa:e[7],seed:e[8],cd:0}));
  if(F.el!==undefined)elder=F.el?{x:F.el[0],y:F.el[1],hp:F.el[2],maxHp:F.el[3],vx:F.el[4],vy:F.el[5],r:72,flash:0,provoked:0,atk:0,hx:F.el[0],hy:F.el[1],terr:520,sense:410}:null;
  if(F.sp!==undefined)spider=F.sp?{x:F.sp[0],y:F.sp[1],hp:F.sp[2],maxHp:F.sp[3],r:92,flash:0,gait:tnow*3,gnash:0,provoked:0,
@@ -4214,8 +4226,8 @@ function netDynLite(){ /* the fast heartbeat: souls, honey, shots - and everythi
  return {t:+tnow.toFixed(3),g:goldT>=0?1:0,
   dr:drops.map(d=>[d.x|0,d.y|0,+d.amt.toFixed(1)]),
   sh:shots.map(x=>[x.x|0,x.y|0,x.vx|0,x.vy|0]),
-  ob:orbs.map(o=>[o.x|0,o.y|0,o.hue,+o.r.toFixed(1),+o.ph.toFixed(2)]),
   wp:wasps.map(w=>[w.x|0,w.y|0,w.vx|0,w.vy|0,w.trio||0]),
+  gp:grottos.map(g=>(g.pricks||[]).map(p=>[p.x|0,p.y|0])), /* THE CAVE FIX: pricklers actually drift for connected clients now - previously sent once at netWorldInit and never again, so they appeared frozen in multiplayer while still dealing live server-authoritative damage from their true (moving) position - a real desync, now closed */
   sw:netSnapshot().sw};}
 function netDyn(){ /* the LIVING world, streamed */
  return {t:+tnow.toFixed(3),g:goldT>=0?1:0,
@@ -4223,8 +4235,8 @@ function netDyn(){ /* the LIVING world, streamed */
    (g.rock?1:0)|(g.rich?2:0)|(g.grand?4:0)|(g.gild?8:0)|(g.mother?16:0)|(g.web?32:0)|(g.lumen?64:0)|(g.closed?128:0)|(g.gilt?256:0),+((g.openT||0)).toFixed(2)]),
   dr:drops.map(d=>[d.x|0,d.y|0,+d.amt.toFixed(1)]),
   sh:shots.map(x=>[x.x|0,x.y|0,x.vx|0,x.vy|0]),
-  ob:orbs.map(o=>[o.x|0,o.y|0,o.hue,+o.r.toFixed(1),+o.ph.toFixed(2)]),
   wp:wasps.map(w=>[w.x|0,w.y|0,w.vx|0,w.vy|0,w.trio||0]),
+  gp:grottos.map(g=>(g.pricks||[]).map(p=>[p.x|0,p.y|0])), /* THE CAVE FIX: see netDynLite */
   ey:eyes.map(e=>[e.x|0,e.y|0,e.r|0,e.hp|0,e.maxHp||300,+(e.blink||0).toFixed(2),(e.dread||0)>0?1:0,+e.wa.toFixed(2),+(e.seed||0).toFixed(2)]),
   el:elder?[elder.x|0,elder.y|0,elder.hp|0,elder.maxHp,(elder.vx||0)|0,(elder.vy||0)|0]:0,
   sp:spider?[spider.x|0,spider.y|0,spider.hp|0,spider.maxHp,(spider.kids||[]).map(k=>[k.x|0,k.y|0])]:0,

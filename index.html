@@ -401,7 +401,7 @@ function equipItem(id){const it=itemById(id);if(!it||!ownsItem(id))return false;
 
 
 /* ============ state ============ */
-let NID=1,swarms=[],groves=[],boulders=[],coves=[],ways=[],drops=[],fx=[],flies=[],grass=[],elder=null,shots=[],spider=null,webshots=[];
+let NID=1,UIDN=1,swarms=[],groves=[],boulders=[],coves=[],ways=[],drops=[],fx=[],flies=[],grass=[],elder=null,shots=[],spider=null,webshots=[];
 let tnow=0,running=false,shake=0,warnT=0,goldT=-1,goldNext=170;
 let nudged={split:false,war:false,evo:false};
 let ambient=[],herald={},decor=[],thorns=[];
@@ -439,7 +439,7 @@ function addUnit(s,role){
  s._slots=s._slots||{};s._slots[role]=(s._slots[role]||0);
  const slot=s._slots[role]++; /* birth number: spawn spiral + tie-breaks; marching order is by the LIVING */
  const sa9=slot*2.39996+rand(-0.1,0.1); /* golden-angle spiral: a crowd of recruits never stacks */
- const u={role,x:s.x+Math.cos(sa9)*(s.R*0.35+R.r+4+(slot%6)*9),y:s.y+Math.sin(sa9)*(s.R*0.35+R.r+4+(slot%6)*9),vx:0,vy:0,hp:R.hp,maxHp:R.hp,r:R.r,dmg:R.dmg,spd:R.spd,col:R.col,shape:R.shape,
+ const u={uid:UIDN++,role,x:s.x+Math.cos(sa9)*(s.R*0.35+R.r+4+(slot%6)*9),y:s.y+Math.sin(sa9)*(s.R*0.35+R.r+4+(slot%6)*9),vx:0,vy:0,hp:R.hp,maxHp:R.hp,r:R.r,dmg:R.dmg,spd:R.spd,col:R.col,shape:R.shape,
   seed:rand(0,TAU),zeal:rand(0.88,1.15),wanA:rand(0,TAU),wanV:rand(0.4,1.2)*(Math.random()<0.5?-1:1),per:Math.random()<0.3,
   st:'home',tgt:null,node:null,load:0,pat:rand(1.5,2.6),atk:0,flash:0,slow:0,fat:0,fatT:0,slain:false,cl:0,
   sig:rand(1,3),sigT:0,braced:false,slot};
@@ -4052,7 +4052,9 @@ function netApplyWorld(D){ /* the STATIC world takes the client's stage */
  thorns=D.th;groves=[];drops=[];shots=[];orbs=[];wasps=[];eyes=[];elder=null;spider=null;
  for(const s2 of swarms){s2.dead=true;s2.gone=true;}swarms=[];}
 function netApplyFrame(F){ /* the LIVING world flows in - stamped by OUR clock, not the server's lumpy one */
- {const fm=new Map();for(const w9 of F.sw)fm.set(w9.id,w9);
+ {const fm=new Map();
+  for(const w9 of F.sw){fm.set(w9.id,w9);
+   if(w9.u){w9.um=new Map();for(const t9 of w9.u)w9.um.set(t9[5],t9);}}
   NET.buf.push({rt:(typeof performance!=='undefined'?performance.now():Date.now()),m:fm});
   while(NET.buf.length>14)NET.buf.shift();}
  goldT=F.g?3:-1;
@@ -4077,13 +4079,16 @@ function netApplyFrame(F){ /* the LIVING world flows in - stamped by OUR clock, 
   m9.tx=w9.x;m9.ty=w9.y;m9.hp=w9.h;m9.honey=w9.H;
   if(w9.y2){m9.say=w9.y2;m9.sayT=1.2;}
   const uu=w9.u||[];
-  while(m9.units.length>uu.length)m9.units.pop();
-  for(let j=0;j<uu.length;j++){const t9=uu[j];let u=m9.units[j];
+  const old9=m9.uById||new Map(),nu9=[],nb9=new Map();
+  for(let j=0;j<uu.length;j++){const t9=uu[j];const uid=t9[5];
    const role=ROLE_BY_ID[t9[2]]||'forager';const R9=ROLES[role];
-   if(!u||u.role!==role){u=m9.units[j]={role,x:t9[0],y:t9[1],tx:t9[0],ty:t9[1],vx:0,vy:0,r:R9.r,col:R9.col,shape:R9.shape,
-    maxHp:R9.hp,hp:t9[3],load:t9[4],seed:(w9.id*13.7+j*2.39)%TAU,zeal:1,slot:j,_fi:j,_gi:j,braced:false,aura:false,
-    atk:0,flash:0,slow:0,fat:0,mend:0,wanA:0,wanV:1,per:false,sig:2,sigT:0,cl:0,home:false,load2:0};}
-   u.tx=t9[0];u.ty=t9[1];u.hp=t9[3];u.load=t9[4];}
+   let u=old9.get(uid);
+   if(!u||u.role!==role)u={uid,role,x:t9[0],y:t9[1],tx:t9[0],ty:t9[1],vx:0,vy:0,r:R9.r,col:R9.col,shape:R9.shape,
+    maxHp:R9.hp,hp:t9[3],load:t9[4],seed:(uid*2.39)%TAU,zeal:1,slot:j,_fi:j,_gi:j,braced:false,aura:false,
+    atk:0,flash:0,slow:0,fat:0,mend:0,wanA:0,wanV:1,per:false,sig:2,sigT:0,cl:0,home:false,load2:0};
+   u.tx=t9[0];u.ty=t9[1];u.hp=t9[3];u.load=t9[4];u.slot=j;u._fi=j;u._gi=j;
+   nu9.push(u);nb9.set(uid,u);}
+  m9.units=nu9;m9.uById=nb9;
   seen[w9.id]=1;}
  for(const id in NET.mirror)if(!seen[id]&&!NET.mirror[id].dead)NET.mirror[id].dead=true;
  const all=Object.values(NET.mirror);
@@ -4110,9 +4115,10 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides 12
    s2.vy+=((dy/dl)*want-s2.vy)*Math.min(1,6*dt);
    s2.x+=s2.vx*dt;s2.y+=s2.vy*dt;
    collideBoulders(s2,Math.max(12+queenStage(s2)*3.5,s2.R*0.26));
-   const ex=s2.tx-s2.x,ey=s2.ty-s2.y;
-   if(Math.hypot(ex,ey)>420){s2.x=s2.tx;s2.y=s2.ty;} /* far past truth: come home */
-   else{s2.x+=ex*Math.min(1,1.4*dt);s2.y+=ey*Math.min(1,1.4*dt);} /* otherwise the gentlest hand */
+   const ex=s2.tx-s2.x,ey=s2.ty-s2.y,er9=Math.hypot(ex,ey);
+   const allow=Math.min(150,s2.spdNow*((NET.rtt||120)/1000+0.06)+14); /* honest drift for YOUR ping: never punished */
+   if(er9>420){s2.x=s2.tx;s2.y=s2.ty;} /* far past truth: come home */
+   else if(er9>allow){const pull=Math.min(1,1.8*dt)*(er9-allow)/er9;s2.x+=ex*pull;s2.y+=ey*pull;} /* only the EXCESS is corrected */
    s2.spdNow=Math.hypot(s2.vx,s2.vy);
   } else if(wA&&wB&&!wA.d&&!wB.d){ /* pure interpolation - no guessing, no snapping, ever */
    const nx=wA.x+(wB.x-wA.x)*al,ny=wA.y+(wB.y-wA.y)*al;
@@ -4121,9 +4127,9 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides 12
   else if(s2.tx!==undefined){const k9=Math.min(1,6*dt);
    s2.vx=(s2.tx-s2.x)*8;s2.vy=(s2.ty-s2.y)*8;s2.x+=(s2.tx-s2.x)*k9;s2.y+=(s2.ty-s2.y)*k9;
    s2.spdNow=Math.hypot(s2.vx,s2.vy);}
-  {const uA=wA&&wA.u,uB=wB&&wB.u;
+  {const uA=wA&&wA.um,uB=wB&&wB.um;
    for(let j=0;j<s2.units.length;j++){const u=s2.units[j];
-    const tA=uA&&uA[j],tB=uB&&uB[j];
+    const tA=uA&&uA.get(u.uid),tB=uB&&uB.get(u.uid);
     if(s2===MP&&!s2.ally&&tB){ /* own troops: interp but anchored around the predicted queen's offset */
      const ox=s2.x-s2.tx,oy=s2.y-s2.ty;
      const bx=tA?tA[0]+(tB[0]-tA[0])*al:tB[0],by=tA?tA[1]+(tB[1]-tA[1])*al:tB[1];
@@ -4153,7 +4159,7 @@ function netSnapshot(){ /* THE WIRE: one compact frame of truth (server -> clien
   if(s.dead){S9.sw.push({id:s.nid,i:s.team,a:s.ally?1:0,d:1});continue;}
   S9.sw.push({id:s.nid,i:s.team,n:s.name,c:s.col,c2:s.col2||0,q:s.cosEq||0,p:s.prot>0?1:0,
    x:s.x|0,y:s.y|0,h:s.hp|0,H:s.honey|0,a:s.ally?1:0,y2:s.sayT>0?s.say:0,
-   u:s.units.map(u=>[u.x|0,u.y|0,ROLE_ID[u.role]||0,u.hp|0,(u.load||0)|0])});}
+   u:s.units.map(u=>[u.x|0,u.y|0,ROLE_ID[u.role]||0,u.hp|0,(u.load||0)|0,u.uid||0])});}
  return S9;}
 const GKIND=['bloom','sprout','grand','rock','bell','spray','puff','tumble','night','comb','fairy','rich','algae'];
 function netWorldInit(){ /* the STATIC world, sent once at the door */

@@ -1301,7 +1301,13 @@ function step(dt){
     let foe=null;
     if(war&&!routed&&u.role!=='nurse'){
      if(!u.tgt||u.tgt.slain||Math.random()<0.02){u.tgt=null;let bs=1e18;
-      for(const eu of war.units){if(eu.slain)continue;
+      /* THE LEVY CAP: a mega-war can field thousands; no soldier needs to interview all of them.
+         Scan up to 60 (a random window, so no unit is systematically ignored) - a HARD ceiling on
+         per-soldier search cost, trading "the mathematically single best foe" for "a good nearby foe".
+         Below the cap (ordinary wars) behaviour is untouched: the window covers the whole army. */
+      const wu=war.units,wn=wu.length,CAP=60,lim=Math.min(wn,CAP);
+      const start=wn>CAP?(Math.random()*wn)|0:0;
+      for(let i9=0;i9<lim;i9++){const eu=wu[(start+i9)%wn];if(eu.slain)continue;
        let sc=Math.sqrt(d2(u.x,u.y,eu.x,eu.y))+eu.cl*46;
        if(eu.role==='armourer')sc-=150; /* the ANCHOR draws the blows */
        if(eu.role==='forager')sc+=240; /* first break the LINE, then rob the larder */

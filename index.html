@@ -233,6 +233,7 @@ const EVOS=[
  {at:60,kind:'unlock',opts:['titan'],label:'TITANS'}
 ];
 const SPLIT_MAX=3;
+const SOUL_CAP=150; /* THE MUSTER LIMIT: comfortably past every unlock (titans need 60) so nothing is ever locked out - a brood this size is still a colossal army, just not an UNBOUNDED one a server tick has to survive */
 /* meta (cosmetics only, ever — and EVERYTHING earnable with ✨: Royal Nectar only skips the grind) */
 let META={xp:0,skin:0,nectar:0,royal:false,sub:false,seasonXp:0,claimedF:[],claimedR:[],owned:{},eq:{pattern:'plain',crown:'none',trail:'none',wings:'standard',body:'sleek',tail:'notail',fleet:'plainfleet',aura:'noaura'}};
 try{const m=(typeof localStorage!=='undefined')&&localStorage.getItem('brood_meta');if(m){const p=JSON.parse(m);META=Object.assign(META,p);META.owned=p.owned||{};META.eq=Object.assign({pattern:'plain',crown:'none',trail:'none',wings:'standard',body:'sleek',tail:'notail',fleet:'plainfleet',aura:'noaura'},p.eq||{});META.claimedF=p.claimedF||[];META.claimedR=p.claimedR||[];}}catch(e){}
@@ -495,6 +496,7 @@ function chooseEvo(role){
 function canBuy(role){return role==='forager'||role==='soldier'||unlocked[role];}
 function buy(s,role){
  if(s.dead||!canBuy(role))return false;
+ if(s.units.length>=SOUL_CAP){if(s===me())sfx('full');return false;} /* THE MUSTER LIMIT: SPLIT to keep growing, don't stack one brood past it */
  const c=ROLES[role].cost;
  if(s.honey<c){if(s===me())sfx('full');return false;}
  s.honey-=c;addUnit(s,role);calcR(s);
@@ -1006,6 +1008,10 @@ function resumeAudio(){const c=ac();if(c&&c.state==='suspended')c.resume();music
 /* ============ step ============ */
 function step(dt){
  tnow+=dt;const M=me();
+ const sepPar=(step._sepPar=1-(step._sepPar||0)); /* THE STAGGER CLOCK: flips exactly ONCE per tick, unlike step._par
+  (which flips once per swarm and so goes static whenever the alive swarm count is even) - the big-swarm
+  self-separation stagger below needs a guarantee that BOTH halves get serviced within any 2 consecutive
+  ticks, so it can't borrow a toggle whose per-tick net change depends on incidental swarm count. */
  for(const s of swarms){if(s.dead&&!s.ally&&!s.gone){s.respawn-=dt;if(s.respawn<=0)reviveSwarm(s);}}
  swarms=swarms.filter(s=>!s.gone);
  checkEvo();
@@ -1014,6 +1020,7 @@ function step(dt){
  {const M3=me();
   if(M3&&!M3.dead){
    if(!nudged.split&&M3.units.length>=5){nudged.split=true;toast('Q — SPLIT: half your brood becomes a loyal kin-queen. Small = FAST.','#ff9ad0',5);}
+   if(!nudged.cap&&M3.units.length>=SOUL_CAP){nudged.cap=true;toast('YOUR BROOD IS AT ITS MUSTER LIMIT — SPLIT (Q) to keep growing as more queens, not one overloaded swarm.','#ffd75e',6);}
    if(!nudged.war&&M3.war){nudged.war=true;toast('WAR! Your fighters hold a front line. Keep your queen BEHIND it.','#ff9a6a',5);}
    if(!nudged.eldr&&elder&&d2(M3.x,M3.y,elder.x,elder.y)<1000*1000){nudged.eldr=true;toast('THE ELDER - the horned tyrant of the far meadow. FELL IT and its crown is yours forever.','#ffb04d',6);}
    if(!nudged.nb&&goldT<0){for(const g9 of groves){if(g9.kind==='night'&&g9.closed&&d2(g9.x,g9.y,M3.x,M3.y)<300*300){nudged.nb=true;
@@ -1497,7 +1504,17 @@ function step(dt){
   if(bigS)for(let i9=0;i9<arr.length;i9++)arr[i9]._sepIdx=i9; /* a one-pass local index so each pair resolves exactly once via the grid */
   for(let i=0;i<arr.length;i++){const A=arr[i];
    if(bigS){
-    /* THE GRID, self-swarm: same overlap-only locality argument as the cross-swarm grind below */
+    /* THE STAGGER: this is the single costliest loop in a mega-war. Same spirit as the small-swarm `par`
+       stride and the cross-swarm `big9` shove stride above/below - each soul only reaches out to its
+       neighbours every OTHER frame, alternating which half via the dedicated step._sepPar clock (see top of
+       step()) so no pair goes unresolved for more than one frame (a 16ms-stale nudge, invisible at 60fps).
+       Roughly halves this loop's cost. */
+    if((i%2)!==sepPar)continue;
+    /* THE GRID, self-swarm: same overlap-only locality argument as the cross-swarm grind below - kept as a
+       call to the shared gridNear() helper, NOT inlined: measured head-to-head, an inlined flat cell-walk
+       here is 7-19% SLOWER (worse at higher populations) than calling the small separate helper function -
+       apparently V8 optimizes step() (already 1000+ lines) better when this stays factored out. Measure,
+       don't assume - textbook "remove the callback overhead" can be a regression in an unusual context. */
     gridNear(A.x,A.y,A.r+40,B=>{if(B===A||B._sw!==s||B._sepIdx<=A._sepIdx)return;
      const mn=A.r+B.r+3,ex=B.x-A.x,ey=B.y-A.y;
      if(ex>mn||ex<-mn||ey>mn||ey<-mn)return;
@@ -2175,6 +2192,7 @@ function canBuyBot(s,role){const U=botUnlocks[s.team]=botUnlocks[s.team]||{};
  return !!U[role];}
 function botBuy(s,role){
  if(s.recalling)return; /* a swarm flying home hoards the honey — no new mouths mid-recall */
+ if(s.units.length>=SOUL_CAP)return; /* bots hoard past the cap rather than recruit into it - same law as the player */
  if(role==='titan'&&teamSwarms(s.team).reduce((t2,x)=>t2+count(x,'titan'),0)>=1)return;
  if(role!=='forager'&&role!=='soldier'&&!canBuyBot(s,role))role='forager';
  const c=ROLES[role].cost;

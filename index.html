@@ -454,6 +454,14 @@ function calcR(s){s.R=26+9.2*Math.sqrt(s.units.length+1);}
 const CSEQ5=[0,1,-1,2,-2],CSEQ4=[-0.5,0.5,-1.5,1.5],CSEQ3=[0,1,-1]; /* CENTER-OUT: partial ranks stay balanced */
 const CMEAN5=[0,0.5,0,0.5,0],CMEAN4=[-0.5,0,-0.5,0],CMEAN3=[0,0.5,0]; /* prefix means: subtract, and every part-row sits MIRRORED on the line of march */
 /* THE LAW OF SIZE: small broods fly fast; great broods crawl. Splitting is speed. */
+let UGRID=new Map();
+function gridBuild(){UGRID.clear(); /* THE GRID: one pass, every soul indexed - the n-squared scans die here */
+ for(const s of swarms){if(s.dead)continue;
+  for(const u of s.units){const k=((u.x/128)|0)*100000+((u.y/128)|0);
+   let c=UGRID.get(k);if(!c){c=[];UGRID.set(k,c);}c.push(u);u._sw=s;}}}
+function gridNear(x,y,r,fn){const x0=((x-r)/128)|0,x1=((x+r)/128)|0,y0=((y-r)/128)|0,y1=((y+r)/128)|0;
+ for(let cx=x0;cx<=x1;cx++)for(let cy=y0;cy<=y1;cy++){const c=UGRID.get(cx*100000+cy);if(!c)continue;
+  for(let i=0;i<c.length;i++)fn(c[i]);}}
 function honeyCap(s){let f9=0;for(const u of s.units)if(u.role==='forager')f9++;return 500+40*f9;} /* THE LARDER LAW: the queen carries 500 herself; all beyond lives in forager bellies */
 function swarmMass(s){const us=s.units;if(!us||!us.length)return 0;
  if(!us[0]||!us[0].role)return us.length;
@@ -1017,6 +1025,7 @@ function step(dt){
   s.war=bw;
   for(const u of s.units)u.cl=0;
  }
+ gridBuild();
  for(const s of swarms){
   if(s.dead)continue;
   const n=s.units.length;
@@ -1272,7 +1281,7 @@ function step(dt){
      else{u.wanA+=u.wanV*dt*0.8;
       gx=s.x-hx*s.R*0.85+Math.cos(u.wanA)*s.R*0.55;gy=s.y-hy*s.R*0.85+Math.sin(u.wanA)*s.R*0.55; /* idle workers keep to the REAR quarter, out of the guard's way */}
      if(war){let ne=null,nd2=60*60;
-      for(const eu of war.units){const q=d2(u.x,u.y,eu.x,eu.y);if(q<nd2){nd2=q;ne=eu;}}
+      gridNear(u.x,u.y,62,eu=>{if(eu._sw!==war)return;const q=d2(u.x,u.y,eu.x,eu.y);if(q<nd2){nd2=q;ne=eu;}});
       if(ne){gx=lerp(u.x+(u.x-ne.x)*3,s.x,0.5);gy=lerp(u.y+(u.y-ne.y)*3,s.y,0.5);fast=true;}}
     }
    }
@@ -1294,11 +1303,12 @@ function step(dt){
      for(const wp of wasps){const q=d2(u.x,u.y,wp.x,wp.y);if(q<bq9){bq9=q;foe=wp;}}
      for(const ey of eyes){const q=d2(u.x,u.y,ey.x,ey.y);if(q<bq9){bq9=q;foe=ey;}}}
     if(!foe&&!routed&&(u.role==='lancer'||u.role==='spitter')&&u._fi%3===0){ /* FREEBLADES: a third of the light troops answer opportunity, war or no war */
-     let bs2=260*260,bswm=null;
-     for(const es of swarms){if(es.dead||es.team===s.team)continue;
-      if(grottoOf(es.x,es.y)!==grottoOf(s.x,s.y))continue;
-      for(const eu of es.units){if(eu.slain)continue;const q=d2(u.x,u.y,eu.x,eu.y)*(eu.role==='forager'?0.55:1);
-       if(q<bs2){bs2=q;foe=eu;bswm=es;}}}
+     let bs2=260*260,bswm=null;const myGr9=grottoOf(s.x,s.y);
+     gridNear(u.x,u.y,260,eu=>{const es=eu._sw;
+      if(!es||es.dead||es.team===s.team||eu.slain)return;
+      if(grottoOf(es.x,es.y)!==myGr9)return;
+      const q=d2(u.x,u.y,eu.x,eu.y)*(eu.role==='forager'?0.55:1);
+      if(q<bs2){bs2=q;foe=eu;bswm=es;}});
      if(bswm)u.tgtS=bswm;}
     if(foe){
      fight=true;fast=true;
@@ -1910,6 +1920,7 @@ function step(dt){
   sh.x+=sh.vx*dt;sh.y+=sh.vy*dt;sh.t-=dt;
   let hit=false;
   for(const es of swarms){if(es.dead||es.team===sh.team)continue;
+   if(d2(sh.x,sh.y,es.x,es.y)>(es.R+560)*(es.R+560))continue; /* out of the swarm's whole reach: pass by */
    if(d2(sh.x,sh.y,es.x,es.y)<18*18&&es.prot<=0){ /* struck the queen */
     let dm=sh.dmg*(es.exposed?2:1);es.hp-=dm;es.flash=.1;es.hitT=.12;hit=true;
     if(es===me())sfx('hurt');

@@ -33,7 +33,13 @@ function start(port,htmlPath){
   if(u==='/'||u==='/index.html'||u==='/BROOD.html'){
    res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-cache'});
    res.end(fs.readFileSync(HTML));
-  } else if(u==='/healthz'){res.writeHead(200);res.end('alive');}
+  } else if(u==='/healthz'){ /* TELEMETRY: lag is measured here, never guessed again */
+   const h=TICKS.hist.slice().sort((a,b)=>a-b);
+   const p95=h.length?h[Math.min(h.length-1,(h.length*0.95)|0)]:0;
+   let souls=0;for(const s2 of G.swarms)if(!s2.dead)souls+=s2.units.length;
+   res.writeHead(200,{'Content-Type':'application/json'});
+   res.end(JSON.stringify({ok:1,seats:Object.keys(seats).length,souls,
+    tickAvg:+(TICKS.n?TICKS.sum/TICKS.n:0).toFixed(2),tickP95:p95,upMin:((Date.now()-BOOT)/60000)|0}));}
   else{res.writeHead(404);res.end('the meadow has no such door');}
  });
  const wss=new WebSocketServer({server:httpSrv});
@@ -54,10 +60,13 @@ function start(port,htmlPath){
    const s=G.swarms.find(z=>z.team===team&&!z.ally);
    if(s){s.bot=true;delete s.forceAim;}}});
  });
+ const BOOT=Date.now(),TICKS={n:0,sum:0,hist:[]};
  const DT=1/60;let acc=0,last=Date.now();
  const simI=setInterval(()=>{const now=Date.now();acc+=(now-last)/1000;last=now;
   if(acc>0.25)acc=0.25;let n=0;
-  while(acc>=DT&&n<5){G.step(DT);acc-=DT;n++;}},8);
+  const t0=Date.now();
+  while(acc>=DT&&n<5){G.step(DT);acc-=DT;n++;}
+  if(n){const el=Date.now()-t0;TICKS.n++;TICKS.sum+=el;TICKS.hist.push(el);if(TICKS.hist.length>300)TICKS.hist.shift();}},8);
  let fN=0;
  const netI=setInterval(()=>{ /* 20Hz heartbeat: souls every beat, the slow world every third */
   let f;try{f=JSON.stringify({k:'f',...((fN++%3===0)?G.netDyn():G.netDynLite())});}catch(e){return;}

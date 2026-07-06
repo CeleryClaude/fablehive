@@ -65,9 +65,13 @@ function start(port,htmlPath){
  const DT=1/60;let acc=0,last=Date.now();
  const simI=setInterval(()=>{const now=Date.now();acc+=(now-last)/1000;last=now;
   if(acc>0.25)acc=0.25;let n=0;
-  const t0=Date.now();
-  while(acc>=DT&&n<5){G.step(DT);acc-=DT;n++;}
-  if(n){const el=Date.now()-t0;TICKS.n++;TICKS.sum+=el;TICKS.hist.push(el);if(TICKS.hist.length>300)TICKS.hist.shift();}},8);
+  /* TRUE PER-STEP TIMING: a catch-up burst of 5 steps must never be counted as one slow tick */
+  while(acc>=DT&&n<5){
+   const t0=process.hrtime.bigint();
+   G.step(DT);
+   const el=Number(process.hrtime.bigint()-t0)/1e6;
+   TICKS.n++;TICKS.sum+=el;TICKS.hist.push(el);if(TICKS.hist.length>300)TICKS.hist.shift();
+   acc-=DT;n++;}},8);
  let fN=0;
  const netI=setInterval(()=>{ /* 20Hz heartbeat: souls every beat, the slow world every third */
   let f;try{f=JSON.stringify({k:'f',...((fN++%3===0)?G.netDyn():G.netDynLite())});}catch(e){return;}

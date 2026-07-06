@@ -44,6 +44,7 @@ function start(port,htmlPath){
  });
  const wss=new WebSocketServer({server:httpSrv});
  wss.on('connection',ws=>{
+  try{ws._socket&&ws._socket.setNoDelay&&ws._socket.setNoDelay(true);}catch(e){} /* no Nagle: frames leave the MOMENT they exist */
   let team=null;
   ws.on('message',buf=>{let m;try{m=JSON.parse(buf);}catch(e){return;}
    if(m.k==='join'&&team===null){

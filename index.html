@@ -4119,10 +4119,22 @@ function netApplyFrame(F){ /* the LIVING world flows in - stamped by OUR clock, 
  all.sort((a,b)=>(a.team===NET.you&&!a.ally?-1:b.team===NET.you&&!b.ally?1:0));
  swarms=all;
  for(const s2 of swarms)if(!s2.dead)calcR(s2);}
-function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides 125ms in the past, between two KNOWN truths */
+function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in the past, between two KNOWN truths */
  tnow+=dt;
  const MP=swarms[0];
- const nowR=(typeof performance!=='undefined'?performance.now():Date.now()),rT=nowR-125;
+ /* THE INTERP DELAY: was a flat 125ms for every connection. That's ~2.5x the server's 50ms send interval -
+    safe margin against arrival jitter, but needlessly laggy for anyone on a fast/stable link, since this
+    delay's job is to smooth JITTER, not to compensate for base RTT (which it structurally can't fix - we
+    are always rendering a moment in the past, on purpose, so two known frames exist to interpolate between).
+    Scale it off the one path-quality signal already tracked (ping) as a rough proxy: floor 80ms (~1.6x the
+    send interval - still real safety margin), growing mildly with rtt for extra cushion on rougher paths,
+    never exceeding the old 125ms ceiling. Cuts guaranteed staleness for troops/other units by ~15-35ms on a
+    typical connection, without touching the queen's own movement (client-predicted, unaffected by any of this).
+    Not verified against real network jitter - this sandbox has none to test against, only a same-process
+    mirror. If troops still stutter/hitch after this ships, that's the signal this needs to go back UP, not
+    down further. */
+ const nowR=(typeof performance!=='undefined'?performance.now():Date.now()),
+  interpDelay=Math.min(125,Math.max(80,60+(NET.rtt||0)*0.3)),rT=nowR-interpDelay;
  let FA=null,FB=null;
  for(let i=NET.buf.length-1;i>=0;i--){if(NET.buf[i].rt<=rT){FA=NET.buf[i];FB=NET.buf[i+1]||NET.buf[i];break;}}
  if(!FA&&NET.buf.length){FA=FB=NET.buf[0];}

@@ -1475,7 +1475,23 @@ function step(dt){
   /* separation inside the swarm */
   const arr=s.units;
   const par=(step._par=1-(step._par||0));
+  const bigS=arr.length>26;
+  if(bigS)for(let i9=0;i9<arr.length;i9++)arr[i9]._sepIdx=i9; /* a one-pass local index so each pair resolves exactly once via the grid */
   for(let i=0;i<arr.length;i++){const A=arr[i];
+   if(bigS){
+    /* THE GRID, self-swarm: same overlap-only locality argument as the cross-swarm grind below */
+    gridNear(A.x,A.y,A.r+40,B=>{if(B===A||B._sw!==s||B._sepIdx<=A._sepIdx)return;
+     const mn=A.r+B.r+3,ex=B.x-A.x,ey=B.y-A.y;
+     if(ex>mn||ex<-mn||ey>mn||ey<-mn)return;
+     const d3=Math.hypot(ex,ey)||0.01;
+     if(d3<mn){const inRank=moving&&A.role===B.role&&A.role!=='forager';
+      let wA=0.5,wB=0.5;
+      if(A.role==='titan'&&B.role!=='titan'){wA=0.04;wB=0.96;}
+      else if(B.role==='titan'&&A.role!=='titan'){wA=0.96;wB=0.04;}
+      else if(A.role==='forager'&&B.role!=='forager'){wA=0.92;wB=0.08;}
+      else if(B.role==='forager'&&A.role!=='forager'){wA=0.08;wB=0.92;}
+      const F=(mn-d3)*(inRank?0.32:1.0)/d3;A.x-=ex*F*wA;A.y-=ey*F*wA;B.x+=ex*F*wB;B.y+=ey*F*wB;}});
+   } else
    for(let j=i+1+((i+par)%2);j<arr.length;j+=arr.length>26?2:1){const B=arr[j];
     const mn=A.r+B.r+3,ex=B.x-A.x,ey=B.y-A.y;
     if(ex>mn||ex<-mn||ey>mn||ey<-mn)continue;
@@ -1496,12 +1512,13 @@ function step(dt){
    let ui9=0;
    for(const ua of a.units){if(ua.role==='forager')continue;
     if(big9&&((ui9++)%2!==(step._par||0)))continue;
-    for(const ub of b.units){if(ub.role==='forager')continue;
+    /* THE GRID: two bodies can only ever shove if they're already almost touching - no reason to test the WHOLE enemy army per soldier */
+    gridNear(ua.x,ua.y,60,ub=>{if(ub._sw!==b||ub.role==='forager')return;
      const mn=ua.r+ub.r+1,ex=ub.x-ua.x,ey=ub.y-ua.y;
-     if(ex>mn||ex<-mn||ey>mn||ey<-mn)continue;
+     if(ex>mn||ex<-mn||ey>mn||ey<-mn)return;
      const d3=Math.hypot(ex,ey)||0.01;
      if(d3<mn){const p=(mn-d3)*0.5/d3;ua.x-=ex*p;ua.y-=ey*p;ub.x+=ex*p;ub.y+=ey*p;
-      ua.vx*=0.92;ua.vy*=0.92;ub.vx*=0.92;ub.vy*=0.92;}}}}}
+      ua.vx*=0.92;ua.vy*=0.92;ub.vx*=0.92;ub.vy*=0.92;}});}}}
  /* THE QUEEN HAS A BODY: her own fighters part for her; an enemy wall STOPS her */
  for(const s of swarms){if(s.dead)continue;
   const qr=14+queenStage(s)*3;
@@ -1925,12 +1942,14 @@ function step(dt){
     let dm=sh.dmg*(es.exposed?2:1);es.hp-=dm;es.flash=.1;es.hitT=.12;hit=true;
     if(es===me())sfx('hurt');
     if(es.hp<=0)killQueen(es,sh.by);break;}
-   for(const eu of es.units){if(d2(sh.x,sh.y,eu.x,eu.y)<(eu.r+4)**2){
-    let dm=sh.dmg*(eu.braced?0.7:1);
-    if(eu.r>=15)dm*=1.6; /* QUARRELS pierce the slow and the huge */
-    if(eu.aura)dm=soakLink(es,eu,dm);
-    eu.hp-=dm;eu.flash=.12;eu.slow=0.5;hit=true;
-    if(eu.hp<=0)killUnit(es,eu,sh.by);break;}}
+   /* THE GRID: a shot only ever strikes what's within a few px of ITSELF - no reason to walk a thousand-soul army to learn that */
+   gridNear(sh.x,sh.y,40,eu=>{if(hit||eu._sw!==es||eu.slain)return;
+    if(d2(sh.x,sh.y,eu.x,eu.y)<(eu.r+4)**2){
+     let dm=sh.dmg*(eu.braced?0.7:1);
+     if(eu.r>=15)dm*=1.6; /* QUARRELS pierce the slow and the huge */
+     if(eu.aura)dm=soakLink(es,eu,dm);
+     eu.hp-=dm;eu.flash=.12;eu.slow=0.5;hit=true;
+     if(eu.hp<=0)killUnit(es,eu,sh.by);}});
    if(hit)break;}
   if(hit){addP(sh.x,sh.y,'#8fe0c0',4,90);shots.splice(i,1);continue;}
   if(sh.t<=0){addP(sh.x,sh.y,'#8fe0c0',2,50);shots.splice(i,1);}

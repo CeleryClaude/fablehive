@@ -752,23 +752,23 @@ function makeWorld(){
  do{ex=rand(700,WORLD.w-700);ey=rand(700,WORLD.h-700);tr++;}
  while(tr<20&&(d2(ex,ey,WORLD.w/2,WORLD.h/2)<1500*1500||(ex<2900&&ey<2900)));
  elder={x:ex,y:ey,hx:ex,hy:ey,vx:0,vy:0,r:72,hp:3600,maxHp:3600,terr:520,sense:410,spd:122,atk:0,provoked:0,flash:0};
- for(let g=0;g<4;g++)groves.push({x:ex+rand(-220,220),y:ey+rand(-220,220),amt:210,max:210,vx:0,vy:0,mother:true,sp:6});
+ for(let g=0;g<4;g++){const ga4=g/4*TAU+rand(-0.25,0.25),gr4=rand(185,235);groves.push({x:ex+Math.cos(ga4)*gr4,y:ey+Math.sin(ga4)*gr4,amt:210,max:210,vx:0,vy:0,mother:true,sp:6});}
  /* THE BROODMOTHER: the meadow's other nightmare — patient, webbed, surrounded by her young */
  {let sx2,sy2,tr3=0;
-  do{sx2=rand(760,2700);sy2=rand(760,2700);tr3++;} /* she haunts the DARK REALM */
-  while(tr3<44&&(d2(sx2,sy2,WORLD.w/2,WORLD.h/2)<1500*1500||d2(sx2,sy2,ex,ey)<2600*2600));
+  do{sx2=rand(900,1950);sy2=rand(900,1950);tr3++;} /* DEEPER in the DARK REALM, clear of the wind road */
+  while(tr3<80&&(d2(sx2,sy2,WORLD.w/2,WORLD.h/2)<1500*1500||d2(sx2,sy2,ex,ey)<2600*2600));
   spider={x:sx2,y:sy2,hx:sx2,hy:sy2,vx:0,vy:0,r:92,hp:9000,maxHp:9000,terr:600,sense:450,spd:150,
    provoked:0,flash:0,gait:0,kids:[],kidT:9,gnash:0,tgtRef:null,tgtT:0};
   for(let k=0;k<5;k++)spider.kids.push({x:sx2+rand(-140,140),y:sy2+rand(-140,140),vx:0,vy:0,hp:160,r:11,wa:rand(0,TAU),atk:0});
-  for(let g=0;g<5;g++)groves.push({x:sx2+rand(-260,260),y:sy2+rand(-260,260),amt:260,max:260,vx:0,vy:0,web:true,rich:true,sp:2,kind:'rich'});
+  for(let g=0;g<5;g++){const ga5=g/5*TAU+rand(-0.22,0.22),gr5=rand(210,285);groves.push({x:sx2+Math.cos(ga5)*gr5,y:sy2+Math.sin(ga5)*gr5,amt:260,max:260,vx:0,vy:0,web:true,rich:true,sp:2,kind:'rich'});}
  }
  grottos=[];
  for(let gr=0;gr<1;gr++){ /* ONE cave now - deep in the dark north-west realm */
   let gx9,gy9,tr9=0;
-  do{gx9=rand(1200,2500);gy9=rand(1200,2500);tr9++;}
+  do{gx9=rand(1000,2050);gy9=rand(1000,2050);tr9++;}
   while(tr9<90&&(d2(gx9,gy9,WORLD.w/2,WORLD.h/2)<1500*1500
    ||(elder&&d2(gx9,gy9,elder.hx,elder.hy)<1400*1400)
-   ||(spider&&d2(gx9,gy9,spider.hx,spider.hy)<1400*1400)
+   ||(spider&&d2(gx9,gy9,spider.hx,spider.hy)<1000*1000)
    ||grottos.some(g9=>d2(gx9,gy9,g9.x,g9.y)<2400*2400)
    ||coves.some(c9=>d2(gx9,gy9,c9.x,c9.y)<(430+c9.r+240)*(430+c9.r+240))));
   const GR=430,ga9=Math.PI/2+rand(-0.3,0.3); /* the one archway faces SOUTH, more or less */
@@ -1771,21 +1771,10 @@ function step(dt){
   if(dr.t<=0)drops.splice(i,1);}
  /* DEW-MOTHS/DRAGONFLIES: fully moved to client-side ambiance (clientDecorTick) - no server simulation, not collectible */
  /* GNAT CLOUDS: harmless swarms the army bursts through and harvests */
- for(let i=gnats.length-1;i>=0;i--){const gn=gnats[i];
-  gn.wa+=rand(-0.4,0.4)*dt*2;gn.cd-=dt;
+ for(const gn of gnats){ /* GNAT/FIREFLY CLOUDS: pure ambiance now - they drift, the army passes through, NOTHING is collected */
+  gn.wa+=rand(-0.4,0.4)*dt*2;
   gn.x=clamp(gn.x+Math.cos(gn.wa)*22*dt,300,WORLD.w-300);
-  gn.y=clamp(gn.y+Math.sin(gn.wa)*22*dt,300,WORLD.h-300);
-  if(gn.cd<=0)for(const s2 of swarms){if(s2.dead)continue;
-   if(d2(gn.x,gn.y,s2.x,s2.y)>(s2.R+600)**2)continue;
-   let hit=false;
-   if(d2(gn.x,gn.y,s2.x,s2.y)<(s2.R*0.5+30)**2)hit=true;
-   else for(const u2 of s2.units){if(d2(gn.x,gn.y,u2.x,u2.y)<(u2.r+22)**2){hit=true;break;}}
-   if(hit){gn.n--;gn.cd=0.22;
-    dropAt(gn.x+rand(-14,14),gn.y+rand(-14,14),rand(1.5,2.8),8);
-    addP(gn.x,gn.y,'#d8e8c0',3,70);
-    if(s2.team===0)gainXP(0.5);
-    break;}}
-  if(gn.n<=0){addP(gn.x,gn.y,'#d8e8c0',8,110);gnats.splice(i,1);}}
+  gn.y=clamp(gn.y+Math.sin(gn.wa)*22*dt,300,WORLD.h-300);}
  if(gnats.length<6&&Math.random()<dt*0.3){const p9={x:rand(500,WORLD.w-500),y:rand(WORLD.h*0.58,WORLD.h-400)};gnats.push({x:p9.x,y:p9.y,n:rand(8,13)|0,wa:rand(0,TAU),cd:0});}
  /* DEW: glints the queens harvest by flight alone */
  step._dw3=((step._dw3||0)+1)%3;
@@ -2994,7 +2983,7 @@ function drawUnit(s,u,LOD){
  let baseCol=u.col;
  {const FL=s.team===0?FLEETS[META.eq.fleet]:null; /* THE LIVERY LAW: every brood wears its QUEEN's colour - armies read at a glance */
   const liv=(FL&&FL.tint)?FL.tint:s.col;
-  if(liv)baseCol=mixc(u.col,liv,(FL&&FL.tint)?0.55:0.42);}
+  if(liv)baseCol=mixc(u.col,liv,(FL&&FL.tint)?0.88:0.85);}
  const well=clamp(u.hp/(u.maxHp||1),0,1); /* WELLNESS is worn, not barred: the hurt grey and dim */
  if(well<0.97)baseCol=sicken(baseCol,(1-well)*0.88); /* the hurt go DULL - that is the only health language */
  const col=u.flash>0?'#fff':(u.fat>0.6?shade(baseCol,-0.25):baseCol);

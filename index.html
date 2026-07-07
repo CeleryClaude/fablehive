@@ -12,8 +12,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#241426;font-family:
 #lb .me{color:#ffcf5e;font-weight:bold}
 #hint{position:fixed;bottom:84px;left:0;right:0;text-align:center;font-size:12.5px;opacity:.5;text-shadow:0 1px 3px #000;pointer-events:none}
 #bar{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;display:none;gap:8px;z-index:7;flex-wrap:wrap;justify-content:center;max-width:96vw}
-@media (pointer:coarse), (max-width:820px){#bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;max-width:100vw;left:0;right:0;transform:none;justify-content:flex-start;padding:0 6px;-webkit-overflow-scrolling:touch}.ab{min-width:50px;padding:7px 4px;flex:0 0 auto}.ab span{font-size:12px}.ab small{font-size:9.5px}#tip{max-width:82vw;font-size:11px;padding:5px 9px;bottom:52px;max-height:22vh;overflow:hidden}#hint{display:none}#lb{font-size:11px}}
-html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;max-width:100vw;left:0;right:0;transform:none;justify-content:flex-start;padding:0 6px;-webkit-overflow-scrolling:touch}html.mob .ab{min-width:50px;padding:7px 4px;flex:0 0 auto}html.mob .ab span{font-size:12px}html.mob .ab small{font-size:9.5px}html.mob #tip{max-width:82vw;font-size:11px;padding:5px 9px;bottom:52px;max-height:22vh;overflow:hidden}html.mob #hint{display:none}html.mob #lb{font-size:11px}
+@media (pointer:coarse), (max-width:820px){#bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;max-width:none;left:76px;right:4px;transform:none;justify-content:flex-start;padding:0 5px;-webkit-overflow-scrolling:touch}.ab{min-width:44px;padding:6px 3px;flex:0 0 auto}.ab span{font-size:10.5px}.ab small{font-size:8px}#tip{max-width:82vw;font-size:11px;padding:5px 9px;bottom:52px;max-height:22vh;overflow:hidden}#hint{display:none}#lb{font-size:11px}}
+html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;max-width:none;left:76px;right:4px;transform:none;justify-content:flex-start;padding:0 5px;-webkit-overflow-scrolling:touch}html.mob .ab{min-width:44px;padding:6px 3px;flex:0 0 auto}html.mob .ab span{font-size:10.5px}html.mob .ab small{font-size:8px}html.mob #tip{max-width:82vw;font-size:11px;padding:5px 9px;bottom:52px;max-height:22vh;overflow:hidden}html.mob #hint{display:none}html.mob #lb{font-size:11px}
 #tip{position:fixed;left:50%;transform:translateX(-50%);bottom:86px;max-width:340px;padding:9px 13px;background:rgba(30,16,32,.92);border:1px solid rgba(255,220,150,.4);border-radius:12px;font-size:12.5px;line-height:1.45;display:none;z-index:8;pointer-events:none;text-align:center;box-shadow:0 4px 20px #0008}
 #tip b{color:#ffd75e;letter-spacing:1px}
 #xpbar{width:240px;height:9px;background:rgba(255,255,255,.12);border-radius:6px;margin:8px auto 2px;overflow:hidden}
@@ -123,7 +123,8 @@ addEventListener('resize',resize);resize();
 addEventListener('beforeunload',()=>{try{metaSave();}catch(e){}});
 if(typeof document!=='undefined'&&document.addEventListener)document.addEventListener('visibilitychange',()=>{try{metaSave();}catch(e){}});
 const isTouch=('ontouchstart'in window)||navigator.maxTouchPoints>0;
-function setMobClass(){try{document.documentElement.classList.toggle('mob',isTouch||(window.innerWidth||999)<820);}catch(e){}}
+let MOB=false;
+function setMobClass(){try{MOB=Math.min((window.innerWidth||9999),((window.screen&&window.screen.width)||9999))<820;document.documentElement.classList.toggle('mob',MOB);}catch(e){}}
 setMobClass();if(typeof addEventListener!=='undefined')addEventListener('resize',setMobClass);
 const WORLD={w:7200,h:7200}; /* a quarter larger - four realms need room */
 const rand=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t;
@@ -382,16 +383,16 @@ const ITEMS=[
  {id:'voidring', cat:'aura',   n:'Void Ring',   xp:4800,royal:true,d:'a thin circle of missing light'},
  {id:'moltaura', cat:'aura',   n:'Apex Shimmer',xp:-1,  d:'reach 120 souls once — wear the shimmer of the great'},
  {id:'algaeglow',cat:'aura',   n:'Grotto Glow', xp:-1,  d:'gather 200 honey inside the dark — the algae remember you'},
- {id:'plainfleet',cat:'fleet', n:'No Coat',     xp:0,   d:'your brood as it was born - every detail bare'},
- {id:'waxfleet',   cat:'fleet', n:'Beeswax',     xp:1200,d:'sealed in warm matte wax - of the hive, through and through'},
- {id:'chitinfleet',cat:'fleet', n:'Chitin',      xp:2000,d:'hard dark carapace - a beetle-shell gloss on every soul'},
- {id:'bronzefleet',cat:'fleet', n:'Bronze Legion',xp:2400,d:'burnished bronze plate - an army cast in old metal'},
- {id:'frostfleet', cat:'fleet', n:'Hoarfrost',   xp:2600,d:'every soul rimed in pale, cold ice'},
- {id:'amberfleet', cat:'fleet', n:'Ambercast',   xp:2800,d:'set in warm resin, lit softly from within'},
- {id:'ironfleet',  cat:'fleet', n:'Ironclad',    xp:3000,d:'cold grey steel - a hard edge of war'},
- {id:'bonefleet',  cat:'fleet', n:'Bonewrought', xp:3400,d:'pale ivory, matte and quiet - an army of relics'},
- {id:'goldfleet',  cat:'fleet', n:'Gilded Court',xp:3600,royal:true,d:'polished gold - every soul a small sun'},
- {id:'obsidianfleet',cat:'fleet',n:'Obsidian',   xp:4200,royal:true,d:'black volcanic glass with one cold star of light'}
+ {id:'plainfleet',cat:'fleet', n:'No Kit',      xp:0,   d:'your brood as it was born - no armour, just wings'},
+ {id:'waxfleet',   cat:'fleet', n:'Huntsman',    xp:1200,d:'a light leather cap - quick and quiet, head only'},
+ {id:'chitinfleet',cat:'fleet', n:'Carapace',    xp:2000,d:'clip-on beetle-plates and a low horned helm'},
+ {id:'bronzefleet',cat:'fleet', n:'Bronze Legion',xp:2400,d:'a bronze war-helm and a rear crest - an old army'},
+ {id:'frostfleet', cat:'fleet', n:'Frostplate',  xp:2600,d:'a pale helm and a fan of ice-shards down the back'},
+ {id:'amberfleet', cat:'fleet', n:'Wildwarden',  xp:2800,d:'a leaf-crest helm and little branching antlers'},
+ {id:'ironfleet',  cat:'fleet', n:'Ironguard',   xp:3000,d:'a full steel helm and a bladed back-fin'},
+ {id:'bonefleet',  cat:'fleet', n:'Bonecrown',   xp:3400,d:'a horned bone helm and a ridge of spines'},
+ {id:'goldfleet',  cat:'fleet', n:'Regalia',     xp:3600,royal:true,d:'a golden crown-helm and a proud crest'},
+ {id:'obsidianfleet',cat:'fleet',n:'Dreadplate',  xp:4200,royal:true,d:'a black horned helm and a row of jagged spikes'}
 ];
 for(const it of ITEMS){if(it.royal)it.xp=Math.round(it.xp*2.2);else if(it.xp>0)it.xp=Math.round(it.xp*1.6);} /* the long road got longer; the ROYAL SUB is the carriage */
 function itemById(id){return ITEMS.find(i2=>i2.id===id)||null;}
@@ -2428,14 +2429,13 @@ function drawNestQueen(){
  paintCrown(c2,base,t2,tryOn.crown||META.eq.crown);
  c2.restore();
  /* FLEET preview: three little soldiers march below, dressed in your theme */
- {const FL=FLEETS[(tryOn.fleet||META.eq.fleet)]; /* a worker, a soldier and a lancer - so you see the material on real shapes */
-  let bc=col;if(FL&&FL.body)bc=mixc(col,FL.body,FL.mix||0.24);
-  const lit=(x,y,r)=>{if(FL&&FL.shade){c2.fillStyle=FL.shade;c2.beginPath();c2.arc(x+r*0.32,y+r*0.34,r*0.52,0,TAU);c2.fill();}
-   if(FL&&FL.spec){c2.fillStyle=FL.spec;c2.beginPath();c2.arc(x-r*0.3,y-r*0.32,r*0.42,0,TAU);c2.fill();}};
-  const uy=104;
-  c2.fillStyle=bc;c2.beginPath();c2.arc(44,uy,5.5,0,TAU);c2.fill();lit(44,uy,5.5); /* worker (dot) */
-  c2.fillStyle=bc;c2.beginPath();c2.moveTo(74,uy-6);c2.lineTo(86,uy-6);c2.lineTo(87,uy+1);c2.lineTo(80,uy+8);c2.lineTo(73,uy+1);c2.closePath();c2.fill();lit(80,uy,7); /* soldier (shield) */
-  c2.fillStyle=bc;c2.beginPath();c2.moveTo(124,uy);c2.lineTo(111,uy-5);c2.lineTo(111,uy+5);c2.closePath();c2.fill();lit(116,uy,5);} /* lancer (dart) */
+ {const FL=FLEETS[(tryOn.fleet||META.eq.fleet)];const uy=104; /* worker, soldier, lancer - team colour + the ARMOUR you chose */
+  const one=(x,r,sh)=>{c2.save();c2.translate(x,uy);c2.fillStyle=col;c2.beginPath();
+   if(sh==='dot'){c2.arc(0,0,r,0,TAU);}
+   else if(sh==='shield'){c2.moveTo(-r*0.8,-r);c2.lineTo(r*0.8,-r);c2.lineTo(r,r*0.2);c2.lineTo(0,r*1.1);c2.lineTo(-r,r*0.2);c2.closePath();}
+   else{c2.moveTo(r,0);c2.lineTo(-r*0.7,-r*0.8);c2.lineTo(-r*0.7,r*0.8);c2.closePath();}
+   c2.fill();if(FL)drawArmour(c2,r,FL);c2.restore();};
+  one(44,5.5,'dot');one(80,7,'shield');one(116,6,'tri');}
 }
 let nestI=null,nestTab='skins',nestSz=1,nestFxA=[];
 const TABS=[['skins','COLOURS'],['body','BODY'],['pattern','PATTERNS'],['crown','CROWNS'],['wings','WINGS'],['trail','TRAILS'],['tail','TAILS'],['aura','◎ AURAS'],['fleet','⚔ FLEET']];
@@ -2620,16 +2620,16 @@ function paintTail(g2,base,t2,tail,col,st){
  g2.restore();
 }
 /* FLEET dress: how the ARMY wears the theme */
-const FLEETS={plainfleet:null, /* ARMOUR & MATERIAL: the body WEARS the material (queen-hue still leads) + a lit highlight and a soft shade. no rings, no particles */
- waxfleet:{body:'#e8b84e',mix:0.34,spec:'rgba(255,240,205,.5)'},
- chitinfleet:{body:'#241820',mix:0.44,spec:'rgba(255,242,236,.55)',shade:'rgba(0,0,0,.34)'},
- bronzefleet:{body:'#b5702e',mix:0.44,spec:'rgba(255,226,170,.6)',shade:'rgba(60,30,8,.3)'},
- frostfleet:{body:'#c2dcec',mix:0.4,spec:'rgba(248,253,255,.72)',shade:'rgba(120,160,190,.3)'},
- amberfleet:{body:'#d98a2a',mix:0.4,spec:'rgba(255,232,175,.58)'},
- ironfleet:{body:'#9aa4ac',mix:0.42,spec:'rgba(255,255,255,.6)',shade:'rgba(28,34,42,.34)'},
- bonefleet:{body:'#e6e0cf',mix:0.42,spec:'rgba(255,252,242,.42)'},
- goldfleet:{body:'#f0c24a',mix:0.48,spec:'rgba(255,255,222,.82)',shade:'rgba(140,90,18,.28)'},
- obsidianfleet:{body:'#12100f',mix:0.52,spec:'rgba(222,224,255,.78)',shade:'rgba(0,0,0,.4)'}};
+const FLEETS={plainfleet:null, /* ADDITIVE ARMOUR: clip-on helm + back-piece over the TEAM-coloured body. never recolours the troop */
+ waxfleet:{metal:'#caa46a',dark:'#7a5a2e',lite:'#efd4a0',helm:'cap',back:'none'},
+ chitinfleet:{metal:'#4a2f38',dark:'#241119',lite:'#8a6470',helm:'horned',back:'plates'},
+ bronzefleet:{metal:'#c8843e',dark:'#6e4318',lite:'#f0c07a',helm:'dome',back:'crest'},
+ frostfleet:{metal:'#bfe0ef',dark:'#5f92ad',lite:'#f2fbff',helm:'dome',back:'shards'},
+ amberfleet:{metal:'#7fae5a',dark:'#3e5e2a',lite:'#c8e89a',helm:'leaf',back:'antler'},
+ ironfleet:{metal:'#b9c2cb',dark:'#5b6672',lite:'#eef3f7',helm:'dome',back:'fin'},
+ bonefleet:{metal:'#e8e2d0',dark:'#9a9078',lite:'#fffdf2',helm:'horned',back:'spikes'},
+ goldfleet:{metal:'#f0c94a',dark:'#8a6410',lite:'#fff2b0',helm:'crown',back:'crest'},
+ obsidianfleet:{metal:'#2e2a36',dark:'#0a0810',lite:'#6a6480',helm:'horned',back:'spikes'}};
 function paintWings(g2,base,t2,style){
  const wf=Math.sin(t2*38)*0.5+0.5;
  if(style==='glass'){
@@ -3003,11 +3003,26 @@ function drawQueen(s){
  ctx.restore();
  if(s.hp<s.maxHp)drawBar(s.x,s.y+base+14,46,s.hp/s.maxHp,false); /* a clean BAR - no rings, no colour riddles */
 }
+function drawArmour(g,r,FL){ /* clip-ons in the unit's rotated frame: +x front. drawn OVER the body so team colour always shows */
+ const mc=FL.metal,dk=FL.dark,lt=FL.lite,B=FL.back,H=FL.helm;g.lineJoin='round';g.lineCap='round';
+ if(B==='spikes'){g.fillStyle=dk;for(let i=-1;i<=1;i++){const y=i*r*0.55;g.beginPath();g.moveTo(-r*0.35,y-r*0.16);g.lineTo(-r*1.15,y);g.lineTo(-r*0.35,y+r*0.16);g.closePath();g.fill();}}
+ else if(B==='fin'){g.fillStyle=mc;g.beginPath();g.moveTo(-r*0.15,-r*0.55);g.lineTo(-r*1.05,0);g.lineTo(-r*0.15,r*0.55);g.closePath();g.fill();g.fillStyle=lt;g.beginPath();g.moveTo(-r*0.15,-r*0.28);g.lineTo(-r*0.7,0);g.lineTo(-r*0.15,r*0.28);g.closePath();g.fill();}
+ else if(B==='crest'){g.fillStyle=lt;g.beginPath();g.moveTo(-r*0.05,-r*0.35);g.lineTo(-r*0.95,-r*0.5);g.lineTo(-r*0.55,0);g.lineTo(-r*0.95,r*0.5);g.lineTo(-r*0.05,r*0.35);g.closePath();g.fill();}
+ else if(B==='shards'){g.fillStyle=lt;for(let i=-1;i<=1;i++){const y=i*r*0.5;g.beginPath();g.moveTo(-r*0.35,y);g.lineTo(-r*1.0,y-r*0.12);g.lineTo(-r*0.45,y+r*0.22);g.closePath();g.fill();}}
+ else if(B==='plates'){g.fillStyle=dk;g.beginPath();g.ellipse(-r*0.3,0,r*0.5,r*0.72,0,0,TAU);g.fill();g.strokeStyle=lt;g.lineWidth=Math.max(0.7,r*0.09);g.beginPath();g.moveTo(-r*0.3,-r*0.62);g.lineTo(-r*0.3,r*0.62);g.stroke();}
+ else if(B==='antler'){g.strokeStyle=mc;g.lineWidth=Math.max(1,r*0.13);for(const s of[-1,1]){g.beginPath();g.moveTo(-r*0.15,s*r*0.3);g.quadraticCurveTo(-r*0.8,s*r*0.7,-r*0.6,s*r*1.15);g.moveTo(-r*0.55,s*r*0.6);g.lineTo(-r*0.98,s*r*0.72);g.stroke();}}
+ if(H&&H!=='none'){
+  g.fillStyle=mc;g.beginPath();g.moveTo(r*0.08,-r*0.82);g.quadraticCurveTo(r*1.18,-r*0.4,r*1.18,0);g.quadraticCurveTo(r*1.18,r*0.4,r*0.08,r*0.82);g.quadraticCurveTo(r*0.52,0,r*0.08,-r*0.82);g.closePath();g.fill();
+  g.strokeStyle=dk;g.lineWidth=Math.max(0.8,r*0.1);g.beginPath();g.moveTo(r*0.08,-r*0.82);g.quadraticCurveTo(r*1.18,-r*0.4,r*1.18,0);g.quadraticCurveTo(r*1.18,r*0.4,r*0.08,r*0.82);g.stroke();g.fillStyle=dk;g.beginPath();g.ellipse(r*0.62,0,r*0.13,r*0.32,0,0,TAU);g.fill();
+  g.fillStyle=lt;g.beginPath();g.arc(r*0.42,-r*0.4,r*0.14,0,TAU);g.fill();
+  if(H==='horned'){g.strokeStyle=lt;g.lineWidth=Math.max(1,r*0.15);for(const s of[-1,1]){g.beginPath();g.moveTo(r*0.1,s*r*0.5);g.quadraticCurveTo(r*0.7,s*r*0.85,r*0.5,s*r*1.15);g.stroke();}}
+  else if(H==='crown'){g.fillStyle=lt;for(let i=-1;i<=1;i++){const x=r*0.12+i*r*0.28;g.beginPath();g.moveTo(x-r*0.1,-r*0.5);g.lineTo(x,-r*1.02);g.lineTo(x+r*0.1,-r*0.5);g.closePath();g.fill();}}
+  else if(H==='crest'||H==='leaf'){g.fillStyle=lt;g.beginPath();g.moveTo(-r*0.05,-r*0.5);g.quadraticCurveTo(r*0.1,-r*1.15,r*0.35,-r*0.45);g.closePath();g.fill();}
+ }
+}
 function drawUnit(s,u,LOD){
  let baseCol=u.col;
- {if(s.col)baseCol=mixc(u.col,s.col,0.85); /* THE LIVERY LAW: every brood wears its QUEEN's colour - armies read at a glance */
-  const FL=s.team===0?FLEETS[META.eq.fleet]:null;
-  if(FL&&FL.body)baseCol=mixc(baseCol,FL.body,FL.mix||0.24);}
+ {if(s.col)baseCol=mixc(u.col,s.col,0.85);} /* THE LIVERY LAW: every brood wears its QUEEN's colour. Fleets add ARMOUR on top - they NEVER recolour the body */
  const well=clamp(u.hp/(u.maxHp||1),0,1); /* WELLNESS is worn, not barred: the hurt grey and dim */
  if(well<0.97)baseCol=sicken(baseCol,(1-well)*0.88); /* the hurt go DULL - that is the only health language */
  const col=u.flash>0?'#fff':(u.fat>0.6?shade(baseCol,-0.25):baseCol);
@@ -3154,11 +3169,7 @@ function drawUnit(s,u,LOD){
  }
  if(u.aura&&u.role!=='armourer'){ctx.globalAlpha=.5;ctx.strokeStyle='#c8853a';ctx.lineWidth=1.6;
   ctx.beginPath();ctx.arc(0,0,u.r+2.2,0,TAU);ctx.stroke();ctx.globalAlpha=1;} /* bronze-plated */
- if(s.team===0){const FL=FLEETS[META.eq.fleet]; /* ARMOUR FINISH: a lit body - a soft shade then a highlight glint, both kept inside the silhouette. never a ring */
-  if(FL){
-   if(FL.shade){ctx.fillStyle=FL.shade;ctx.beginPath();ctx.arc(u.r*0.33,u.r*0.35,u.r*0.52,0,TAU);ctx.fill();}
-   if(FL.spec){ctx.fillStyle=FL.spec;ctx.beginPath();ctx.arc(-u.r*0.3,-u.r*0.32,u.r*0.4,0,TAU);ctx.fill();}
-  }}
+ if(s.team===0){const FL=FLEETS[META.eq.fleet];if(FL)drawArmour(ctx,u.r,FL);} /* ARMOUR: additive clip-ons over the team-coloured body */
  ctx.restore();
 }
 function drawBar(x,y,w,frac,big){frac=clamp(frac,0,1);const h=big?6:4.5;
@@ -3993,7 +4004,7 @@ function draw(){
  }
  /* minimap */
  ctx.setTransform(1,0,0,1,0,0);
- const ms=(isTouch?74:126)*DPR,mx=12*DPR,my=H-ms-(isTouch?58:12)*DPR,sc=ms/WORLD.w;
+ const ms=(MOB?60:isTouch?74:126)*DPR,mx=10*DPR,my=H-ms-(MOB?10:isTouch?58:12)*DPR,sc=ms/WORLD.w;
  ctx.fillStyle='rgba(30,18,34,.74)';ctx.fillRect(mx,my,ms,ms);
  ctx.strokeStyle='rgba(255,207,94,.4)';ctx.lineWidth=1;ctx.strokeRect(mx,my,ms,ms);
  for(const b of boulders){ctx.fillStyle='rgba(160,140,180,.4)';ctx.fillRect(mx+b.x*sc-1,my+b.y*sc-1,2,2);}

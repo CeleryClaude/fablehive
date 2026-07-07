@@ -3000,26 +3000,28 @@ function drawQueen(s){
  ctx.restore();
  if(s.hp<s.maxHp)drawBar(s.x,s.y+base+14,46,s.hp/s.maxHp,false); /* a clean BAR - no rings, no colour riddles */
 }
-function drawArmour(g,u,FL,col){ /* ROLE-AWARE clip-ons over the team-coloured body. bug fleets grow the creature in YOUR colour; metal fleets in their own */
- const r=u.r;let mc,dk,lt;
- if(FL.bug){mc=shade(col,-0.16);dk=shade(col,-0.46);lt=shade(col,0.34);}else{mc=FL.metal;dk=FL.dark;lt=FL.lite;}
- g.lineJoin='round';g.lineCap='round';const lw=Math.max(0.7,r*0.1),M=FL.motif;
- function sig(x,y,s,ang){g.save();g.translate(x,y);g.rotate(ang);
-  if(M==='spike'){g.fillStyle=lt;g.beginPath();g.moveTo(-s*0.4,0);g.lineTo(0,-s*1.3);g.lineTo(s*0.4,0);g.closePath();g.fill();}
-  else if(M==='horn'){g.strokeStyle=lt;g.lineWidth=Math.max(1,s*0.32);g.beginPath();g.moveTo(0,0);g.quadraticCurveTo(s*0.35,-s*1.0,-s*0.15,-s*1.5);g.stroke();}
-  else if(M==='crown'){g.fillStyle=lt;g.beginPath();g.moveTo(-s*0.5,0);g.lineTo(-s*0.3,-s*0.95);g.lineTo(0,-s*0.4);g.lineTo(s*0.3,-s*0.95);g.lineTo(s*0.5,0);g.closePath();g.fill();}
-  else if(M==='plate'){g.fillStyle=lt;g.beginPath();g.ellipse(0,-s*0.25,s*0.5,s*0.34,0,0,TAU);g.fill();g.strokeStyle=dk;g.lineWidth=Math.max(0.5,s*0.13);g.beginPath();g.moveTo(-s*0.45,-s*0.25);g.lineTo(s*0.45,-s*0.25);g.stroke();}
-  else if(M==='mandible'){g.strokeStyle=lt;g.lineWidth=Math.max(1,s*0.3);g.beginPath();g.moveTo(0,-s*0.15);g.quadraticCurveTo(s*0.95,-s*0.45,s*0.7,-s*1.15);g.stroke();}
-  else if(M==='wing'){g.fillStyle=lt;g.beginPath();g.ellipse(0,-s*0.4,s*0.36,s*0.72,0.25,0,TAU);g.fill();g.strokeStyle=dk;g.lineWidth=lw*0.7;g.stroke();}
-  g.restore();}
- const R=u.role;
- if(R==='forager'){g.fillStyle=mc;g.beginPath();g.ellipse(-r*0.3,0,r*0.62,r*0.52,0,0,TAU);g.fill();g.strokeStyle=dk;g.lineWidth=lw;g.stroke();g.strokeStyle=lt;g.lineWidth=lw*0.7;g.beginPath();g.moveTo(-r*0.3,-r*0.5);g.lineTo(-r*0.3,r*0.5);g.stroke();sig(-r*0.3,-r*0.45,r*0.5,0);}
- else if(R==='soldier'){g.fillStyle=mc;g.beginPath();g.arc(r*0.15,0,r*0.66,-1.5,1.5);g.lineTo(-r*0.15,0);g.closePath();g.fill();g.strokeStyle=dk;g.lineWidth=lw;g.stroke();g.fillStyle=dk;g.beginPath();g.ellipse(r*0.42,0,r*0.09,r*0.34,0,0,TAU);g.fill();g.fillStyle=mc;g.beginPath();g.ellipse(-r*0.15,-r*0.72,r*0.26,r*0.16,0.3,0,TAU);g.fill();g.beginPath();g.ellipse(-r*0.15,r*0.72,r*0.26,r*0.16,-0.3,0,TAU);g.fill();sig(r*0.05,-r*0.62,r*0.72,0);}
- else if(R==='lancer'){g.fillStyle=mc;g.beginPath();g.moveTo(r*0.5,0);g.lineTo(r*1.3,-r*0.16);g.lineTo(r*1.3,r*0.16);g.closePath();g.fill();g.strokeStyle=dk;g.lineWidth=lw;g.stroke();g.strokeStyle=mc;g.lineWidth=lw*1.5;g.beginPath();g.moveTo(-r*0.3,-r*0.28);g.lineTo(-r*1.15,-r*0.72);g.moveTo(-r*0.3,r*0.28);g.lineTo(-r*1.15,r*0.72);g.stroke();sig(-r*0.75,-r*0.5,r*0.5,-0.7);}
- else if(R==='spitter'){g.fillStyle=mc;g.beginPath();g.arc(r*0.1,-r*0.12,r*0.6,-2.2,0.35);g.arc(r*0.1,-r*0.12,r*0.32,0.35,-2.2,true);g.closePath();g.fill();g.strokeStyle=dk;g.lineWidth=lw;g.stroke();g.strokeStyle=mc;g.lineWidth=lw*1.6;g.beginPath();g.moveTo(-r*0.3,r*0.1);g.lineTo(-r*0.95,r*0.4);g.moveTo(-r*0.45,r*0.35);g.lineTo(-r*1.05,r*0.6);g.stroke();sig(r*0.05,-r*0.55,r*0.5,0);}
- else if(R==='armourer'){g.fillStyle=mc;g.beginPath();g.ellipse(-r*0.05,0,r*0.85,r*0.7,0,0,TAU);g.fill();g.strokeStyle=dk;g.lineWidth=lw;g.stroke();g.beginPath();g.ellipse(-r*0.05,0,r*0.55,r*0.46,0,0,TAU);g.stroke();g.beginPath();g.ellipse(-r*0.05,0,r*0.28,r*0.24,0,0,TAU);g.stroke();g.fillStyle=dk;g.beginPath();g.rect(r*0.52,-r*0.38,r*0.2,r*0.76);g.fill();sig(-r*0.05,-r*0.74,r*0.7,0);sig(-r*0.05,r*0.02,r*0.55,Math.PI);}
- else if(R==='nurse'){g.fillStyle=mc;g.beginPath();g.arc(-r*0.1,0,r*0.68,-2.4,2.4);g.closePath();g.fill();g.strokeStyle=dk;g.lineWidth=lw;g.stroke();if(FL.bug){g.fillStyle=lt;g.beginPath();g.ellipse(r*0.12,0,r*0.16,r*0.3,0,0,TAU);g.fill();}else{g.strokeStyle=lt;g.lineWidth=lw*1.4;g.beginPath();g.moveTo(r*0.12,-r*0.24);g.lineTo(r*0.12,r*0.24);g.moveTo(-r*0.05,0);g.lineTo(r*0.3,0);g.stroke();}sig(-r*0.25,-r*0.52,r*0.45,0);}
- else if(R==='titan'){g.fillStyle=mc;g.beginPath();g.arc(r*0.1,0,r*0.5,-1.3,1.3);g.lineTo(-r*0.1,0);g.closePath();g.fill();g.strokeStyle=dk;g.lineWidth=lw;g.stroke();g.strokeStyle=lt;g.lineWidth=Math.max(1.5,r*0.13);for(const sg of[-1,1]){g.beginPath();g.moveTo(r*0.2,sg*r*0.4);g.quadraticCurveTo(r*0.95,sg*r*0.8,r*0.7,sg*r*1.28);g.stroke();}for(let i=0;i<3;i++)sig(-r*0.1-i*r*0.34,-r*0.05,r*0.72,-0.15*(i-1));}
+function drawArmour(g,u,FL,col){ /* FLAT, organic armour in the game's own language: clean tapered forms + colour-matched lines, no 3D. bug fleets grow the creature in YOUR colour */
+ const r=u.r,R=u.role,M=FL.motif;
+ let base,edge,hi;if(FL.bug){base=shade(col,0.14);edge=shade(col,-0.4);hi=shade(col,0.36);}else{base=FL.metal;edge=FL.dark;hi=FL.lite;}
+ g.lineJoin='round';g.lineCap='round';
+ const claw=(bx,by,ang,L,W,curl,fill)=>{g.save();g.translate(bx,by);g.rotate(ang);g.beginPath();g.moveTo(0,-W);g.quadraticCurveTo(L*0.5,-W*0.35-curl*L*0.45,L,-curl*L);g.quadraticCurveTo(L*0.5,W*0.35-curl*L*0.45,0,W);g.closePath();g.fillStyle=fill;g.fill();g.strokeStyle=edge;g.lineWidth=Math.max(0.5,W*0.45);g.stroke();g.restore();};
+ const shell=(cx,cy,SX,SY,ang,fill)=>{g.save();g.translate(cx,cy);g.rotate(ang);g.beginPath();g.moveTo(SX,0);g.quadraticCurveTo(SX*0.2,-SY,-SX*0.7,-SY*0.55);g.quadraticCurveTo(-SX*1.05,0,-SX*0.7,SY*0.55);g.quadraticCurveTo(SX*0.2,SY,SX,0);g.closePath();g.fillStyle=fill;g.fill();g.strokeStyle=edge;g.lineWidth=Math.max(0.6,r*0.06);g.stroke();g.restore();};
+ const ridge=(x,hh)=>{g.strokeStyle=edge;g.lineWidth=Math.max(1.1,r*0.14);g.beginPath();g.moveTo(x,-hh);g.lineTo(x,hh);g.stroke();};
+ const helmCap=()=>{g.fillStyle=base;g.beginPath();g.moveTo(r*0.62,-r*0.42);g.quadraticCurveTo(r*0.0,-r*0.62,-r*0.2,-r*0.2);g.lineTo(-r*0.2,r*0.2);g.quadraticCurveTo(r*0.0,r*0.62,r*0.62,r*0.42);g.quadraticCurveTo(r*0.4,0,r*0.62,-r*0.42);g.closePath();g.fill();g.strokeStyle=edge;g.lineWidth=Math.max(0.6,r*0.07);g.stroke();g.strokeStyle=hi;g.lineWidth=Math.max(0.5,r*0.05);g.beginPath();g.moveTo(r*0.5,-r*0.34);g.quadraticCurveTo(r*0.05,-r*0.5,-r*0.14,-r*0.16);g.stroke();};
+ const M1=(x,y,ang,sc)=>{
+  if(M==='spike')claw(x,y,ang,r*0.85*sc,r*0.15*sc,0.12,hi);
+  else if(M==='horn')claw(x,y,ang,r*1.05*sc,r*0.19*sc,0.52,base);
+  else if(M==='mandible')claw(x,y,ang,r*0.95*sc,r*0.2*sc,-0.5,base);
+  else if(M==='crown')claw(x,y,ang,r*0.7*sc,r*0.2*sc,0,hi);
+  else if(M==='wing')shell(x,y,r*0.5*sc,r*0.4*sc,ang,base);
+  else if(M==='plate')ridge(x,r*0.44*sc);};
+ if(R==='forager'){if(M==='plate'){ridge(-r*0.1,r*0.45);ridge(-r*0.5,r*0.4);}else{M1(-r*0.55,-r*0.2,-2.5,0.7);M1(-r*0.55,r*0.2,2.5,0.7);}}
+ else if(R==='soldier'){if(!FL.bug)helmCap();if(M==='plate'){ridge(-r*0.1,r*0.4);ridge(-r*0.5,r*0.34);}else{M1(r*0.05,-r*0.35,-1.9,1.0);if(M!=='mandible')M1(r*0.05,r*0.35,1.9,1.0);}M1(-r*0.4,-r*0.5,-2.6,0.6);M1(-r*0.4,r*0.5,2.6,0.6);}
+ else if(R==='lancer'){M1(-r*0.1,-r*0.28,-2.75,0.85);M1(-r*0.1,r*0.28,2.75,0.85);M1(-r*0.55,-r*0.16,-2.85,0.6);M1(-r*0.55,r*0.16,2.85,0.6);if(M==='mandible'||M==='horn'){M1(r*0.55,-r*0.12,-0.15,0.7);M1(r*0.55,r*0.12,0.15,0.7);}}
+ else if(R==='spitter'){M1(-r*0.15,-r*0.25,-2.6,0.8);M1(-r*0.5,-r*0.1,-2.8,0.6);if(M==='plate')ridge(-r*0.2,r*0.4);}
+ else if(R==='armourer'){ridge(r*0.35,r*0.6);ridge(-r*0.05,r*0.72);ridge(-r*0.45,r*0.6);M1(-r*0.05,-r*0.72,-1.6,1.1);M1(-r*0.5,-r*0.4,-2.3,0.8);M1(-r*0.5,r*0.4,2.3,0.8);}
+ else if(R==='nurse'){M1(-r*0.3,-r*0.35,-2.4,0.6);if(FL.bug){g.fillStyle=hi;g.beginPath();g.ellipse(r*0.1,0,r*0.13,r*0.24,0,0,TAU);g.fill();}}
+ else if(R==='titan'){M1(r*0.35,-r*0.35,-0.5,1.5);M1(r*0.35,r*0.35,0.5,1.5);for(let i=0;i<4;i++){const x=-r*0.05-i*r*0.28;if(M==='plate')ridge(x,r*0.55);else M1(x,-r*0.02,-1.6-0.12*(i-1.5),0.85-i*0.08);}}
 }
 function drawUnitLocal(g,s,u,a,vm,col,fleetId){ /* the unit's LOCAL-frame art (shapes + armour). shared by the battlefield AND the wardrobe mirror so they always match */
  if(u.shape==='dot'){

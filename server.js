@@ -27,6 +27,7 @@ function start(port,htmlPath){
  let G=makeGame(HTML);
  const SEATS=[0,1,2,3,4,5];
  const seats={};
+ let lastEmpty=Date.now();
  /* THE WILD & THE FRESH MEADOW: unoccupied seats play as the wild (bots); an EMPTY room IDLES
     instead of grinding a bot war for nobody; and the first arrival into an empty room begins in a
     FRESH, light meadow rather than an hours-old, overgrown one no 60Hz tick can hold. */
@@ -37,7 +38,7 @@ function start(port,htmlPath){
  const httpSrv=http.createServer((req,res)=>{
   const u=(req.url||'/').split('?')[0];
   if(u==='/'||u==='/index.html'||u==='/BROOD.html'){
-   res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-cache'});
+   res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});
    res.end(fs.readFileSync(HTML));
   } else if(u==='/healthz'){ /* TELEMETRY: lag is measured here, never guessed again */
    const h=TICKS.hist.slice().sort((a,b)=>a-b);
@@ -58,14 +59,14 @@ function start(port,htmlPath){
     for(const t of SEATS)if(seats[t]===undefined){team=t;break;}
     if(team===null){ws.send(JSON.stringify({k:'full'}));ws.close();return;}
     seats[team]=ws;
-    if(wasEmpty)freshWorld(); /* a lone arrival into an empty room begins in a clean, light meadow */
+    if(wasEmpty&&Date.now()-lastEmpty>15000)freshWorld(); /* only reset a LONG-empty room, so devices/friends joining close together SHARE the world */ /* a lone arrival into an empty room begins in a clean, light meadow */
     const s=G.swarms.find(z=>z.team===team&&!z.ally);
     if(s){s.bot=false;s.name=(''+(m.n||'Queen')).slice(0,16).replace(/[<>&"']/g,'');delete s.forceAim;}
     ws.send(JSON.stringify({k:'init',you:team,world:G.netWorldInit()}));
    } else if(m.k==='cmd'&&team!==null){try{G.applyInput(team,m.c||{});}catch(e){}}
    else if(m.k==='p'){try{ws.send(JSON.stringify({k:'p',t:m.t}));}catch(e){}}
   });
-  ws.on('close',()=>{if(team!==null){delete seats[team];
+  ws.on('close',()=>{if(team!==null){delete seats[team];if(!Object.keys(seats).length)lastEmpty=Date.now();
    const s=G.swarms.find(z=>z.team===team&&!z.ally);
    if(s){s.bot=true;delete s.forceAim;}}});
  });

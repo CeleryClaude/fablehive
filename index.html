@@ -884,6 +884,15 @@ function makeWorld(){
  pollen=[];for(let i=0;i<80;i++)pollen.push({x:rand(0,WORLD.w),y:rand(0,WORLD.h),vx:rand(-7,7),vy:rand(-5,9),ph:rand(0,TAU),r:rand(0.8,1.8)});
  flies=[];for(let i=0;i<60;i++)flies.push({x:rand(0,WORLD.w),y:rand(0,WORLD.h),ph:rand(0,TAU),r:rand(1,2.2)});
 }
+function sweepBoulders(ox,oy,nx,ny,rad){ /* CONTINUOUS collision: a fast move or a reconcile-SNAP can never tunnel a stone */
+ const dx=nx-ox,dy=ny-oy,a=dx*dx+dy*dy;if(a<0.0001)return[nx,ny];
+ let bestT=1;
+ for(const b of boulders){const RR=b.r+rad,fx=ox-b.x,fy=oy-b.y,c=fx*fx+fy*fy-RR*RR;
+  if(c<0)continue; /* started inside - the overlap resolver handles it */
+  const bq=2*(fx*dx+fy*dy),disc=bq*bq-4*a*c;if(disc<0)continue;
+  const t=(-bq-Math.sqrt(disc))/(2*a);if(t>=0&&t<bestT)bestT=t;}
+ if(bestT<1){const t=Math.max(0,bestT-0.002);return[ox+dx*t,oy+dy*t];}
+ return[nx,ny];}
 function collideBoulders(o,rad){
  /* resolve ONLY the deepest overlap per frame: in a seam of two rocks this slides you out
     along the compound wall instead of ping-ponging you into a stone tomb */
@@ -4173,7 +4182,7 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
     mirror. If troops still stutter/hitch after this ships, that's the signal this needs to go back UP, not
     down further. */
  const nowR=(typeof performance!=='undefined'?performance.now():Date.now()),
-  interpDelay=Math.min(125,Math.max(80,60+(NET.rtt||0)*0.3)),rT=nowR-interpDelay;
+  interpDelay=Math.min(100,Math.max(48,40+(NET.rtt||0)*0.26)),rT=nowR-interpDelay;
  let FA=null,FB=null;
  for(let i=NET.buf.length-1;i>=0;i--){if(NET.buf[i].rt<=rT){FA=NET.buf[i];FB=NET.buf[i+1]||NET.buf[i];break;}}
  if(!FA&&NET.buf.length){FA=FB=NET.buf[0];}
@@ -4181,6 +4190,7 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
  for(const s2 of swarms){if(s2.dead)continue;
   const wA=FA&&FA.m.get(s2.nid),wB=FB&&FB.m.get(s2.nid);
   if(s2===MP&&!s2.ally){ /* CLIENT PREDICTION: she answers your hand NOW; the wire corrects gently */
+   const ox0=s2.x,oy0=s2.y; /* pre-frame anchor for swept collision */
    let dx=0,dy=0,drv=false;const kv=keyVec();
    if(kv.on){dx=kv.x;dy=kv.y;drv=true;}
    else if(input.joy){const m2=Math.hypot(input.joy.dx,input.joy.dy);if(m2>10){dx=input.joy.dx;dy=input.joy.dy;drv=true;}}
@@ -4194,6 +4204,7 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
    const allow=Math.min(150,s2.spdNow*((NET.rtt||120)/1000+0.06)+14); /* honest drift for YOUR ping: never punished */
    if(er9>420){s2.x=s2.tx;s2.y=s2.ty;} /* far past truth: come home */
    else if(er9>allow){const pull=Math.min(1,1.8*dt)*(er9-allow)/er9;s2.x+=ex*pull;s2.y+=ey*pull;} /* only the EXCESS is corrected */
+   {const swp=sweepBoulders(ox0,oy0,s2.x,s2.y,Math.max(12+queenStage(s2)*3.5,s2.R*0.26));s2.x=swp[0];s2.y=swp[1];} /* SWEPT: a snap can never tunnel a boulder now */
    collideBoulders(s2,Math.max(12+queenStage(s2)*3.5,s2.R*0.26)); /* THE STONE VETO: the drift-tolerance pull above answers to your PING, never to solid rock - re-resolve once more, last word, every frame, so "honest drift" can never settle you on/inside a boulder. Verified safe (idempotent when clear) via boulder_rest_test.js; could not conclusively reproduce the reported fly-through/rest-on-top in a same-process sandbox (no real jitter/packet-loss to test against - see mirror_test.js's own caveat), so this ships as a hardening, not a confirmed fix */
    s2.spdNow=Math.hypot(s2.vx,s2.vy);
   } else if(wA&&wB&&!wA.d&&!wB.d){ /* pure interpolation - no guessing, no snapping, ever */
@@ -4284,7 +4295,7 @@ window.__G={netSnapshot,netWorldInit,netDyn,netDynLite,applyInput,NET,netApplyWo
  get ways(){return ways;},get drops(){return drops;},get elder(){return elder;},get tnow(){return tnow;},get shots(){return shots;},get goldT(){return goldT;},set goldT(v){goldT=v;},get FAIRY(){return FAIRY;},get dews(){return dews;},get comboN(){return comboN;},get spider(){return spider;},get webshots(){return webshots;},killSpider,get grottos(){return grottos;},get wasps(){return wasps;},get fieldMaws(){return fieldMaws;},get eyes(){return eyes;},get orbs(){return orbs;},get OASIS(){return OASIS;},realmOf,get ambient(){return ambient;},BOTS,get decor(){return decor;},get thorns(){return thorns;},honeyCap,
  get unlocked(){return unlocked;},get evoPending(){return evoPending;},get META(){return META;},
  ROLES,EVOS,SPLIT_MAX,setup,step,addUnit,buy,splitSwarm,recallAll,teamSize,teamSwarms,mainOf,queenSpd,count,
- killUnit,killQueen,chooseEvo,checkEvo,calcR,reviveSwarm,ITEMS,buyItem,equipItem,ownsItem,gainXP,grantRoyal(){META.royal=true;metaSave();},grantSub(){META.sub=true;metaSave();},revokeSub(){META.sub=false;metaSave();},
+ killUnit,killQueen,chooseEvo,checkEvo,calcR,sweepBoulders,reviveSwarm,ITEMS,buyItem,equipItem,ownsItem,gainXP,grantRoyal(){META.royal=true;metaSave();},grantSub(){META.sub=true;metaSave();},revokeSub(){META.sub=false;metaSave();},
  possess(s){s.bot=false;s.forceAim={x:s.x,y:s.y,drive:false};},
  drive(s,x,y,dr){s.forceAim={x,y,drive:dr!==false};},
  free(s){delete s.forceAim;},

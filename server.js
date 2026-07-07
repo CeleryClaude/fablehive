@@ -86,7 +86,7 @@ function start(port,htmlPath){
  let fN=0;
  const netI=setInterval(()=>{ if(Object.keys(seats).length===0)return; /* 20Hz heartbeat: souls every beat, the slow world every third */
   let f;try{f=JSON.stringify({k:'f',...((fN++%3===0)?G.netDyn():G.netDynLite())});}catch(e){return;}
-  for(const t in seats){try{seats[t].send(f);}catch(e){}}},50);
+  for(const t in seats){try{seats[t].send(f);}catch(e){}}},33);
  httpSrv.listen(port,()=>console.log('FABLEHIVE room + page on :'+port));
  return {close(){clearInterval(simI);clearInterval(netI);try{wss.close();}catch(e){}try{httpSrv.close();}catch(e){}},get G(){return G;},seats};
 }

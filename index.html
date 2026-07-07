@@ -4167,6 +4167,7 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
    const allow=Math.min(150,s2.spdNow*((NET.rtt||120)/1000+0.06)+14); /* honest drift for YOUR ping: never punished */
    if(er9>420){s2.x=s2.tx;s2.y=s2.ty;} /* far past truth: come home */
    else if(er9>allow){const pull=Math.min(1,1.8*dt)*(er9-allow)/er9;s2.x+=ex*pull;s2.y+=ey*pull;} /* only the EXCESS is corrected */
+   collideBoulders(s2,Math.max(12+queenStage(s2)*3.5,s2.R*0.26)); /* THE STONE VETO: the drift-tolerance pull above answers to your PING, never to solid rock - re-resolve once more, last word, every frame, so "honest drift" can never settle you on/inside a boulder. Verified safe (idempotent when clear) via boulder_rest_test.js; could not conclusively reproduce the reported fly-through/rest-on-top in a same-process sandbox (no real jitter/packet-loss to test against - see mirror_test.js's own caveat), so this ships as a hardening, not a confirmed fix */
    s2.spdNow=Math.hypot(s2.vx,s2.vy);
   } else if(wA&&wB&&!wA.d&&!wB.d){ /* pure interpolation - no guessing, no snapping, ever */
    const nx=wA.x+(wB.x-wA.x)*al,ny=wA.y+(wB.y-wA.y)*al;

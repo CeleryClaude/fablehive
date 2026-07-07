@@ -545,7 +545,7 @@ function mergeInto(main,a){
 
 /* ============ world ============ */
 let moths=[],moss=[],pollen=[],starT=30,star=null,dews=[],comboN=0,comboT=0,comboBest=0,gnats=[],wasps=[],waspT=30,grottos=[],geodeIn=null,geodeA=0,fieldMaws=[],eyes=[],eyeT=75,OASIS=null,orbs=[],orbT=6,puffDecor=[],tumbleDecor=[]; /* puffDecor/tumbleDecor: pure client-side ambiance, see clientDecorTick */
-const FLOWER_T={sprout:28,bloom:30,grand:10,rock:24,bell:8,spray:8,night:4,comb:8}; /* fewer specks, more LARGE flora - and the maws own the bite. puff/tumble moved to client-side ambiance (clientDecorTick), no longer part of the grove economy */
+const FLOWER_T={sprout:28,bloom:30,grand:10,rock:24,bell:8,night:4,comb:8}; /* fewer specks, more LARGE flora - and the maws own the bite. puff/tumble moved to client-side ambiance (clientDecorTick), no longer part of the grove economy */
 let FAIRY={next:1,rings:{}}; /* fairy ring registry: clear all six in time -> jackpot */
 const POPPABLE={sprout:1,bloom:1,grand:1,rock:1,bell:1,snap:1,fairy:1,night:1};
 function flowerSpot(edgeBias){
@@ -727,7 +727,7 @@ function makeWorld(){
  for(let g=0;g<7;g++)spawnFlower('grand',true);
  for(let g=0;g<24;g++)spawnFlower('rock',true);
  for(let g=0;g<6;g++)spawnFlower('bell',true);
- for(let g=0;g<8;g++)spawnFlower('spray',true);
+ for(let g=0;g<8;g++)spawnFlower('grand',true); /* SPRAYBLOOM retired: those 8 walk-over flowers are now rich forager-worked GRAND blooms */
  /* puff/tumble no longer seeded server-side - client-side ambiance instead */
  for(let g=0;g<4;g++)spawnFlower('night',true);
  FAIRY={next:1,rings:{}};
@@ -923,7 +923,7 @@ function setup(){
   if(elder&&d2(px,py,elder.hx,elder.hy)<1600*1600)continue;
   if(spider&&d2(px,py,spider.hx,spider.hy)<1600*1600)continue;
   break;}
- const m=newSwarm(0,px,py,{bot:false,ally:false,name:'You',col:SKINS[META.skin].c,honey:300});
+ const m=newSwarm(0,px,py,{bot:false,ally:false,name:(META.name||'You'),col:SKINS[META.skin].c,honey:300});
  for(let i=0;i<2;i++)addUnit(m,'forager'); /* a reservoir, not an army — the opening is YOURS */
  calcR(m);swarms.push(m);
  /* spawn safety: near a grove */
@@ -1285,7 +1285,7 @@ function step(dt){
      if(u.node){const dn=Math.hypot(u.x-u.node.x,u.y-u.node.y);
       u.gT=(u.gT||0)+dt;
       if(u.gT>6){u.badN=u.node;u.node=null;u.gT=0;gx=s.x;gy=s.y;fast=true;} /* six seconds without a sip: the flower is walled off — release the obsession, come home */
-      else if(dn<16){u.gT=0;u.badN=null;const take=Math.min(u.node.amt,Math.max(0,honeyCap(s)-s.honey),(teamSize(s.team)<8?14:10)*dt);
+      else if(dn<16){u.gT=0;u.badN=null;const take=Math.min(u.node.amt,Math.max(0,honeyCap(s)-s.honey),(teamSize(s.team)<8?16:12)*dt);
        u.node.amt-=take;s.honey+=take; /* the hive-mind purse: no trips, no barging - the belly swells where she stands */
        if(s.team===0&&take>0){gainXP(take*0.1);
         if(grottoOf(u.x,u.y)){s.grottoHoney=(s.grottoHoney||0)+take;
@@ -4042,7 +4042,7 @@ function hud(){
   rank.push({name:main2?main2.name:s.name,col:(main2||s).col,n:teamSize(s.team),meF:s.team===0});}
  rank.sort((a,b)=>b.n-a.n);
  lbEl.innerHTML='<b style="opacity:.6;font-size:11px">BROODS · souls</b><br>'+rank.map((r,i)=>
-  '<span class="'+(r.meF?'me':'')+'"><span style="color:'+r.col+'">●</span> '+(r.meF?'YOU':r.name)+' — '+r.n+'</span>').join('<br>');
+  '<span class="'+(r.meF?'me':'')+'"><span style="color:'+r.col+'">●</span> '+r.name+' — '+r.n+'</span>').join('<br>');
  if(toastT>0){toastT-=1/60;if(toastT<=0)toastEl.style.opacity='0';}
  warnEl.style.opacity=warnT>0?'0.9':'0';
  barT-=1/60;if(barT<=0){barT=0.5;renderBar();}

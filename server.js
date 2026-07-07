@@ -24,10 +24,16 @@ function makeGame(htmlPath){
 function start(port,htmlPath){
  const {WebSocketServer}=require('ws');
  const HTML=htmlPath||path.join(__dirname,fs.existsSync(path.join(__dirname,'index.html'))?'index.html':'BROOD.html');
- const G=makeGame(HTML);
- {const s0=G.swarms.find(z=>z.team===0&&!z.ally);if(s0){s0.bot=true;s0.name='Wilder';}}
+ let G=makeGame(HTML);
  const SEATS=[0,1,2,3,4,5];
  const seats={};
+ /* THE WILD & THE FRESH MEADOW: unoccupied seats play as the wild (bots); an EMPTY room IDLES
+    instead of grinding a bot war for nobody; and the first arrival into an empty room begins in a
+    FRESH, light meadow rather than an hours-old, overgrown one no 60Hz tick can hold. */
+ function applyWild(){for(const t of SEATS){const sw=G.swarms.find(z=>z.team===t&&!z.ally);
+  if(sw){if(seats[t]!==undefined){sw.bot=false;}else{sw.bot=true;delete sw.forceAim;if(t===0)sw.name='Wilder';}}}}
+ function freshWorld(){G=makeGame(HTML);applyWild();}
+ applyWild();
  const httpSrv=http.createServer((req,res)=>{
   const u=(req.url||'/').split('?')[0];
   if(u==='/'||u==='/index.html'||u==='/BROOD.html'){
@@ -48,9 +54,11 @@ function start(port,htmlPath){
   let team=null;
   ws.on('message',buf=>{let m;try{m=JSON.parse(buf);}catch(e){return;}
    if(m.k==='join'&&team===null){
+    const wasEmpty=Object.keys(seats).length===0;
     for(const t of SEATS)if(seats[t]===undefined){team=t;break;}
     if(team===null){ws.send(JSON.stringify({k:'full'}));ws.close();return;}
     seats[team]=ws;
+    if(wasEmpty)freshWorld(); /* a lone arrival into an empty room begins in a clean, light meadow */
     const s=G.swarms.find(z=>z.team===team&&!z.ally);
     if(s){s.bot=false;s.name=(''+(m.n||'Queen')).slice(0,16).replace(/[<>&"']/g,'');delete s.forceAim;}
     ws.send(JSON.stringify({k:'init',you:team,world:G.netWorldInit()}));
@@ -63,7 +71,9 @@ function start(port,htmlPath){
  });
  const BOOT=Date.now(),TICKS={n:0,sum:0,hist:[]};
  const DT=1/60;let acc=0,last=Date.now();
- const simI=setInterval(()=>{const now=Date.now();acc+=(now-last)/1000;last=now;
+ const simI=setInterval(()=>{const now=Date.now();
+  if(Object.keys(seats).length===0){last=now;acc=0;return;} /* IDLE when the room is empty: no humans, no grind - the meadow simply waits */
+  acc+=(now-last)/1000;last=now;
   if(acc>0.25)acc=0.25;let n=0;
   /* TRUE PER-STEP TIMING: a catch-up burst of 5 steps must never be counted as one slow tick */
   while(acc>=DT&&n<5){
@@ -73,11 +83,11 @@ function start(port,htmlPath){
    TICKS.n++;TICKS.sum+=el;TICKS.hist.push(el);if(TICKS.hist.length>300)TICKS.hist.shift();
    acc-=DT;n++;}},8);
  let fN=0;
- const netI=setInterval(()=>{ /* 20Hz heartbeat: souls every beat, the slow world every third */
+ const netI=setInterval(()=>{ if(Object.keys(seats).length===0)return; /* 20Hz heartbeat: souls every beat, the slow world every third */
   let f;try{f=JSON.stringify({k:'f',...((fN++%3===0)?G.netDyn():G.netDynLite())});}catch(e){return;}
   for(const t in seats){try{seats[t].send(f);}catch(e){}}},50);
  httpSrv.listen(port,()=>console.log('FABLEHIVE room + page on :'+port));
- return {close(){clearInterval(simI);clearInterval(netI);try{wss.close();}catch(e){}try{httpSrv.close();}catch(e){}},G,seats};
+ return {close(){clearInterval(simI);clearInterval(netI);try{wss.close();}catch(e){}try{httpSrv.close();}catch(e){}},get G(){return G;},seats};
 }
 if(require.main===module)start(process.env.PORT||8081);
 module.exports={start,makeGame};

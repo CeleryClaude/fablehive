@@ -77,6 +77,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#241426;font-family:
  <h1>FABLEHIVE</h1>
  <p style="margin-top:-6px;opacity:.55;font-size:13px;letter-spacing:3px">a fable of the honey dusk</p>
  <p style="font-size:16px;max-width:420px">Fly your queen. Your brood does the rest.<br><b style="color:#ffd75e">Grow huge — then SPLIT to fly fast again.</b></p>
+ <input id="nameIn" maxlength="16" placeholder="your name" autocomplete="off" style="display:block;margin:6px auto 10px;padding:9px 14px;width:200px;max-width:70vw;text-align:center;font-size:15px;border-radius:12px;border:1.5px solid #ffd75e88;background:rgba(30,16,30,.85);color:#fff2dc;outline:none">
  <button class="btn" id="go">RISE</button>
  <button class="btn2" id="nestBtn">THE NEST · customise</button>
  <p style="font-size:12px;opacity:.5;margin-top:10px">move: WASD / drag &nbsp;·&nbsp; everything else you'll learn as you fly</p>
@@ -94,7 +95,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#241426;font-family:
   <div style="opacity:.85;margin:6px 0">wear <b>EVERYTHING</b><br>every treasure<br>every fleet<br>every future season</div>
   <div style="font-size:17px;color:#ffd75e;font-weight:bold">$5<span style="font-size:11px">/mo</span></div>
   <button class="btn2" id="subBtn" style="margin-top:8px;border-color:#ffd75e;width:100%">SUBSCRIBE</button>
-  <div style="opacity:.5;font-size:10px;margin-top:6px">everything stays earnable free — the sub is the carriage, not the road</div>
+  <div style="opacity:.5;font-size:10px;margin-top:6px">all of it stays earnable, free</div>
  </div>
  <h1 style="font-size:34px">THE NEST</h1>
  <canvas id="qprev" width="230" height="120"></canvas>
@@ -238,7 +239,8 @@ const SOUL_CAP=150; /* THE MUSTER LIMIT: comfortably past every unlock (titans n
 let META={xp:0,skin:0,nectar:0,royal:false,sub:false,seasonXp:0,claimedF:[],claimedR:[],owned:{},eq:{pattern:'plain',crown:'none',trail:'none',wings:'standard',body:'sleek',tail:'notail',fleet:'plainfleet',aura:'noaura'}};
 try{const m=(typeof localStorage!=='undefined')&&localStorage.getItem('brood_meta');if(m){const p=JSON.parse(m);META=Object.assign(META,p);META.owned=p.owned||{};META.eq=Object.assign({pattern:'plain',crown:'none',trail:'none',wings:'standard',body:'sleek',tail:'notail',fleet:'plainfleet',aura:'noaura'},p.eq||{});META.claimedF=p.claimedF||[];META.claimedR=p.claimedR||[];}}catch(e){}
 function metaSave(){try{if(typeof localStorage!=='undefined')localStorage.setItem('brood_meta',JSON.stringify(META));}catch(e){}}
-function gainXP(n2){META.xp+=n2;}
+const XP_RATE=0.6; /* slow the climb: quick first joys, a real road to royalty (single knob, tune me) */
+function gainXP(n2){META.xp+=n2*XP_RATE;}
 function trophy(id,msg){ /* achievements should FEEL like achievements */
  if(META.owned[id])return;
  META.owned[id]=true;metaSave();
@@ -2343,8 +2345,7 @@ function showOver(){
  const M4=me();
  document.getElementById('overTxt').innerHTML=
   'Brood peak <b>'+peak+'</b> · honey kept <b>'+Math.floor(M4.honey)+'</b><br>'
-  +'<span style="font-size:13px;opacity:.85">run ✨ bonus <b style="color:#ffd75e">+'+(M4._xpBonus||0)+'</b> (peak × 1.5 — the great runs pay) · nest ✨ <b>'+Math.floor(META.xp)+'</b></span><br>'
-  +'<span style="font-size:12px;opacity:.6">the bar only rises — every ✨ walks you toward the next unlock</span>';
+  +'<span style="font-size:13px;opacity:.85">run bonus <b style="color:#ffd75e">+'+(M4._xpBonus||0)+'✨</b> · nest <b>'+Math.floor(META.xp)+'✨</b></span>';
  document.getElementById('over').style.display='flex';
  metaSave();
 }
@@ -2420,7 +2421,7 @@ function showHome(){
  const upcoming=ITEMS.filter(it=>it.xp>0&&!earnOnly(it)&&META.xp<it.xp).sort((a,b)=>a.xp-b.xp)[0];
  const prevXp=upcoming?(ITEMS.filter(it=>it.xp>0&&it.xp<=META.xp).map(it=>it.xp).sort((a,b)=>b-a)[0]||0):0;
  fill.style.width=upcoming?Math.round(100*(META.xp-prevXp)/Math.max(1,upcoming.xp-prevXp))+'%':'100%';
- nx.textContent=upcoming?('NEXT UNLOCK: '+upcoming.n+' — '+Math.ceil(upcoming.xp-META.xp)+'✨ to go'):'the whole wardrobe is yours';
+ nx.textContent=upcoming?('NEXT: '+upcoming.n+' · '+Math.ceil(upcoming.xp-META.xp)+'✨'):'the whole wardrobe is yours';
  /* tabs */
  const sr=document.getElementById('sizeRow');
  if(sr&&sr.children)for(let i=0;i<sr.children.length;i++){const b=sr.children[i];
@@ -2500,13 +2501,20 @@ document.getElementById('backBtn').onclick=()=>{document.getElementById('home').
    running=false;metaSave();
    nestFrom='retired';showHome();});
  }}
+let WS_URL=null;
 {try{if(typeof location!=='undefined'){const P9=new URLSearchParams(location.search||'');
  let u9=P9.get('ws');
  if(!u9&&/^https?:$/.test(location.protocol)&&!P9.get('solo')) /* served from a room? then the room IS home */
   u9=(location.protocol==='https:'?'wss://':'ws://')+location.host;
- if(u9)setTimeout(()=>NET.connect(u9,P9.get('name')||'Queen'),400);}}catch(e){}}
-document.getElementById('go').onclick=()=>{document.getElementById('start').style.display='none';
+ WS_URL=u9||null; /* connect on RISE with the chosen name, not silently on load */
+ {const ni=document.getElementById('nameIn');if(ni){try{ni.value=(META.name||P9.get('name')||'').slice(0,16);}catch(e){}}}
+}}catch(e){}}
+document.getElementById('go').onclick=()=>{
+ const nm=((document.getElementById('nameIn')||{}).value||'').trim().slice(0,16)||'Queen';
+ try{META.name=nm;metaSave();}catch(e){}
+ document.getElementById('start').style.display='none';
  barEl.style.display='flex';document.getElementById('gear').style.display='block';resumeAudio();setup();renderBar();running=true;
+ if(WS_URL&&!NET.on)NET.connect(WS_URL,nm);
  document.getElementById('hint').innerHTML=isTouch?'drag to fly · tap your queen to recall · buttons below':'WASD / arrows / hold mouse · 1–6 spawn · Q split · E recall · M mute';};
 
 /* ============ render: honey dusk, cute with teeth ============ */

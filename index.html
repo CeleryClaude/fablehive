@@ -299,7 +299,7 @@ const ITEMS=[
  {id:'broodcrown',cat:'crown', n:'Brood Crown', xp:-1,  d:'slay the Broodmother — six eyes keep watch from your brow'},
  {id:'waspband', cat:'crown',  n:'Waspbane Band',xp:-1, d:'break nine wasps in one life — wear their warning stripes'},
  {id:'broodsigil',cat:'pattern',n:'Her Sigil',  xp:-1,  d:'slay the Broodmother — the hourglass, worn in defiance'},
- {id:'noctis',   cat:'pattern',n:'Noctis',      xp:-1,  d:'drain a nightbloom under the gold — wear the night itself'},
+ {id:'noctis',   cat:'pattern',n:'Noctis',      xp:2400, d:'the night itself, worn - deep indigo dusted with cold stars'},
  {id:'silkstrand',cat:'trail', n:'Silkstrand',  xp:-1,  d:'slay the Broodmother — silk follows you like memory'},
  {id:'notrail',  cat:'trail',  n:'Still Air',   xp:0,   d:'you pass unseen'},
  {id:'breeze',   cat:'trail',  n:'Breeze',      xp:130, d:'the faintest stir'},
@@ -545,9 +545,9 @@ function mergeInto(main,a){
 
 /* ============ world ============ */
 let moths=[],moss=[],pollen=[],starT=30,star=null,dews=[],comboN=0,comboT=0,comboBest=0,gnats=[],wasps=[],waspT=30,grottos=[],geodeIn=null,geodeA=0,fieldMaws=[],eyes=[],eyeT=75,OASIS=null,orbs=[],orbT=6,puffDecor=[],tumbleDecor=[]; /* puffDecor/tumbleDecor: pure client-side ambiance, see clientDecorTick */
-const FLOWER_T={sprout:28,bloom:30,grand:10,rock:24,bell:8,night:4,comb:8}; /* fewer specks, more LARGE flora - and the maws own the bite. puff/tumble moved to client-side ambiance (clientDecorTick), no longer part of the grove economy */
+const FLOWER_T={sprout:28,bloom:32,grand:10,rock:24,bell:8,comb:8}; /* fewer specks, more LARGE flora - and the maws own the bite. puff/tumble moved to client-side ambiance (clientDecorTick), no longer part of the grove economy */
 let FAIRY={next:1,rings:{}}; /* fairy ring registry: clear all six in time -> jackpot */
-const POPPABLE={sprout:1,bloom:1,grand:1,rock:1,bell:1,snap:1,fairy:1,night:1};
+const POPPABLE={sprout:1,bloom:1,grand:1,rock:1,bell:1,snap:1,fairy:1};
 function flowerSpot(edgeBias){
  for(let t=0;t<60;t++){
   let x,y;
@@ -739,7 +739,7 @@ function makeWorld(){
  for(let g=0;g<6;g++)spawnFlower('bell',true);
  for(let g=0;g<8;g++)spawnFlower('grand',true); /* SPRAYBLOOM retired: those 8 walk-over flowers are now rich forager-worked GRAND blooms */
  /* puff/tumble no longer seeded server-side - client-side ambiance instead */
- for(let g=0;g<4;g++)spawnFlower('night',true);
+ /* nightblooms removed - the 5-10s unfurl wait was more chore than charm */
  FAIRY={next:1,rings:{}};
  /* two GILDED BLOOMS: rare, radiant, worth a pilgrimage — and a fight */
  for(let g=0;g<2;g++){
@@ -1038,8 +1038,6 @@ function step(dt){
    if(!nudged.cap&&M3.units.length>=SOUL_CAP){nudged.cap=true;toast('YOUR BROOD IS AT ITS MUSTER LIMIT — SPLIT (Q) to keep growing as more queens, not one overloaded swarm.','#ffd75e',6);}
    if(!nudged.war&&M3.war){nudged.war=true;toast('WAR! Your fighters hold a front line. Keep your queen BEHIND it.','#ff9a6a',5);}
    if(!nudged.eldr&&elder&&d2(M3.x,M3.y,elder.x,elder.y)<1000*1000){nudged.eldr=true;toast('THE ELDER - the horned tyrant of the far meadow. FELL IT and its crown is yours forever.','#ffb04d',6);}
-   if(!nudged.nb&&goldT<0){for(const g9 of groves){if(g9.kind==='night'&&g9.closed&&d2(g9.x,g9.y,M3.x,M3.y)<300*300){nudged.nb=true;
-    toast('A NIGHTBLOOM stirs - stay CLOSE and it will unfurl for you.','#c9a6ff',6);break;}}}
    {const rl=realmOf(M3.x,M3.y); /* the realm HERALDS itself, once, softly */
     if(rl!=='mid'&&!herald[rl]){herald[rl]=true;
      const RN={south:['THE GOLDEN VALE','#ffd75e'],dark:['THE UMBRAL REACH','#8a7ae0'],bad:['THE SHATTERED SHELF','#c8574a'],oasis:['THE OASIS','#7fe0c8']}[rl];
@@ -4129,7 +4127,11 @@ function netApplyFrame(F){ /* the LIVING world flows in - stamped by OUR clock, 
  {const fm=new Map();
   for(const w9 of F.sw){fm.set(w9.id,w9);
    if(w9.u){w9.um=new Map();for(const t9 of w9.u)w9.um.set(t9[5],t9);}}
-  NET.buf.push({rt:(typeof performance!=='undefined'?performance.now():Date.now()),m:fm});
+  {const arr=(typeof performance!=='undefined'?performance.now():Date.now());
+   if(NET.clock==null||arr-NET._lastArr>500)NET.clock=arr; /* first frame or a long stall: hard resync */
+   else{NET.clock+=33;NET.clock+=(arr-NET.clock)*0.06;} /* JITTER BUFFER: advance one send-interval (even spacing kills stutter), then ease gently toward true arrival to track the real rate */
+   NET._lastArr=arr;
+   NET.buf.push({rt:NET.clock,m:fm});}
   while(NET.buf.length>14)NET.buf.shift();}
  goldT=F.g?3:-1;
  if(F.gv)groves=F.gv.map(g=>({x:g[0],y:g[1],kind:GKIND[g[2]],sp:g[3],amt:g[4],max:g[5],

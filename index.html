@@ -2429,13 +2429,10 @@ function drawNestQueen(){
  paintCrown(c2,base,t2,tryOn.crown||META.eq.crown);
  c2.restore();
  /* FLEET preview: three little soldiers march below, dressed in your theme */
- {const FL=FLEETS[(tryOn.fleet||META.eq.fleet)];const uy=104; /* worker, soldier, lancer - team colour + the ARMOUR you chose */
-  const one=(x,r,sh)=>{c2.save();c2.translate(x,uy);c2.fillStyle=col;c2.beginPath();
-   if(sh==='dot'){c2.arc(0,0,r,0,TAU);}
-   else if(sh==='shield'){c2.moveTo(-r*0.8,-r);c2.lineTo(r*0.8,-r);c2.lineTo(r,r*0.2);c2.lineTo(0,r*1.1);c2.lineTo(-r,r*0.2);c2.closePath();}
-   else{c2.moveTo(r,0);c2.lineTo(-r*0.7,-r*0.8);c2.lineTo(-r*0.7,r*0.8);c2.closePath();}
-   c2.fill();if(FL)drawArmour(c2,r,FL);c2.restore();};
-  one(44,5.5,'dot');one(80,7,'shield');one(116,6,'tri');}
+ {const fs2={team:0}; /* THE MIRROR NOW SHOWS THE REAL TROOPS: same drawUnitLocal as the battlefield + your armour */
+  const mk=(role,x,sc)=>{const R=ROLES[role];const fu={role,shape:R.shape,r:R.r*sc,load:0,fat:0,seed:x*7,zeal:1,sig:3,atk:0,flash:0,hp:1,maxHp:1,x:x,y:104,vx:1,vy:0,fa:0};
+   c2.save();c2.translate(x,104);drawUnitLocal(c2,fs2,fu,0,1,col);c2.restore();};
+  mk('forager',40,1.25);mk('soldier',82,1.05);mk('lancer',126,1.1);mk('spitter',176,1.15);}
 }
 let nestI=null,nestTab='skins',nestSz=1,nestFxA=[];
 const TABS=[['skins','COLOURS'],['body','BODY'],['pattern','PATTERNS'],['crown','CROWNS'],['wings','WINGS'],['trail','TRAILS'],['tail','TAILS'],['aura','◎ AURAS'],['fleet','⚔ FLEET']];
@@ -3020,6 +3017,140 @@ function drawArmour(g,r,FL){ /* clip-ons in the unit's rotated frame: +x front. 
   else if(H==='crest'||H==='leaf'){g.fillStyle=lt;g.beginPath();g.moveTo(-r*0.05,-r*0.5);g.quadraticCurveTo(r*0.1,-r*1.15,r*0.35,-r*0.45);g.closePath();g.fill();}
  }
 }
+function drawUnitLocal(g,s,u,a,vm,col){ /* the unit's LOCAL-frame art (shapes + armour). shared by the battlefield AND the wardrobe mirror so they always match */
+ if(u.shape==='dot'){
+  const fat9=Math.min(1,(u.load||0)/40);
+  if(fat9>0.05){g.fillStyle='rgba(255,194,62,'+(0.45+0.3*fat9).toFixed(2)+')'; /* the honey SHOWS: a swelling amber belly */
+   g.beginPath();g.ellipse(-u.r*0.3,0,u.r*(0.55+0.9*fat9),u.r*(0.45+0.75*fat9),0,0,TAU);g.fill();}
+  /* fat-forager halo ring REMOVED - a full forager just fattens and her CORE glows (below) */
+  g.fillStyle=u.load>0?shade(col,0.35):col; /* laden = brighter LIVERY, never a costume change */
+  g.beginPath();g.ellipse(0,0,u.r+1,u.r*0.72,0,0,TAU);g.fill();
+  if(fat9>=0.97){g.fillStyle='rgba(255,248,205,'+(0.5+0.28*Math.sin(tnow*3+u.seed)).toFixed(2)+')';g.beginPath();g.arc(0,0,u.r*0.5,0,TAU);g.fill();} /* FULL: the CORE glows, no halo */
+  const wf=Math.sin(tnow*44*u.zeal+u.seed)*0.5+0.5;
+  g.globalAlpha=.3+.3*wf;g.fillStyle='#fff8e8';
+  g.beginPath();g.ellipse(-1,-u.r,u.r*0.9,u.r*0.42,0.5,0,TAU);g.fill();
+  g.beginPath();g.ellipse(-1,u.r,u.r*0.9,u.r*0.42,-0.5,0,TAU);g.fill();
+  g.globalAlpha=1;
+ } else if(u.shape==='shield'){ /* SOLDIER: a slim bristling legionary - spear-points and discipline, no fat */
+  const wf9=Math.sin(tnow*40*u.zeal+u.seed)*0.5+0.5;
+  g.fillStyle='rgba(255,250,235,'+(0.18+0.2*wf9)+')'; /* slim quick wings */
+  g.beginPath();g.ellipse(-u.r*0.3,-u.r*0.6,u.r*0.5,u.r*0.18,0.45,0,TAU);g.fill();
+  g.beginPath();g.ellipse(-u.r*0.3,u.r*0.6,u.r*0.5,u.r*0.18,-0.45,0,TAU);g.fill();
+  g.strokeStyle=shade(col,-0.2);g.lineWidth=1.6; /* BRISTLES: three spines aft on each flank */
+  for(const sd9 of [-1,1])for(let k9=0;k9<3;k9++){
+   const bx=-u.r*0.1-k9*u.r*0.32,by=sd9*u.r*0.42;
+   g.beginPath();g.moveTo(bx,by);g.lineTo(bx-u.r*0.3,by+sd9*u.r*0.34);g.stroke();}
+  g.fillStyle=col; /* slim tapered body */
+  g.beginPath();g.moveTo(u.r*0.9,0);
+  g.quadraticCurveTo(u.r*0.3,-u.r*0.5,-u.r*0.9,-u.r*0.22);g.lineTo(-u.r*1.05,0);g.lineTo(-u.r*0.9,u.r*0.22);
+  g.quadraticCurveTo(u.r*0.3,u.r*0.5,u.r*0.9,0);g.closePath();g.fill();
+  g.strokeStyle=shade(col,-0.3);g.lineWidth=1; /* segment rings */
+  for(let k9=0;k9<3;k9++){const sx=u.r*(0.3-k9*0.38);
+   g.beginPath();g.moveTo(sx,-u.r*0.34);g.lineTo(sx,u.r*0.34);g.stroke();}
+  g.strokeStyle=shade(col,0.3);g.lineWidth=2; /* the PIKE, always levelled */
+  g.beginPath();g.moveTo(u.r*0.7,0);g.lineTo(u.r*1.55,0);g.stroke();
+  g.fillStyle='#fff3d0';
+  g.beginPath();g.moveTo(u.r*1.75,0);g.lineTo(u.r*1.45,-u.r*0.16);g.lineTo(u.r*1.45,u.r*0.16);g.closePath();g.fill();
+  g.fillStyle=shade(col,0.22); /* small round buckler at the shoulder */
+  g.beginPath();g.arc(u.r*0.52,0,u.r*0.34,0,TAU);g.fill();
+  g.strokeStyle=shade(col,-0.35);g.lineWidth=1.2;g.stroke();
+  g.fillStyle='#2a1606'; /* boss + eyes */
+  g.beginPath();g.arc(u.r*0.52,0,u.r*0.09,0,TAU);g.fill();
+  g.beginPath();g.arc(u.r*0.8,-u.r*0.14,u.r*0.07,0,TAU);g.fill();
+  g.beginPath();g.arc(u.r*0.8,u.r*0.14,u.r*0.07,0,TAU);g.fill();
+ } else if(u.shape==='slab'){ /* ARMOURER: the great domed plate-beetle - the heavy armoured look lives HERE now */
+  g.fillStyle=col;
+  g.beginPath();g.ellipse(0,0,u.r*1.05,u.r*0.85,0,0,TAU);g.fill();
+  g.fillStyle=shade(col,0.2); /* dome light */
+  g.beginPath();g.ellipse(-u.r*0.15,-u.r*0.22,u.r*0.55,u.r*0.34,0.3,0,TAU);g.fill();
+  g.strokeStyle=shade(col,-0.35);g.lineWidth=1.6; /* overlapping PLATE seams */
+  for(let k9=1;k9<=3;k9++){g.beginPath();g.arc(-u.r*1.3,0,u.r*(0.75+k9*0.45),-0.62,0.62);g.stroke();}
+  g.fillStyle=shade(col,0.3); /* helm */
+  g.beginPath();g.arc(u.r*0.8,0,u.r*0.28,0,TAU);g.fill();
+  g.fillStyle='#2a1606';
+  g.beginPath();g.arc(u.r*0.88,-u.r*0.1,u.r*0.06,0,TAU);g.fill();
+  g.beginPath();g.arc(u.r*0.88,u.r*0.1,u.r*0.06,0,TAU);g.fill();
+  g.lineWidth=2.6;g.strokeStyle='#8a5c30'; /* iron-bound rim */
+  g.beginPath();g.ellipse(0,0,u.r*1.05,u.r*0.85,0,0,TAU);g.stroke();
+  g.fillStyle='#8a5c30'; /* rivets round the rim */
+  for(let k9=0;k9<6;k9++){const aa=k9/6*TAU+0.5;
+   g.beginPath();g.arc(Math.cos(aa)*u.r*0.88,Math.sin(aa)*u.r*0.72,1.5,0,TAU);g.fill();}
+} else if(u.shape==='spout'){ /* SPITTER: a light rider - slender, swept, built to loose and flee */
+  const wf9=Math.sin(tnow*46*u.zeal+u.seed)*0.5+0.5;
+  g.fillStyle='rgba(255,250,235,'+(0.2+0.24*wf9)+')';
+  g.beginPath();g.ellipse(-u.r*0.35,-u.r*0.55,u.r*0.55,u.r*0.16,0.5,0,TAU);g.fill();
+  g.beginPath();g.ellipse(-u.r*0.35,u.r*0.55,u.r*0.55,u.r*0.16,-0.5,0,TAU);g.fill();
+  g.fillStyle=col; /* slender teardrop, leaning into the ride */
+  g.beginPath();g.moveTo(u.r*0.85,0);
+  g.quadraticCurveTo(u.r*0.1,-u.r*0.46,-u.r*1.05,-u.r*0.12);g.lineTo(-u.r*1.05,u.r*0.12);
+  g.quadraticCurveTo(u.r*0.1,u.r*0.46,u.r*0.85,0);g.closePath();g.fill();
+  g.fillStyle='rgba(255,255,255,.4)'; /* saddle sheen */
+  g.beginPath();g.ellipse(-u.r*0.2,-u.r*0.16,u.r*0.34,u.r*0.12,0.3,0,TAU);g.fill();
+  g.strokeStyle=shade(col,-0.3);g.lineWidth=1.8; /* the long BLOWPIPE */
+  g.beginPath();g.moveTo(u.r*0.45,0);g.lineTo(u.r+9,0);g.stroke();
+  g.fillStyle='#d8ffe8';g.beginPath();g.arc(u.r+9,0,1.8,0,TAU);g.fill();
+  g.fillStyle='#1e3226'; /* the archer's eye */
+  g.beginPath();g.arc(u.r*0.3,-u.r*0.2,u.r*0.15,0,TAU);g.fill();
+  g.fillStyle='#fff';g.beginPath();g.arc(u.r*0.34,-u.r*0.24,u.r*0.05,0,TAU);g.fill();
+  if(u.atk>1.2){g.fillStyle='#d8ffe8';g.beginPath();g.arc(u.r+9,0,3,0,TAU);g.fill();} /* venom charge glows */
+ } else if(u.shape==='heart'){ /* NURSE: a soft heart on soft wings */
+  {const wf9=Math.sin(tnow*38*u.zeal+u.seed)*0.5+0.5;
+   g.fillStyle='rgba(255,250,240,'+(0.24+0.24*wf9)+')';
+   g.beginPath();g.ellipse(-u.r*0.2,-u.r*0.72,u.r*0.5,u.r*0.2,0.5,0,TAU);g.fill();
+   g.beginPath();g.ellipse(-u.r*0.2,u.r*0.72,u.r*0.5,u.r*0.2,-0.5,0,TAU);g.fill();}
+  g.fillStyle=col;
+  g.beginPath();
+  g.moveTo(u.r*0.9,0);
+  g.bezierCurveTo(u.r*0.9,-u.r*0.9,-u.r*0.4,-u.r*1.0,-u.r*0.8,-u.r*0.28);
+  g.bezierCurveTo(-u.r*1.05,0.0,-u.r*1.05,0,-u.r*0.8,u.r*0.28);
+  g.bezierCurveTo(-u.r*0.4,u.r*1.0,u.r*0.9,u.r*0.9,u.r*0.9,0);
+  g.closePath();g.fill();
+  g.fillStyle='rgba(255,255,255,.92)'; /* the MEDIC CROSS: readable in any livery, at any zoom */
+  g.fillRect(-u.r*0.14,-u.r*0.46,u.r*0.28,u.r*0.92);
+  g.fillRect(-u.r*0.46,-u.r*0.14,u.r*0.92,u.r*0.28);
+  g.strokeStyle='rgba(255,255,255,.7)';g.lineWidth=1;g.stroke();
+ } else if(u.shape==='tri'){ /* LANCER: a wasp-dart — narrow waist, blurred wings, a sting you can read */
+  const wf9=Math.sin(tnow*46*u.zeal+u.seed)*0.5+0.5;
+  g.fillStyle='rgba(255,250,235,'+(0.2+0.24*wf9)+')';
+  g.beginPath();g.ellipse(-u.r*0.1,-u.r*0.6,u.r*0.55,u.r*0.2,0.5,0,TAU);g.fill();
+  g.beginPath();g.ellipse(-u.r*0.1,u.r*0.6,u.r*0.55,u.r*0.2,-0.5,0,TAU);g.fill();
+  g.fillStyle=col;
+  g.beginPath();g.ellipse(u.r*0.42,0,u.r*0.42,u.r*0.3,0,0,TAU);g.fill(); /* thorax */
+  g.beginPath();g.moveTo(-u.r*0.05,0); /* the abdomen tapers to the sting */
+  g.quadraticCurveTo(-u.r*0.35,u.r*0.4,-u.r*1.02,0);
+  g.quadraticCurveTo(-u.r*0.35,-u.r*0.4,-u.r*0.05,0);g.closePath();g.fill();
+  g.strokeStyle=shade(col,0.4);g.lineWidth=1.6;
+  g.beginPath();g.moveTo(u.r*0.8,0);g.lineTo(u.r*1.25,0);g.stroke(); /* the lance itself */
+  g.fillStyle='#2a1606';
+  g.beginPath();g.arc(u.r*0.56,-u.r*0.12,u.r*0.08,0,TAU);g.fill();
+  g.beginPath();g.arc(u.r*0.56,u.r*0.12,u.r*0.08,0,TAU);g.fill();
+ } else { /* TITAN: a walking monument — dark mass, molten core, horns and tusks */
+  g.fillStyle=u.flash>0?'#fff':shade(col,-0.45); /* dark hide */
+  g.beginPath();for(let k=0;k<6;k++){const aa=k/6*TAU+Math.PI/6;k?g.lineTo(Math.cos(aa)*u.r,Math.sin(aa)*u.r):g.moveTo(Math.cos(aa)*u.r,Math.sin(aa)*u.r);}g.closePath();g.fill();
+  g.lineWidth=2.6;g.strokeStyle='#8a5a3a';g.stroke();
+  g.fillStyle=col; /* horn spikes on every shoulder */
+  for(let k=0;k<6;k++){const aa=k/6*TAU+Math.PI/6;
+   const bx=Math.cos(aa)*u.r,by=Math.sin(aa)*u.r;
+   g.beginPath();g.moveTo(bx*0.82,by*0.82);
+   g.lineTo(bx*1.3+Math.cos(aa+1.8)*2.5,by*1.3+Math.sin(aa+1.8)*2.5);
+   g.lineTo(bx*0.82+Math.cos(aa+1.57)*4,by*0.82+Math.sin(aa+1.57)*4);g.closePath();g.fill();}
+  g.fillStyle=col; /* twin tusks forward */
+  g.beginPath();g.moveTo(u.r*0.7,-u.r*0.4);g.quadraticCurveTo(u.r*1.5,-u.r*0.5,u.r*1.6,-u.r*0.1);g.lineTo(u.r*0.75,-u.r*0.15);g.closePath();g.fill();
+  g.beginPath();g.moveTo(u.r*0.7,u.r*0.4);g.quadraticCurveTo(u.r*1.5,u.r*0.5,u.r*1.6,u.r*0.1);g.lineTo(u.r*0.75,u.r*0.15);g.closePath();g.fill();
+  const chg=1-clamp(u.sig/5,0,1); /* the molten core brightens toward the SLAM */
+  g.fillStyle='rgba(255,'+Math.round(140+80*chg)+','+Math.round(50+40*chg)+','+(0.5+0.45*chg)+')';
+  g.beginPath();g.arc(0,0,u.r*(0.34+0.1*chg)+Math.sin(tnow*5)*1.2,0,TAU);g.fill();
+  g.fillStyle='rgba(255,240,200,'+(0.25+0.5*chg)+')';
+  g.beginPath();g.arc(0,0,u.r*0.16,0,TAU);g.fill();
+  g.fillStyle='#ffcf3a'; /* eyes */
+  g.beginPath();g.arc(u.r*0.5,-u.r*0.24,2,0,TAU);g.fill();
+  g.beginPath();g.arc(u.r*0.5,u.r*0.24,2,0,TAU);g.fill();
+  if(g===ctx&&vm>40&&Math.random()<0.12)addP(u.x-Math.cos(a)*u.r,u.y-Math.sin(a)*u.r,'#c8a06a',1,26); /* dust at its heels */
+ }
+ if(u.aura&&u.role!=='armourer'){g.globalAlpha=.5;g.strokeStyle='#c8853a';g.lineWidth=1.6;
+  g.beginPath();g.arc(0,0,u.r+2.2,0,TAU);g.stroke();g.globalAlpha=1;} /* bronze-plated */
+ if(s.team===0){const FL=FLEETS[META.eq.fleet];if(FL)drawArmour(g,u.r,FL);} /* ARMOUR: additive clip-ons over the team-coloured body */
+}
 function drawUnit(s,u,LOD){
  let baseCol=u.col;
  {if(s.col)baseCol=mixc(u.col,s.col,0.85);} /* THE LIVERY LAW: every brood wears its QUEEN's colour. Fleets add ARMOUR on top - they NEVER recolour the body */
@@ -3038,138 +3169,7 @@ function drawUnit(s,u,LOD){
   u.fa=(u.fa===undefined?want:u.fa+d9*0.12);}
  const a=u.fa;
  ctx.save();ctx.translate(u.x,u.y);ctx.rotate(a);
- if(u.shape==='dot'){
-  const fat9=Math.min(1,(u.load||0)/40);
-  if(fat9>0.05){ctx.fillStyle='rgba(255,194,62,'+(0.45+0.3*fat9).toFixed(2)+')'; /* the honey SHOWS: a swelling amber belly */
-   ctx.beginPath();ctx.ellipse(-u.r*0.3,0,u.r*(0.55+0.9*fat9),u.r*(0.45+0.75*fat9),0,0,TAU);ctx.fill();}
-  /* fat-forager halo ring REMOVED - a full forager just fattens and her CORE glows (below) */
-  ctx.fillStyle=u.load>0?shade(col,0.35):col; /* laden = brighter LIVERY, never a costume change */
-  ctx.beginPath();ctx.ellipse(0,0,u.r+1,u.r*0.72,0,0,TAU);ctx.fill();
-  if(fat9>=0.97){ctx.fillStyle='rgba(255,248,205,'+(0.5+0.28*Math.sin(tnow*3+u.seed)).toFixed(2)+')';ctx.beginPath();ctx.arc(0,0,u.r*0.5,0,TAU);ctx.fill();} /* FULL: the CORE glows, no halo */
-  const wf=Math.sin(tnow*44*u.zeal+u.seed)*0.5+0.5;
-  ctx.globalAlpha=.3+.3*wf;ctx.fillStyle='#fff8e8';
-  ctx.beginPath();ctx.ellipse(-1,-u.r,u.r*0.9,u.r*0.42,0.5,0,TAU);ctx.fill();
-  ctx.beginPath();ctx.ellipse(-1,u.r,u.r*0.9,u.r*0.42,-0.5,0,TAU);ctx.fill();
-  ctx.globalAlpha=1;
- } else if(u.shape==='shield'){ /* SOLDIER: a slim bristling legionary - spear-points and discipline, no fat */
-  const wf9=Math.sin(tnow*40*u.zeal+u.seed)*0.5+0.5;
-  ctx.fillStyle='rgba(255,250,235,'+(0.18+0.2*wf9)+')'; /* slim quick wings */
-  ctx.beginPath();ctx.ellipse(-u.r*0.3,-u.r*0.6,u.r*0.5,u.r*0.18,0.45,0,TAU);ctx.fill();
-  ctx.beginPath();ctx.ellipse(-u.r*0.3,u.r*0.6,u.r*0.5,u.r*0.18,-0.45,0,TAU);ctx.fill();
-  ctx.strokeStyle=shade(col,-0.2);ctx.lineWidth=1.6; /* BRISTLES: three spines aft on each flank */
-  for(const sd9 of [-1,1])for(let k9=0;k9<3;k9++){
-   const bx=-u.r*0.1-k9*u.r*0.32,by=sd9*u.r*0.42;
-   ctx.beginPath();ctx.moveTo(bx,by);ctx.lineTo(bx-u.r*0.3,by+sd9*u.r*0.34);ctx.stroke();}
-  ctx.fillStyle=col; /* slim tapered body */
-  ctx.beginPath();ctx.moveTo(u.r*0.9,0);
-  ctx.quadraticCurveTo(u.r*0.3,-u.r*0.5,-u.r*0.9,-u.r*0.22);ctx.lineTo(-u.r*1.05,0);ctx.lineTo(-u.r*0.9,u.r*0.22);
-  ctx.quadraticCurveTo(u.r*0.3,u.r*0.5,u.r*0.9,0);ctx.closePath();ctx.fill();
-  ctx.strokeStyle=shade(col,-0.3);ctx.lineWidth=1; /* segment rings */
-  for(let k9=0;k9<3;k9++){const sx=u.r*(0.3-k9*0.38);
-   ctx.beginPath();ctx.moveTo(sx,-u.r*0.34);ctx.lineTo(sx,u.r*0.34);ctx.stroke();}
-  ctx.strokeStyle=shade(col,0.3);ctx.lineWidth=2; /* the PIKE, always levelled */
-  ctx.beginPath();ctx.moveTo(u.r*0.7,0);ctx.lineTo(u.r*1.55,0);ctx.stroke();
-  ctx.fillStyle='#fff3d0';
-  ctx.beginPath();ctx.moveTo(u.r*1.75,0);ctx.lineTo(u.r*1.45,-u.r*0.16);ctx.lineTo(u.r*1.45,u.r*0.16);ctx.closePath();ctx.fill();
-  ctx.fillStyle=shade(col,0.22); /* small round buckler at the shoulder */
-  ctx.beginPath();ctx.arc(u.r*0.52,0,u.r*0.34,0,TAU);ctx.fill();
-  ctx.strokeStyle=shade(col,-0.35);ctx.lineWidth=1.2;ctx.stroke();
-  ctx.fillStyle='#2a1606'; /* boss + eyes */
-  ctx.beginPath();ctx.arc(u.r*0.52,0,u.r*0.09,0,TAU);ctx.fill();
-  ctx.beginPath();ctx.arc(u.r*0.8,-u.r*0.14,u.r*0.07,0,TAU);ctx.fill();
-  ctx.beginPath();ctx.arc(u.r*0.8,u.r*0.14,u.r*0.07,0,TAU);ctx.fill();
- } else if(u.shape==='slab'){ /* ARMOURER: the great domed plate-beetle - the heavy armoured look lives HERE now */
-  ctx.fillStyle=col;
-  ctx.beginPath();ctx.ellipse(0,0,u.r*1.05,u.r*0.85,0,0,TAU);ctx.fill();
-  ctx.fillStyle=shade(col,0.2); /* dome light */
-  ctx.beginPath();ctx.ellipse(-u.r*0.15,-u.r*0.22,u.r*0.55,u.r*0.34,0.3,0,TAU);ctx.fill();
-  ctx.strokeStyle=shade(col,-0.35);ctx.lineWidth=1.6; /* overlapping PLATE seams */
-  for(let k9=1;k9<=3;k9++){ctx.beginPath();ctx.arc(-u.r*1.3,0,u.r*(0.75+k9*0.45),-0.62,0.62);ctx.stroke();}
-  ctx.fillStyle=shade(col,0.3); /* helm */
-  ctx.beginPath();ctx.arc(u.r*0.8,0,u.r*0.28,0,TAU);ctx.fill();
-  ctx.fillStyle='#2a1606';
-  ctx.beginPath();ctx.arc(u.r*0.88,-u.r*0.1,u.r*0.06,0,TAU);ctx.fill();
-  ctx.beginPath();ctx.arc(u.r*0.88,u.r*0.1,u.r*0.06,0,TAU);ctx.fill();
-  ctx.lineWidth=2.6;ctx.strokeStyle='#8a5c30'; /* iron-bound rim */
-  ctx.beginPath();ctx.ellipse(0,0,u.r*1.05,u.r*0.85,0,0,TAU);ctx.stroke();
-  ctx.fillStyle='#8a5c30'; /* rivets round the rim */
-  for(let k9=0;k9<6;k9++){const aa=k9/6*TAU+0.5;
-   ctx.beginPath();ctx.arc(Math.cos(aa)*u.r*0.88,Math.sin(aa)*u.r*0.72,1.5,0,TAU);ctx.fill();}
-} else if(u.shape==='spout'){ /* SPITTER: a light rider - slender, swept, built to loose and flee */
-  const wf9=Math.sin(tnow*46*u.zeal+u.seed)*0.5+0.5;
-  ctx.fillStyle='rgba(255,250,235,'+(0.2+0.24*wf9)+')';
-  ctx.beginPath();ctx.ellipse(-u.r*0.35,-u.r*0.55,u.r*0.55,u.r*0.16,0.5,0,TAU);ctx.fill();
-  ctx.beginPath();ctx.ellipse(-u.r*0.35,u.r*0.55,u.r*0.55,u.r*0.16,-0.5,0,TAU);ctx.fill();
-  ctx.fillStyle=col; /* slender teardrop, leaning into the ride */
-  ctx.beginPath();ctx.moveTo(u.r*0.85,0);
-  ctx.quadraticCurveTo(u.r*0.1,-u.r*0.46,-u.r*1.05,-u.r*0.12);ctx.lineTo(-u.r*1.05,u.r*0.12);
-  ctx.quadraticCurveTo(u.r*0.1,u.r*0.46,u.r*0.85,0);ctx.closePath();ctx.fill();
-  ctx.fillStyle='rgba(255,255,255,.4)'; /* saddle sheen */
-  ctx.beginPath();ctx.ellipse(-u.r*0.2,-u.r*0.16,u.r*0.34,u.r*0.12,0.3,0,TAU);ctx.fill();
-  ctx.strokeStyle=shade(col,-0.3);ctx.lineWidth=1.8; /* the long BLOWPIPE */
-  ctx.beginPath();ctx.moveTo(u.r*0.45,0);ctx.lineTo(u.r+9,0);ctx.stroke();
-  ctx.fillStyle='#d8ffe8';ctx.beginPath();ctx.arc(u.r+9,0,1.8,0,TAU);ctx.fill();
-  ctx.fillStyle='#1e3226'; /* the archer's eye */
-  ctx.beginPath();ctx.arc(u.r*0.3,-u.r*0.2,u.r*0.15,0,TAU);ctx.fill();
-  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(u.r*0.34,-u.r*0.24,u.r*0.05,0,TAU);ctx.fill();
-  if(u.atk>1.2){ctx.fillStyle='#d8ffe8';ctx.beginPath();ctx.arc(u.r+9,0,3,0,TAU);ctx.fill();} /* venom charge glows */
- } else if(u.shape==='heart'){ /* NURSE: a soft heart on soft wings */
-  {const wf9=Math.sin(tnow*38*u.zeal+u.seed)*0.5+0.5;
-   ctx.fillStyle='rgba(255,250,240,'+(0.24+0.24*wf9)+')';
-   ctx.beginPath();ctx.ellipse(-u.r*0.2,-u.r*0.72,u.r*0.5,u.r*0.2,0.5,0,TAU);ctx.fill();
-   ctx.beginPath();ctx.ellipse(-u.r*0.2,u.r*0.72,u.r*0.5,u.r*0.2,-0.5,0,TAU);ctx.fill();}
-  ctx.fillStyle=col;
-  ctx.beginPath();
-  ctx.moveTo(u.r*0.9,0);
-  ctx.bezierCurveTo(u.r*0.9,-u.r*0.9,-u.r*0.4,-u.r*1.0,-u.r*0.8,-u.r*0.28);
-  ctx.bezierCurveTo(-u.r*1.05,0.0,-u.r*1.05,0,-u.r*0.8,u.r*0.28);
-  ctx.bezierCurveTo(-u.r*0.4,u.r*1.0,u.r*0.9,u.r*0.9,u.r*0.9,0);
-  ctx.closePath();ctx.fill();
-  ctx.fillStyle='rgba(255,255,255,.92)'; /* the MEDIC CROSS: readable in any livery, at any zoom */
-  ctx.fillRect(-u.r*0.14,-u.r*0.46,u.r*0.28,u.r*0.92);
-  ctx.fillRect(-u.r*0.46,-u.r*0.14,u.r*0.92,u.r*0.28);
-  ctx.strokeStyle='rgba(255,255,255,.7)';ctx.lineWidth=1;ctx.stroke();
- } else if(u.shape==='tri'){ /* LANCER: a wasp-dart — narrow waist, blurred wings, a sting you can read */
-  const wf9=Math.sin(tnow*46*u.zeal+u.seed)*0.5+0.5;
-  ctx.fillStyle='rgba(255,250,235,'+(0.2+0.24*wf9)+')';
-  ctx.beginPath();ctx.ellipse(-u.r*0.1,-u.r*0.6,u.r*0.55,u.r*0.2,0.5,0,TAU);ctx.fill();
-  ctx.beginPath();ctx.ellipse(-u.r*0.1,u.r*0.6,u.r*0.55,u.r*0.2,-0.5,0,TAU);ctx.fill();
-  ctx.fillStyle=col;
-  ctx.beginPath();ctx.ellipse(u.r*0.42,0,u.r*0.42,u.r*0.3,0,0,TAU);ctx.fill(); /* thorax */
-  ctx.beginPath();ctx.moveTo(-u.r*0.05,0); /* the abdomen tapers to the sting */
-  ctx.quadraticCurveTo(-u.r*0.35,u.r*0.4,-u.r*1.02,0);
-  ctx.quadraticCurveTo(-u.r*0.35,-u.r*0.4,-u.r*0.05,0);ctx.closePath();ctx.fill();
-  ctx.strokeStyle=shade(col,0.4);ctx.lineWidth=1.6;
-  ctx.beginPath();ctx.moveTo(u.r*0.8,0);ctx.lineTo(u.r*1.25,0);ctx.stroke(); /* the lance itself */
-  ctx.fillStyle='#2a1606';
-  ctx.beginPath();ctx.arc(u.r*0.56,-u.r*0.12,u.r*0.08,0,TAU);ctx.fill();
-  ctx.beginPath();ctx.arc(u.r*0.56,u.r*0.12,u.r*0.08,0,TAU);ctx.fill();
- } else { /* TITAN: a walking monument — dark mass, molten core, horns and tusks */
-  ctx.fillStyle=u.flash>0?'#fff':shade(col,-0.45); /* dark hide */
-  ctx.beginPath();for(let k=0;k<6;k++){const aa=k/6*TAU+Math.PI/6;k?ctx.lineTo(Math.cos(aa)*u.r,Math.sin(aa)*u.r):ctx.moveTo(Math.cos(aa)*u.r,Math.sin(aa)*u.r);}ctx.closePath();ctx.fill();
-  ctx.lineWidth=2.6;ctx.strokeStyle='#8a5a3a';ctx.stroke();
-  ctx.fillStyle=col; /* horn spikes on every shoulder */
-  for(let k=0;k<6;k++){const aa=k/6*TAU+Math.PI/6;
-   const bx=Math.cos(aa)*u.r,by=Math.sin(aa)*u.r;
-   ctx.beginPath();ctx.moveTo(bx*0.82,by*0.82);
-   ctx.lineTo(bx*1.3+Math.cos(aa+1.8)*2.5,by*1.3+Math.sin(aa+1.8)*2.5);
-   ctx.lineTo(bx*0.82+Math.cos(aa+1.57)*4,by*0.82+Math.sin(aa+1.57)*4);ctx.closePath();ctx.fill();}
-  ctx.fillStyle=col; /* twin tusks forward */
-  ctx.beginPath();ctx.moveTo(u.r*0.7,-u.r*0.4);ctx.quadraticCurveTo(u.r*1.5,-u.r*0.5,u.r*1.6,-u.r*0.1);ctx.lineTo(u.r*0.75,-u.r*0.15);ctx.closePath();ctx.fill();
-  ctx.beginPath();ctx.moveTo(u.r*0.7,u.r*0.4);ctx.quadraticCurveTo(u.r*1.5,u.r*0.5,u.r*1.6,u.r*0.1);ctx.lineTo(u.r*0.75,u.r*0.15);ctx.closePath();ctx.fill();
-  const chg=1-clamp(u.sig/5,0,1); /* the molten core brightens toward the SLAM */
-  ctx.fillStyle='rgba(255,'+Math.round(140+80*chg)+','+Math.round(50+40*chg)+','+(0.5+0.45*chg)+')';
-  ctx.beginPath();ctx.arc(0,0,u.r*(0.34+0.1*chg)+Math.sin(tnow*5)*1.2,0,TAU);ctx.fill();
-  ctx.fillStyle='rgba(255,240,200,'+(0.25+0.5*chg)+')';
-  ctx.beginPath();ctx.arc(0,0,u.r*0.16,0,TAU);ctx.fill();
-  ctx.fillStyle='#ffcf3a'; /* eyes */
-  ctx.beginPath();ctx.arc(u.r*0.5,-u.r*0.24,2,0,TAU);ctx.fill();
-  ctx.beginPath();ctx.arc(u.r*0.5,u.r*0.24,2,0,TAU);ctx.fill();
-  if(vm>40&&Math.random()<0.12)addP(u.x-Math.cos(a)*u.r,u.y-Math.sin(a)*u.r,'#c8a06a',1,26); /* dust at its heels */
- }
- if(u.aura&&u.role!=='armourer'){ctx.globalAlpha=.5;ctx.strokeStyle='#c8853a';ctx.lineWidth=1.6;
-  ctx.beginPath();ctx.arc(0,0,u.r+2.2,0,TAU);ctx.stroke();ctx.globalAlpha=1;} /* bronze-plated */
- if(s.team===0){const FL=FLEETS[META.eq.fleet];if(FL)drawArmour(ctx,u.r,FL);} /* ARMOUR: additive clip-ons over the team-coloured body */
+ drawUnitLocal(ctx,s,u,a,vm,col);
  ctx.restore();
 }
 function drawBar(x,y,w,frac,big){frac=clamp(frac,0,1);const h=big?6:4.5;

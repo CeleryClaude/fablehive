@@ -380,15 +380,16 @@ const ITEMS=[
  {id:'voidring', cat:'aura',   n:'Void Ring',   xp:4800,royal:true,d:'a thin circle of missing light'},
  {id:'moltaura', cat:'aura',   n:'Apex Shimmer',xp:-1,  d:'reach 120 souls once — wear the shimmer of the great'},
  {id:'algaeglow',cat:'aura',   n:'Grotto Glow', xp:-1,  d:'gather 200 honey inside the dark — the algae remember you'},
- {id:'plainfleet',cat:'fleet', n:'No Coat',xp:0,   d:'your brood as it was born - every detail bare'},
- {id:'infernofleet',cat:'fleet',n:'Inferno Fleet',xp:3600,royal:true,d:'your troops smoulder and spit embers'},
- {id:'angelfleet',cat:'fleet', n:'Choir Fleet', xp:3400,royal:true,d:'every soul wears a small halo of light'},
- {id:'slimefleet',cat:'fleet', n:'Ooze Fleet',  xp:2200,d:'your army wobbles. gloriously.'},
- {id:'voidfleet',cat:'fleet',  n:'Eldritch Fleet',xp:4600,royal:true,d:'each troop opens one small eye. it follows.'},
- {id:'starfleet',cat:'fleet',  n:'Stellar Fleet',xp:2800,d:'your brood glitters like a constellation'},
- {id:'royalfleet',cat:'fleet', n:'Gilded Court', xp:3200,royal:true,d:'every soul wears a fleck of the crown'},
- {id:'frostfleet',cat:'fleet', n:'Winter Levy',  xp:2400,d:'breath you can see, frost you can hear'},
- {id:'bloomfleet',cat:'fleet', n:'Petal Guard',  xp:1800,d:'an army in soft armour of flowers'}
+ {id:'plainfleet',cat:'fleet', n:'No Coat',     xp:0,   d:'your brood as it was born - every detail bare'},
+ {id:'waxfleet',   cat:'fleet', n:'Beeswax',     xp:1200,d:'sealed in warm matte wax - of the hive, through and through'},
+ {id:'chitinfleet',cat:'fleet', n:'Chitin',      xp:2000,d:'hard dark carapace - a beetle-shell gloss on every soul'},
+ {id:'bronzefleet',cat:'fleet', n:'Bronze Legion',xp:2400,d:'burnished bronze plate - an army cast in old metal'},
+ {id:'frostfleet', cat:'fleet', n:'Hoarfrost',   xp:2600,d:'every soul rimed in pale, cold ice'},
+ {id:'amberfleet', cat:'fleet', n:'Ambercast',   xp:2800,d:'set in warm resin, lit softly from within'},
+ {id:'ironfleet',  cat:'fleet', n:'Ironclad',    xp:3000,d:'cold grey steel - a hard edge of war'},
+ {id:'bonefleet',  cat:'fleet', n:'Bonewrought', xp:3400,d:'pale ivory, matte and quiet - an army of relics'},
+ {id:'goldfleet',  cat:'fleet', n:'Gilded Court',xp:3600,royal:true,d:'polished gold - every soul a small sun'},
+ {id:'obsidianfleet',cat:'fleet',n:'Obsidian',   xp:4200,royal:true,d:'black volcanic glass with one cold star of light'}
 ];
 for(const it of ITEMS){if(it.royal)it.xp=Math.round(it.xp*2.2);else if(it.xp>0)it.xp=Math.round(it.xp*1.6);} /* the long road got longer; the ROYAL SUB is the carriage */
 function itemById(id){return ITEMS.find(i2=>i2.id===id)||null;}
@@ -2427,13 +2428,11 @@ function drawNestQueen(){
  /* FLEET preview: three little soldiers march below, dressed in your theme */
  {const FL=FLEETS[(tryOn.fleet||META.eq.fleet)];
   for(let k=0;k<3;k++){const ux=52+k*36,uy=104;
-   c2.fillStyle=FL&&FL.tint?FL.tint:'#f2e2c4';
+   let bc=col;if(FL&&FL.body)bc=mixc(col,FL.body,FL.mix||0.24);
+   c2.fillStyle=bc;
    c2.beginPath();c2.moveTo(ux+7,uy);c2.lineTo(ux+2,uy+6);c2.lineTo(ux-6,uy+4);c2.lineTo(ux-6,uy-4);c2.lineTo(ux+2,uy-6);c2.closePath();c2.fill();
-   if(FL&&FL.halo){c2.strokeStyle='rgba(255,246,220,.85)';c2.lineWidth=1.2;
-    c2.beginPath();c2.ellipse(ux,uy-9,4,1.4,0,0,TAU);c2.stroke();}
-   if(FL&&FL.eye){c2.fillStyle='#e8dcf8';c2.beginPath();c2.arc(ux,uy,3,0,TAU);c2.fill();
-    c2.fillStyle='#241426';c2.beginPath();c2.arc(ux+1,uy,1.3,0,TAU);c2.fill();}
-   if(FL&&FL.glow){c2.fillStyle='rgba(255,120,40,.3)';c2.beginPath();c2.arc(ux,uy,8,0,TAU);c2.fill();}}}
+   if(FL&&FL.rim){c2.strokeStyle=FL.rim;c2.lineWidth=FL.rimW||1.3;c2.stroke();}
+   if(FL&&FL.spec){c2.fillStyle=FL.spec;c2.beginPath();c2.arc(ux-2,uy-2,1.8,0,TAU);c2.fill();}}}
 }
 let nestI=null,nestTab='skins',nestSz=1,nestFxA=[];
 const TABS=[['skins','COLOURS'],['body','BODY'],['pattern','PATTERNS'],['crown','CROWNS'],['wings','WINGS'],['trail','TRAILS'],['tail','TAILS'],['aura','◎ AURAS'],['fleet','⚔ FLEET']];
@@ -2618,15 +2617,16 @@ function paintTail(g2,base,t2,tail,col,st){
  g2.restore();
 }
 /* FLEET dress: how the ARMY wears the theme */
-const FLEETS={plainfleet:null,
- infernofleet:{tint:'#3a2018',glow:'rgba(255,120,40,.4)',ember:true},
- angelfleet:{tint:'#fff6e4',halo:true,soft:true},
- slimefleet:{tint:'#8fe07a',wobble:true,gloss:true},
- voidfleet:{tint:'#2e2038',eye:true,tendril:true},
- starfleet:{tint:'#1e2a52',spark:true,constel:true},
- royalfleet:{tint:'#e8c060',crown:true},
- frostfleet:{tint:'#bcd8e8',frost:true},
- bloomfleet:{tint:'#ffc0d8',bloom:true}};
+const FLEETS={plainfleet:null, /* ARMOUR & MATERIAL: a body-tint (queen-hue still leads) + a rim + one specular spot. no particles */
+ waxfleet:{body:'#e8b84e',mix:0.26,rim:'rgba(175,125,38,.55)'},
+ chitinfleet:{body:'#2a1c22',mix:0.34,rim:'rgba(18,10,14,.85)',spec:'rgba(255,240,235,.45)',rimW:1.6},
+ bronzefleet:{body:'#b5702e',mix:0.34,rim:'rgba(88,48,16,.7)',spec:'rgba(255,222,170,.6)',rimW:1.5},
+ frostfleet:{body:'#c2dcec',mix:0.32,rim:'rgba(150,200,230,.7)',spec:'rgba(246,252,255,.7)'},
+ amberfleet:{body:'#d98a2a',mix:0.30,rim:'rgba(120,60,10,.6)',spec:'rgba(255,226,150,.55)'},
+ ironfleet:{body:'#9aa4ac',mix:0.32,rim:'rgba(38,46,54,.75)',spec:'rgba(255,255,255,.5)',rimW:1.5},
+ bonefleet:{body:'#e6e0cf',mix:0.32,rim:'rgba(120,110,90,.6)'},
+ goldfleet:{body:'#f0c24a',mix:0.36,rim:'rgba(150,100,20,.8)',spec:'rgba(255,255,220,.8)',rimW:1.6},
+ obsidianfleet:{body:'#141018',mix:0.42,rim:'rgba(0,0,0,.85)',spec:'rgba(220,222,255,.7)',rimW:1.5}};
 function paintWings(g2,base,t2,style){
  const wf=Math.sin(t2*38)*0.5+0.5;
  if(style==='glass'){
@@ -3002,9 +3002,9 @@ function drawQueen(s){
 }
 function drawUnit(s,u,LOD){
  let baseCol=u.col;
- {const FL=s.team===0?FLEETS[META.eq.fleet]:null; /* THE LIVERY LAW: every brood wears its QUEEN's colour - armies read at a glance */
-  const liv=(FL&&FL.tint)?FL.tint:s.col;
-  if(liv)baseCol=mixc(u.col,liv,(FL&&FL.tint)?0.88:0.85);}
+ {if(s.col)baseCol=mixc(u.col,s.col,0.85); /* THE LIVERY LAW: every brood wears its QUEEN's colour - armies read at a glance */
+  const FL=s.team===0?FLEETS[META.eq.fleet]:null;
+  if(FL&&FL.body)baseCol=mixc(baseCol,FL.body,FL.mix||0.24);}
  const well=clamp(u.hp/(u.maxHp||1),0,1); /* WELLNESS is worn, not barred: the hurt grey and dim */
  if(well<0.97)baseCol=sicken(baseCol,(1-well)*0.88); /* the hurt go DULL - that is the only health language */
  const col=u.flash>0?'#fff':(u.fat>0.6?shade(baseCol,-0.25):baseCol);
@@ -3151,39 +3151,10 @@ function drawUnit(s,u,LOD){
  }
  if(u.aura&&u.role!=='armourer'){ctx.globalAlpha=.5;ctx.strokeStyle='#c8853a';ctx.lineWidth=1.6;
   ctx.beginPath();ctx.arc(0,0,u.r+2.2,0,TAU);ctx.stroke();ctx.globalAlpha=1;} /* bronze-plated */
- if(s.team===0){const FL=FLEETS[META.eq.fleet];
+ if(s.team===0){const FL=FLEETS[META.eq.fleet]; /* ARMOUR FINISH: a rim of the material + one specular spot - cheap, no particles, no per-frame random */
   if(FL){
-   if(FL.glow){ctx.fillStyle=FL.glow;ctx.beginPath();ctx.arc(0,0,u.r+3,0,TAU);ctx.fill();
-    ctx.strokeStyle='rgba(255,150,50,'+(0.55+0.3*Math.sin(tnow*5+u.seed))+')';ctx.lineWidth=1.2; /* ember seams */
-    ctx.beginPath();ctx.moveTo(-u.r*0.6,u.r*0.2);ctx.lineTo(-u.r*0.1,-u.r*0.15);ctx.lineTo(u.r*0.4,u.r*0.15);ctx.stroke();
-    if(Math.random()<0.08)addP(u.x,u.y,'#ff8a50',1,50);}
-   if(FL.halo){ctx.strokeStyle='rgba(255,246,220,'+(0.6+0.25*Math.sin(tnow*3+u.seed))+')';ctx.lineWidth=1.4;
-    ctx.beginPath();ctx.ellipse(0,-u.r-3,u.r*0.5,u.r*0.16,0,0,TAU);ctx.stroke();}
-   if(FL.tendril){ctx.strokeStyle='rgba(120,80,160,.6)';ctx.lineWidth=1.3;
-    for(const sg9 of [-1,1]){ctx.beginPath();ctx.moveTo(-u.r*0.7,sg9*u.r*0.3);
-     ctx.quadraticCurveTo(-u.r*1.3,sg9*u.r*(0.5+0.2*Math.sin(tnow*4+u.seed)),-u.r*1.7,sg9*u.r*0.25);ctx.stroke();}}
-   if(FL.eye){const bl=Math.sin(tnow*1.7+u.seed)>0.86?0.2:1;
-    ctx.fillStyle='#e8dcf8';ctx.beginPath();ctx.ellipse(0,0,u.r*0.42,u.r*0.42*bl,0,0,TAU);ctx.fill();
-    const M7=me();const ea=Math.atan2(M7.y-u.y,M7.x-u.x)-a;
-    ctx.fillStyle='#241426';ctx.beginPath();ctx.arc(Math.cos(ea)*u.r*0.16,Math.sin(ea)*u.r*0.16*bl,u.r*0.16,0,TAU);ctx.fill();}
-   if(FL.spark){ctx.fillStyle='rgba(255,255,255,'+(0.5+0.4*Math.sin(tnow*3+u.seed*5))+')';
-    ctx.beginPath();ctx.arc(u.r*0.4,-u.r*0.3,1.1,0,TAU);ctx.fill();
-    ctx.beginPath();ctx.arc(-u.r*0.45,u.r*0.25,0.9,0,TAU);ctx.fill();
-    ctx.strokeStyle='rgba(200,216,255,.25)';ctx.lineWidth=0.8;
-    ctx.beginPath();ctx.moveTo(u.r*0.4,-u.r*0.3);ctx.lineTo(-u.r*0.45,u.r*0.25);ctx.stroke();}
-   if(FL.crown){ctx.strokeStyle='rgba(255,220,120,.9)';ctx.lineWidth=1.2;
-    ctx.beginPath();ctx.moveTo(u.r*0.3,-u.r-2);ctx.lineTo(u.r*0.5,-u.r-5);ctx.lineTo(u.r*0.7,-u.r-2);ctx.stroke();}
-   if(FL.frost){ctx.strokeStyle='rgba(230,245,255,'+(0.5+0.3*Math.sin(tnow*3+u.seed))+')';ctx.lineWidth=1;
-    ctx.beginPath();ctx.moveTo(-u.r*0.6,-u.r*0.5);ctx.lineTo(-u.r*0.2,-u.r*0.9);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(-u.r*0.4,-u.r*0.75);ctx.lineTo(-u.r*0.55,-u.r*0.95);ctx.stroke();}
-   if(FL.bloom){ctx.fillStyle='rgba(255,160,200,.8)';
-    for(let p9=0;p9<3;p9++){const aa=p9/3*TAU+u.seed;
-     ctx.beginPath();ctx.ellipse(u.r*0.5*Math.cos(aa)*0.4-u.r*0.3,Math.sin(aa)*u.r*0.4,u.r*0.16,u.r*0.09,aa,0,TAU);ctx.fill();}}
-   if(FL.wobble){const wob9=Math.sin(tnow*8+u.seed);
-    ctx.strokeStyle='rgba(143,224,122,.55)';ctx.lineWidth=2;
-    ctx.beginPath();ctx.ellipse(0,0,u.r+1.8+wob9*1.8,u.r+1.8-wob9*1.8,0,0,TAU);ctx.stroke();
-    ctx.fillStyle='rgba(255,255,255,.55)';ctx.beginPath();ctx.arc(-u.r*0.3,-u.r*0.3,u.r*0.2,0,TAU);ctx.fill();
-    if(Math.random()<0.04)addP(u.x,u.y+u.r,'#8fe07a',1,20);}
+   if(FL.rim){ctx.strokeStyle=FL.rim;ctx.lineWidth=FL.rimW||1.4;ctx.beginPath();ctx.arc(0,0,u.r+0.5,0,TAU);ctx.stroke();}
+   if(FL.spec){ctx.fillStyle=FL.spec;ctx.beginPath();ctx.arc(-u.r*0.32,-u.r*0.34,u.r*0.24,0,TAU);ctx.fill();}
   }}
  ctx.restore();
 }

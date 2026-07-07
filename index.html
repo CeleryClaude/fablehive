@@ -1208,6 +1208,23 @@ function step(dt){
      if(u.hp<=0)killUnit(e,u,s);did=true;}}}
    if(did){s.stompCd=1.4;addRing(s.x,s.y,'#fff2dc',44);if(s===M)sfx('stomp');}
   }
+  /* QUEEN RAM: bodies clash - the bigger deals more, CAPPED so it is a war of nerve, never a quick kill */
+  if(s.ramCd>0)s.ramCd-=dt;
+  if(!(s.ramCd>0)&&s.prot<=0){
+   for(const e of swarms){if(e.dead||e.team===s.team||e.prot>0)continue;
+    const dd=d2(s.x,s.y,e.x,e.y),rr=s.R+e.R;
+    if(dd<rr*rr){const d=Math.sqrt(dd)||1,nx=(e.x-s.x)/d,ny=(e.y-s.y)/d;
+     const clos=Math.max(0,s.vx*nx+s.vy*ny)+Math.max(0,-(e.vx*nx+e.vy*ny));
+     const sizeF=Math.min(2.3,(swarmMass(s)+8)/(swarmMass(e)+8));
+     const dmg=Math.min(16,8*sizeF*(0.4+Math.min(1,clos/260)));
+     e.hp-=dmg;e.flash=0.16;e.hitT=0.16;
+     const push=(rr-d)*0.5;e.x+=nx*push;e.y+=ny*push;s.x-=nx*push;s.y-=ny*push;
+     e.vx+=nx*90;e.vy+=ny*90;s.vx-=nx*40;s.vy-=ny*40;s.ramCd=0.6;
+     if(s===M||e===M){shake=Math.min(15,shake+5);if(s===M)sfx('stomp');}
+     if(e.hp<=0)killQueen(e,s);
+     break;}
+   }
+  }
   /* ally recall: fly home and merge */
   if(s.ally&&s.recalling){
    const main=mainOf(s.team);
@@ -2124,7 +2141,7 @@ function botBrain(s,dt){
   const huntGr=grottoOf(s.x,s.y);
   for(const e of swarms){if(e.dead||e.team===s.team)continue;
    if(grottoOf(e.x,e.y)!==huntGr)continue;
-   if(n>e.units.length*1.3+2){const q=d2(s.x,s.y,e.x,e.y);if(q<pd){pd=q;prey=e;}}}
+   if(n>e.units.length*1.3+2||(e.hp<(e.maxHp||300)*0.45&&n>e.units.length*0.55)){const q=d2(s.x,s.y,e.x,e.y);if(q<pd){pd=q;prey=e;}}}
   if(prey&&pd<(s.arch==='bully'?1400*1400:700*700)){s.prey=prey;s.gx=prey.x;s.gy=prey.y;return;}
  }
  /* coward loves coves */

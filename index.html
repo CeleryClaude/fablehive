@@ -12,7 +12,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#241426;font-family:
 #lb .me{color:#ffcf5e;font-weight:bold}
 #hint{position:fixed;bottom:84px;left:0;right:0;text-align:center;font-size:12.5px;opacity:.5;text-shadow:0 1px 3px #000;pointer-events:none}
 #bar{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;display:none;gap:8px;z-index:7;flex-wrap:wrap;justify-content:center;max-width:96vw}
-@media (pointer:coarse){#bar{gap:5px;bottom:8px}.ab{min-width:50px;padding:7px 4px}.ab span{font-size:12px}.ab small{font-size:9.5px}}
+@media (pointer:coarse){#bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;max-width:100vw;left:0;right:0;transform:none;justify-content:flex-start;padding:0 6px;-webkit-overflow-scrolling:touch}.ab{min-width:50px;padding:7px 4px;flex:0 0 auto}.ab span{font-size:12px}.ab small{font-size:9.5px}#tip{max-width:84vw;font-size:11px;padding:6px 10px;bottom:56px;max-height:28vh;overflow:hidden}#hint{display:none}#lb{font-size:11px}}
 #tip{position:fixed;left:50%;transform:translateX(-50%);bottom:86px;max-width:340px;padding:9px 13px;background:rgba(30,16,32,.92);border:1px solid rgba(255,220,150,.4);border-radius:12px;font-size:12.5px;line-height:1.45;display:none;z-index:8;pointer-events:none;text-align:center;box-shadow:0 4px 20px #0008}
 #tip b{color:#ffd75e;letter-spacing:1px}
 #xpbar{width:240px;height:9px;background:rgba(255,255,255,.12);border-radius:6px;margin:8px auto 2px;overflow:hidden}
@@ -2997,10 +2997,10 @@ function drawUnit(s,u,LOD){
   const fat9=Math.min(1,(u.load||0)/40);
   if(fat9>0.05){ctx.fillStyle='rgba(255,194,62,'+(0.45+0.3*fat9).toFixed(2)+')'; /* the honey SHOWS: a swelling amber belly */
    ctx.beginPath();ctx.ellipse(-u.r*0.3,0,u.r*(0.55+0.9*fat9),u.r*(0.45+0.75*fat9),0,0,TAU);ctx.fill();}
-  if(fat9>=0.97){ctx.strokeStyle='rgba(255,220,120,.8)';ctx.lineWidth=1.4; /* FULL: it gleams - and raiders notice */
-   ctx.beginPath();ctx.arc(0,0,u.r+4+Math.sin(tnow*3+u.seed),0,TAU);ctx.stroke();}
+  /* fat-forager halo ring REMOVED - a full forager just fattens and her CORE glows (below) */
   ctx.fillStyle=u.load>0?shade(col,0.35):col; /* laden = brighter LIVERY, never a costume change */
   ctx.beginPath();ctx.ellipse(0,0,u.r+1,u.r*0.72,0,0,TAU);ctx.fill();
+  if(fat9>=0.97){ctx.fillStyle='rgba(255,248,205,'+(0.5+0.28*Math.sin(tnow*3+u.seed)).toFixed(2)+')';ctx.beginPath();ctx.arc(0,0,u.r*0.5,0,TAU);ctx.fill();} /* FULL: the CORE glows, no halo */
   const wf=Math.sin(tnow*44*u.zeal+u.seed)*0.5+0.5;
   ctx.globalAlpha=.3+.3*wf;ctx.fillStyle='#fff8e8';
   ctx.beginPath();ctx.ellipse(-1,-u.r,u.r*0.9,u.r*0.42,0.5,0,TAU);ctx.fill();
@@ -3986,7 +3986,7 @@ function draw(){
  }
  /* minimap */
  ctx.setTransform(1,0,0,1,0,0);
- const ms=126*DPR,mx=12*DPR,my=H-ms-12*DPR,sc=ms/WORLD.w;
+ const ms=(isTouch?74:126)*DPR,mx=12*DPR,my=H-ms-(isTouch?58:12)*DPR,sc=ms/WORLD.w;
  ctx.fillStyle='rgba(30,18,34,.74)';ctx.fillRect(mx,my,ms,ms);
  ctx.strokeStyle='rgba(255,207,94,.4)';ctx.lineWidth=1;ctx.strokeRect(mx,my,ms,ms);
  for(const b of boulders){ctx.fillStyle='rgba(160,140,180,.4)';ctx.fillRect(mx+b.x*sc-1,my+b.y*sc-1,2,2);}

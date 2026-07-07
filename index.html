@@ -609,7 +609,7 @@ function spawnFlower(kind,quiet){
    if(groves.some(g9=>Math.hypot(x9-g9.x,y9-g9.y)<150))continue;
    if(fieldMaws.some(m=>Math.hypot(x9-m.x,y9-m.y)<160))continue;p={x:x9,y:y9};}
   if(!p)return null;
-  g={x:p.x,y:p.y,amt:rand(120,150),max:150,vx:0,vy:0,sp:6,kind:'comb',rich:true};
+  g={x:p.x,y:p.y,amt:rand(160,215),max:215,vx:0,vy:0,sp:6,kind:'comb',rich:true};
  } else if(kind==='sprout'){const p=flowerSpot(true);
   g={x:p.x,y:p.y,amt:rand(24,44),max:44,vx:rand(-5,5),vy:rand(-5,5),sp:(Math.random()*5)|0,kind:'sprout'};
  } else if(kind==='grand'){const p=flowerSpot(true);
@@ -722,7 +722,7 @@ function makeWorld(){
  /* THE LIVING MEADOW: flowers POP when drained and are reborn elsewhere — the hunt never stales */
  for(let g=0;g<60;g++)spawnFlower('sprout',true);
  for(let g=0;g<46;g++)spawnFlower('bloom',true);
- for(let g=0;g<7;g++)spawnFlower('comb',true);
+ for(let g=0;g<18;g++)spawnFlower('comb',true);
  for(let g=0;g<2;g++)spawnFlower('fairyring',true);
  for(let g=0;g<7;g++)spawnFlower('grand',true);
  for(let g=0;g<24;g++)spawnFlower('rock',true);
@@ -3447,7 +3447,13 @@ function draw(){
     ctx.lineTo(b.x+Math.cos(aa)*b.r*0.4-5,b.y+Math.sin(aa)*b.r*0.4+8);ctx.closePath();ctx.fill();}}
   else if(b.kind===0&&!b.cove){ /* mossy cap */
    ctx.fillStyle='rgba(122,168,96,.3)';
-   ctx.beginPath();ctx.ellipse(b.x-b.r*0.2,b.y-b.r*0.34,b.r*0.5,b.r*0.3,0.4,0,TAU);ctx.fill();}}
+   ctx.beginPath();ctx.ellipse(b.x-b.r*0.2,b.y-b.r*0.34,b.r*0.5,b.r*0.3,0.4,0,TAU);ctx.fill();}
+  if(!b.cove&&b.y>WORLD.h*0.58&&((b.x*7+b.y)|0)%3===0){ /* HANGING BEEHIVE - the honey vale's own decor */
+   const hx=b.x+b.r*0.6,hy=b.y+b.r*0.46,hs=Math.min(15,b.r*0.32);
+   ctx.strokeStyle='rgba(60,40,20,.45)';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(hx,hy-hs*1.5);ctx.lineTo(hx,hy-hs*0.9);ctx.stroke();
+   for(let hr=0;hr<3;hr++){ctx.fillStyle=hr%2?'#dfa636':'#f0c250';ctx.beginPath();ctx.ellipse(hx,hy-hs*0.5+hr*hs*0.5,hs*(0.92-hr*0.13),hs*0.34,0,0,TAU);ctx.fill();}
+   ctx.fillStyle='#3a2410';ctx.beginPath();ctx.arc(hx,hy+hs*0.28,hs*0.14,0,TAU);ctx.fill();}
+ }
  /* THE CRYSTAL COURT: floor and facets, drawn beneath every living thing */
  if(geodeA>0.02&&geodeIn){const g9=geodeIn;
   ctx.globalAlpha=geodeA;

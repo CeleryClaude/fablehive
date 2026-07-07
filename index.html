@@ -673,6 +673,16 @@ function makeWorld(){
   for(let i=0;i<NW;i++){
    const a1=i/NW*TAU,a2=(i+1)/NW*TAU;
    ways.push({x1:cxx+Math.cos(a1)*RR,y1:cyy+Math.sin(a1)*RR,x2:cxx+Math.cos(a2)*RR,y2:cyy+Math.sin(a2)*RR,w:80});
+  }
+  /* WIND TRIBUTARIES: side-channels that BOW away from the ring and RETURN to it - a loop, never a dead end. Boulders (checked vs ways) and coves (below) give them a wide berth. */
+  for(const pr of [[0,2],[3,5],[5,7]]){
+   const aA=pr[0]/NW*TAU,aB=pr[1]/NW*TAU,bow=rand(520,760),SEG=5;
+   let px=cxx+Math.cos(aA)*RR,py=cyy+Math.sin(aA)*RR;
+   for(let sg=1;sg<=SEG;sg++){
+    const tt=sg/SEG,ang=aA+tt*(aB-aA),rad=RR+bow*Math.sin(tt*Math.PI);
+    const nx=cxx+Math.cos(ang)*rad,ny=cyy+Math.sin(ang)*rad;
+    ways.push({x1:px,y1:py,x2:nx,y2:ny,w:60,trib:true,tail:sg===SEG});
+    px=nx;py=ny;}
   }}
 
  /* generous LARGE boulders — parted politely around the rivers of air */
@@ -705,7 +715,7 @@ function makeWorld(){
  for(let c=0;c<4;c++){
   let cx,cy,ct9=0;
   do{cx=rand(650,WORLD.w-650);cy=rand(650,WORLD.h-650);ct9++;}
-  while(ct9<40&&(covePts.some(p=>d2(p[0],p[1],cx,cy)<1350*1350)||d2(cx,cy,WORLD.w/2,WORLD.h/2)<900*900));
+  while(ct9<40&&(covePts.some(p=>d2(p[0],p[1],cx,cy)<1350*1350)||d2(cx,cy,WORLD.w/2,WORLD.h/2)<900*900||ways.some(w=>{if(!w.trib)return false;const L2=(w.x2-w.x1)**2+(w.y2-w.y1)**2||1;const t=clamp(((cx-w.x1)*(w.x2-w.x1)+(cy-w.y1)*(w.y2-w.y1))/L2,0,1);return d2(cx,cy,w.x1+(w.x2-w.x1)*t,w.y1+(w.y2-w.y1)*t)<430*430;})));
   covePts.push([cx,cy]);
   const CR=330,ga=rand(0,TAU);
   const tight=c===0;

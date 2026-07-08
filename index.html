@@ -4195,7 +4195,7 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
    const ex=s2.tx-s2.x,ey=s2.ty-s2.y,er9=Math.hypot(ex,ey);
    const staleMs9=nowR-(NET._lastArr||nowR); /* how long since a FRESH truth landed */
    if(staleMs9<120){ /* ONLY reconcile against CURRENT truth. During a server STALL the truth is FROZEN - dragging her back toward it is exactly the "stretching against invisible resistance / stuck on nothing" bug, so we don't. */
-    const allow=Math.min(300,s2.spdNow*((NET.rtt||120)/1000+0.14)+48);
+    const allow=Math.min(360,(s2.spdNow*((NET.rtt||120)/1000+0.14)+48)*(drv?1.8:1)); /* your hand on her = trust it; reconcile hard only when you ease off */
     if(er9>600){s2.x=s2.tx;s2.y=s2.ty;} /* truly lost (respawn/teleport): come home */
     else if(er9>allow){const pull=Math.min(1,1.1*dt)*(er9-allow)/er9;s2.x+=ex*pull;s2.y+=ey*pull;}
    } /* stalled wire: she flies FREE on your hand; the reconcile lands gently the moment a frame arrives */
@@ -4210,10 +4210,17 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
    s2.vx=(s2.tx-s2.x)*8;s2.vy=(s2.ty-s2.y)*8;s2.x+=(s2.tx-s2.x)*k9;s2.y+=(s2.ty-s2.y)*k9;
    s2.spdNow=Math.hypot(s2.vx,s2.vy);}
   {const uA=wA&&wA.um,uB=wB&&wB.um;
+   let OX=0,OY=0;
+   if(s2===MP&&!s2.ally){ /* ONE stable anchor per frame: predicted queen MINUS the server queen at the troops' OWN interp time (temporally matched, not the newest frame - that mismatch made them trail), then low-passed to erase the ~7px-per-frame tx step that made the swarm SWIM */
+    const sqx=(wA&&wB)?wA.x+(wB.x-wA.x)*al:s2.tx,sqy=(wA&&wB)?wA.y+(wB.y-wA.y)*al:s2.ty;
+    const rox=s2.x-sqx,roy=s2.y-sqy;
+    NET._fox=(NET._fox==null?rox:NET._fox+(rox-NET._fox)*Math.min(1,12*dt));
+    NET._foy=(NET._foy==null?roy:NET._foy+(roy-NET._foy)*Math.min(1,12*dt));
+    OX=NET._fox;OY=NET._foy;}
    for(let j=0;j<s2.units.length;j++){const u=s2.units[j];
     const tA=uA&&uA.get(u.uid),tB=uB&&uB.get(u.uid);
-    if(s2===MP&&!s2.ally&&tB){ /* own troops: interp but anchored around the predicted queen's offset */
-     const ox=s2.x-s2.tx,oy=s2.y-s2.ty;
+    if(s2===MP&&!s2.ally&&tB){ /* own troops: hold formation tight around the PREDICTED queen via the stable anchor above */
+     const ox=OX,oy=OY;
      const bx=tA?tA[0]+(tB[0]-tA[0])*al:tB[0],by=tA?tA[1]+(tB[1]-tA[1])*al:tB[1];
      {const tx9=bx+ox,ty9=by+oy,jx9=tx9-u.x,jy9=ty9-u.y,jd9=Math.hypot(jx9,jy9),cap9=150+(u.spd||300)*dt;
       if(jd9>cap9){u.x+=jx9/jd9*cap9;u.y+=jy9/jd9*cap9;}else{u.x=tx9;u.y=ty9;} /* glide over teleport-scale snaps, never teleport */

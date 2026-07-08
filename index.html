@@ -386,11 +386,12 @@ const ITEMS=[
  {id:'plainfleet',cat:'fleet', n:'No Kit',      xp:0,   d:'your brood as it was born - no armour, just wings'},
  {id:'waxfleet',   cat:'fleet', n:'Wingcase',    xp:1200,d:'raised wing-cases, grown in YOUR colour - a fiercer you'},
  {id:'chitinfleet',cat:'fleet', n:'Carapace',    xp:2000,d:'layered chitin plates, grown in your own colour'},
+ {id:'combfleet',  cat:'fleet', n:'Honeycomb',   xp:2200,d:'waxen hex-cells, plated in your own colour'},
  {id:'bronzefleet',cat:'fleet', n:'Thornbrood',  xp:2400,d:'spines and thorns, every one your own colour'},
  {id:'frostfleet', cat:'fleet', n:'Frostplate',  xp:2600,d:'ice-forged plate and pale wing-shards'},
- {id:'amberfleet', cat:'fleet', n:'Ravager',     xp:2800,d:'great forward mandibles in your hue - a predator'},
+ {id:'amberfleet', cat:'fleet', n:'Petalward',   xp:2800,d:'soft petals, grown in your own colour'},
  {id:'ironfleet',  cat:'fleet', n:'Ironguard',   xp:3000,d:'forged steel plate, fitted to each rank'},
- {id:'bonefleet',  cat:'fleet', n:'Hornbrood',   xp:3400,d:'curved horns and ridges, in your own colour'},
+ {id:'bonefleet',  cat:'fleet', n:'Leafmail',    xp:3400,d:'a mantle of leaves, all your own colour'},
  {id:'goldfleet',  cat:'fleet', n:'Regalia',     xp:3600,royal:true,d:'a golden crown-helm for every soul'},
  {id:'obsidianfleet',cat:'fleet',n:'Dreadplate',  xp:4200,royal:true,d:'black spiked warplate, forged per unit'}
 ];
@@ -2623,8 +2624,9 @@ const FLEETS={plainfleet:null, /* ROLE-AWARE ARMOUR: each unit type wears a DIFF
  goldfleet:{metal:'#f0c94a',dark:'#8a6410',lite:'#fff2b0',motif:'crown'},
  obsidianfleet:{metal:'#2e2a36',dark:'#0a0810',lite:'#8a84a0',motif:'spike'},
  chitinfleet:{bug:true,motif:'plate'},
- amberfleet:{bug:true,motif:'mandible'},
- bonefleet:{bug:true,motif:'horn'},
+ combfleet:{bug:true,motif:'honeycomb'},
+ amberfleet:{bug:true,motif:'petal'},
+ bonefleet:{bug:true,motif:'leaf'},
  waxfleet:{bug:true,motif:'wing'},
  bronzefleet:{bug:true,motif:'spike'}};
 function paintWings(g2,base,t2,style){
@@ -3007,6 +3009,10 @@ function drawArmour(g,u,FL,col){ /* FLAT, organic armour in the game's own langu
  const claw=(bx,by,ang,L,W,curl,fill)=>{g.save();g.translate(bx,by);g.rotate(ang);g.beginPath();g.moveTo(0,-W);g.quadraticCurveTo(L*0.5,-W*0.35-curl*L*0.45,L,-curl*L);g.quadraticCurveTo(L*0.5,W*0.35-curl*L*0.45,0,W);g.closePath();g.fillStyle=fill;g.fill();g.strokeStyle=edge;g.lineWidth=Math.max(0.5,W*0.45);g.stroke();g.restore();};
  const shell=(cx,cy,SX,SY,ang,fill)=>{g.save();g.translate(cx,cy);g.rotate(ang);g.beginPath();g.moveTo(SX,0);g.quadraticCurveTo(SX*0.2,-SY,-SX*0.7,-SY*0.55);g.quadraticCurveTo(-SX*1.05,0,-SX*0.7,SY*0.55);g.quadraticCurveTo(SX*0.2,SY,SX,0);g.closePath();g.fillStyle=fill;g.fill();g.strokeStyle=edge;g.lineWidth=Math.max(0.6,r*0.06);g.stroke();g.restore();};
  const ridge=(x,hh)=>{g.strokeStyle=edge;g.lineWidth=Math.max(1.1,r*0.14);g.beginPath();g.moveTo(x,-hh);g.lineTo(x,hh);g.stroke();};
+ const petal=(bx,by,ang,L,W,fill)=>{g.save();g.translate(bx,by);g.rotate(ang);g.beginPath();g.moveTo(0,0);g.quadraticCurveTo(L*0.35,-W,L*0.82,-W*0.28);g.quadraticCurveTo(L*1.06,0,L*0.82,W*0.28);g.quadraticCurveTo(L*0.35,W,0,0);g.closePath();g.fillStyle=fill||hi;g.fill();g.strokeStyle=edge;g.lineWidth=Math.max(0.5,W*0.26);g.stroke();g.restore();};
+ const leaf=(bx,by,ang,L,W,fill)=>{g.save();g.translate(bx,by);g.rotate(ang);g.beginPath();g.moveTo(0,0);g.quadraticCurveTo(L*0.4,-W,L,0);g.quadraticCurveTo(L*0.4,W,0,0);g.closePath();g.fillStyle=fill||base;g.fill();g.strokeStyle=edge;g.lineWidth=Math.max(0.5,W*0.32);g.stroke();g.beginPath();g.moveTo(L*0.14,0);g.lineTo(L*0.82,0);g.stroke();g.restore();};
+ const hexAt=(cx,cy,s)=>{g.beginPath();for(let i=0;i<6;i++){const a=i/6*TAU;const fn=i?'lineTo':'moveTo';g[fn](cx+Math.cos(a)*s,cy+Math.sin(a)*s);}g.closePath();g.fillStyle=base;g.fill();g.strokeStyle=edge;g.lineWidth=Math.max(0.5,s*0.2);g.stroke();};
+ const comb=(cx,cy,s)=>{const dx=s*1.5,dy=s*0.87;hexAt(cx,cy,s);hexAt(cx-dx,cy-dy,s);hexAt(cx-dx,cy+dy,s);hexAt(cx+dx,cy-dy,s*0.9);hexAt(cx+dx,cy+dy,s*0.9);hexAt(cx-dx*2,cy,s*0.85);};
  const helmCap=()=>{g.fillStyle=base;g.beginPath();g.moveTo(r*0.62,-r*0.42);g.quadraticCurveTo(r*0.0,-r*0.62,-r*0.2,-r*0.2);g.lineTo(-r*0.2,r*0.2);g.quadraticCurveTo(r*0.0,r*0.62,r*0.62,r*0.42);g.quadraticCurveTo(r*0.4,0,r*0.62,-r*0.42);g.closePath();g.fill();g.strokeStyle=edge;g.lineWidth=Math.max(0.6,r*0.07);g.stroke();g.strokeStyle=hi;g.lineWidth=Math.max(0.5,r*0.05);g.beginPath();g.moveTo(r*0.5,-r*0.34);g.quadraticCurveTo(r*0.05,-r*0.5,-r*0.14,-r*0.16);g.stroke();};
  const M1=(x,y,ang,sc)=>{
   if(M==='spike')claw(x,y,ang,r*0.85*sc,r*0.15*sc,0.12,hi);
@@ -3014,7 +3020,10 @@ function drawArmour(g,u,FL,col){ /* FLAT, organic armour in the game's own langu
   else if(M==='mandible')claw(x,y,ang,r*0.95*sc,r*0.2*sc,-0.5,base);
   else if(M==='crown')claw(x,y,ang,r*0.7*sc,r*0.2*sc,0,hi);
   else if(M==='wing')shell(x,y,r*0.5*sc,r*0.4*sc,ang,base);
-  else if(M==='plate')ridge(x,r*0.44*sc);};
+  else if(M==='plate')ridge(x,r*0.44*sc);
+  else if(M==='petal')petal(x,y,ang,r*0.7*sc,r*0.34*sc);
+  else if(M==='leaf')leaf(x,y,ang,r*0.95*sc,r*0.24*sc);};
+ if(M==='honeycomb'){const hs=r*0.26;comb(-r*0.15,0,hs);if(R==='armourer'||R==='titan'){comb(r*0.42,0,hs*0.9);comb(-r*0.62,0,hs*0.85);}return;}
  if(R==='forager'){if(M==='plate'){ridge(-r*0.1,r*0.45);ridge(-r*0.5,r*0.4);}else{M1(-r*0.55,-r*0.2,-2.5,0.7);M1(-r*0.55,r*0.2,2.5,0.7);}}
  else if(R==='soldier'){if(!FL.bug)helmCap();if(M==='plate'){ridge(-r*0.1,r*0.4);ridge(-r*0.5,r*0.34);}else{M1(r*0.05,-r*0.35,-1.9,1.0);if(M!=='mandible')M1(r*0.05,r*0.35,1.9,1.0);}M1(-r*0.4,-r*0.5,-2.6,0.6);M1(-r*0.4,r*0.5,2.6,0.6);}
  else if(R==='lancer'){M1(-r*0.1,-r*0.28,-2.75,0.85);M1(-r*0.1,r*0.28,2.75,0.85);M1(-r*0.55,-r*0.16,-2.85,0.6);M1(-r*0.55,r*0.16,2.85,0.6);if(M==='mandible'||M==='horn'){M1(r*0.55,-r*0.12,-0.15,0.7);M1(r*0.55,r*0.12,0.15,0.7);}}

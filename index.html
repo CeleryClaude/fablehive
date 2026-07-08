@@ -4083,7 +4083,7 @@ const NET={on:false,ws:null,you:0,mirror:{},aimT:0,deadShown:false,rtt:0,pingT:0
   const W9=new WebSocket(url);NET.ws=W9;
   W9.onopen=()=>{W9.send(JSON.stringify({k:'join',n:(name||'Queen').slice(0,16)}));};
   W9.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}
-   if(m.k==='init'){NET.you=m.you;NET.on=true;netApplyWorld(m.world);toast('CONNECTED - realm '+m.you,'#9fd8ff',3);}
+   if(m.k==='init'){NET.you=m.you;NET.on=true;netApplyWorld(m.world);renderBar();toast('CONNECTED - realm '+m.you,'#9fd8ff',3);} /* refresh the bar THE MOMENT we (re)connect so tiers unlock instantly, never a stale 'at X souls' after a laggy reconnect */
    else if(m.k==='f')netApplyFrame(m);
    else if(m.k==='p')NET.rtt=Date.now()-m.t;};
   W9.onclose=()=>{NET.on=false;toast('THE WIRE CLOSED - meadow is yours alone again','#ff9a6a',4);};

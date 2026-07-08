@@ -24,7 +24,7 @@ function makeGame(htmlPath){
 function start(port,htmlPath){
  const {WebSocketServer}=require('ws');
  const HTML=htmlPath||path.join(__dirname,fs.existsSync(path.join(__dirname,'index.html'))?'index.html':'BROOD.html');
- let G=makeGame(HTML);
+ let G=makeGame(HTML);G.unlockAll&&G.unlockAll();
  const SEATS=[0,1,2,3,4,5];
  const seats={};
  let lastEmpty=Date.now();
@@ -33,7 +33,7 @@ function start(port,htmlPath){
     FRESH, light meadow rather than an hours-old, overgrown one no 60Hz tick can hold. */
  function applyWild(){for(const t of SEATS){const sw=G.swarms.find(z=>z.team===t&&!z.ally);
   if(sw){if(seats[t]!==undefined){sw.bot=false;}else{sw.bot=true;delete sw.forceAim;if(t===0)sw.name='Wilder';}}}}
- function freshWorld(){G=makeGame(HTML);applyWild();}
+ function freshWorld(){G=makeGame(HTML);G.unlockAll&&G.unlockAll();applyWild();}
  applyWild();
  const httpSrv=http.createServer((req,res)=>{
   const u=(req.url||'/').split('?')[0];

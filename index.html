@@ -440,7 +440,7 @@ function newSwarm(team,x,y,opts){
   name:opts.name||'brood',col:opts.col||'#ffcf5e',
   x,y,vx:0,vy:0,tx:x,ty:y,drive:false,
   hp:300,maxHp:300,honey:opts.honey!=null?opts.honey:30,units:[],dead:false,respawn:0,prot:3,flash:0,hitT:0,
-  R:36,stompCd:0,expoT:0,exposed:false,rout:0,lost:0,lostT:0,
+  R:36,stompCd:0,expoT:0,exposed:false,
   aiT:0,gx:x,gy:y,fear:0};
  return s;
 }
@@ -505,7 +505,7 @@ function chooseEvo(role){
  addRing(me().x,me().y,'#ffd75e',me().R+30);
  renderBar();return true;
 }
-function canBuy(role){return role==='forager'||role==='soldier'||unlocked[role];}
+function canBuy(role){return role==='forager'||role==='soldier'||unlocked[role]||(typeof NET!=='undefined'&&NET&&NET.on);}
 function recruitCost(s,role){let c=ROLES[role].cost;if(role!=='forager'){const n=s.units.length;if(n>44)c=Math.round(c*(1+(n-44)*0.035));}return c;} /* DIMINISHING RETURNS (58): a lean warband is cheap; every COMBAT soul past ~45 costs steeply more (roughly 2x by 70, ~3x near the cap). Foragers stay flat so the economy never chokes. The pressure to stay small is the WALLET, not the legs. */
 function buy(s,role){
  if(s.dead||!canBuy(role))return false;
@@ -1203,9 +1203,6 @@ function step(dt){
     if(s===me())sfx('evolve');
     if(s.growM>=120)trophy('moltaura','APEX — THE SHIMMER OF THE GREAT IS YOURS');
     s.growM+=15;}}
-  /* rout & morale */
-  if(s.lostT>0){s.lostT-=dt;if(s.lostT<=0)s.lost=0;}
-  if(s.rout>0)s.rout-=dt;
   /* exposure (gentle, x2) */
   let nb=1e18;for(const u of s.units){const q=d2(u.x,u.y,s.x,s.y);if(q<nb)nb=q;}
   const iso=n===0||nb>150*150;
@@ -1259,7 +1256,7 @@ function step(dt){
    while(dd9>Math.PI)dd9-=TAU;while(dd9<-Math.PI)dd9+=TAU;
    ca9+=clamp(dd9,-2.6*dt,2.6*dt);s._fh=ca9; /* the LEGION wheels in an arc - it never teleports sideways */
    if(moving){hx=Math.cos(ca9);hy=Math.sin(ca9);}}
-  const war=s.war,routed=s.rout>0;
+  const war=s.war;
   /* wedge slots for soldiers: the phalanx forms ahead when the queen flies */
   /* slots are PERSISTENT (u.slot): a fallen comrade leaves a gap, not a scramble */
   let anc=0,tit=0,sol=0,lan=0,spi=0,nur=0;
@@ -1283,7 +1280,7 @@ function step(dt){
      troops — with its bronze ring/halo — is GONE: the armourer is a pure BULWARK for the queen, nothing else.) */
   const anch=[];for(const u of s.units)if(u.role==='armourer')anch.push(u);
   for(const u of s.units){
-   u.braced=(u.role==='armourer')||(u.role==='soldier'&&!routed&&Math.hypot(u.x-s.x,u.y-s.y)<s.R*1.3);
+   u.braced=(u.role==='armourer')||(u.role==='soldier'&&Math.hypot(u.x-s.x,u.y-s.y)<s.R*1.3);
   }
   /* STICKY BULWARK (57): a foe diving the crown can no longer skate through an armourer's smooth round body.
      To enemies the armourer is now a SOLID obstacle that TARS them at the line, so assassins stick to the shield
@@ -1343,7 +1340,7 @@ function step(dt){
    }
    else{ /* fighters & shields */
     let foe=null;
-    if(war&&!routed&&u.role!=='nurse'){
+    if(war&&u.role!=='nurse'){
      if(!u.tgt||u.tgt.slain||Math.random()<0.02){u.tgt=null;let bs=1e18;
       /* THE LEVY CAP: a mega-war can field thousands; no soldier needs to interview all of them.
          Scan up to 60 (a random window, so no unit is systematically ignored) - a HARD ceiling on
@@ -1362,10 +1359,10 @@ function step(dt){
     }
     if(elder&&!foe&&u.role!=='nurse'&&elder.provoked>0&&d2(u.x,u.y,elder.x,elder.y)<300*300)foe=elder;
     if(spider&&!foe&&u.role!=='nurse'&&spider.provoked>0&&d2(u.x,u.y,spider.x,spider.y)<340*340)foe=spider;
-    if(!foe&&!war&&!routed&&(u.role==='lancer'||u.role==='soldier'||u.role==='titan')){let bq9=270*270; /* stingers and STARERS are answered - titans too */
+    if(!foe&&!war&&(u.role==='lancer'||u.role==='soldier'||u.role==='titan')){let bq9=270*270; /* stingers and STARERS are answered - titans too */
      for(const wp of wasps){const q=d2(u.x,u.y,wp.x,wp.y);if(q<bq9){bq9=q;foe=wp;}}
      for(const ey of eyes){const q=d2(u.x,u.y,ey.x,ey.y);if(q<bq9){bq9=q;foe=ey;}}}
-    if(!foe&&!routed&&((u.role==='lancer'&&u._fi%5<3)||(u.role==='spitter'&&u._fi%3===0))){ /* FREEBLADES: lancers hunt freely (~60%), spitters a third - war or no war */
+    if(!foe&&((u.role==='lancer'&&u._fi%5<3)||(u.role==='spitter'&&u._fi%3===0))){ /* FREEBLADES: lancers hunt freely (~60%), spitters a third - war or no war */
      let bs2=260*260,bswm=null;const myGr9=grottoOf(s.x,s.y);
      gridNear(u.x,u.y,260,eu=>{const es=eu._sw;
       if(!es||es.dead||es.team===s.team||eu.slain)return;
@@ -1438,7 +1435,7 @@ function step(dt){
       const vv=Math.hypot(u.vx,u.vy)||1;u.vx+=u.vx/vv*70;u.vy+=u.vy/vv*70;
       if(foe.cl!==undefined)foe.cl++;
      }
-    } else if(routed){gx=s.x-hx*30;gy=s.y-hy*30;fast=true;}
+    }
     else if(u.role==='spitter'){ /* ARTILLERY RANKS: straight lines behind the queen */
      const row=Math.floor(u._fi/4),inR4=Math.min(4,spi-row*4),lat=(CSEQ4[u._fi%4]-CMEAN4[inR4-1])*26;
      if(moving){
@@ -2066,7 +2063,7 @@ function killElder(by){
 }
 function reviveSwarm(s){
  const banked=s.honey; /* THE BANK IS SACRED: revive never eats what death spared */
- s.dead=false;s.hp=s.maxHp=300;s.honey=Math.max(banked,150);s.units=[];s.rout=0;s.lost=0;s.exposed=false;s.expoT=0;
+ s.dead=false;s.hp=s.maxHp=300;s.honey=Math.max(banked,150);s.units=[];s.exposed=false;s.expoT=0;
  let bx=s.x,by=s.y,bs=-1;
  for(let k=0;k<24;k++){const x=rand(400,WORLD.w-400),y=rand(400,WORLD.h-400);
   if(elder&&d2(x,y,elder.hx,elder.hy)<900*900)continue;
@@ -4032,18 +4029,13 @@ function hud(){
  const M=me();if(!M)return; /* no queen yet, no numbers yet */
  const total=teamSize(0);if(total>peak)peak=total;
  let st;
- if(!M.war)hud._wh=null;
  if(M.dead)st='<span style="color:#ff8f9a">fallen…</span>';
  else if(M.exposed)st='<span style="color:#ff6a7a">⚡ EXPOSED! return to your brood</span>';
- else if(M.rout>0)st='<span style="color:#ff8f9a">your ranks are broken — rally</span>';
  else if(M.war){const W9=M.war;
   let mh=0,mm=0,eh=0,em=0;for(const u of M.units){mh+=u.hp;mm+=u.maxHp;}for(const u of W9.units){eh+=u.hp;em+=u.maxHp;}
   const mp=mm?mh/mm:0,ep=em?eh/em:0;
-  hud._wh=hud._wh||[];hud._wh.push([tnow,mh,eh]);while(hud._wh.length>1&&tnow-hud._wh[0][0]>3)hud._wh.shift();
-  const d0=hud._wh[0],dm9=Math.max(0,d0[1]-mh),de9=Math.max(0,d0[2]-eh);
-  const verdict=(dm9*1.25<de9)?'<b style="color:#9fe8a0">WINNING</b>':(de9*1.25<dm9)?'<b style="color:#ff6a7a">LOSING - pull back?</b>':'<b style="color:#ffd75e">HOLDING</b>';
   const bar9=(p9,c9)=>'<span style="display:inline-block;width:46px;height:6px;background:#ffffff22;border-radius:3px;vertical-align:middle"><span style="display:block;width:'+Math.round(p9*100)+'%;height:100%;background:'+c9+';border-radius:3px"></span></span>';
-  st='<span style="color:#ff9a6a">⚔</span> YOU '+M.units.length+' '+bar9(mp,'#9fe8c0')+' vs '+bar9(ep,'#ff8f7a')+' '+W9.units.length+' <span style="opacity:.7">fallen '+(M.warLoss||0)+':'+(W9.warLoss||0)+'</span> '+verdict;
+  st='<span style="color:#ff9a6a">⚔</span> YOU '+M.units.length+' '+bar9(mp,'#9fe8c0')+' vs '+bar9(ep,'#ff8f7a')+' '+W9.units.length;
  }
  else if((M.spdNow||0)>170)st='<span style="color:#ffe9a0">flying</span>';
  else st='<span style="opacity:.55">gathering</span>';
@@ -4140,7 +4132,7 @@ function netApplyFrame(F){ /* the LIVING world flows in - stamped by OUR clock, 
   let m9=NET.mirror[w9.id];
   if(w9.d){if(m9)m9.dead=true;continue;}
   if(!m9){m9=NET.mirror[w9.id]={nid:w9.id,team:w9.i,bot:true,ally:!!w9.a,x:w9.x,y:w9.y,vx:0,vy:0,tx:w9.x,ty:w9.y,
-   maxHp:300,units:[],R:36,war:null,rout:0,exposed:false,prot:0,gulp:0,flash:0,hitT:0,recalling:false,honey:0,hp:300,
+   maxHp:300,units:[],R:36,war:null,exposed:false,prot:0,gulp:0,flash:0,hitT:0,recalling:false,honey:0,hp:300,
    cosEq:null,warLoss:0,sayT:0,stompCd:0,expoT:0,lost:0,lostT:0,slots:{}};}
   m9.dead=false;m9.name=w9.n;m9.col=w9.c;m9.col2=w9.c2||null;m9.cosEq=w9.q||null;m9.prot=w9.p?1:0;
   m9.tx=w9.x;m9.ty=w9.y;m9.hp=w9.h;m9.honey=w9.H;
@@ -4285,7 +4277,7 @@ function applyInput(team,cmd){ /* THE HAND: remote players ride the same reins t
  if(cmd.recall)recallAll(team);
  if(cmd.say)s.say=(''+cmd.say).slice(0,80),s.sayT=8;
  return true;}
-window.__G={netSnapshot,netWorldInit,netDyn,netDynLite,applyInput,NET,netApplyWorld,netApplyFrame,netTick,
+window.__G={unlockAll(){for(const k in ROLES)unlocked[k]=true;},netSnapshot,netWorldInit,netDyn,netDynLite,applyInput,NET,netApplyWorld,netApplyFrame,netTick,
  get swarms(){return swarms;},get groves(){return groves;},get boulders(){return boulders;},get coves(){return coves;},
  get ways(){return ways;},get drops(){return drops;},get elder(){return elder;},get tnow(){return tnow;},get shots(){return shots;},get goldT(){return goldT;},set goldT(v){goldT=v;},get FAIRY(){return FAIRY;},get dews(){return dews;},get comboN(){return comboN;},get spider(){return spider;},get webshots(){return webshots;},killSpider,get grottos(){return grottos;},get wasps(){return wasps;},get fieldMaws(){return fieldMaws;},get eyes(){return eyes;},get orbs(){return orbs;},get OASIS(){return OASIS;},realmOf,get ambient(){return ambient;},BOTS,get decor(){return decor;},get thorns(){return thorns;},honeyCap,
  get unlocked(){return unlocked;},get evoPending(){return evoPending;},get META(){return META;},

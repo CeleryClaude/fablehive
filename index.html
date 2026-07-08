@@ -4,6 +4,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
 html,body{width:100%;height:100%;overflow:hidden;background:#241426;font-family:'Trebuchet MS',system-ui,sans-serif;color:#fff2dc;touch-action:none}
+button,.ab,.btn,.btn2,.tab,.szBtn,#gear{touch-action:manipulation}
 #cv{display:block;position:fixed;inset:0}
 #hud{position:fixed;top:10px;left:12px;font-size:14px;line-height:1.5;text-shadow:0 1px 3px #000;pointer-events:none}
 #hud b{font-size:23px;color:#ffe9a0;display:inline-block;transition:transform .12s}
@@ -14,6 +15,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#241426;font-family:
 #bar{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;display:none;gap:8px;z-index:7;flex-wrap:wrap;justify-content:center;max-width:96vw}
 @media (pointer:coarse), (max-width:820px){#bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;max-width:none;left:76px;right:4px;transform:none;justify-content:flex-start;padding:0 5px;-webkit-overflow-scrolling:touch}.ab{min-width:44px;padding:6px 3px;flex:0 0 auto}.ab span{font-size:10.5px}.ab small{font-size:8px}#tip{max-width:82vw;font-size:11px;padding:5px 9px;bottom:52px;max-height:22vh;overflow:hidden}#hint{display:none}#lb{font-size:11px}}
 html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;max-width:none;left:76px;right:4px;transform:none;justify-content:flex-start;padding:0 5px;-webkit-overflow-scrolling:touch}html.mob .ab{min-width:44px;padding:6px 3px;flex:0 0 auto}html.mob .ab span{font-size:10.5px}html.mob .ab small{font-size:8px}html.mob #tip{max-width:82vw;font-size:11px;padding:5px 9px;bottom:52px;max-height:22vh;overflow:hidden}html.mob #hint{display:none}html.mob #lb{font-size:11px}
+html.mob #subRail{position:fixed;left:6px;right:6px;bottom:6px;top:auto;width:auto;padding:7px 12px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;z-index:12}html.mob #subRail .subMore{display:none}html.mob #subRail button{width:auto!important;margin-top:0!important;padding:6px 16px}html.mob #home{padding-bottom:70px}
 #tip{position:fixed;left:50%;transform:translateX(-50%);bottom:86px;max-width:340px;padding:9px 13px;background:rgba(30,16,32,.92);border:1px solid rgba(255,220,150,.4);border-radius:12px;font-size:12.5px;line-height:1.45;display:none;z-index:8;pointer-events:none;text-align:center;box-shadow:0 4px 20px #0008}
 #tip b{color:#ffd75e;letter-spacing:1px}
 #xpbar{width:240px;height:9px;background:rgba(255,255,255,.12);border-radius:6px;margin:8px auto 2px;overflow:hidden}
@@ -91,12 +93,12 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
 </div>
 <div id="home" class="panel">
  <div id="subRail" style="position:absolute;left:10px;top:12%;width:150px;padding:14px 12px;background:linear-gradient(180deg,rgba(70,40,20,.85),rgba(40,22,44,.9));border:1.5px solid #ffd75e88;border-radius:14px;text-align:center;font-size:12px;line-height:1.5">
-  <div style="font-size:26px">👑</div>
-  <b style="color:#ffd75e;letter-spacing:1px">ROYAL SUB</b>
-  <div style="opacity:.85;margin:6px 0">wear <b>EVERYTHING</b><br>every treasure<br>every fleet<br>every future season</div>
+  <div class="subMore" style="font-size:26px">👑</div>
+  <b style="color:#ffd75e;letter-spacing:1px">👑 ROYAL SUB</b>
+  <div class="subMore" style="opacity:.85;margin:6px 0">wear <b>EVERYTHING</b><br>every treasure<br>every fleet<br>every future season</div>
   <div style="font-size:17px;color:#ffd75e;font-weight:bold">$5<span style="font-size:11px">/mo</span></div>
   <button class="btn2" id="subBtn" style="margin-top:8px;border-color:#ffd75e;width:100%">SUBSCRIBE</button>
-  <div style="opacity:.5;font-size:10px;margin-top:6px">all of it stays earnable, free</div>
+  <div class="subMore" style="opacity:.5;font-size:10px;margin-top:6px">all of it stays earnable, free</div>
  </div>
  <h1 style="font-size:34px">THE NEST</h1>
  <canvas id="qprev" width="230" height="120"></canvas>
@@ -2351,12 +2353,14 @@ function showTipFor(el2){
  clearTimeout(tipTimer);if(small9)tipTimer=setTimeout(hideTip,3200);
 }
 function hideTip(){clearTimeout(tipTimer);const t2=document.getElementById('tip');if(t2)t2.style.display='none';}
-function doAct(act){
- const M=me();let r3=true;
- if(act==='split')splitSwarm(M);
- else if(act==='recall')recallAll(0);
- else if(act.indexOf('unlock:')===0)chooseEvo(act.slice(7));
- else if(act.indexOf('buy:')===0)r3=buy(M,act.slice(4));
+function doAct(a){
+ let r3=true;
+ if(a==='split')act({split:1});
+ else if(a==='recall')act({recall:1});
+ else if(a.indexOf('unlock:')===0)chooseEvo(a.slice(7));
+ else if(a.indexOf('buy:')===0){const role=a.slice(4);
+  if(NET.on){act({buy:role});r3=!!(me()&&me().honey>=recruitCost(me(),role));} /* ONLINE: SEND it (was buy() on the local mirror, which the wire immediately overwrote = mobile buttons did nothing) */
+  else r3=buy(me(),role);}
  resumeAudio();return r3;
 }
 function showOver(){
@@ -4114,7 +4118,7 @@ function netApplyFrame(F){ /* the LIVING world flows in - stamped by OUR clock, 
   {const arr=(typeof performance!=='undefined'?performance.now():Date.now());
    if(NET.clock==null||arr-NET._lastArr>500)NET.clock=arr; /* first frame or a long stall: hard resync */
    else{const iv=arr-NET._lastArr;NET.jit=(NET.jit||0)*0.9+Math.abs(iv-33)*0.1; /* running arrival jitter, ms */
-    NET.clock+=33;NET.clock+=(arr-NET.clock)*0.06;} /* JITTER BUFFER: advance one send-interval (even spacing kills stutter), then ease gently toward true arrival to track the real rate */
+    NET.clock+=33;NET.clock+=(arr-NET.clock)*0.11;} /* JITTER BUFFER: advance one send-interval (even spacing kills stutter), then ease gently toward true arrival to track the real rate */
    NET._lastArr=arr;
    NET.buf.push({rt:NET.clock,m:fm});}
   while(NET.buf.length>14)NET.buf.shift();}
@@ -4173,7 +4177,7 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
     mirror. If troops still stutter/hitch after this ships, that's the signal this needs to go back UP, not
     down further. */
  const nowR=(typeof performance!=='undefined'?performance.now():Date.now()),
-  interpDelay=Math.min(100,Math.max(48,40+(NET.rtt||0)*0.26)),rT=nowR-interpDelay;
+  interpDelay=Math.min(150,Math.max(85,60+(NET.rtt||0)*0.32)),rT=nowR-interpDelay;
  let FA=null,FB=null;
  for(let i=NET.buf.length-1;i>=0;i--){if(NET.buf[i].rt<=rT){FA=NET.buf[i];FB=NET.buf[i+1]||NET.buf[i];break;}}
  if(!FA&&NET.buf.length){FA=FB=NET.buf[0];}
@@ -4192,9 +4196,9 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
    s2.x+=s2.vx*dt;s2.y+=s2.vy*dt;
    collideBoulders(s2,Math.max(12+queenStage(s2)*3.5,s2.R*0.26));
    const ex=s2.tx-s2.x,ey=s2.ty-s2.y,er9=Math.hypot(ex,ey);
-   const allow=Math.min(150,s2.spdNow*((NET.rtt||120)/1000+0.06)+14); /* honest drift for YOUR ping: never punished */
+   const allow=Math.min(260,s2.spdNow*((NET.rtt||120)/1000+0.14)+48); /* honest drift for YOUR ping: never punished */
    if(er9>420){s2.x=s2.tx;s2.y=s2.ty;} /* far past truth: come home */
-   else if(er9>allow){const pull=Math.min(1,1.8*dt)*(er9-allow)/er9;s2.x+=ex*pull;s2.y+=ey*pull;} /* only the EXCESS is corrected */
+   else if(er9>allow){const pull=Math.min(1,1.1*dt)*(er9-allow)/er9;s2.x+=ex*pull;s2.y+=ey*pull;} /* only the EXCESS is corrected */
    if(er9<=1200){const swp=sweepBoulders(ox0,oy0,s2.x,s2.y,Math.max(12+queenStage(s2)*3.5,s2.R*0.26));s2.x=swp[0];s2.y=swp[1];} /* SWEPT for real-scale motion only; a teleport-scale snap (spawn/respawn, er9>1200) lands on truth freely so the sweep can never strand you in a corner */
    collideBoulders(s2,Math.max(12+queenStage(s2)*3.5,s2.R*0.26)); /* THE STONE VETO: the drift-tolerance pull above answers to your PING, never to solid rock - re-resolve once more, last word, every frame, so "honest drift" can never settle you on/inside a boulder. Verified safe (idempotent when clear) via boulder_rest_test.js; could not conclusively reproduce the reported fly-through/rest-on-top in a same-process sandbox (no real jitter/packet-loss to test against - see mirror_test.js's own caveat), so this ships as a hardening, not a confirmed fix */
    s2.spdNow=Math.hypot(s2.vx,s2.vy);

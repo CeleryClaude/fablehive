@@ -4170,14 +4170,14 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
     mirror. If troops still stutter/hitch after this ships, that's the signal this needs to go back UP, not
     down further. */
  const nowR=(typeof performance!=='undefined'?performance.now():Date.now()),
-  interpDelay=Math.min(150,Math.max(85,60+(NET.rtt||0)*0.32)),rT=nowR-interpDelay;
+  interpDelay=Math.min(140,Math.max(65,48+(NET.rtt||0)*0.32)),rT=nowR-interpDelay;
  let FA=null,FB=null;
  for(let i=NET.buf.length-1;i>=0;i--){if(NET.buf[i].rt<=rT){FA=NET.buf[i];FB=NET.buf[i+1]||NET.buf[i];break;}}
  if(!FA&&NET.buf.length){FA=FB=NET.buf[0];}
  let al;const newest9=NET.buf.length?NET.buf[NET.buf.length-1]:null;
  if(FA&&FB&&FB!==FA&&FB.rt>FA.rt){al=Math.min(1,Math.max(0,(rT-FA.rt)/(FB.rt-FA.rt)));} /* two known truths: interpolate BETWEEN them */
  else if(newest9&&NET.buf.length>=2&&rT>=newest9.rt){ /* STARVED — server stalled (shared-CPU steal): glide on the last known velocity instead of freezing into inert dots; capped so a long stall can't fling them away */
-  const P9=NET.buf[NET.buf.length-2];FA=P9;FB=newest9;al=(newest9.rt>P9.rt)?Math.min(2.4,(rT-P9.rt)/(newest9.rt-P9.rt)):1;}
+  const P9=NET.buf[NET.buf.length-2];FA=P9;FB=newest9;al=(newest9.rt>P9.rt)?Math.min(1.8,(rT-P9.rt)/(newest9.rt-P9.rt)):1;}
  else al=1;
  for(const s2 of swarms){if(s2.dead)continue;
   const wA=FA&&FA.m.get(s2.nid),wB=FB&&FB.m.get(s2.nid);
@@ -4193,9 +4193,12 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
    s2.x+=s2.vx*dt;s2.y+=s2.vy*dt;
    collideBoulders(s2,Math.max(12+queenStage(s2)*3.5,s2.R*0.26));
    const ex=s2.tx-s2.x,ey=s2.ty-s2.y,er9=Math.hypot(ex,ey);
-   const allow=Math.min(260,s2.spdNow*((NET.rtt||120)/1000+0.14)+48); /* honest drift for YOUR ping: never punished */
-   if(er9>420){s2.x=s2.tx;s2.y=s2.ty;} /* far past truth: come home */
-   else if(er9>allow){const pull=Math.min(1,1.1*dt)*(er9-allow)/er9;s2.x+=ex*pull;s2.y+=ey*pull;} /* only the EXCESS is corrected */
+   const staleMs9=nowR-(NET._lastArr||nowR); /* how long since a FRESH truth landed */
+   if(staleMs9<120){ /* ONLY reconcile against CURRENT truth. During a server STALL the truth is FROZEN - dragging her back toward it is exactly the "stretching against invisible resistance / stuck on nothing" bug, so we don't. */
+    const allow=Math.min(300,s2.spdNow*((NET.rtt||120)/1000+0.14)+48);
+    if(er9>600){s2.x=s2.tx;s2.y=s2.ty;} /* truly lost (respawn/teleport): come home */
+    else if(er9>allow){const pull=Math.min(1,1.1*dt)*(er9-allow)/er9;s2.x+=ex*pull;s2.y+=ey*pull;}
+   } /* stalled wire: she flies FREE on your hand; the reconcile lands gently the moment a frame arrives */
    if(er9<=1200){const swp=sweepBoulders(ox0,oy0,s2.x,s2.y,Math.max(12+queenStage(s2)*3.5,s2.R*0.26));s2.x=swp[0];s2.y=swp[1];} /* SWEPT for real-scale motion only; a teleport-scale snap (spawn/respawn, er9>1200) lands on truth freely so the sweep can never strand you in a corner */
    collideBoulders(s2,Math.max(12+queenStage(s2)*3.5,s2.R*0.26)); /* THE STONE VETO: the drift-tolerance pull above answers to your PING, never to solid rock - re-resolve once more, last word, every frame, so "honest drift" can never settle you on/inside a boulder. Verified safe (idempotent when clear) via boulder_rest_test.js; could not conclusively reproduce the reported fly-through/rest-on-top in a same-process sandbox (no real jitter/packet-loss to test against - see mirror_test.js's own caveat), so this ships as a hardening, not a confirmed fix */
    s2.spdNow=Math.hypot(s2.vx,s2.vy);
@@ -4212,11 +4215,13 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
     if(s2===MP&&!s2.ally&&tB){ /* own troops: interp but anchored around the predicted queen's offset */
      const ox=s2.x-s2.tx,oy=s2.y-s2.ty;
      const bx=tA?tA[0]+(tB[0]-tA[0])*al:tB[0],by=tA?tA[1]+(tB[1]-tA[1])*al:tB[1];
-     u.vx=(bx+ox-u.x)/Math.max(dt,0.001);u.vy=(by+oy-u.y)/Math.max(dt,0.001);
-     u.x=bx+ox;u.y=by+oy;}
+     {const tx9=bx+ox,ty9=by+oy,jx9=tx9-u.x,jy9=ty9-u.y,jd9=Math.hypot(jx9,jy9),cap9=150+(u.spd||300)*dt;
+      if(jd9>cap9){u.x+=jx9/jd9*cap9;u.y+=jy9/jd9*cap9;}else{u.x=tx9;u.y=ty9;} /* glide over teleport-scale snaps, never teleport */
+      u.vx=jx9/Math.max(dt,0.001);u.vy=jy9/Math.max(dt,0.001);}}
     else if(tB){const bx=tA?tA[0]+(tB[0]-tA[0])*al:tB[0],by=tA?tA[1]+(tB[1]-tA[1])*al:tB[1];
-     u.vx=(bx-u.x)/Math.max(dt,0.001);u.vy=(by-u.y)/Math.max(dt,0.001);
-     u.x=bx;u.y=by;}
+     const jx9=bx-u.x,jy9=by-u.y,jd9=Math.hypot(jx9,jy9),cap9=150+(u.spd||300)*dt;
+     if(jd9>cap9){u.x+=jx9/jd9*cap9;u.y+=jy9/jd9*cap9;}else{u.x=bx;u.y=by;} /* glide over teleport-scale snaps (post-stall), never a jarring jump */
+     u.vx=jx9/Math.max(dt,0.001);u.vy=jy9/Math.max(dt,0.001);}
     else{const k9=Math.min(1,6*dt);
      u.vx=(u.tx-u.x)*8;u.vy=(u.ty-u.y)*8;u.x+=(u.tx-u.x)*k9;u.y+=(u.ty-u.y)*k9;}}}
   if(s2.sayT>0)s2.sayT-=dt;}

@@ -237,7 +237,7 @@ const EVOS=[
  {at:60,kind:'unlock',opts:['titan'],label:'TITANS'}
 ];
 const SPLIT_MAX=3;
-const SOUL_CAP=150; /* THE MUSTER LIMIT: comfortably past every unlock (titans need 60) so nothing is ever locked out - a brood this size is still a colossal army, just not an UNBOUNDED one a server tick has to survive */
+const SOUL_CAP=100; /* THE MUSTER LIMIT (58): brought DOWN from 150 - still comfortably past every unlock (titans 60, stage-3 70) so nothing is ever locked out, but a leaner ceiling means more dogfights and fewer laggy deathmatches. Split to grow past it as more queens, not one bloated swarm a 60Hz tick can't hold. */
 /* meta (cosmetics only, ever — and EVERYTHING earnable with ✨: Royal Nectar only skips the grind) */
 let META={xp:0,skin:0,nectar:0,royal:false,sub:false,seasonXp:0,claimedF:[],claimedR:[],owned:{},eq:{pattern:'plain',crown:'none',trail:'none',wings:'standard',body:'sleek',tail:'notail',fleet:'plainfleet',aura:'noaura'}};
 try{const m=(typeof localStorage!=='undefined')&&localStorage.getItem('brood_meta');if(m){const p=JSON.parse(m);META=Object.assign(META,p);META.owned=p.owned||{};META.eq=Object.assign({pattern:'plain',crown:'none',trail:'none',wings:'standard',body:'sleek',tail:'notail',fleet:'plainfleet',aura:'noaura'},p.eq||{});META.claimedF=p.claimedF||[];META.claimedR=p.claimedR||[];}}catch(e){}
@@ -483,8 +483,10 @@ function honeyCap(s){let f9=0;for(const u of s.units)if(u.role==='forager')f9++;
 function swarmMass(s){const us=s.units;if(!us||!us.length)return 0;
  if(!us[0]||!us[0].role)return us.length;
  let m=0;for(const u of us)m+=(ROLES[u.role]?ROLES[u.role].mass:1);return m;}
-function queenSpd(s){return 238*Math.pow(9/(6+swarmMass(s)),0.42)*(s.prot>0?1.15:1);}
-/* THE LAW OF WEIGHT: a warband of lancers FLIES; a procession of titans THUNDERS */
+function queenSpd(s){return 224*Math.pow(11/(11+swarmMass(s)*0.12),0.5)*(s.prot>0?1.15:1);}
+/* THE LAW OF WEIGHT (58): a lean brood still FLIES and a great one is heavier — but the crawl is GONE.
+   Opening speed is unchanged (~218); a maxed brood now moves ~150 instead of ~80, so late-game isn't a slog.
+   The real brake on bloat is the WALLET (recruitCost) and the lower cap, NOT a boring slowdown. */
 function count(s,role){let n=0;for(const u of s.units)if(u.role===role)n++;return n;}
 
 /* team progression: threshold evolutions, chosen on the bar, never a pause */
@@ -502,10 +504,11 @@ function chooseEvo(role){
  renderBar();return true;
 }
 function canBuy(role){return role==='forager'||role==='soldier'||unlocked[role];}
+function recruitCost(s,role){let c=ROLES[role].cost;if(role!=='forager'){const n=s.units.length;if(n>44)c=Math.round(c*(1+(n-44)*0.035));}return c;} /* DIMINISHING RETURNS (58): a lean warband is cheap; every COMBAT soul past ~45 costs steeply more (roughly 2x by 70, ~3x near the cap). Foragers stay flat so the economy never chokes. The pressure to stay small is the WALLET, not the legs. */
 function buy(s,role){
  if(s.dead||!canBuy(role))return false;
  if(s.units.length>=SOUL_CAP){if(s===me())sfx('full');return false;} /* THE MUSTER LIMIT: SPLIT to keep growing, don't stack one brood past it */
- const c=ROLES[role].cost;
+ const c=recruitCost(s,role);
  if(s.honey<c){if(s===me())sfx('full');return false;}
  s.honey-=c;addUnit(s,role);calcR(s);
  if(s===me()){sfx('buy');addRing(s.x,s.y,ROLES[role].col,24);}
@@ -1279,6 +1282,15 @@ function step(dt){
    u.braced=(u.role==='armourer')||(u.role==='soldier'&&!routed&&Math.hypot(u.x-s.x,u.y-s.y)<s.R*1.3);
    u.aura=false;
    for(const b2 of anch){if(b2!==u&&d2(u.x,u.y,b2.x,b2.y)<75*75){u.aura=true;break;}}
+  }
+  /* STICKY BULWARK (57): a foe diving the crown can no longer skate through an armourer's smooth round body.
+     To enemies the armourer is now a SOLID obstacle that TARS them at the line, so assassins stick to the shield
+     wall instead of gliding past to the queen. Titans bull through; kindred armourers never shove each other. */
+  if(anch.length)for(const a9 of anch){const gR9=a9.r+30;
+   gridNear(a9.x,a9.y,gR9,u9=>{const es9=u9._sw;if(!es9||es9.team===s.team||u9.role==='titan'||u9.role==='armourer')return;
+    const dx9=u9.x-a9.x,dy9=u9.y-a9.y,dd9=Math.hypot(dx9,dy9)||0.01;if(dd9>=gR9)return;
+    u9.slow=Math.max(u9.slow||0,0.9); /* TAR at the wall — crawl, don't glide */
+    const md9=a9.r+u9.r+4;if(dd9<md9){u9.x=a9.x+dx9/dd9*md9;u9.y=a9.y+dy9/dd9*md9;u9.vx*=0.55;u9.vy*=0.55;}}); /* SOLID body: kill the through-momentum */
   }
   for(const u of s.units){
    if(u.flash>0)u.flash-=dt;if(u.atk>0)u.atk-=dt;if(u.slow>0)u.slow-=dt;if(u.mend>0)u.mend-=dt;
@@ -2171,7 +2183,7 @@ function botBuy(s,role){
  if(s.units.length>=SOUL_CAP)return; /* bots hoard past the cap rather than recruit into it - same law as the player */
  if(role==='titan'&&teamSwarms(s.team).reduce((t2,x)=>t2+count(x,'titan'),0)>=1)return;
  if(role!=='forager'&&role!=='soldier'&&!canBuyBot(s,role))role='forager';
- const c=ROLES[role].cost;
+ const c=recruitCost(s,role);
  if(s.honey>=c){s.honey-=c;addUnit(s,role);calcR(s);}
 }
 

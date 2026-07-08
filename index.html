@@ -631,8 +631,8 @@ function spawnFlower(kind,quiet){
 function popFlower(g){ /* the poker-machine payout: burst, nuggets, gone */
  g.dead=true;
  const i=groves.indexOf(g);if(i>=0)groves.splice(i,1);
- addP(g.x,g.y,'#ffd7e8',g.grand?16:8,g.grand?200:120);
- addRing(g.x,g.y,g.grand?'#ffdf7e':'#ffd7e8',g.grand?70:34);
+ addP(g.x,g.y,'#ffd7e8',g.grand?26:15,g.grand?240:170);addP(g.x,g.y,'#fff3e0',g.grand?12:7,g.grand?150:110); /* a real POOF, not a fizzle */
+ addRing(g.x,g.y,g.gild?'#ffdf7e':g.grand?'#ffdf7e':'#ffd7e8',g.grand?86:46);
  const n2=g.grand?8:g.kind==='night'?7:g.kind==='fairy'?2:g.kind==='sprout'?2:4;
  for(let k=0;k<n2;k++)dropAt(g.x+rand(-20,20),g.y+rand(-20,20),rand(2.5,5)+(g.grand||g.kind==='night'?3:0),11);
  if(near({x:g.x,y:g.y}))sfx(g.grand||g.kind==='night'?'gild':'pop');
@@ -1718,7 +1718,7 @@ function step(dt){
  /* groves drift, regrow, and the drained POP */
  flowerTick(dt);
  for(let gi=groves.length-1;gi>=0;gi--){const g=groves[gi];
-  if(POPPABLE[g.kind]&&!g.closed){if(g.amt<=2.5){popFlower(g);continue;}}
+  if(POPPABLE[g.kind]&&!g.closed){if(g.amt<=Math.max(3,g.max*0.08)){popFlower(g);continue;}}
   /* NIGHTBLOOM: stay close and it slowly UNFURLS (about six seconds) - then it pays like the night itself */
   if(g.kind==='night'&&g.closed){
    let close9=false;
@@ -3688,7 +3688,7 @@ function draw(){
   const k=clamp(g.amt/g.max,0,1);
   if(LOD===2){ /* far: a coloured coin of the right size — readable, cheap */
    const big9=g.gild?36:g.grand?27:g.mother?21:g.rich?15:g.rock?11:g.kind==='sprout'?8:12.5;
-   const rr9=big9*(0.5+0.75*k);
+   const rr9=big9*(0.82+0.18*k);
    const SP9=['#ff9ab0','#9ab8ff','#fff3e0','#c9a6ff','#ff8a70','#ffd7e8','#ffdf7e'];
    ctx.fillStyle=g.gild?'#ffdf7e':SP9[Math.min(6,g.sp||0)];
    ctx.globalAlpha=0.85;
@@ -3697,13 +3697,10 @@ function draw(){
    ctx.beginPath();ctx.arc(g.x,g.y,Math.max(1.6,rr9*0.3),0,TAU);ctx.fill();
    continue;}
   let jx=0,jy=0;
-  if(POPPABLE[g.kind]&&!g.closed&&k<0.3){const sh9=(0.3-k)*8;
-   jx=Math.sin(tnow*31+g.x)*sh9;jy=Math.cos(tnow*29+g.y)*sh9;
-   ctx.fillStyle='rgba(255,240,180,'+(0.25*(1-k/0.3)).toFixed(3)+')';
-   ctx.beginPath();ctx.arc(g.x,g.y,10+(0.3-k)*30,0,TAU);ctx.fill();}
+  /* NO shiver, NO halo: a drained flower just stays plump, then it is GONE */
   ctx.save();ctx.translate(jx,jy);
   const big=g.gild?36:g.grand?27:g.mother?21:g.rich?15:g.rock?11:g.kind==='sprout'?8:12.5;
-  const rr=big*(0.5+0.75*k); /* petals swell with nectar */
+  const rr=big*(0.82+0.18*k); /* barely shrinks - plump until it VANISHES */
   const pc=g.gild?10:g.grand?9:g.mother?8:g.rich?7:5+((g.sp||0)%2);
   if(g.grand){ /* the GRAND ones shimmer and slowly turn */
    ctx.globalAlpha=.14+.07*Math.sin(tnow*2.2+g.x);ctx.fillStyle='#ffeef6';
@@ -3724,9 +3721,7 @@ function draw(){
    ctx.beginPath();ctx.ellipse(g.x+Math.cos(a)*rr*0.5,g.y+Math.sin(a)*rr*0.5,rr*0.4,rr*0.26,a,0,TAU);ctx.fill();}
   ctx.globalAlpha=1;ctx.fillStyle=g.gild?'#ffcf3a':'#ffcf5e';
   ctx.beginPath();ctx.arc(g.x,g.y,Math.max(2,rr*0.42),0,TAU);ctx.fill();
-  if(k<0.25){ /* spent: a tight green bud, clearly RESTING, not a ghost */
-   ctx.strokeStyle='#9ab86a';ctx.lineWidth=1.6;
-   ctx.beginPath();ctx.arc(g.x,g.y,rr*0.5+2.5,0,TAU);ctx.stroke();}
+  /* no resting bud, no ghost */
   if(g.mother){ctx.strokeStyle='rgba(255,233,160,.5)';ctx.lineWidth=2;
    ctx.beginPath();ctx.arc(g.x,g.y,rr+8+Math.sin(tnow*3)*3,0,TAU);ctx.stroke();}
   if(g.lumen){ctx.strokeStyle='rgba(140,255,220,'+(0.4+0.25*Math.sin(tnow*2.6+g.x))+')';ctx.lineWidth=2;

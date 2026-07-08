@@ -2351,12 +2351,13 @@ function showTipFor(el2){
 }
 function hideTip(){clearTimeout(tipTimer);const t2=document.getElementById('tip');if(t2)t2.style.display='none';}
 function doAct(a){
- let r3=true;
- if(a==='split')act({split:1});
- else if(a==='recall')act({recall:1});
+ const M9=me();let r3=true;
+ if(a==='split'){act({split:1});if(NET.on&&M9&&!M9.dead&&M9.units.length>=4){sfx('split');addRing(M9.x,M9.y,'#ff9ad0',34);}}
+ else if(a==='recall'){act({recall:1});if(NET.on)sfx('recall');}
  else if(a.indexOf('unlock:')===0)chooseEvo(a.slice(7));
  else if(a.indexOf('buy:')===0){const role=a.slice(4);
-  if(NET.on){act({buy:role});r3=!!(me()&&me().honey>=recruitCost(me(),role));} /* ONLINE: SEND it (was buy() on the local mirror, which the wire immediately overwrote = mobile buttons did nothing) */
+  if(NET.on){act({buy:role});r3=!!(M9&&M9.honey>=recruitCost(M9,role));
+   if(r3){sfx('buy');if(M9)addRing(M9.x,M9.y,(ROLES[role]||{}).col||'#ffd75e',24);}} /* OPTIMISTIC FEEL: the click lands with sound+ring NOW; the laggy wire just catches up (offline already gets this from the sim, online used to get nothing) */
   else r3=buy(me(),role);}
  resumeAudio();return r3;
 }
@@ -4039,7 +4040,7 @@ function hud(){
  }
  else if((M.spdNow||0)>170)st='<span style="color:#ffe9a0">flying</span>';
  else st='<span style="opacity:.55">gathering</span>';
- if(NET&&NET.on&&NET.rtt)st+=' <span style="opacity:.5">· '+NET.rtt+'ms</span>';
+ if(NET&&NET.on&&NET.rtt){const pc9=NET.rtt<70?'#9fe8a0':NET.rtt<160?'#ffd75e':'#ff8f7a';st+=' <span style="opacity:.75;color:'+pc9+'">· '+NET.rtt+'ms</span>';} /* ping wears its colour: green good, amber busy, red = the server hiccupped (not the game) */
  const allies=teamSwarms(0).filter(s=>s.ally).length;
  hud._dispH=hud._dispH===undefined?M.honey:hud._dispH+(M.honey-hud._dispH)*0.22; /* the odometer rolls */
  const shown=Math.floor(hud._dispH);

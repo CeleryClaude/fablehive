@@ -4173,7 +4173,11 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
  let FA=null,FB=null;
  for(let i=NET.buf.length-1;i>=0;i--){if(NET.buf[i].rt<=rT){FA=NET.buf[i];FB=NET.buf[i+1]||NET.buf[i];break;}}
  if(!FA&&NET.buf.length){FA=FB=NET.buf[0];}
- const al=(FA&&FB&&FB.rt>FA.rt)?Math.min(1,Math.max(0,(rT-FA.rt)/(FB.rt-FA.rt))):1;
+ let al;const newest9=NET.buf.length?NET.buf[NET.buf.length-1]:null;
+ if(FA&&FB&&FB!==FA&&FB.rt>FA.rt){al=Math.min(1,Math.max(0,(rT-FA.rt)/(FB.rt-FA.rt)));} /* two known truths: interpolate BETWEEN them */
+ else if(newest9&&NET.buf.length>=2&&rT>=newest9.rt){ /* STARVED — server stalled (shared-CPU steal): glide on the last known velocity instead of freezing into inert dots; capped so a long stall can't fling them away */
+  const P9=NET.buf[NET.buf.length-2];FA=P9;FB=newest9;al=(newest9.rt>P9.rt)?Math.min(2.4,(rT-P9.rt)/(newest9.rt-P9.rt)):1;}
+ else al=1;
  for(const s2 of swarms){if(s2.dead)continue;
   const wA=FA&&FA.m.get(s2.nid),wB=FB&&FB.m.get(s2.nid);
   if(s2===MP&&!s2.ally){ /* CLIENT PREDICTION: she answers your hand NOW; the wire corrects gently */

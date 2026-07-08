@@ -3278,6 +3278,7 @@ function draw(){
  ctx.strokeStyle='rgba(72,52,64,.85)';ctx.lineWidth=1.5;
  const M9=me();
  let gi9=0;
+ ctx.globalAlpha=0.26;ctx.beginPath(); /* GRASS BATCH: one path + one stroke */
  for(const g of grass){if(g.x<vx0||g.x>vx1||g.y<vy0||g.y>vy1)continue;
   if(LOD===2&&(gi9++%2))continue;
   let lean=0; /* the grass parts before the queen */
@@ -3285,9 +3286,9 @@ function draw(){
    if(qd2<80*80){const qd=Math.sqrt(qd2)||1;
     lean=(1-qd/80)*0.9*((g.x-M9.x)*Math.cos(g.a+1.57)+(g.y-M9.y)*Math.sin(g.a+1.57)>=0?1:-1);}}
   g._ln=g._ln===undefined?lean:g._ln+(lean-g._ln)*0.2;
-  ctx.globalAlpha=g.s;ctx.beginPath();ctx.moveTo(g.x,g.y);
-  ctx.lineTo(g.x+Math.cos(g.a+(g._ln||0))*g.l+Math.sin(tnow*0.8+g.x*0.01)*2,g.y+Math.sin(g.a+(g._ln||0))*g.l);ctx.stroke();}
- ctx.globalAlpha=1;
+  ctx.moveTo(g.x,g.y);
+  ctx.lineTo(g.x+Math.cos(g.a+(g._ln||0))*g.l+Math.sin(tnow*0.8+g.x*0.01)*2,g.y+Math.sin(g.a+(g._ln||0))*g.l);}
+ ctx.stroke();ctx.globalAlpha=1; /* ONE stroke for ALL grass - was a stroke + alpha flip per blade */
  /* the WIND: winding gust ribbons you can join — curling threads and drifting petals */
  ctx.lineCap='round';
  for(const wway of ways){

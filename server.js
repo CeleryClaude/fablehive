@@ -4,7 +4,7 @@
 const fs=require('fs'),vm=require('vm'),path=require('path'),http=require('http');
 /* --- TEMP DIAGNOSTIC TELEMETRY: event-loop lag + GC pauses + heap, to locate the multi-second freezes --- */
 const {PerformanceObserver}=require('perf_hooks');
-const DIAG={gcCount:0,gcTotalMs:0,gcMaxMs:0,elLagMaxMs:0};
+const DIAG={gcCount:0,gcTotalMs:0,gcMaxMs:0,elLagMaxMs:0,maxBufBytes:0,dropped:0};
 try{new PerformanceObserver(l=>{for(const e of l.getEntries()){DIAG.gcCount++;DIAG.gcTotalMs+=e.duration;if(e.duration>DIAG.gcMaxMs)DIAG.gcMaxMs=e.duration;}}).observe({entryTypes:['gc']});}catch(e){}
 {let _t=Date.now();setInterval(()=>{const n=Date.now(),lag=n-_t-100;if(lag>DIAG.elLagMaxMs)DIAG.elLagMaxMs=lag;_t=n;},100);}
 
@@ -50,12 +50,12 @@ function start(port,htmlPath){
    const p95=h.length?h[Math.min(h.length-1,(h.length*0.95)|0)]:0;
    let souls=0;for(const s2 of G.swarms)if(!s2.dead)souls+=s2.units.length;
    const mu=process.memoryUsage();
-   const elLag=DIAG.elLagMaxMs,gcMax=DIAG.gcMaxMs;DIAG.elLagMaxMs=0;DIAG.gcMaxMs=0; /* per-interval maxes since last poll */
+   const elLag=DIAG.elLagMaxMs,gcMax=DIAG.gcMaxMs,mbuf=DIAG.maxBufBytes;DIAG.elLagMaxMs=0;DIAG.gcMaxMs=0;DIAG.maxBufBytes=0; /* per-interval maxes since last poll */
    res.writeHead(200,{'Content-Type':'application/json'});
    res.end(JSON.stringify({ok:1,seats:Object.keys(seats).length,souls,
     tickAvg:+(TICKS.n?TICKS.sum/TICKS.n:0).toFixed(2),tickP95:p95,upMin:((Date.now()-BOOT)/60000)|0,
     ticks:TICKS.n,elLagMaxMs:elLag,gcCount:DIAG.gcCount,gcMaxMs:+gcMax.toFixed(0),gcTotalMs:+DIAG.gcTotalMs.toFixed(0),
-    heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0}));}
+    heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else{res.writeHead(404);res.end('the meadow has no such door');}
  });
  const wss=new WebSocketServer({server:httpSrv});
@@ -95,7 +95,7 @@ function start(port,htmlPath){
  let fN=0;
  const netI=setInterval(()=>{ if(Object.keys(seats).length===0)return; /* 20Hz heartbeat: souls every beat, the slow world every third */
   let f;try{f=JSON.stringify({k:'f',...((fN++%3===0)?G.netDyn():G.netDynLite())});}catch(e){return;}
-  for(const t in seats){try{seats[t].send(f);}catch(e){}}},33);
+  for(const t in seats){const _w=seats[t];if(!_w)continue;const _b=_w.bufferedAmount||0;if(_b>DIAG.maxBufBytes)DIAG.maxBufBytes=_b;if(_b<65536){try{_w.send(f);}catch(e){}}else{DIAG.dropped++;}}},33); /* BACKPRESSURE GUARD: skip a client whose send buffer is already backed up (>64KB) rather than piling stale frames on it */
  httpSrv.listen(port,()=>console.log('FABLEHIVE room + page on :'+port));
  return {close(){clearInterval(simI);clearInterval(netI);try{wss.close();}catch(e){}try{httpSrv.close();}catch(e){}},get G(){return G;},seats};
 }

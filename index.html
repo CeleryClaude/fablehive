@@ -4224,7 +4224,12 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
     OX=NET._fox;OY=NET._foy;}
    for(let j=0;j<s2.units.length;j++){const u=s2.units[j];
     const tA=uA&&uA.get(u.uid),tB=uB&&uB.get(u.uid);
-    if(s2===MP&&!s2.ally){ /* own troops are NOT interpolated here — the LOCAL swarm-brain (moveUnits, after this loop) forms them around the predicted queen; this is the fix that makes online feel like solo */}
+    if(s2===MP&&!s2.ally){ /* OWN troops interpolate from the wire like everyone else, offset by OX/OY so they sit around your PREDICTED queen — NO per-frame local swarm-brain (that pinned weak phones) */
+     if(tB){const bx=(tA?tA[0]+(tB[0]-tA[0])*al:tB[0])+OX,by=(tA?tA[1]+(tB[1]-tA[1])*al:tB[1])+OY;
+      const jx9=bx-u.x,jy9=by-u.y,jd9=Math.hypot(jx9,jy9),cap9=150+(u.spd||300)*dt;
+      if(jd9>cap9){u.x+=jx9/jd9*cap9;u.y+=jy9/jd9*cap9;}else{u.x=bx;u.y=by;}
+      u.vx=jx9/Math.max(dt,0.001);u.vy=jy9/Math.max(dt,0.001);}
+     else if(u.tx!==undefined){const k9=Math.min(1,6*dt);u.vx=(u.tx-u.x)*8;u.vy=(u.ty-u.y)*8;u.x+=(u.tx-u.x)*k9;u.y+=(u.ty-u.y)*k9;}}
     else if(tB){const bx=tA?tA[0]+(tB[0]-tA[0])*al:tB[0],by=tA?tA[1]+(tB[1]-tA[1])*al:tB[1];
      const jx9=bx-u.x,jy9=by-u.y,jd9=Math.hypot(jx9,jy9),cap9=150+(u.spd||300)*dt;
      if(jd9>cap9){u.x+=jx9/jd9*cap9;u.y+=jy9/jd9*cap9;}else{u.x=bx;u.y=by;} /* glide over teleport-scale snaps (post-stall), never a jarring jump */
@@ -4232,16 +4237,7 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
     else{const k9=Math.min(1,6*dt);
      u.vx=(u.tx-u.x)*8;u.vy=(u.ty-u.y)*8;u.x+=(u.tx-u.x)*k9;u.y+=(u.ty-u.y)*k9;}}}
   if(s2.sayT>0)s2.sayT-=dt;}
- {const _mp=MP; /* THE SWARM RUNS LOCAL: online, your own troops think with the SAME brain as solo — formed, foraging, fighting around your PREDICTED queen; the server still owns hp/kills/honey (moveUnits sim=false) but the FEEL is yours, not lerped dots */
-  if(NET.on&&_mp&&!_mp.dead&&_mp.units&&_mp.units.length){
-   gridBuild();boulderGridBuild();
-   let dxo=0,dyo=0,drvo=false;const kvo=keyVec();
-   if(kvo.on){dxo=kvo.x;dyo=kvo.y;drvo=true;}
-   else if(input.joy){const m2=Math.hypot(input.joy.dx,input.joy.dy);if(m2>10){dxo=input.joy.dx;dyo=input.joy.dy;drvo=true;}}
-   else if(input.mDown){dxo=cam.x+(input.mx*DPR-W/2)/cam.z-_mp.x;dyo=cam.y+(input.my*DPR-H/2)/cam.z-_mp.y;drvo=Math.hypot(dxo,dyo)>30;}
-   const ddo=Math.hypot(dxo,dyo)||1,spdo=queenSpd(_mp),sepO=(netTick._sp=1-(netTick._sp||0));
-   try{moveUnits(_mp,dt,drvo,dxo,dyo,ddo,spdo,sepO,_mp,false);}catch(e){if(!netTick._e){netTick._e=1;console.error("moveUnits online:",e);}}
-  }}
+ /* (removed) the per-frame LOCAL swarm-brain (gridBuild+boulderGridBuild+moveUnits, every client every frame). It felt solo-tight on a strong desktop but PINNED weak phones: a ~100-unit sim at 60fps could not keep pace AND drain the socket, so frames backlogged and the phone's ms CLIMBED (22s seen). Own troops now interpolate from the server like everyone else (branch above, offset to the predicted queen). The server stays sole authority for combat/kills/honey, so troops that looked inert online now render the server's REAL fighting. */
  NET.pingT-=dt;if(NET.pingT<=0){NET.pingT=2;NET.cmd&&NET.ws&&NET.ws.readyState===1&&NET.ws.send(JSON.stringify({k:'p',t:Date.now()}));}
  NET.aimT-=dt;
  const M9=swarms[0];

@@ -1033,6 +1033,332 @@ cv.addEventListener('touchstart',e=>{const t=e.changedTouches[0];if(!t)return;
 function resumeAudio(){const c=ac();if(c&&c.state==='suspended')c.resume();music();}
 
 /* ============ step ============ */
+function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, lifted verbatim from step() so it can also run LOCALLY online — this is your soul, and online will now run it instead of lerping dead dots */
+  /* ---- UNITS: formation is law ---- */
+  const moving=s.spdNow>60;
+  /* anticipated heading: lean into where you're steering (26d) */
+  let hx=s.vx,hy=s.vy;
+  if(drive){hx=lerp(s.vx/(s.spdNow||1),dx/dd,0.5);hy=lerp(s.vy/(s.spdNow||1),dy/dd,0.5);}
+  const hl=Math.hypot(hx,hy)||1;hx/=hl;hy/=hl;
+  {const wa9=Math.atan2(hy,hx);let ca9=(s._fh===undefined?wa9:s._fh),dd9=wa9-ca9;
+   while(dd9>Math.PI)dd9-=TAU;while(dd9<-Math.PI)dd9+=TAU;
+   ca9+=clamp(dd9,-2.6*dt,2.6*dt);s._fh=ca9; /* the LEGION wheels in an arc - it never teleports sideways */
+   if(moving){hx=Math.cos(ca9);hy=Math.sin(ca9);}}
+  const war=s.war;
+  /* wedge slots for soldiers: the phalanx forms ahead when the queen flies */
+  /* slots are PERSISTENT (u.slot): a fallen comrade leaves a gap, not a scramble */
+  let anc=0,tit=0,sol=0,lan=0,spi=0,nur=0;
+  for(const u of s.units){if(u.role==='armourer')anc++;else if(u.role==='titan')tit++;else if(u.role==='soldier')sol++;else if(u.role==='lancer')lan++;else if(u.role==='spitter')spi++;else if(u.role==='nurse')nur++;}
+  {let sur=Math.max(0,s.honey-500); /* THE LARDER: past her own 500, the wallet is worn on the workers */
+   for(const u of s.units){if(u.role!=='forager')continue;u.load=Math.min(40,sur);sur=Math.max(0,sur-u.load);}}
+  {let gi=0;const rc={}; /* LIVING ORDER: ranks are numbered by who still breathes - balance can never rot */
+  for(const u of s.units){
+   if(u.role==='soldier'){const row=Math.floor(gi/5),inR=Math.min(5,sol-row*5),col=CSEQ5[gi%5]-CMEAN5[inR-1];
+    u._wl=col*30;u._wd=s.R*0.42+18+row*30+Math.abs(col)*8;u._gi=gi++;}
+   else{rc[u.role]=rc[u.role]||0;u._fi=rc[u.role]++;}
+  }}
+  /* NURSES mend every soul near them, always — attrition is a doctrine you can SEE */
+  {const nrs=[];for(const u of s.units)if(u.role==='nurse')nrs.push(u);
+   if(nrs.length)for(const u of s.units){if(u.hp>=u.maxHp)continue;
+    for(const n2 of nrs){if(d2(u.x,u.y,n2.x,n2.y)<80*80){
+     if(sim)u.hp=Math.min(u.maxHp,u.hp+2*dt);u.mend=0.5;
+     if(Math.random()<dt*1.4&&fx.length<430)fx.push({x:u.x+rand(-6,6),y:u.y-u.r-4,vx:0,vy:-26,t:0,life:0.8,col:'#a8f0b8',txt:'+'});
+     break;}}}}
+  /* the ARMOURER braces always; soldiers brace in formation. (The old PLATED aura that buffed nearby
+     troops — with its bronze ring/halo — is GONE: the armourer is a pure BULWARK for the queen, nothing else.) */
+  const anch=[];for(const u of s.units)if(u.role==='armourer')anch.push(u);
+  for(const u of s.units){
+   u.braced=(u.role==='armourer')||(u.role==='soldier'&&Math.hypot(u.x-s.x,u.y-s.y)<s.R*1.3);
+  }
+  /* STICKY BULWARK (57): a foe diving the crown can no longer skate through an armourer's smooth round body.
+     To enemies the armourer is now a SOLID obstacle that TARS them at the line, so assassins stick to the shield
+     wall instead of gliding past to the queen. Titans bull through; kindred armourers never shove each other. */
+  if(anch.length)for(const a9 of anch){const gR9=a9.r+30;
+   gridNear(a9.x,a9.y,gR9,u9=>{const es9=u9._sw;if(!es9||es9.team===s.team||u9.role==='titan'||u9.role==='armourer')return;
+    const dx9=u9.x-a9.x,dy9=u9.y-a9.y,dd9=Math.hypot(dx9,dy9)||0.01;if(dd9>=gR9)return;
+    u9.slow=Math.max(u9.slow||0,0.9); /* TAR at the wall — crawl, don't glide */
+    const md9=a9.r+u9.r+4;if(dd9<md9){u9.x=a9.x+dx9/dd9*md9;u9.y=a9.y+dy9/dd9*md9;u9.vx*=0.55;u9.vy*=0.55;}}); /* SOLID body: kill the through-momentum */
+  }
+  for(const u of s.units){
+   if(u.flash>0)u.flash-=dt;if(u.atk>0)u.atk-=dt;if(u.slow>0)u.slow-=dt;if(u.mend>0)u.mend-=dt;
+   if(u.fat>0&&u.fatT<=0)u.fat=Math.max(0,u.fat-0.1*dt);
+   if(u.fatT>0)u.fatT-=dt;
+   let gx=null,gy=null,fast=false,fight=false;
+   const leash=u.role==='forager'?520:(s.war?520:430); /* in war, the rope is war-range — the hunt can finish */
+   const dq=Math.hypot(u.x-s.x,u.y-s.y);
+   /* hysteresis: once you turn for home, commit until you're truly home (no boundary jitter) */
+   if(dq>leash+26)u.home=true;else if(dq<leash*0.72)u.home=false;
+   if(u.home){gx=s.x;gy=s.y;fast=true;}
+   else if(u.role==='forager'){
+    /* always working (28c). robbable. flees enemies. */
+    /* scoop: a forager touching fallen honey takes it as cargo */
+    for(let i2=drops.length-1;i2>=0;i2--){const dr=drops[i2];if(grottoOf(dr.x,dr.y)!==grottoOf(u.x,u.y))continue;
+     if(d2(dr.x,dr.y,u.x,u.y)<16*16){if(sim){s.honey+=dr.amt;drops.splice(i2,1);}addSpark(u.x,u.y,2);break;}}
+    if(u.load>=39||s.honey>=honeyCap(s)){ /* FULL BELLY (or full house): fall in beside the queen, a fat larder on the wing */
+     u.node=null;
+     const llat=(((u._fi||0)%2)?22:-22)*(1+Math.floor((u._fi||0)/2)*0.5);
+     gx=s.x-hx*(s.R*0.55+16)-hy*llat;gy=s.y-hy*(s.R*0.55+16)+hx*llat;
+     fast=moving;}
+    else{
+     if(u.node&&(u.node.dead||u.node.amt<=3||d2(u.node.x,u.node.y,s.x,s.y)>(leash-50)**2))u.node=null; /* a flower the queen left behind is NOT your errand anymore */
+     if(!u.node){let bn=null,bs=1e18;
+      for(const g of groves){if(g.dead||g.closed||g.amt<=6||g===u.badN)continue;if(grottoOf(g.x,g.y)!==grottoOf(u.x,u.y))continue; /* what sleeps behind stone stays behind stone */
+       const q=d2(s.x,s.y,g.x,g.y);if(q>(leash-60)**2)continue; /* only flowers the ROPE can truly reach */
+       let crowd=0;for(const w of s.units){if(w.role==='forager'&&w.node===g)crowd++;}
+       const sc=Math.sqrt(d2(u.x,u.y,g.x,g.y))-g.amt*0.8+Math.max(0,crowd-2)*70; /* disperse: a crowded flower loses its charm */
+       if(sc<bs){bs=sc;bn=g;}}
+      u.node=bn;}
+     if(u.node){const dn=Math.hypot(u.x-u.node.x,u.y-u.node.y);
+      u.gT=(u.gT||0)+dt;
+      if(u.gT>6){u.badN=u.node;u.node=null;u.gT=0;gx=s.x;gy=s.y;fast=true;} /* six seconds without a sip: the flower is walled off — release the obsession, come home */
+      else if(dn<16){u.gT=0;u.badN=null;const take=Math.min(u.node.amt,Math.max(0,honeyCap(s)-s.honey),(teamSize(s.team)<8?16:12)*dt);
+       if(sim){u.node.amt-=take;s.honey+=take; /* the hive-mind purse */
+       if(s.team===0&&take>0){gainXP(take*0.1);
+        if(grottoOf(u.x,u.y)){s.grottoHoney=(s.grottoHoney||0)+take;
+         if(s.grottoHoney>=200)trophy('algaeglow','GROTTO GLOW — THE ALGAE REMEMBER YOU');}}}
+       if(s===M&&take>0&&Math.random()<dt*1.3){sfx('feed');s.gulp=Math.max(s.gulp||0,0.08);}
+       gx=u.node.x+Math.cos(tnow*6*u.zeal+u.seed)*3;gy=u.node.y+Math.sin(tnow*6*u.zeal+u.seed)*3;}
+      else{gx=u.node.x;gy=u.node.y;fast=true;}}
+     else{u.wanA+=u.wanV*dt*0.8;
+      gx=s.x-hx*s.R*0.85+Math.cos(u.wanA)*s.R*0.55;gy=s.y-hy*s.R*0.85+Math.sin(u.wanA)*s.R*0.55; /* idle workers keep to the REAR quarter, out of the guard's way */}
+     if(war){let ne=null,nd2=60*60;
+      gridNear(u.x,u.y,62,eu=>{if(eu._sw!==war)return;const q=d2(u.x,u.y,eu.x,eu.y);if(q<nd2){nd2=q;ne=eu;}});
+      if(ne){gx=lerp(u.x+(u.x-ne.x)*3,s.x,0.5);gy=lerp(u.y+(u.y-ne.y)*3,s.y,0.5);fast=true;}}
+    }
+   }
+   else{ /* fighters & shields */
+    let foe=null;
+    if(war&&u.role!=='nurse'){
+     if(!u.tgt||u.tgt.slain||Math.random()<0.02){u.tgt=null;let bs=1e18;
+      /* THE LEVY CAP: a mega-war can field thousands; no soldier needs to interview all of them.
+         Scan up to 60 (a random window, so no unit is systematically ignored) - a HARD ceiling on
+         per-soldier search cost, trading "the mathematically single best foe" for "a good nearby foe".
+         Below the cap (ordinary wars) behaviour is untouched: the window covers the whole army. */
+      const wu=war.units,wn=wu.length,CAP=60,lim=Math.min(wn,CAP);
+      const start=wn>CAP?(Math.random()*wn)|0:0;
+      for(let i9=0;i9<lim;i9++){const eu=wu[(start+i9)%wn];if(eu.slain)continue;
+       let sc=Math.sqrt(d2(u.x,u.y,eu.x,eu.y))+eu.cl*46;
+       if(eu.role==='armourer')sc-=150; /* the ANCHOR draws the blows */
+       if(eu.role==='forager')sc+=240; /* first break the LINE, then rob the larder */
+       if(sc<bs){bs=sc;u.tgt=eu;u.tgtS=war;}}}
+     foe=u.tgt&&!u.tgt.slain?u.tgt:null;
+     if((u._fi%13)<1&&u.role!=='armourer'&&war.prot<=0&&d2(s.x,s.y,war.x,war.y)<(s.R+war.R+720)**2)foe=war; /* ~8% DEDICATED regicides dive the crown, embroiled or not (fills the void left by removing the queen-ram) */
+     else if(!foe&&war.prot<=0&&(war.units.length<=2||d2(u.x,u.y,war.x,war.y)<160*160)&&d2(s.x,s.y,war.x,war.y)<(s.R+war.R+240)**2)foe=war; /* and regicide when her LINE is broken or she strays into reach */
+    }
+    if(elder&&!foe&&u.role!=='nurse'&&elder.provoked>0&&d2(u.x,u.y,elder.x,elder.y)<300*300)foe=elder;
+    if(spider&&!foe&&u.role!=='nurse'&&spider.provoked>0&&d2(u.x,u.y,spider.x,spider.y)<340*340)foe=spider;
+    if(!foe&&!war&&(u.role==='lancer'||u.role==='soldier'||u.role==='titan')){let bq9=270*270; /* stingers and STARERS are answered - titans too */
+     for(const wp of wasps){const q=d2(u.x,u.y,wp.x,wp.y);if(q<bq9){bq9=q;foe=wp;}}
+     for(const ey of eyes){const q=d2(u.x,u.y,ey.x,ey.y);if(q<bq9){bq9=q;foe=ey;}}}
+    if(!foe&&((u.role==='lancer'&&u._fi%5<3)||(u.role==='spitter'&&u._fi%3===0))){ /* FREEBLADES: lancers hunt freely (~60%), spitters a third - war or no war */
+     let bs2=260*260,bswm=null;const myGr9=grottoOf(s.x,s.y);
+     gridNear(u.x,u.y,260,eu=>{const es=eu._sw;
+      if(!es||es.dead||es.team===s.team||eu.slain)return;
+      if(grottoOf(es.x,es.y)!==myGr9)return;
+      const q=d2(u.x,u.y,eu.x,eu.y)*(eu.role==='forager'?0.55:1);
+      if(q<bs2){bs2=q;foe=eu;bswm=es;}});
+     if(bswm)u.tgtS=bswm;}
+    if(foe){
+     fight=true;fast=true;
+     if(u.sigT>0)u.sigT-=dt; else u.sig-=dt;
+     const fd2=d2(u.x,u.y,foe.x,foe.y);
+     if(war&&foe.units===undefined&&foe.role!==undefined&&(!u.tgtS||u.tgtS===war)&&fd2>120*120&&war.units.length>=3){
+      /* HOLD THE LINE: advance as a WALL - the grind happens where walls meet */
+      const wdx=war.x-s.x,wdy=war.y-s.y,wd9=Math.hypot(wdx,wdy)||1,wx9=wdx/wd9,wy9=wdy/wd9;
+      const FD=(u.role==='armourer')?Math.max(s.R*0.22+12,14+queenStage(s)*3+u.r+10):(Math.min(wd9*0.45,s.R*0.42+130)+(u.role==='titan'?26:0)); /* the BASTION never leaves her side: royal guard, not front-liner */
+      const latW=u.role==='soldier'?(u._wl||0):u.role==='lancer'?((u._fi%2?1:-1)*(s.R*0.5+Math.floor(u._fi/2)*20)):CSEQ3[(u._fi||0)%3]*40;
+      gx=s.x+wx9*FD-wy9*latW;gy=s.y+wy9*FD+wx9*latW;
+     } else {gx=foe.x;gy=foe.y;}
+     if(u.role==='spitter'){ /* THE HORSE-ARCHER: sweep in, loose, WHEEL AWAY */
+      const fd=Math.sqrt(fd2);
+      if(fd<130){gx=u.x+(u.x-foe.x)/(fd||1)*110;gy=u.y+(u.y-foe.y)/(fd||1)*110;} /* never let them touch you */
+      else if(fd>240){gx=foe.x;gy=foe.y;}
+      else if(u.atk>1.1&&d2(u.x+u.vx*0.4,u.y+u.vy*0.4,foe.x,foe.y)>fd2){gx=u.x+u.vx*0.4;gy=u.y+u.vy*0.4;fast=true;} /* ride the wheel OUT only - never drift into the brawl */
+      else{gx=u.x;gy=u.y;fast=false;}
+      if(war&&d2(u.x,u.y,war.x,war.y)<140*140){const qd9=Math.hypot(u.x-war.x,u.y-war.y)||1;
+       gx=u.x+(u.x-war.x)/qd9*130;gy=u.y+(u.y-war.y)/qd9*130;fast=true;} /* and NEVER stroll over the enemy queen */
+      if(u.atk<=0&&fd<240){
+       u.atk=1.6;
+       const aa9=Math.atan2(foe.y-u.y,foe.x-u.x)+rand(-0.05,0.05); /* a hand looses it, not a laser */
+       if(sim)shots.push({x:u.x,y:u.y,vx:Math.cos(aa9)*290,vy:Math.sin(aa9)*290,t:2.6,team:s.team,by:s,dmg:u.dmg,col:'#8fe0c0'});
+       if(fd>150){const sd9=(u._fi%2?1:-1);u.vx+=-Math.sin(aa9)*sd9*200;u.vy+=Math.cos(aa9)*sd9*200;} /* loose, then WHEEL - only with room to dance */
+       if(near(s))sfx('spit');
+      }
+     }
+     if(u.role==='titan'&&u.sig<=0){ /* SEISMIC SLAM */
+      let hitN=0;
+      for(const es of swarms){if(es.dead||es.team===s.team)continue;
+       if(d2(s.x,s.y,es.x,es.y)>(s.R+es.R+560)**2)continue;
+       for(const eu of es.units){if(d2(eu.x,eu.y,u.x,u.y)<110*110){
+        const a2=Math.atan2(eu.y-u.y,eu.x-u.x);
+        eu.vx+=Math.cos(a2)*430;eu.vy+=Math.sin(a2)*430;
+        if(sim){eu.hp-=40;eu.flash=.2;eu.slow=0.5;if(eu.hp<=0)killUnit(es,eu,s);}hitN++;}}}
+      if(hitN){u.sig=5+rand(0,1);addRing(u.x,u.y,'#ffb04d',120);addP(u.x,u.y,'#c8a06a',10,180);
+       if(near(s)){sfx('slam');shake=Math.min(14,shake+5);}}
+      else u.sig=0.4;
+     }
+     const rr=(foe.r||14)+u.r+2;
+     if(u.role!=='spitter'&&u.atk<=0&&fd2<rr*rr){
+      u.atk=1.15;u.fat=Math.min(1,u.fat+0.06);u.fatT=12;
+      const vm=Math.hypot(u.vx,u.vy);
+      let dmg=u.dmg*0.8*(0.7+Math.min(1.25,vm/240))*(1-0.35*u.fat); /* momentum splatters; the weary soften; wars BREATHE */
+      if(u.role==='lancer'&&foe.role&&(foe.role==='spitter'||foe.role==='nurse'||foe.role==='forager'))dmg*=1.3; /* the dart finds the soft */
+      if(sim){if(foe.units!==undefined){ /* it's a queen */
+       dmg*= (foe.exposed?2:1);
+       foe.hp-=dmg;foe.flash=.1;foe.hitT=.12;
+       if(foe===M)sfx('hurt');
+       if(foe.hp<=0)killQueen(foe,s);
+      } else if(foe===elder){elder.hp-=dmg;elder.flash=.1;elder.provoked=6;if(elder.hp<=0)killElder(s);}
+      else if(foe===spider){spider.hp-=dmg;spider.flash=.1;spider.provoked=6;if(spider.hp<=0)killSpider(s);}
+      else if(foe.trio!==undefined){foe.hp-=dmg;foe.lastBy=s;const ka9=Math.atan2(foe.y-u.y,foe.x-u.x);
+       foe.vx+=Math.cos(ka9)*320;foe.vy+=Math.sin(ka9)*320;} /* wasps are BATTED out of the air */
+      else if(foe.blink!==undefined){foe.hp-=dmg;} /* and the EYE is cut */
+      else{
+       if(foe.braced&&u.role!=='titan')dmg*=0.7; /* the shield-line holds — but titans CRUSH walls */
+       foe.hp-=dmg;foe.flash=.12;foe.slow=0.4;
+       if(foe.hp<=0){killUnit(u.tgtS||war,foe,s);if(vm>240)addP(u.x,u.y,u.col,5,150);}
+      }
+      }addSpark(u.x,u.y,2);if(s===M||war===M)sfx('hit');
+      const vv=Math.hypot(u.vx,u.vy)||1;u.vx+=u.vx/vv*70;u.vy+=u.vy/vv*70;
+      if(foe.cl!==undefined)foe.cl++;
+     }
+    }
+    else if(u.role==='spitter'){ /* ARTILLERY RANKS: straight lines behind the queen */
+     const row=Math.floor(u._fi/4),inR4=Math.min(4,spi-row*4),lat=(CSEQ4[u._fi%4]-CMEAN4[inR4-1])*26;
+     if(moving){
+      gx=s.x-hx*(s.R*0.5+18+row*22)-hy*lat;
+      gy=s.y-hy*(s.R*0.5+18+row*22)+hx*lat;
+      fast=true;
+     } else { /* parked ranks, barely breathing */
+      u.wanA+=u.wanV*dt*0.15;
+      gx=s.x-hx*(s.R*0.72+row*20)-hy*lat+Math.cos(u.wanA)*3;
+      gy=s.y-hy*(s.R*0.72+row*20)+hx*lat+Math.sin(u.wanA)*3;
+     }
+    }
+    else if(u.role==='nurse'){ /* mercy holds STATION just behind the crown */
+     const nlat=((u._fi%2)?16:-16)+(nur%2?16/nur:0),nd=s.R*0.28+12+Math.floor(u._fi/2)*22; /* an odd sisterhood recenters */
+     gx=s.x-hx*nd-hy*nlat;gy=s.y-hy*nd+hx*nlat;
+     fast=moving;
+     /* find the most wounded soul nearby and go to them */
+     if(u.atk<=0){let worst=null,wr=0.82;
+      for(const w2 of s.units){if(w2===u||w2.slain)continue;
+       const fr=w2.hp/w2.maxHp;
+       if(fr<wr&&d2(u.x,u.y,w2.x,w2.y)<200*200){wr=fr;worst=w2;}}
+      if(worst){gx=worst.x;gy=worst.y;fast=true;
+       if(d2(u.x,u.y,worst.x,worst.y)<(u.r+worst.r+6)**2){
+        worst.hp=Math.min(worst.maxHp,worst.hp+7);u.atk=1.1;worst.mend=0.9;
+        addP(worst.x,worst.y,'#a8f0b8',3,50);
+        if(fx.length<440)fx.push({x:worst.x,y:worst.y-worst.r-4,vx:0,vy:-30,t:0,life:0.9,col:'#a8f0b8',txt:'+'});
+        if(near(s)&&Math.random()<0.3)sfx('feed');}}}
+    }
+   else if(u.role==='armourer'){ /* the anchors: a bar/ring that GROWS with their number - never stacked */
+     const arB=Math.max(s.R*0.2+8,14+queenStage(s)*3+u.r+10);
+     if(moving){ /* a WIDENING wall before the queen: rows multiply as the anchors do */
+      const perRow=Math.max(3,Math.ceil(Math.sqrt(anc))),rowI=Math.floor((u._fi||0)/perRow),colI=(u._fi||0)%perRow,inRow=Math.min(perRow,anc-rowI*perRow);
+      const lat=(colI-(inRow-1)/2)*(u.r*2+6),ad9=arB+rowI*(u.r*2+8);
+      gx=s.x+hx*ad9-hy*lat;gy=s.y+hy*ad9+hx*lat;fast=true;
+     } else { /* garrison: concentric rings, evenly filled, never overlapping */
+      const rp=ringPos(u._fi||0,Math.max(s.R*0.4,arB),u.r*2+7,anc),aa=rp[1]+tnow*0.05;
+      gx=s.x+Math.cos(aa)*rp[0];gy=s.y+Math.sin(aa)*rp[0];
+     }
+    }
+    else if(u.role==='lancer'){
+     if(moving){ /* OUTRIDERS: staggered echelon on each flank */
+      const side=(u._fi%2?1:-1),rank=Math.floor(u._fi/2); /* every pair its OWN post - no two darts share a shadow */
+      const rail=Math.max(96,s.R*0.55+16)+rank*14; /* the rails run OUTSIDE the phalanx shoulders, always */
+      gx=s.x+hx*(s.R*0.1-Math.min(rank,4)*22)-hy*side*rail;
+      gy=s.y+hy*(s.R*0.1-Math.min(rank,4)*22)+hx*side*rail;
+      fast=true;
+     } else { /* SENTRY ORBIT: outriders evenly spaced, all riding the same way round */
+      const la=((u._fi||0)/Math.max(1,lan))*TAU+tnow*0.4;
+      gx=s.x+Math.cos(la)*(s.R*1.45);gy=s.y+Math.sin(la)*(s.R*1.45);
+     }
+    } else { /* soldier: the wall */
+     if(moving){ /* PHALANX: forward-facing wedge ahead of the queen (15) */
+      gx=s.x+hx*(u._wd||s.R*0.6)-hy*(u._wl||0);
+      gy=s.y+hy*(u._wd||s.R*0.6)+hx*(u._wl||0);
+      fast=true;
+     } else { /* GARRISON: concentric rings that GROW with the muster - shields never stack */
+      const rp=ringPos(u._gi||0,Math.max(s.R*0.55,u.r+10),u.r*2+6,sol),ring=rp[1]+tnow*0.06;
+      gx=s.x+Math.cos(ring)*rp[0];gy=s.y+Math.sin(ring)*rp[0];
+     }
+    }
+   }
+   /* titans ride center-front, shoulder to shoulder */
+   if(u.role==='titan'&&!fight){
+    const tr9=Math.floor((u._fi||0)/4),inRow=Math.max(1,Math.min(4,tit-tr9*4));
+    const lat=((u._fi||0)%4-(inRow-1)/2)*66; /* each rank centers on ITS OWN count */
+    const van=s.R*0.42+18+Math.ceil(sol/5)*30+30+tr9*70; /* the VANGUARD walks BEYOND the phalanx - zones never overlap */
+    gx=s.x+hx*van-hy*lat;gy=s.y+hy*van+hx*lat;fast=moving;}
+   /* the rope never fights you: desire beyond the leash is clamped TO the leash */
+   if(!u.home){const tdx=gx-s.x,tdy=gy-s.y,tl=Math.hypot(tdx,tdy);
+    if(tl>leash-14){gx=s.x+tdx/tl*(leash-14);gy=s.y+tdy/tl*(leash-14);}}
+   /* silk for units too: velocity toward goal, eased */
+   const gdx=gx-u.x,gdy=gy-u.y,gl=Math.hypot(gdx,gdy)||1;
+   const dock=fight?1:Math.min(1,gl/44); /* ARRIVE: glide into your slot, never orbit it */
+
+   const us=dock*u.spd*0.92*(0.72+0.28*clamp(u.hp/(u.maxHp||1),0,1))*u.zeal*(fast?1.15:0.55)* /* the hurt LIMP - dull and slow, no bars needed */((u.home&&(s._wb>1||(dq>700&&u.role!=='forager')))?1.5:1)*(1-0.45*clamp(u.slow,0,1))*(1-0.2*u.fat)*(u.load>12?0.82:1)*1; /* stragglers catch the wind; separated FIGHTERS sprint in desperation — no soul is ever stranded */
+   const ds=Math.min(us,gl*7);
+   const uk=Math.min(1,7*dt);
+   u.vx+=(gdx/gl*ds-u.vx)*uk;u.vy+=(gdy/gl*ds-u.vy)*uk;
+   /* a whisper of wobble = life (25c) — but the RANKS hold still */
+   if((u.per||!fight)&&(u.role==='forager'||!moving)){const wob=Math.sin(tnow*6*u.zeal+u.seed)*(fight?6:10);
+    u.vx+=-gdy/gl*wob*dt*6;u.vy+=gdx/gl*wob*dt*6;}
+   u.x+=u.vx*dt;u.y+=u.vy*dt;
+   /* the HIGH AIR: a homing soul pinned by stone for a heartbeat simply flies OVER the rocks —
+      bees do not argue with geometry */
+   const gl2=Math.hypot(gx-u.x,gy-u.y);
+   if(u.home||gl2>70){u._ft=(u._ft||0)+dt;
+    if(u._ft>0.8){if(Math.abs(u.x-(u._fx!=null?u._fx:u.x-99))+Math.abs(u.y-(u._fy!=null?u._fy:u.y))<10)u._fly=true;
+     u._fx=u.x;u._fy=u.y;u._ft=0;}
+   } else {u._fly=false;u._ft=0;u._fx=null;}
+   if(u._fly&&(dq<300&&gl2<60))u._fly=false;
+   if(!u._fly)collideBoulders(u,u.r);
+   else for(const b9 of boulders){if(!b9.hide)continue;const dx9=u.x-b9.x,dy9=u.y-b9.y,d9=Math.hypot(dx9,dy9),m9=b9.r+u.r;
+    if(d9<m9&&d9>0.01){u.x=b9.x+dx9/d9*m9;u.y=b9.y+dy9/d9*m9;u._fly=false;break;}} /* the HIGH AIR ends at the dome - nothing flies through stone */
+  }
+  /* separation inside the swarm */
+  const arr=s.units;
+  const par=(step._par=1-(step._par||0));
+  const bigS=arr.length>26;
+  if(bigS)for(let i9=0;i9<arr.length;i9++)arr[i9]._sepIdx=i9; /* a one-pass local index so each pair resolves exactly once via the grid */
+  for(let i=0;i<arr.length;i++){const A=arr[i];
+   if(bigS){
+    /* THE STAGGER: this is the single costliest loop in a mega-war. Same spirit as the small-swarm `par`
+       stride and the cross-swarm `big9` shove stride above/below - each soul only reaches out to its
+       neighbours every OTHER frame, alternating which half via the dedicated step._sepPar clock (see top of
+       step()) so no pair goes unresolved for more than one frame (a 16ms-stale nudge, invisible at 60fps).
+       Roughly halves this loop's cost. */
+    if((i%2)!==sepPar)continue;
+    /* THE GRID, self-swarm: same overlap-only locality argument as the cross-swarm grind below - kept as a
+       call to the shared gridNear() helper, NOT inlined: measured head-to-head, an inlined flat cell-walk
+       here is 7-19% SLOWER (worse at higher populations) than calling the small separate helper function -
+       apparently V8 optimizes step() (already 1000+ lines) better when this stays factored out. Measure,
+       don't assume - textbook "remove the callback overhead" can be a regression in an unusual context. */
+    gridNear(A.x,A.y,A.r+40,B=>{if(B===A||B._sw!==s||B._sepIdx<=A._sepIdx)return;
+     const mn=A.r+B.r+3,ex=B.x-A.x,ey=B.y-A.y;
+     if(ex>mn||ex<-mn||ey>mn||ey<-mn)return;
+     const d3=Math.hypot(ex,ey)||0.01;
+     if(d3<mn){const inRank=moving&&A.role===B.role&&A.role!=='forager';
+      let wA=0.5,wB=0.5;
+      if(A.role==='titan'&&B.role!=='titan'){wA=0.04;wB=0.96;}
+      else if(B.role==='titan'&&A.role!=='titan'){wA=0.96;wB=0.04;}
+      else if(A.role==='forager'&&B.role!=='forager'){wA=0.92;wB=0.08;}
+      else if(B.role==='forager'&&A.role!=='forager'){wA=0.08;wB=0.92;}
+      const F=(mn-d3)*(inRank?0.3:0.5)/d3;A.x-=ex*F*wA;A.y-=ey*F*wA;B.x+=ex*F*wB;B.y+=ey*F*wB;}});
+   } else
+   for(let j=i+1+((i+par)%2);j<arr.length;j+=arr.length>26?2:1){const B=arr[j];
+    const mn=A.r+B.r+3,ex=B.x-A.x,ey=B.y-A.y;
+    if(ex>mn||ex<-mn||ey>mn||ey<-mn)continue;
+    const d3=Math.hypot(ex,ey)||0.01;
+    if(d3<mn){const inRank=moving&&A.role===B.role&&A.role!=='forager';
+     let wA=0.5,wB=0.5; /* MAKE WAY FOR THE MONUMENTS: titans wade through, kin scoot aside */
+     if(A.role==='titan'&&B.role!=='titan'){wA=0.04;wB=0.96;}
+     else if(B.role==='titan'&&A.role!=='titan'){wA=0.96;wB=0.04;}
+     else if(A.role==='forager'&&B.role!=='forager'){wA=0.92;wB=0.08;} /* the little workers always yield */
+     else if(B.role==='forager'&&A.role!=='forager'){wA=0.08;wB=0.92;}
+     const F=(mn-d3)*(inRank?0.3:0.5)/d3;A.x-=ex*F*wA;A.y-=ey*F*wA;B.x+=ex*F*wB;B.y+=ey*F*wB;}}}
+}
 function step(dt){
  tnow+=dt;const M=me();
  const sepPar=(step._sepPar=1-(step._sepPar||0)); /* THE STAGGER CLOCK: flips exactly ONCE per tick, unlike step._par
@@ -1247,331 +1573,7 @@ function step(dt){
    else s.recalling=false; /* the main is gone — the kin is free to live */
   }
   if(s.gone||s.dead)continue;
-  /* ---- UNITS: formation is law ---- */
-  const moving=s.spdNow>60;
-  /* anticipated heading: lean into where you're steering (26d) */
-  let hx=s.vx,hy=s.vy;
-  if(drive){hx=lerp(s.vx/(s.spdNow||1),dx/dd,0.5);hy=lerp(s.vy/(s.spdNow||1),dy/dd,0.5);}
-  const hl=Math.hypot(hx,hy)||1;hx/=hl;hy/=hl;
-  {const wa9=Math.atan2(hy,hx);let ca9=(s._fh===undefined?wa9:s._fh),dd9=wa9-ca9;
-   while(dd9>Math.PI)dd9-=TAU;while(dd9<-Math.PI)dd9+=TAU;
-   ca9+=clamp(dd9,-2.6*dt,2.6*dt);s._fh=ca9; /* the LEGION wheels in an arc - it never teleports sideways */
-   if(moving){hx=Math.cos(ca9);hy=Math.sin(ca9);}}
-  const war=s.war;
-  /* wedge slots for soldiers: the phalanx forms ahead when the queen flies */
-  /* slots are PERSISTENT (u.slot): a fallen comrade leaves a gap, not a scramble */
-  let anc=0,tit=0,sol=0,lan=0,spi=0,nur=0;
-  for(const u of s.units){if(u.role==='armourer')anc++;else if(u.role==='titan')tit++;else if(u.role==='soldier')sol++;else if(u.role==='lancer')lan++;else if(u.role==='spitter')spi++;else if(u.role==='nurse')nur++;}
-  {let sur=Math.max(0,s.honey-500); /* THE LARDER: past her own 500, the wallet is worn on the workers */
-   for(const u of s.units){if(u.role!=='forager')continue;u.load=Math.min(40,sur);sur=Math.max(0,sur-u.load);}}
-  {let gi=0;const rc={}; /* LIVING ORDER: ranks are numbered by who still breathes - balance can never rot */
-  for(const u of s.units){
-   if(u.role==='soldier'){const row=Math.floor(gi/5),inR=Math.min(5,sol-row*5),col=CSEQ5[gi%5]-CMEAN5[inR-1];
-    u._wl=col*30;u._wd=s.R*0.42+18+row*30+Math.abs(col)*8;u._gi=gi++;}
-   else{rc[u.role]=rc[u.role]||0;u._fi=rc[u.role]++;}
-  }}
-  /* NURSES mend every soul near them, always — attrition is a doctrine you can SEE */
-  {const nrs=[];for(const u of s.units)if(u.role==='nurse')nrs.push(u);
-   if(nrs.length)for(const u of s.units){if(u.hp>=u.maxHp)continue;
-    for(const n2 of nrs){if(d2(u.x,u.y,n2.x,n2.y)<80*80){
-     u.hp=Math.min(u.maxHp,u.hp+2*dt);u.mend=0.5;
-     if(Math.random()<dt*1.4&&fx.length<430)fx.push({x:u.x+rand(-6,6),y:u.y-u.r-4,vx:0,vy:-26,t:0,life:0.8,col:'#a8f0b8',txt:'+'});
-     break;}}}}
-  /* the ARMOURER braces always; soldiers brace in formation. (The old PLATED aura that buffed nearby
-     troops — with its bronze ring/halo — is GONE: the armourer is a pure BULWARK for the queen, nothing else.) */
-  const anch=[];for(const u of s.units)if(u.role==='armourer')anch.push(u);
-  for(const u of s.units){
-   u.braced=(u.role==='armourer')||(u.role==='soldier'&&Math.hypot(u.x-s.x,u.y-s.y)<s.R*1.3);
-  }
-  /* STICKY BULWARK (57): a foe diving the crown can no longer skate through an armourer's smooth round body.
-     To enemies the armourer is now a SOLID obstacle that TARS them at the line, so assassins stick to the shield
-     wall instead of gliding past to the queen. Titans bull through; kindred armourers never shove each other. */
-  if(anch.length)for(const a9 of anch){const gR9=a9.r+30;
-   gridNear(a9.x,a9.y,gR9,u9=>{const es9=u9._sw;if(!es9||es9.team===s.team||u9.role==='titan'||u9.role==='armourer')return;
-    const dx9=u9.x-a9.x,dy9=u9.y-a9.y,dd9=Math.hypot(dx9,dy9)||0.01;if(dd9>=gR9)return;
-    u9.slow=Math.max(u9.slow||0,0.9); /* TAR at the wall — crawl, don't glide */
-    const md9=a9.r+u9.r+4;if(dd9<md9){u9.x=a9.x+dx9/dd9*md9;u9.y=a9.y+dy9/dd9*md9;u9.vx*=0.55;u9.vy*=0.55;}}); /* SOLID body: kill the through-momentum */
-  }
-  for(const u of s.units){
-   if(u.flash>0)u.flash-=dt;if(u.atk>0)u.atk-=dt;if(u.slow>0)u.slow-=dt;if(u.mend>0)u.mend-=dt;
-   if(u.fat>0&&u.fatT<=0)u.fat=Math.max(0,u.fat-0.1*dt);
-   if(u.fatT>0)u.fatT-=dt;
-   let gx=null,gy=null,fast=false,fight=false;
-   const leash=u.role==='forager'?520:(s.war?520:430); /* in war, the rope is war-range — the hunt can finish */
-   const dq=Math.hypot(u.x-s.x,u.y-s.y);
-   /* hysteresis: once you turn for home, commit until you're truly home (no boundary jitter) */
-   if(dq>leash+26)u.home=true;else if(dq<leash*0.72)u.home=false;
-   if(u.home){gx=s.x;gy=s.y;fast=true;}
-   else if(u.role==='forager'){
-    /* always working (28c). robbable. flees enemies. */
-    /* scoop: a forager touching fallen honey takes it as cargo */
-    for(let i2=drops.length-1;i2>=0;i2--){const dr=drops[i2];if(grottoOf(dr.x,dr.y)!==grottoOf(u.x,u.y))continue;
-     if(d2(dr.x,dr.y,u.x,u.y)<16*16){s.honey+=dr.amt;drops.splice(i2,1);addSpark(u.x,u.y,2);break;}}
-    if(u.load>=39||s.honey>=honeyCap(s)){ /* FULL BELLY (or full house): fall in beside the queen, a fat larder on the wing */
-     u.node=null;
-     const llat=(((u._fi||0)%2)?22:-22)*(1+Math.floor((u._fi||0)/2)*0.5);
-     gx=s.x-hx*(s.R*0.55+16)-hy*llat;gy=s.y-hy*(s.R*0.55+16)+hx*llat;
-     fast=moving;}
-    else{
-     if(u.node&&(u.node.dead||u.node.amt<=3||d2(u.node.x,u.node.y,s.x,s.y)>(leash-50)**2))u.node=null; /* a flower the queen left behind is NOT your errand anymore */
-     if(!u.node){let bn=null,bs=1e18;
-      for(const g of groves){if(g.dead||g.closed||g.amt<=6||g===u.badN)continue;if(grottoOf(g.x,g.y)!==grottoOf(u.x,u.y))continue; /* what sleeps behind stone stays behind stone */
-       const q=d2(s.x,s.y,g.x,g.y);if(q>(leash-60)**2)continue; /* only flowers the ROPE can truly reach */
-       let crowd=0;for(const w of s.units){if(w.role==='forager'&&w.node===g)crowd++;}
-       const sc=Math.sqrt(d2(u.x,u.y,g.x,g.y))-g.amt*0.8+Math.max(0,crowd-2)*70; /* disperse: a crowded flower loses its charm */
-       if(sc<bs){bs=sc;bn=g;}}
-      u.node=bn;}
-     if(u.node){const dn=Math.hypot(u.x-u.node.x,u.y-u.node.y);
-      u.gT=(u.gT||0)+dt;
-      if(u.gT>6){u.badN=u.node;u.node=null;u.gT=0;gx=s.x;gy=s.y;fast=true;} /* six seconds without a sip: the flower is walled off — release the obsession, come home */
-      else if(dn<16){u.gT=0;u.badN=null;const take=Math.min(u.node.amt,Math.max(0,honeyCap(s)-s.honey),(teamSize(s.team)<8?16:12)*dt);
-       u.node.amt-=take;s.honey+=take; /* the hive-mind purse: no trips, no barging - the belly swells where she stands */
-       if(s.team===0&&take>0){gainXP(take*0.1);
-        if(grottoOf(u.x,u.y)){s.grottoHoney=(s.grottoHoney||0)+take;
-         if(s.grottoHoney>=200)trophy('algaeglow','GROTTO GLOW — THE ALGAE REMEMBER YOU');}}
-       if(s===M&&take>0&&Math.random()<dt*1.3){sfx('feed');s.gulp=Math.max(s.gulp||0,0.08);}
-       gx=u.node.x+Math.cos(tnow*6*u.zeal+u.seed)*3;gy=u.node.y+Math.sin(tnow*6*u.zeal+u.seed)*3;}
-      else{gx=u.node.x;gy=u.node.y;fast=true;}}
-     else{u.wanA+=u.wanV*dt*0.8;
-      gx=s.x-hx*s.R*0.85+Math.cos(u.wanA)*s.R*0.55;gy=s.y-hy*s.R*0.85+Math.sin(u.wanA)*s.R*0.55; /* idle workers keep to the REAR quarter, out of the guard's way */}
-     if(war){let ne=null,nd2=60*60;
-      gridNear(u.x,u.y,62,eu=>{if(eu._sw!==war)return;const q=d2(u.x,u.y,eu.x,eu.y);if(q<nd2){nd2=q;ne=eu;}});
-      if(ne){gx=lerp(u.x+(u.x-ne.x)*3,s.x,0.5);gy=lerp(u.y+(u.y-ne.y)*3,s.y,0.5);fast=true;}}
-    }
-   }
-   else{ /* fighters & shields */
-    let foe=null;
-    if(war&&u.role!=='nurse'){
-     if(!u.tgt||u.tgt.slain||Math.random()<0.02){u.tgt=null;let bs=1e18;
-      /* THE LEVY CAP: a mega-war can field thousands; no soldier needs to interview all of them.
-         Scan up to 60 (a random window, so no unit is systematically ignored) - a HARD ceiling on
-         per-soldier search cost, trading "the mathematically single best foe" for "a good nearby foe".
-         Below the cap (ordinary wars) behaviour is untouched: the window covers the whole army. */
-      const wu=war.units,wn=wu.length,CAP=60,lim=Math.min(wn,CAP);
-      const start=wn>CAP?(Math.random()*wn)|0:0;
-      for(let i9=0;i9<lim;i9++){const eu=wu[(start+i9)%wn];if(eu.slain)continue;
-       let sc=Math.sqrt(d2(u.x,u.y,eu.x,eu.y))+eu.cl*46;
-       if(eu.role==='armourer')sc-=150; /* the ANCHOR draws the blows */
-       if(eu.role==='forager')sc+=240; /* first break the LINE, then rob the larder */
-       if(sc<bs){bs=sc;u.tgt=eu;u.tgtS=war;}}}
-     foe=u.tgt&&!u.tgt.slain?u.tgt:null;
-     if((u._fi%13)<1&&u.role!=='armourer'&&war.prot<=0&&d2(s.x,s.y,war.x,war.y)<(s.R+war.R+720)**2)foe=war; /* ~8% DEDICATED regicides dive the crown, embroiled or not (fills the void left by removing the queen-ram) */
-     else if(!foe&&war.prot<=0&&(war.units.length<=2||d2(u.x,u.y,war.x,war.y)<160*160)&&d2(s.x,s.y,war.x,war.y)<(s.R+war.R+240)**2)foe=war; /* and regicide when her LINE is broken or she strays into reach */
-    }
-    if(elder&&!foe&&u.role!=='nurse'&&elder.provoked>0&&d2(u.x,u.y,elder.x,elder.y)<300*300)foe=elder;
-    if(spider&&!foe&&u.role!=='nurse'&&spider.provoked>0&&d2(u.x,u.y,spider.x,spider.y)<340*340)foe=spider;
-    if(!foe&&!war&&(u.role==='lancer'||u.role==='soldier'||u.role==='titan')){let bq9=270*270; /* stingers and STARERS are answered - titans too */
-     for(const wp of wasps){const q=d2(u.x,u.y,wp.x,wp.y);if(q<bq9){bq9=q;foe=wp;}}
-     for(const ey of eyes){const q=d2(u.x,u.y,ey.x,ey.y);if(q<bq9){bq9=q;foe=ey;}}}
-    if(!foe&&((u.role==='lancer'&&u._fi%5<3)||(u.role==='spitter'&&u._fi%3===0))){ /* FREEBLADES: lancers hunt freely (~60%), spitters a third - war or no war */
-     let bs2=260*260,bswm=null;const myGr9=grottoOf(s.x,s.y);
-     gridNear(u.x,u.y,260,eu=>{const es=eu._sw;
-      if(!es||es.dead||es.team===s.team||eu.slain)return;
-      if(grottoOf(es.x,es.y)!==myGr9)return;
-      const q=d2(u.x,u.y,eu.x,eu.y)*(eu.role==='forager'?0.55:1);
-      if(q<bs2){bs2=q;foe=eu;bswm=es;}});
-     if(bswm)u.tgtS=bswm;}
-    if(foe){
-     fight=true;fast=true;
-     if(u.sigT>0)u.sigT-=dt; else u.sig-=dt;
-     const fd2=d2(u.x,u.y,foe.x,foe.y);
-     if(war&&foe.units===undefined&&foe.role!==undefined&&(!u.tgtS||u.tgtS===war)&&fd2>120*120&&war.units.length>=3){
-      /* HOLD THE LINE: advance as a WALL - the grind happens where walls meet */
-      const wdx=war.x-s.x,wdy=war.y-s.y,wd9=Math.hypot(wdx,wdy)||1,wx9=wdx/wd9,wy9=wdy/wd9;
-      const FD=(u.role==='armourer')?Math.max(s.R*0.22+12,14+queenStage(s)*3+u.r+10):(Math.min(wd9*0.45,s.R*0.42+130)+(u.role==='titan'?26:0)); /* the BASTION never leaves her side: royal guard, not front-liner */
-      const latW=u.role==='soldier'?(u._wl||0):u.role==='lancer'?((u._fi%2?1:-1)*(s.R*0.5+Math.floor(u._fi/2)*20)):CSEQ3[(u._fi||0)%3]*40;
-      gx=s.x+wx9*FD-wy9*latW;gy=s.y+wy9*FD+wx9*latW;
-     } else {gx=foe.x;gy=foe.y;}
-     if(u.role==='spitter'){ /* THE HORSE-ARCHER: sweep in, loose, WHEEL AWAY */
-      const fd=Math.sqrt(fd2);
-      if(fd<130){gx=u.x+(u.x-foe.x)/(fd||1)*110;gy=u.y+(u.y-foe.y)/(fd||1)*110;} /* never let them touch you */
-      else if(fd>240){gx=foe.x;gy=foe.y;}
-      else if(u.atk>1.1&&d2(u.x+u.vx*0.4,u.y+u.vy*0.4,foe.x,foe.y)>fd2){gx=u.x+u.vx*0.4;gy=u.y+u.vy*0.4;fast=true;} /* ride the wheel OUT only - never drift into the brawl */
-      else{gx=u.x;gy=u.y;fast=false;}
-      if(war&&d2(u.x,u.y,war.x,war.y)<140*140){const qd9=Math.hypot(u.x-war.x,u.y-war.y)||1;
-       gx=u.x+(u.x-war.x)/qd9*130;gy=u.y+(u.y-war.y)/qd9*130;fast=true;} /* and NEVER stroll over the enemy queen */
-      if(u.atk<=0&&fd<240){
-       u.atk=1.6;
-       const aa9=Math.atan2(foe.y-u.y,foe.x-u.x)+rand(-0.05,0.05); /* a hand looses it, not a laser */
-       shots.push({x:u.x,y:u.y,vx:Math.cos(aa9)*290,vy:Math.sin(aa9)*290,t:2.6,team:s.team,by:s,dmg:u.dmg,col:'#8fe0c0'});
-       if(fd>150){const sd9=(u._fi%2?1:-1);u.vx+=-Math.sin(aa9)*sd9*200;u.vy+=Math.cos(aa9)*sd9*200;} /* loose, then WHEEL - only with room to dance */
-       if(near(s))sfx('spit');
-      }
-     }
-     if(u.role==='titan'&&u.sig<=0){ /* SEISMIC SLAM */
-      let hitN=0;
-      for(const es of swarms){if(es.dead||es.team===s.team)continue;
-       if(d2(s.x,s.y,es.x,es.y)>(s.R+es.R+560)**2)continue;
-       for(const eu of es.units){if(d2(eu.x,eu.y,u.x,u.y)<110*110){
-        const a2=Math.atan2(eu.y-u.y,eu.x-u.x);
-        eu.vx+=Math.cos(a2)*430;eu.vy+=Math.sin(a2)*430;
-        eu.hp-=40;eu.flash=.2;eu.slow=0.5;hitN++;
-        if(eu.hp<=0)killUnit(es,eu,s);}}}
-      if(hitN){u.sig=5+rand(0,1);addRing(u.x,u.y,'#ffb04d',120);addP(u.x,u.y,'#c8a06a',10,180);
-       if(near(s)){sfx('slam');shake=Math.min(14,shake+5);}}
-      else u.sig=0.4;
-     }
-     const rr=(foe.r||14)+u.r+2;
-     if(u.role!=='spitter'&&u.atk<=0&&fd2<rr*rr){
-      u.atk=1.15;u.fat=Math.min(1,u.fat+0.06);u.fatT=12;
-      const vm=Math.hypot(u.vx,u.vy);
-      let dmg=u.dmg*0.8*(0.7+Math.min(1.25,vm/240))*(1-0.35*u.fat); /* momentum splatters; the weary soften; wars BREATHE */
-      if(u.role==='lancer'&&foe.role&&(foe.role==='spitter'||foe.role==='nurse'||foe.role==='forager'))dmg*=1.3; /* the dart finds the soft */
-      if(foe.units!==undefined){ /* it's a queen */
-       dmg*= (foe.exposed?2:1);
-       foe.hp-=dmg;foe.flash=.1;foe.hitT=.12;
-       if(foe===M)sfx('hurt');
-       if(foe.hp<=0)killQueen(foe,s);
-      } else if(foe===elder){elder.hp-=dmg;elder.flash=.1;elder.provoked=6;if(elder.hp<=0)killElder(s);}
-      else if(foe===spider){spider.hp-=dmg;spider.flash=.1;spider.provoked=6;if(spider.hp<=0)killSpider(s);}
-      else if(foe.trio!==undefined){foe.hp-=dmg;foe.lastBy=s;const ka9=Math.atan2(foe.y-u.y,foe.x-u.x);
-       foe.vx+=Math.cos(ka9)*320;foe.vy+=Math.sin(ka9)*320;} /* wasps are BATTED out of the air */
-      else if(foe.blink!==undefined){foe.hp-=dmg;} /* and the EYE is cut */
-      else{
-       if(foe.braced&&u.role!=='titan')dmg*=0.7; /* the shield-line holds — but titans CRUSH walls */
-       foe.hp-=dmg;foe.flash=.12;foe.slow=0.4;
-       if(foe.hp<=0){killUnit(u.tgtS||war,foe,s);if(vm>240)addP(u.x,u.y,u.col,5,150);}
-      }
-      addSpark(u.x,u.y,2);if(s===M||war===M)sfx('hit');
-      const vv=Math.hypot(u.vx,u.vy)||1;u.vx+=u.vx/vv*70;u.vy+=u.vy/vv*70;
-      if(foe.cl!==undefined)foe.cl++;
-     }
-    }
-    else if(u.role==='spitter'){ /* ARTILLERY RANKS: straight lines behind the queen */
-     const row=Math.floor(u._fi/4),inR4=Math.min(4,spi-row*4),lat=(CSEQ4[u._fi%4]-CMEAN4[inR4-1])*26;
-     if(moving){
-      gx=s.x-hx*(s.R*0.5+18+row*22)-hy*lat;
-      gy=s.y-hy*(s.R*0.5+18+row*22)+hx*lat;
-      fast=true;
-     } else { /* parked ranks, barely breathing */
-      u.wanA+=u.wanV*dt*0.15;
-      gx=s.x-hx*(s.R*0.72+row*20)-hy*lat+Math.cos(u.wanA)*3;
-      gy=s.y-hy*(s.R*0.72+row*20)+hx*lat+Math.sin(u.wanA)*3;
-     }
-    }
-    else if(u.role==='nurse'){ /* mercy holds STATION just behind the crown */
-     const nlat=((u._fi%2)?16:-16)+(nur%2?16/nur:0),nd=s.R*0.28+12+Math.floor(u._fi/2)*22; /* an odd sisterhood recenters */
-     gx=s.x-hx*nd-hy*nlat;gy=s.y-hy*nd+hx*nlat;
-     fast=moving;
-     /* find the most wounded soul nearby and go to them */
-     if(u.atk<=0){let worst=null,wr=0.82;
-      for(const w2 of s.units){if(w2===u||w2.slain)continue;
-       const fr=w2.hp/w2.maxHp;
-       if(fr<wr&&d2(u.x,u.y,w2.x,w2.y)<200*200){wr=fr;worst=w2;}}
-      if(worst){gx=worst.x;gy=worst.y;fast=true;
-       if(d2(u.x,u.y,worst.x,worst.y)<(u.r+worst.r+6)**2){
-        worst.hp=Math.min(worst.maxHp,worst.hp+7);u.atk=1.1;worst.mend=0.9;
-        addP(worst.x,worst.y,'#a8f0b8',3,50);
-        if(fx.length<440)fx.push({x:worst.x,y:worst.y-worst.r-4,vx:0,vy:-30,t:0,life:0.9,col:'#a8f0b8',txt:'+'});
-        if(near(s)&&Math.random()<0.3)sfx('feed');}}}
-    }
-   else if(u.role==='armourer'){ /* the anchors: a bar/ring that GROWS with their number - never stacked */
-     const arB=Math.max(s.R*0.2+8,14+queenStage(s)*3+u.r+10);
-     if(moving){ /* a WIDENING wall before the queen: rows multiply as the anchors do */
-      const perRow=Math.max(3,Math.ceil(Math.sqrt(anc))),rowI=Math.floor((u._fi||0)/perRow),colI=(u._fi||0)%perRow,inRow=Math.min(perRow,anc-rowI*perRow);
-      const lat=(colI-(inRow-1)/2)*(u.r*2+6),ad9=arB+rowI*(u.r*2+8);
-      gx=s.x+hx*ad9-hy*lat;gy=s.y+hy*ad9+hx*lat;fast=true;
-     } else { /* garrison: concentric rings, evenly filled, never overlapping */
-      const rp=ringPos(u._fi||0,Math.max(s.R*0.4,arB),u.r*2+7,anc),aa=rp[1]+tnow*0.05;
-      gx=s.x+Math.cos(aa)*rp[0];gy=s.y+Math.sin(aa)*rp[0];
-     }
-    }
-    else if(u.role==='lancer'){
-     if(moving){ /* OUTRIDERS: staggered echelon on each flank */
-      const side=(u._fi%2?1:-1),rank=Math.floor(u._fi/2); /* every pair its OWN post - no two darts share a shadow */
-      const rail=Math.max(96,s.R*0.55+16)+rank*14; /* the rails run OUTSIDE the phalanx shoulders, always */
-      gx=s.x+hx*(s.R*0.1-Math.min(rank,4)*22)-hy*side*rail;
-      gy=s.y+hy*(s.R*0.1-Math.min(rank,4)*22)+hx*side*rail;
-      fast=true;
-     } else { /* SENTRY ORBIT: outriders evenly spaced, all riding the same way round */
-      const la=((u._fi||0)/Math.max(1,lan))*TAU+tnow*0.4;
-      gx=s.x+Math.cos(la)*(s.R*1.45);gy=s.y+Math.sin(la)*(s.R*1.45);
-     }
-    } else { /* soldier: the wall */
-     if(moving){ /* PHALANX: forward-facing wedge ahead of the queen (15) */
-      gx=s.x+hx*(u._wd||s.R*0.6)-hy*(u._wl||0);
-      gy=s.y+hy*(u._wd||s.R*0.6)+hx*(u._wl||0);
-      fast=true;
-     } else { /* GARRISON: concentric rings that GROW with the muster - shields never stack */
-      const rp=ringPos(u._gi||0,Math.max(s.R*0.55,u.r+10),u.r*2+6,sol),ring=rp[1]+tnow*0.06;
-      gx=s.x+Math.cos(ring)*rp[0];gy=s.y+Math.sin(ring)*rp[0];
-     }
-    }
-   }
-   /* titans ride center-front, shoulder to shoulder */
-   if(u.role==='titan'&&!fight){
-    const tr9=Math.floor((u._fi||0)/4),inRow=Math.max(1,Math.min(4,tit-tr9*4));
-    const lat=((u._fi||0)%4-(inRow-1)/2)*66; /* each rank centers on ITS OWN count */
-    const van=s.R*0.42+18+Math.ceil(sol/5)*30+30+tr9*70; /* the VANGUARD walks BEYOND the phalanx - zones never overlap */
-    gx=s.x+hx*van-hy*lat;gy=s.y+hy*van+hx*lat;fast=moving;}
-   /* the rope never fights you: desire beyond the leash is clamped TO the leash */
-   if(!u.home){const tdx=gx-s.x,tdy=gy-s.y,tl=Math.hypot(tdx,tdy);
-    if(tl>leash-14){gx=s.x+tdx/tl*(leash-14);gy=s.y+tdy/tl*(leash-14);}}
-   /* silk for units too: velocity toward goal, eased */
-   const gdx=gx-u.x,gdy=gy-u.y,gl=Math.hypot(gdx,gdy)||1;
-   const dock=fight?1:Math.min(1,gl/44); /* ARRIVE: glide into your slot, never orbit it */
-
-   const us=dock*u.spd*0.92*(0.72+0.28*clamp(u.hp/(u.maxHp||1),0,1))*u.zeal*(fast?1.15:0.55)* /* the hurt LIMP - dull and slow, no bars needed */((u.home&&(s._wb>1||(dq>700&&u.role!=='forager')))?1.5:1)*(1-0.45*clamp(u.slow,0,1))*(1-0.2*u.fat)*(u.load>12?0.82:1)*1; /* stragglers catch the wind; separated FIGHTERS sprint in desperation — no soul is ever stranded */
-   const ds=Math.min(us,gl*7);
-   const uk=Math.min(1,7*dt);
-   u.vx+=(gdx/gl*ds-u.vx)*uk;u.vy+=(gdy/gl*ds-u.vy)*uk;
-   /* a whisper of wobble = life (25c) — but the RANKS hold still */
-   if((u.per||!fight)&&(u.role==='forager'||!moving)){const wob=Math.sin(tnow*6*u.zeal+u.seed)*(fight?6:10);
-    u.vx+=-gdy/gl*wob*dt*6;u.vy+=gdx/gl*wob*dt*6;}
-   u.x+=u.vx*dt;u.y+=u.vy*dt;
-   /* the HIGH AIR: a homing soul pinned by stone for a heartbeat simply flies OVER the rocks —
-      bees do not argue with geometry */
-   const gl2=Math.hypot(gx-u.x,gy-u.y);
-   if(u.home||gl2>70){u._ft=(u._ft||0)+dt;
-    if(u._ft>0.8){if(Math.abs(u.x-(u._fx!=null?u._fx:u.x-99))+Math.abs(u.y-(u._fy!=null?u._fy:u.y))<10)u._fly=true;
-     u._fx=u.x;u._fy=u.y;u._ft=0;}
-   } else {u._fly=false;u._ft=0;u._fx=null;}
-   if(u._fly&&(dq<300&&gl2<60))u._fly=false;
-   if(!u._fly)collideBoulders(u,u.r);
-   else for(const b9 of boulders){if(!b9.hide)continue;const dx9=u.x-b9.x,dy9=u.y-b9.y,d9=Math.hypot(dx9,dy9),m9=b9.r+u.r;
-    if(d9<m9&&d9>0.01){u.x=b9.x+dx9/d9*m9;u.y=b9.y+dy9/d9*m9;u._fly=false;break;}} /* the HIGH AIR ends at the dome - nothing flies through stone */
-  }
-  /* separation inside the swarm */
-  const arr=s.units;
-  const par=(step._par=1-(step._par||0));
-  const bigS=arr.length>26;
-  if(bigS)for(let i9=0;i9<arr.length;i9++)arr[i9]._sepIdx=i9; /* a one-pass local index so each pair resolves exactly once via the grid */
-  for(let i=0;i<arr.length;i++){const A=arr[i];
-   if(bigS){
-    /* THE STAGGER: this is the single costliest loop in a mega-war. Same spirit as the small-swarm `par`
-       stride and the cross-swarm `big9` shove stride above/below - each soul only reaches out to its
-       neighbours every OTHER frame, alternating which half via the dedicated step._sepPar clock (see top of
-       step()) so no pair goes unresolved for more than one frame (a 16ms-stale nudge, invisible at 60fps).
-       Roughly halves this loop's cost. */
-    if((i%2)!==sepPar)continue;
-    /* THE GRID, self-swarm: same overlap-only locality argument as the cross-swarm grind below - kept as a
-       call to the shared gridNear() helper, NOT inlined: measured head-to-head, an inlined flat cell-walk
-       here is 7-19% SLOWER (worse at higher populations) than calling the small separate helper function -
-       apparently V8 optimizes step() (already 1000+ lines) better when this stays factored out. Measure,
-       don't assume - textbook "remove the callback overhead" can be a regression in an unusual context. */
-    gridNear(A.x,A.y,A.r+40,B=>{if(B===A||B._sw!==s||B._sepIdx<=A._sepIdx)return;
-     const mn=A.r+B.r+3,ex=B.x-A.x,ey=B.y-A.y;
-     if(ex>mn||ex<-mn||ey>mn||ey<-mn)return;
-     const d3=Math.hypot(ex,ey)||0.01;
-     if(d3<mn){const inRank=moving&&A.role===B.role&&A.role!=='forager';
-      let wA=0.5,wB=0.5;
-      if(A.role==='titan'&&B.role!=='titan'){wA=0.04;wB=0.96;}
-      else if(B.role==='titan'&&A.role!=='titan'){wA=0.96;wB=0.04;}
-      else if(A.role==='forager'&&B.role!=='forager'){wA=0.92;wB=0.08;}
-      else if(B.role==='forager'&&A.role!=='forager'){wA=0.08;wB=0.92;}
-      const F=(mn-d3)*(inRank?0.3:0.5)/d3;A.x-=ex*F*wA;A.y-=ey*F*wA;B.x+=ex*F*wB;B.y+=ey*F*wB;}});
-   } else
-   for(let j=i+1+((i+par)%2);j<arr.length;j+=arr.length>26?2:1){const B=arr[j];
-    const mn=A.r+B.r+3,ex=B.x-A.x,ey=B.y-A.y;
-    if(ex>mn||ex<-mn||ey>mn||ey<-mn)continue;
-    const d3=Math.hypot(ex,ey)||0.01;
-    if(d3<mn){const inRank=moving&&A.role===B.role&&A.role!=='forager';
-     let wA=0.5,wB=0.5; /* MAKE WAY FOR THE MONUMENTS: titans wade through, kin scoot aside */
-     if(A.role==='titan'&&B.role!=='titan'){wA=0.04;wB=0.96;}
-     else if(B.role==='titan'&&A.role!=='titan'){wA=0.96;wB=0.04;}
-     else if(A.role==='forager'&&B.role!=='forager'){wA=0.92;wB=0.08;} /* the little workers always yield */
-     else if(B.role==='forager'&&A.role!=='forager'){wA=0.08;wB=0.92;}
-     const F=(mn-d3)*(inRank?0.3:0.5)/d3;A.x-=ex*F*wA;A.y-=ey*F*wA;B.x+=ex*F*wB;B.y+=ey*F*wB;}}}
+  moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,true);
  }
  /* the grind: opposing melee shove (lines lock, then thin into dogfight naturally) */
  for(let i=0;i<swarms.length;i++){const a=swarms[i];if(a.dead)continue;
@@ -4144,7 +4146,7 @@ function netApplyFrame(F){ /* the LIVING world flows in - stamped by OUR clock, 
   for(let j=0;j<uu.length;j++){const t9=uu[j];const uid=t9[5];
    const role=ROLE_BY_ID[t9[2]]||'forager';const R9=ROLES[role];
    let u=old9.get(uid);
-   if(!u||u.role!==role)u={uid,role,x:t9[0],y:t9[1],tx:t9[0],ty:t9[1],vx:0,vy:0,r:R9.r,col:R9.col,shape:R9.shape,
+   if(!u||u.role!==role)u={uid,role,x:t9[0],y:t9[1],tx:t9[0],ty:t9[1],vx:0,vy:0,r:R9.r,col:R9.col,shape:R9.shape,spd:R9.spd,dmg:R9.dmg,mass:R9.mass,
     maxHp:R9.hp,hp:t9[3],load:t9[4],seed:(uid*2.39)%TAU,zeal:1,slot:j,_fi:j,_gi:j,braced:false,aura:false,
     atk:0,flash:0,slow:0,fat:0,mend:0,wanA:0,wanV:1,per:false,sig:2,sigT:0,cl:0,home:false,load2:0};
    u.tx=t9[0];u.ty=t9[1];u.hp=t9[3];u.load=t9[4];u.slot=j;u._fi=j;u._gi=j;
@@ -4220,12 +4222,7 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
     OX=NET._fox;OY=NET._foy;}
    for(let j=0;j<s2.units.length;j++){const u=s2.units[j];
     const tA=uA&&uA.get(u.uid),tB=uB&&uB.get(u.uid);
-    if(s2===MP&&!s2.ally&&tB){ /* own troops: hold formation tight around the PREDICTED queen via the stable anchor above */
-     const ox=OX,oy=OY;
-     const bx=tA?tA[0]+(tB[0]-tA[0])*al:tB[0],by=tA?tA[1]+(tB[1]-tA[1])*al:tB[1];
-     {const tx9=bx+ox,ty9=by+oy,jx9=tx9-u.x,jy9=ty9-u.y,jd9=Math.hypot(jx9,jy9),cap9=150+(u.spd||300)*dt;
-      if(jd9>cap9){u.x+=jx9/jd9*cap9;u.y+=jy9/jd9*cap9;}else{u.x=tx9;u.y=ty9;} /* glide over teleport-scale snaps, never teleport */
-      u.vx=jx9/Math.max(dt,0.001);u.vy=jy9/Math.max(dt,0.001);}}
+    if(s2===MP&&!s2.ally){ /* own troops are NOT interpolated here — the LOCAL swarm-brain (moveUnits, after this loop) forms them around the predicted queen; this is the fix that makes online feel like solo */}
     else if(tB){const bx=tA?tA[0]+(tB[0]-tA[0])*al:tB[0],by=tA?tA[1]+(tB[1]-tA[1])*al:tB[1];
      const jx9=bx-u.x,jy9=by-u.y,jd9=Math.hypot(jx9,jy9),cap9=150+(u.spd||300)*dt;
      if(jd9>cap9){u.x+=jx9/jd9*cap9;u.y+=jy9/jd9*cap9;}else{u.x=bx;u.y=by;} /* glide over teleport-scale snaps (post-stall), never a jarring jump */
@@ -4233,6 +4230,16 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
     else{const k9=Math.min(1,6*dt);
      u.vx=(u.tx-u.x)*8;u.vy=(u.ty-u.y)*8;u.x+=(u.tx-u.x)*k9;u.y+=(u.ty-u.y)*k9;}}}
   if(s2.sayT>0)s2.sayT-=dt;}
+ {const _mp=MP; /* THE SWARM RUNS LOCAL: online, your own troops think with the SAME brain as solo — formed, foraging, fighting around your PREDICTED queen; the server still owns hp/kills/honey (moveUnits sim=false) but the FEEL is yours, not lerped dots */
+  if(NET.on&&_mp&&!_mp.dead&&_mp.units&&_mp.units.length){
+   gridBuild();boulderGridBuild();
+   let dxo=0,dyo=0,drvo=false;const kvo=keyVec();
+   if(kvo.on){dxo=kvo.x;dyo=kvo.y;drvo=true;}
+   else if(input.joy){const m2=Math.hypot(input.joy.dx,input.joy.dy);if(m2>10){dxo=input.joy.dx;dyo=input.joy.dy;drvo=true;}}
+   else if(input.mDown){dxo=cam.x+(input.mx*DPR-W/2)/cam.z-_mp.x;dyo=cam.y+(input.my*DPR-H/2)/cam.z-_mp.y;drvo=Math.hypot(dxo,dyo)>30;}
+   const ddo=Math.hypot(dxo,dyo)||1,spdo=queenSpd(_mp),sepO=(netTick._sp=1-(netTick._sp||0));
+   try{moveUnits(_mp,dt,drvo,dxo,dyo,ddo,spdo,sepO,_mp,false);}catch(e){if(!netTick._e){netTick._e=1;console.error("moveUnits online:",e);}}
+  }}
  NET.pingT-=dt;if(NET.pingT<=0){NET.pingT=2;NET.cmd&&NET.ws&&NET.ws.readyState===1&&NET.ws.send(JSON.stringify({k:'p',t:Date.now()}));}
  NET.aimT-=dt;
  const M9=swarms[0];

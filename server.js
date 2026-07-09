@@ -2,6 +2,11 @@
    Serves the game page over HTTP and the authoritative sim over WebSocket on the SAME port.
    Punch the URL, press RISE, you're online. */
 const fs=require('fs'),vm=require('vm'),path=require('path'),http=require('http');
+/* --- TEMP DIAGNOSTIC TELEMETRY: event-loop lag + GC pauses + heap, to locate the multi-second freezes --- */
+const {PerformanceObserver}=require('perf_hooks');
+const DIAG={gcCount:0,gcTotalMs:0,gcMaxMs:0,elLagMaxMs:0};
+try{new PerformanceObserver(l=>{for(const e of l.getEntries()){DIAG.gcCount++;DIAG.gcTotalMs+=e.duration;if(e.duration>DIAG.gcMaxMs)DIAG.gcMaxMs=e.duration;}}).observe({entryTypes:['gc']});}catch(e){}
+{let _t=Date.now();setInterval(()=>{const n=Date.now(),lag=n-_t-100;if(lag>DIAG.elLagMaxMs)DIAG.elLagMaxMs=lag;_t=n;},100);}
 
 function makeGame(htmlPath){
  const html=fs.readFileSync(htmlPath,'utf8');
@@ -44,9 +49,13 @@ function start(port,htmlPath){
    const h=TICKS.hist.slice().sort((a,b)=>a-b);
    const p95=h.length?h[Math.min(h.length-1,(h.length*0.95)|0)]:0;
    let souls=0;for(const s2 of G.swarms)if(!s2.dead)souls+=s2.units.length;
+   const mu=process.memoryUsage();
+   const elLag=DIAG.elLagMaxMs,gcMax=DIAG.gcMaxMs;DIAG.elLagMaxMs=0;DIAG.gcMaxMs=0; /* per-interval maxes since last poll */
    res.writeHead(200,{'Content-Type':'application/json'});
    res.end(JSON.stringify({ok:1,seats:Object.keys(seats).length,souls,
-    tickAvg:+(TICKS.n?TICKS.sum/TICKS.n:0).toFixed(2),tickP95:p95,upMin:((Date.now()-BOOT)/60000)|0}));}
+    tickAvg:+(TICKS.n?TICKS.sum/TICKS.n:0).toFixed(2),tickP95:p95,upMin:((Date.now()-BOOT)/60000)|0,
+    ticks:TICKS.n,elLagMaxMs:elLag,gcCount:DIAG.gcCount,gcMaxMs:+gcMax.toFixed(0),gcTotalMs:+DIAG.gcTotalMs.toFixed(0),
+    heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0}));}
   else{res.writeHead(404);res.end('the meadow has no such door');}
  });
  const wss=new WebSocketServer({server:httpSrv});

@@ -70,7 +70,8 @@ function start(port,htmlPath){
     seats[team]=ws;
     if(wasEmpty&&Date.now()-lastEmpty>15000)freshWorld(); /* only reset a LONG-empty room, so devices/friends joining close together SHARE the world */ /* a lone arrival into an empty room begins in a clean, light meadow */
     const s=G.swarms.find(z=>z.team===team&&!z.ally);
-    if(s){s.bot=false;s.name=(''+(m.n||'Queen')).slice(0,16).replace(/[<>&"']/g,'');delete s.forceAim;}
+    if(s){s.bot=false;s.name=(''+(m.n||'Queen')).slice(0,16).replace(/[<>&"']/g,'');delete s.forceAim;
+     s.dead=false;try{G.reviveSwarm(s);}catch(e){}s.honey=30;} /* FRESH QUEEN on join: a joining player never inherits the wild bot's grown body/units/honey - fixes bot-body spawn + the heavy inherited swarm that stalls weak clients */
     ws.send(JSON.stringify({k:'init',you:team,world:G.netWorldInit()}));
    } else if(m.k==='cmd'&&team!==null){try{G.applyInput(team,m.c||{});}catch(e){}}
    else if(m.k==='p'){try{ws.send(JSON.stringify({k:'p',t:m.t}));}catch(e){}}

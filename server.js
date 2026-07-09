@@ -71,7 +71,7 @@ function start(port,htmlPath){
    if(s){s.bot=true;delete s.forceAim;}}});
  });
  const BOOT=Date.now(),TICKS={n:0,sum:0,hist:[]};
- const DT=1/60;let acc=0,last=Date.now();
+ const DT=1/30;let acc=0,last=Date.now(); /* 30Hz authoritative sim: HALVES sustained CPU so the shared-cpu-1x burst credits stop draining (was 60Hz=~36% CPU nonstop -> throttle -> multi-second stalls). Queen physics verified dt-robust (4px/3s drift vs 60Hz); client predicts her at 60fps + interpolates troops, so nothing looks slower. */
  const simI=setInterval(()=>{const now=Date.now();
   if(Object.keys(seats).length===0){last=now;acc=0;return;} /* IDLE when the room is empty: no humans, no grind - the meadow simply waits */
   acc+=(now-last)/1000;last=now;
@@ -82,7 +82,7 @@ function start(port,htmlPath){
    G.step(DT);
    const el=Number(process.hrtime.bigint()-t0)/1e6;
    TICKS.n++;TICKS.sum+=el;TICKS.hist.push(el);if(TICKS.hist.length>300)TICKS.hist.shift();
-   acc-=DT;n++;}},8);
+   acc-=DT;n++;}},16);
  let fN=0;
  const netI=setInterval(()=>{ if(Object.keys(seats).length===0)return; /* 20Hz heartbeat: souls every beat, the slow world every third */
   let f;try{f=JSON.stringify({k:'f',...((fN++%3===0)?G.netDyn():G.netDynLite())});}catch(e){return;}

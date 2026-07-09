@@ -4303,55 +4303,8 @@ function applyInput(team,cmd){ /* THE HAND: remote players ride the same reins t
  if(cmd.say)s.say=(''+cmd.say).slice(0,80),s.sayT=8;
  return true;}
 
-/* ===== THE TUNING BENCH — live feel knobs, drag & export (press \) ===== */
-const TUNE_KNOBS=[
- ['queen speed',120,340,1,()=>TUNE.qspd,v=>TUNE.qspd=v,'qspd'],
- ['mass slowdown',0.03,0.30,0.005,()=>TUNE.qmass,v=>TUNE.qmass=v,'qmass'],
- ['responsiveness',3,16,0.5,()=>TUNE.qacc,v=>TUNE.qacc=v,'qacc'],
- ['zoom scale',0.6,1.6,0.02,()=>TUNE.zoom,v=>TUNE.zoom=v,'zoom'],
- ['zoom smoothing',0.02,0.20,0.005,()=>TUNE.zease,v=>TUNE.zease=v,'zease'],
- ['look ahead',0,0.8,0.02,()=>TUNE.look,v=>TUNE.look=v,'look'],
- ['camera ease',0.03,0.20,0.005,()=>TUNE.camease,v=>TUNE.camease=v,'camease'],
- ['honey rate',0.3,3,0.1,()=>TUNE.honey,v=>TUNE.honey=v,'honey'],
- ['split cap',1,6,1,()=>SPLIT_MAX,v=>{SPLIT_MAX=v;},'SPLIT_MAX'],
- ['xp rate',0.1,1.5,0.05,()=>XP_RATE,v=>{XP_RATE=v;},'XP_RATE'],
- ['soul cap',20,200,5,()=>SOUL_CAP,v=>{SOUL_CAP=v;},'SOUL_CAP'],
-];
-function tuneExport(){const o={};for(const kk of TUNE_KNOBS)o[kk[6]]=+kk[4]();return JSON.stringify(o);}
-let tunePanel=null;
-function buildTune(){
- if(tunePanel||typeof document==='undefined')return;
- let d;try{d=document.createElement('div');}catch(e){return;}
- if(!d||!d.style||!(document.body&&document.body.appendChild))return;
- d.id='tunep';
- d.style.cssText='position:fixed;top:10px;left:10px;z-index:99999;background:rgba(18,14,26,.94);color:#f0e8ff;font:12px/1.5 system-ui,sans-serif;padding:12px 14px;border:1px solid #6a4a8a;border-radius:10px;width:232px;display:none;box-shadow:0 8px 30px rgba(0,0,0,.55)';
- let h='<div style="font-weight:700;letter-spacing:.5px;margin-bottom:8px;color:#e5b0ff">TUNING BENCH</div>';
- for(let i=0;i<TUNE_KNOBS.length;i++){const kk=TUNE_KNOBS[i];
-  h+='<div style="margin:7px 0"><div style="display:flex;justify-content:space-between"><span>'+kk[0]+'</span><span id="tv'+i+'" style="color:#9fe8a0"></span></div>'+
-     '<input id="ts'+i+'" type="range" min="'+kk[1]+'" max="'+kk[2]+'" step="'+kk[3]+'" style="width:100%"></div>';}
- h+='<button id="tunecopy" style="width:100%;margin-top:8px;padding:6px;background:#6a4a8a;color:#fff;border:0;border-radius:6px;cursor:pointer">COPY numbers</button>';
- h+='<div style="margin-top:6px;font-size:10px;color:#a89ac0">press \\ to hide · best in solo (?solo) · online uses server values</div>';
- d.innerHTML=h;
- try{(document.body||document.documentElement).appendChild(d);}catch(e){return;}
- tunePanel=d;
- for(let i=0;i<TUNE_KNOBS.length;i++){const kk=TUNE_KNOBS[i];
-  const sl=document.getElementById('ts'+i),tv=document.getElementById('tv'+i);
-  if(!sl||!sl.addEventListener)continue;
-  try{sl.value=kk[4]();}catch(e){} if(tv)tv.textContent=''+(+kk[4]());
-  sl.addEventListener('input',()=>{const v=parseFloat(sl.value);kk[5](v);if(tv)tv.textContent=''+v;});}
- const cb=document.getElementById('tunecopy');
- if(cb&&cb.addEventListener)cb.addEventListener('click',()=>{const s=tuneExport();
-  try{navigator.clipboard&&navigator.clipboard.writeText(s);}catch(e){}
-  try{const ta=document.createElement('textarea');ta.value=s;document.body.appendChild(ta);ta.select();document.execCommand&&document.execCommand('copy');document.body.removeChild(ta);}catch(e){}
-  cb.textContent='COPIED ✓';setTimeout(()=>{if(cb)cb.textContent='COPY numbers';},1200);});
-}
-function toggleTune(){buildTune();if(!tunePanel||!tunePanel.style)return;
- const show=tunePanel.style.display==='none';
- if(show)for(let i=0;i<TUNE_KNOBS.length;i++){const sl=document.getElementById('ts'+i),tv=document.getElementById('tv'+i),kk=TUNE_KNOBS[i];if(sl)try{sl.value=kk[4]();}catch(e){}if(tv)tv.textContent=''+(+kk[4]());}
- tunePanel.style.display=show?'block':'none';}
-try{addEventListener('keydown',e=>{if(e.key==='\\'){try{e.preventDefault();}catch(_){}toggleTune();}});}catch(e){}
 
-window.__G={unlockAll(){for(const k in ROLES)unlocked[k]=true;},TUNE,tuneExport,netSnapshot,netWorldInit,netDyn,netDynLite,applyInput,NET,netApplyWorld,netApplyFrame,netTick,
+window.__G={unlockAll(){for(const k in ROLES)unlocked[k]=true;},TUNE,netSnapshot,netWorldInit,netDyn,netDynLite,applyInput,NET,netApplyWorld,netApplyFrame,netTick,
  get swarms(){return swarms;},get groves(){return groves;},get boulders(){return boulders;},get coves(){return coves;},
  get ways(){return ways;},get drops(){return drops;},get elder(){return elder;},get tnow(){return tnow;},get shots(){return shots;},get goldT(){return goldT;},set goldT(v){goldT=v;},get FAIRY(){return FAIRY;},get dews(){return dews;},get comboN(){return comboN;},get spider(){return spider;},get webshots(){return webshots;},killSpider,get grottos(){return grottos;},get wasps(){return wasps;},get fieldMaws(){return fieldMaws;},get eyes(){return eyes;},get orbs(){return orbs;},get OASIS(){return OASIS;},realmOf,get ambient(){return ambient;},BOTS,get decor(){return decor;},get thorns(){return thorns;},honeyCap,
  get unlocked(){return unlocked;},get evoPending(){return evoPending;},get META(){return META;},

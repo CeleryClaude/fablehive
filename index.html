@@ -1726,7 +1726,7 @@ function step(dt){NPLAY=humanCount();
  /* groves drift, regrow, and the drained POP */
  flowerTick(dt);
  for(let gi=groves.length-1;gi>=0;gi--){const g=groves[gi];
-  if(POPPABLE[g.kind]&&!g.closed){if(g.amt<=Math.max(3,g.max*0.08)){popFlower(g);continue;}}
+  if(POPPABLE[g.kind]&&!g.closed){if(g.amt<=Math.max(6,g.max*0.08)){popFlower(g);continue;}} /* pop at 6, not 3: foragers ABANDON a flower at 6, so anything between 4 and 6 was a husk squatting for minutes - unharvestable, unpoppable, regrowing at 0.35/s. The moment the rope lets go, the payout fires */
   /* NIGHTBLOOM: stay close and it slowly UNFURLS (about six seconds) - then it pays like the night itself */
   if(g.kind==='night'&&g.closed){
    let close9=false;
@@ -4157,8 +4157,16 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
    NET.buf.push({rt:NET.clock,m:fm});}
   while(NET.buf.length>14)NET.buf.shift();}
  goldT=F.g?3:-1;
- if(F.gv)groves=F.gv.map(g=>({x:g[0],y:g[1],kind:GKIND[g[2]],sp:g[3],amt:g[4],max:g[5],
+ if(F.gv){const og9=groves,M0=swarms&&swarms[0];
+  groves=F.gv.map(g=>({x:g[0],y:g[1],kind:GKIND[g[2]],sp:g[3],amt:g[4],max:g[5],
   rock:!!(g[6]&1),rich:!!(g[6]&2),grand:!!(g[6]&4),gild:!!(g[6]&8),mother:!!(g[6]&16),web:!!(g[6]&32),lumen:!!(g[6]&64),closed:!!(g[6]&128),gilt:!!(g[6]&256),openT:g[7],surge:0,vx:0,vy:0}));
+  if(og9&&og9.length&&M0&&!M0.dead){let pp9=0; /* THE PAYOUT IS VISIBLE ONLINE: a flower that was in view last beat and gone this beat POPPED on the server - burst+ring+sound here too, not a silent deletion. (Beyond ~2200px it merely left the AoI - no fx for horizon bookkeeping) */
+   for(const g0 of og9){if(pp9>=4)break;
+    if(d2(g0.x,g0.y,M0.x,M0.y)>2200*2200)continue;
+    let fnd9=false;for(const gn of groves){if(Math.abs(gn.x-g0.x)<3&&Math.abs(gn.y-g0.y)<3){fnd9=true;break;}}
+    if(!fnd9){pp9++;
+     if(fx.length<380){addP(g0.x,g0.y,'#ffd7e8',12,170);addRing(g0.x,g0.y,(g0.gild||g0.gilt)?'#ffdf7e':'#ffd7e8',g0.grand?80:46);}
+     if(d2(g0.x,g0.y,M0.x,M0.y)<1200*1200)sfx(g0.grand?'gild':'pop');}}}}
  if(F.dr)drops=F.dr.map(d=>({x:d[0],y:d[1],amt:d[2],t:9}));
  if(F.sh)shots=F.sh.map(x=>({x:x[0],y:x[1],vx:x[2],vy:x[3],t:1,team:-9,dmg:0,col:'#8fe0c0'}));
  if(F.wp)wasps=F.wp.map(w=>({x:w[0],y:w[1],vx:w[2],vy:w[3],trio:w[4],hp:60,atk:0,wa:0,ax:w[0],ay:w[1]}));

@@ -66,10 +66,10 @@ function start(port,htmlPath){
    res.end(JSON.stringify({ok:1,seats:Object.keys(seats).length,souls,
     tickAvg:+(TICKS.n?TICKS.sum/TICKS.n:0).toFixed(2),tickP95:p95,upMin:((Date.now()-BOOT)/60000)|0,
     ticks:TICKS.n,elLagMaxMs:elLag,gcCount:DIAG.gcCount,gcMaxMs:+gcMax.toFixed(0),gcTotalMs:+DIAG.gcTotalMs.toFixed(0),
-    stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:DIAG.netLateMax||0,rateSkips:DIAG.rateSkips||0,
+    stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:(()=>{const v9=DIAG.netLateMax||0;DIAG.netLateMax=0;return v9;})(),rateSkips:DIAG.rateSkips||0,
     buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
     seatNet:Object.keys(seats).map(t9=>{const w9=seats[t9],r9=(w9&&w9._rttMax||0)|0;if(w9)w9._rttMax=0;return {t:+t9,rtt:(w9&&w9._rttS||0)|0,rttMax:r9,buf:(w9&&w9.bufferedAmount||0)|0};}),
-    ver:'r10b-autodeploy-proven',
+    ver:'r11-flowers-pop',
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else{res.writeHead(404);res.end('the meadow has no such door');}
  });
@@ -121,12 +121,13 @@ function start(port,htmlPath){
   acc+=(now-last)/1000;last=now;
   if(acc>0.25)acc=0.25;let n=0;
   /* TRUE PER-STEP TIMING: a catch-up burst of 5 steps must never be counted as one slow tick */
-  while(acc>=DT&&n<3){ /* catch-up capped at 3 (was 5): after a GC or timer hiccup a 5-step burst cost 75ms+ in one gulp, starving the very next net frame - the 1000ms ping SPIKES. Better a hair of time-dilation than a spike */
+  while(acc>=DT&&n<2){ /* catch-up capped at 2: burst gulps starve the beat pipeline - better a hair of time-dilation than a spike */
    const t0=process.hrtime.bigint();
    G.step(DT);
    const el=Number(process.hrtime.bigint()-t0)/1e6;
    TICKS.n++;TICKS.sum+=el;TICKS.hist.push(el);if(TICKS.hist.length>300)TICKS.hist.shift();
-   acc-=DT;n++;}},16);
+   acc-=DT;n++;
+   if(el>22){acc=Math.min(acc,DT);break;}}},16); /* THE PRESSURE VALVE: a monster brawl can cost 40ms+ per tick (probe: Elder=42ms vs 8 normal). When a tick runs hot, SHED THE SIM BACKLOG, never the net beats - the meadow slows a few percent under an Elder's fury; the wire never chokes behind it */
  let fN=0,_lastNet=Date.now();
  const AOI2=2400*2400; /* AREA OF INTEREST (#3b): each seat receives the units/drops/shots/wasps within 2400px of HER queen - beyond that lies pure invisible bandwidth. 2400 covers the widest screen at the zoom cap (~1830px half-width) plus the 520px troop leash, with margin. Queens/headers of ALL swarms still flow every frame (minimap + war-sense need them); authority is untouched - the FULL world simulates server-side, culling is presentation only */
  const netI=setInterval(()=>{ if(Object.keys(seats).length===0){_lastNet=Date.now();return;} /* 30Hz heartbeat: souls every beat, the slow world every third */

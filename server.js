@@ -120,8 +120,8 @@ function start(port,htmlPath){
    acc-=DT;n++;}},16);
  let fN=0,_lastNet=Date.now();
  const AOI2=2400*2400; /* AREA OF INTEREST (#3b): each seat receives the units/drops/shots/wasps within 2400px of HER queen - beyond that lies pure invisible bandwidth. 2400 covers the widest screen at the zoom cap (~1830px half-width) plus the 520px troop leash, with margin. Queens/headers of ALL swarms still flow every frame (minimap + war-sense need them); authority is untouched - the FULL world simulates server-side, culling is presentation only */
- const netI=setInterval(()=>{ if(Object.keys(seats).length===0)return; /* 30Hz heartbeat: souls every beat, the slow world every third */
-  {const nn=Date.now(),gp=nn-_lastNet;if(gp>66&&gp>(DIAG.netLateMax||0))DIAG.netLateMax=gp;_lastNet=nn;} /* how late do net beats actually run? */
+ const netI=setInterval(()=>{ if(Object.keys(seats).length===0){_lastNet=Date.now();return;} /* 30Hz heartbeat: souls every beat, the slow world every third */
+  {const nn=Date.now(),gp=nn-_lastNet;if(gp>66&&gp<30000&&gp>(DIAG.netLateMax||0))DIAG.netLateMax=gp;_lastNet=nn;} /* how late do net beats actually run? (idle/boot gaps excluded - the first samples used to be garbage) */
   let base;try{base=(fN++%3===0)?G.netDyn():G.netDynLite();}catch(e){return;}
   for(const t in seats){const _w=seats[t];if(!_w)continue;
    const _b0=_w.bufferedAmount||0,_rt0=_w._rttS||0; /* GRACEFUL DEGRADATION: strain is a backed-up buffer OR a confessed high ping (bufferbloat queues in the router where bufferedAmount cannot see). Strained pipes get FEWER, LIGHTER beats until the ping heals - a crude congestion controller, not a cliff */

@@ -246,8 +246,10 @@ let SOUL_CAP=100;let NPLAY=1;let ROOM=false;let ELDRT=420,SPDRT=420; /* boss res
 /* meta (cosmetics only, ever — and EVERYTHING earnable with ✨: Royal Nectar only skips the grind) */
 let META={xp:0,skin:0,nectar:0,royal:false,sub:false,seasonXp:0,claimedF:[],claimedR:[],owned:{},eq:{pattern:'plain',crown:'none',trail:'none',wings:'standard',body:'sleek',tail:'notail',fleet:'plainfleet',aura:'noaura',plate:'noplate',eye:'simple'}};
 try{const m=(typeof localStorage!=='undefined')&&localStorage.getItem('brood_meta');if(m){const p=JSON.parse(m);META=Object.assign(META,p);META.owned=p.owned||{};META.eq=Object.assign({pattern:'plain',crown:'none',trail:'none',wings:'standard',body:'sleek',tail:'notail',fleet:'plainfleet',aura:'noaura',plate:'noplate',eye:'simple'},p.eq||{});META.claimedF=p.claimedF||[];META.claimedR=p.claimedR||[];}}catch(e){}
-if(META.owned&&META.owned.broodsigil){META.owned.broodfangs=true;delete META.owned.broodsigil;} /* Her Sigil retired by Celery's decree - the same kill now grants HER FANGS */
+if(META.owned&&META.owned.broodsigil)delete META.owned.broodsigil; /* Her Sigil retired by decree */
+if(META.owned&&META.owned.broodfangs)delete META.owned.broodfangs; /* Her Fangs retired too ("very silly at this stage") - the Broodmother kill keeps broodcrown + silkstrand; a fang trophy may return when it can be drawn WORTHY */
 if(META.eq&&META.eq.pattern==='broodsigil')META.eq.pattern='plain';
+if(META.eq&&META.eq.crown==='broodfangs')META.eq.crown=META.owned&&META.owned.broodcrown?'broodcrown':'none';
 function metaSave(){try{if(typeof localStorage!=='undefined')localStorage.setItem('brood_meta',JSON.stringify(META));}catch(e){}}
 let XP_RATE=0.4; /* slow the climb: quick first joys, a real road to royalty (single knob, tune me) */
 let RUNXP=0; /* what THIS flight has earned - so you know when a trip to the nest is worth it */
@@ -309,7 +311,6 @@ const ITEMS=[
  {id:'elderhorn',cat:'crown',  n:'Elder Crown', xp:-1,  d:'slay the Elder once — wear his horns forever'},
  {id:'broodcrown',cat:'crown', n:'Brood Crown', xp:-1,  d:'slay the Broodmother — six eyes keep watch from your brow'},
  {id:'waspband', cat:'crown',  n:'Waspbane Band',xp:-1, d:'break nine wasps in one life — wear their warning stripes'},
- {id:'broodfangs',cat:'crown',  n:'Her Fangs',   xp:-1,  d:'slay the Broodmother — her chelicerae, worn at the brow'},
  {id:'noctis',   cat:'pattern',n:'Noctis',      xp:2400, d:'the night itself, worn - deep indigo dusted with cold stars'},
  {id:'silkstrand',cat:'trail', n:'Silkstrand',  xp:-1,  d:'slay the Broodmother — silk follows you like memory'},
  {id:'notrail',  cat:'trail',  n:'Still Air',   xp:0,   d:'you pass unseen'},
@@ -1143,7 +1144,7 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
     /* always working (28c). robbable. flees enemies. */
     /* scoop: a forager touching fallen honey takes it as cargo */
     for(let i2=drops.length-1;i2>=0;i2--){const dr=drops[i2];if(grottoOf(dr.x,dr.y)!==grottoOf(u.x,u.y))continue;
-     if(d2(dr.x,dr.y,u.x,u.y)<16*16){if(sim){gainHoney(s,dr.amt);drops.splice(i2,1);}addSpark(u.x,u.y,2);break;}}
+     if(d2(dr.x,dr.y,u.x,u.y)<16*16){if(sim){if(dr.war)s.honey+=dr.amt;else gainHoney(s,dr.amt);drops.splice(i2,1);}addSpark(u.x,u.y,2);break;}}
     if(u.load>=39||s.honey>=honeyCap(s)){ /* FULL BELLY (or full house): fall in beside the queen, a fat larder on the wing */
      u.node=null;
      const llat=(((u._fi||0)%2)?22:-22)*(1+Math.floor((u._fi||0)/2)*0.5);
@@ -1607,7 +1608,7 @@ function step(dt){NPLAY=humanCount();
    if(dq2<110*110){const a2=Math.atan2(s.y-dr.y,s.x-dr.x),pull=dt*(260+(1-Math.sqrt(dq2)/110)*1500); /* elastic: the closer, the hungrier */
     dr.x+=Math.cos(a2)*pull;dr.y+=Math.sin(a2)*pull;}
    if(dq2<32*32){
-    if(s.team===0){gainHoney(s,dr.amt*comboMult()*TUNE.honey);feedCombo();}else gainHoney(s,dr.amt);
+    if(s.team===0){const a9=dr.amt*comboMult()*TUNE.honey;if(dr.war)s.honey+=a9;else gainHoney(s,a9);feedCombo();}else{if(dr.war)s.honey+=dr.amt;else gainHoney(s,dr.amt);}
     if(s===M){sfx('feed');gainXP(dr.amt*0.2);s.gulp=0.16;addFloat(s.x,s.y-s.R-8,'+'+Math.round(dr.amt),'#ffd75e');addP(s.x,s.y,'#ffd75e',3,80);}
     drops.splice(i,1);}}
   /* auto defensive stomp — no button, it just happens */
@@ -1777,7 +1778,7 @@ function step(dt){NPLAY=humanCount();
     if(d2(kd.x,kd.y,s2.x,s2.y)>(s2.R+560)**2)continue;
     for(const u2 of s2.units){if(u2.dmg>0&&u2.atk<=0&&d2(u2.x,u2.y,kd.x,kd.y)<(u2.r+kd.r)**2){
      u2.atk=0.8;kd.hp-=u2.dmg;addSpark(kd.x,kd.y,2);break;}}}
-   if(kd.hp<=0){for(let q9=0;q9<3;q9++)dropAt(kd.x+rand(-10,10),kd.y+rand(-10,10),rand(5,9),10);addP(kd.x,kd.y,'#c8b8d8',9,130);if(near(kd))sfx('pop');sp5.kids.splice(i,1);}}
+   if(kd.hp<=0){for(let q9=0;q9<3;q9++)dropAt(kd.x+rand(-10,10),kd.y+rand(-10,10),rand(5,9),10,1);addP(kd.x,kd.y,'#c8b8d8',9,130);if(near(kd))sfx('pop');sp5.kids.splice(i,1);}}
  }
  /* groves drift, regrow, and the drained POP */
  if(ROOM){ /* THE CORNERS REFILL: in a shared room the nightmares respawn seven minutes after they fall (solo keeps once-per-run trophies sacred). ANSWER to "what are the boss respawn timers": solo NEVER (per world), rooms 420s */
@@ -1944,7 +1945,7 @@ function step(dt){NPLAY=humanCount();
     if(lash){ey.cd=1.25;if(near(ey))sfx('hit');}}
    for(const u2 of s2.units){if(u2.dmg>0&&u2.atk<=0&&d2(u2.x,u2.y,ey.x,ey.y)<(u2.r+ey.r+8)**2){
     u2.atk=0.9;ey.hp-=u2.dmg;addSpark(ey.x,ey.y,2);break;}}}
-  if(ey.hp<=0){for(let k=0;k<7;k++)dropAt(ey.x+rand(-16,16),ey.y+rand(-16,16),rand(5,9),12);
+  if(ey.hp<=0){for(let k=0;k<7;k++)dropAt(ey.x+rand(-16,16),ey.y+rand(-16,16),rand(5,9),12,1);
    if(near(ey)){sfx('die');addRing(ey.x,ey.y,'#b89ae8',120);}addP(ey.x,ey.y,'#b89ae8',12,160);
    {const M5=me();if(M5&&!M5.dead&&d2(M5.x,M5.y,ey.x,ey.y)<900*900)gainXP(9);}
    eyes.splice(i,1);}}
@@ -2011,7 +2012,7 @@ function step(dt){NPLAY=humanCount();
     u2.atk=0.8;wp.hp-=u2.dmg;wp.lastBy=s2;addSpark(wp.x,wp.y,2);break;}}}
   if(wp.hp<=0){
    if(wp.lastBy&&wp.lastBy.team===0){const M5=me();M5.waspKills=(M5.waspKills||0)+1;
-    if(M5.waspKills>=9)trophy('waspband','WASPBANE — NINE BROKEN, STRIPES EARNED');}for(let k=0;k<4;k++)dropAt(wp.x+rand(-12,12),wp.y+rand(-12,12),rand(4,7),10);
+    if(M5.waspKills>=9)trophy('waspband','WASPBANE — NINE BROKEN, STRIPES EARNED');}for(let k=0;k<4;k++)dropAt(wp.x+rand(-12,12),wp.y+rand(-12,12),rand(4,7),10,1);
    addP(wp.x,wp.y,'#ffd75e',8,130);if(near(wp))sfx('pop');wasps.splice(i,1);}}
  if(wasps.length===0&&swarms.some(s2=>s2.bot&&!s2.ally&&!s2.dead)){waspT-=dt; /* the wild returns only where the wild lives */
   if(waspT<=0){waspT=30;
@@ -2068,12 +2069,12 @@ function step(dt){NPLAY=humanCount();
 let metaSaveT=8;
 
 /* ============ deaths ============ */
-function dropAt(x,y,amt,t){
+function dropAt(x,y,amt,t,war){ /* war=1 marks DEATH ENERGY: kill loot ignores the larder cap by Celery's decree - "victories must feel satisfying". Only farming respects the cap */
  if(drops.length>380){ /* the meadow absorbs the oldest spills */
   const old=drops.shift();if(old)drops[0]&&(drops[0].amt+=old.amt*0.5);}
  for(const b of boulders){const dx=x-b.x,dy=y-b.y,d=Math.hypot(dx,dy);
   if(d<b.r+5){const k=(b.r+10)/(d||1);x=b.x+dx*k;y=b.y+dy*k;break;}}
- drops.push({x:clamp(x,30,WORLD.w-30),y:clamp(y,30,WORLD.h-30),amt,t:t||22});
+ drops.push({x:clamp(x,30,WORLD.w-30),y:clamp(y,30,WORLD.h-30),amt,t:t||22,war:war?1:0});
 }
 function killUnit(s,u,by){
  if(s.war)s.warLoss=(s.warLoss||0)+1;
@@ -2082,7 +2083,7 @@ function killUnit(s,u,by){
  {const spill=(ROLES[u.role]?ROLES[u.role].cost:60)*0.9+(u.load||0); /* nearly everything SPENT returns to the meadow - loot wars are real */
   if(u.role==='forager'&&u.load>0)s.honey=Math.max(0,s.honey-u.load); /* the larder dies with its bearer */
   const nn9=Math.max(2,Math.min(6,Math.round(spill/28)));
-  for(let k9=0;k9<nn9;k9++)dropAt(u.x+rand(-14,14),u.y+rand(-14,14),spill/nn9,24);}
+  for(let k9=0;k9<nn9;k9++)dropAt(u.x+rand(-14,14),u.y+rand(-14,14),spill/nn9,24,1);}
  addSpark(u.x,u.y,3);addP(u.x,u.y,u.col,3,90);
  if(by&&by.team===0)gainXP(1);
  /* morale */
@@ -2092,10 +2093,10 @@ function killUnit(s,u,by){
 function killQueen(s,by){
  if(s.dead)return;
  s.dead=true;
- for(const u of s.units){u.slain=true;dropAt(u.x,u.y,(ROLES[u.role]?ROLES[u.role].cost*0.5:20),24);}
+ for(const u of s.units){u.slain=true;dropAt(u.x,u.y,(ROLES[u.role]?ROLES[u.role].cost*0.5:20),24,1);}
  {const total=24+s.honey*0.8,n3=10+Math.min(16,Math.floor(total/16)); /* THE FOUNTAIN OF SPOILS */
   for(let k=0;k<n3;k++){const aa=k/n3*TAU+rand(-0.2,0.2);
-   dropAt(s.x+Math.cos(aa)*rand(18,110),s.y+Math.sin(aa)*rand(18,110),total/n3,26);}
+   dropAt(s.x+Math.cos(aa)*rand(18,110),s.y+Math.sin(aa)*rand(18,110),total/n3,26,1);}
   addRing(s.x,s.y,'#ffdf7e',s.R*2.2);addRing(s.x,s.y,'#fff3c4',s.R*1.2);
   if(by&&by===me()){sfx('gild');shake=Math.min(18,shake+8);toast('SPOILS OF WAR - drink the meadow dry','#ffdf7e',4);}}
  s.units=[];addRing(s.x,s.y,s.col,s.R*2.6);addP(s.x,s.y,s.col,26,220);
@@ -2114,18 +2115,18 @@ function killQueen(s,by){
 }
 function killSpider(by){
  if(!spider)return;
- for(let i=0;i<55;i++)dropAt(spider.x+rand(-110,110),spider.y+rand(-110,110),rand(9,17),16);
+ for(let i=0;i<55;i++)dropAt(spider.x+rand(-110,110),spider.y+rand(-110,110),rand(9,17),16,1);
  addRing(spider.x,spider.y,'#e8dcf8',360);addP(spider.x,spider.y,'#c8b8d8',48,300);
  toast('THE BROODMOTHER FALLS — HER HOARD SPILLS','#e8dcf8');sfx('die');
  shake=Math.min(22,shake+14);
  if(by&&by.team===0){gainXP(120);
   trophy('broodcrown','HER RELICS ARE YOURS — CROWN, SIGIL, SILK');
-  META.owned.broodfangs=true;META.owned.silkstrand=true;metaSave();}
+  META.owned.silkstrand=true;metaSave();}
  spider=null;webshots.length=0;
 }
 function killElder(by){
  if(!elder)return;
- for(let i=0;i<30;i++)dropAt(elder.x+rand(-80,80),elder.y+rand(-80,80),rand(8,16),14);
+ for(let i=0;i<30;i++)dropAt(elder.x+rand(-80,80),elder.y+rand(-80,80),rand(8,16),14,1);
  addRing(elder.x,elder.y,'#ffb04d',300);addP(elder.x,elder.y,'#ffb04d',40,280);
  toast('THE ELDER FALLS — A FORTUNE SPILLS','#ffd75e');sfx('die');
  if(by&&by.team===0){gainXP(60);
@@ -3370,21 +3371,6 @@ function paintCrown(g2,base,t2,cr){
   const em9=0.7+0.3*Math.sin(t2*2.8); /* his ember, carried */
   g2.fillStyle='rgba(255,150,60,'+(0.4*em9).toFixed(3)+')';g2.beginPath();g2.arc(base*1.12,0,base*0.16,0,TAU);g2.fill();
   g2.fillStyle='rgba(255,190,60,'+(0.95*em9).toFixed(3)+')';g2.beginPath();g2.arc(base*1.12,0,base*0.09,0,TAU);g2.fill();}
- else if(cr==='broodfangs'){const gn9=(Math.sin(t2*2.1)*0.5+0.5)*0.16; /* HER FANGS: the broodmother's scythe-mandibles taken at the kill - slender dark chitin, needle-tipped, venom remembering. They breathe slowly */
-  g2.fillStyle='#241826';g2.strokeStyle='#1e1226';g2.lineWidth=1;
-  g2.beginPath();g2.ellipse(base*0.9,0,base*0.13,base*0.26,0,0,TAU);g2.fill();g2.stroke(); /* the jaw-mount */
-  for(const sd of [-1,1]){g2.save();g2.translate(base*0.96,sd*base*0.18);g2.rotate(sd*(0.5-gn9));
-   g2.fillStyle='#1c1220';g2.strokeStyle='#4a3a54';g2.lineWidth=0.8;
-   g2.beginPath();g2.moveTo(-base*0.03,-sd*base*0.024);
-   g2.quadraticCurveTo(base*0.3,-sd*base*0.04,base*0.5,sd*base*0.14);
-   g2.quadraticCurveTo(base*0.56,sd*base*0.2,base*0.52,sd*base*0.23);
-   g2.quadraticCurveTo(base*0.44,sd*base*0.17,base*0.26,sd*base*0.08);
-   g2.quadraticCurveTo(base*0.08,sd*base*0.016,-base*0.03,sd*base*0.024);g2.closePath();g2.fill();g2.stroke();
-   g2.strokeStyle='rgba(200,180,220,.5)';g2.lineWidth=0.7;
-   g2.beginPath();g2.moveTo(base*0.03,-sd*base*0.016);g2.quadraticCurveTo(base*0.3,-sd*base*0.024,base*0.46,sd*base*0.13);g2.stroke();
-   g2.fillStyle='rgba(160,255,140,'+(0.5+0.4*Math.sin(t2*3.4+sd)).toFixed(3)+')';
-   g2.beginPath();g2.arc(base*0.52,sd*base*0.22,1.3,0,TAU);g2.fill();
-   g2.restore();}}
  else if(cr==='antler'){g2.strokeStyle='#c8a06a';g2.lineWidth=2;
   for(const sg of [-1,1]){
    g2.beginPath();g2.moveTo(base*0.8,sg*base*0.34);

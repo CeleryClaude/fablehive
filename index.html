@@ -1130,6 +1130,9 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
     u9.slow=Math.max(u9.slow||0,0.9); /* TAR at the wall — crawl, don't glide */
     const md9=a9.r+u9.r+4;if(dd9<md9){u9.x=a9.x+dx9/dd9*md9;u9.y=a9.y+dy9/dd9*md9;u9.vx*=0.55;u9.vy*=0.55;}}); /* SOLID body: kill the through-momentum */
   }
+  const nearDr9=[];{const rr9=(s.R+580)*(s.R+580); /* THE DROP SHORTLIST: foragers used to scan EVERY drop on the map with a grotto lookup PER PAIR, every tick - O(foragers*drops*grottos). The pop-payout nuggets swelled the drop count and tickAvg crept from 7ms toward the valve. One cheap prefilter per swarm; foragers scan only what they could actually reach */
+   for(let i2=0;i2<drops.length;i2++){const dr=drops[i2];const ddx=dr.x-s.x,ddy=dr.y-s.y;
+    if(ddx*ddx+ddy*ddy<rr9)nearDr9.push(dr);}}
   for(const u of s.units){
    if(u.flash>0)u.flash-=dt;if(u.atk>0)u.atk-=dt;if(u.slow>0)u.slow-=dt;if(u.mend>0)u.mend-=dt;
    if(u.fat>0&&u.fatT<=0)u.fat=Math.max(0,u.fat-0.1*dt);
@@ -1143,8 +1146,9 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
    else if(u.role==='forager'){
     /* always working (28c). robbable. flees enemies. */
     /* scoop: a forager touching fallen honey takes it as cargo */
-    for(let i2=drops.length-1;i2>=0;i2--){const dr=drops[i2];if(grottoOf(dr.x,dr.y)!==grottoOf(u.x,u.y))continue;
-     if(d2(dr.x,dr.y,u.x,u.y)<16*16){if(sim){if(dr.war)s.honey+=dr.amt;else gainHoney(s,dr.amt);drops.splice(i2,1);}addSpark(u.x,u.y,2);break;}}
+    for(const dr of nearDr9){if(dr._gone)continue;
+     if(d2(dr.x,dr.y,u.x,u.y)<16*16){if(grottoOf(dr.x,dr.y)!==grottoOf(u.x,u.y))continue; /* the grotto test runs on HITS only now, never per pair */
+      if(sim){dr._gone=1;const ix9=drops.indexOf(dr);if(ix9>=0)drops.splice(ix9,1);if(dr.war)s.honey+=dr.amt;else gainHoney(s,dr.amt);}addSpark(u.x,u.y,2);break;}}
     if(u.load>=39||s.honey>=honeyCap(s)){ /* FULL BELLY (or full house): fall in beside the queen, a fat larder on the wing */
      u.node=null;
      const llat=(((u._fi||0)%2)?22:-22)*(1+Math.floor((u._fi||0)/2)*0.5);
@@ -2738,26 +2742,50 @@ function paintWings(g2,base,t2,style){
   g2.strokeStyle='rgba(255,255,255,.6)';g2.lineWidth=0.8;
   g2.beginPath();g2.ellipse(-base*0.38,-base*0.92,base*0.92,base*0.3,-0.42,0,TAU);g2.stroke();
   g2.beginPath();g2.ellipse(-base*0.38,base*0.92,base*0.92,base*0.3,0.42,0,TAU);g2.stroke();
- }else if(style==='monarch'){
+ }else if(style==='monarch'){ /* MONARCH second pass: forewing + hindwing, royal orange CELLS split by bold black veins fanning from the base, black border rimmed with white dots - the actual butterfly, not an orange smudge */
   for(const sg of [-1,1]){
-   g2.fillStyle='rgba(255,150,60,'+(0.4+0.3*wf)+')';
-   g2.beginPath();g2.ellipse(-base*0.38,sg*base*0.9,base*0.86,base*0.36,-sg*0.42,0,TAU);g2.fill();
-   g2.strokeStyle='rgba(40,20,16,.75)';g2.lineWidth=1.4;
-   g2.beginPath();g2.ellipse(-base*0.38,sg*base*0.9,base*0.86,base*0.36,-sg*0.42,0,TAU);g2.stroke();
-   g2.beginPath();g2.moveTo(-base*0.3,sg*base*0.55);g2.lineTo(-base*0.85,sg*base*1.15);g2.stroke();}
- }else if(style==='emberw'){
+   g2.fillStyle='rgba(255,120,34,'+(0.5+0.22*wf)+')';
+   g2.beginPath();g2.ellipse(-base*0.95,sg*base*0.74,base*0.5,base*0.3,-sg*0.16,0,TAU);g2.fill(); /* hindwing tucks behind */
+   g2.strokeStyle='rgba(24,14,10,.85)';g2.lineWidth=1.6;g2.stroke();
+   g2.fillStyle='rgba(255,138,40,'+(0.55+0.25*wf)+')';
+   g2.beginPath();g2.ellipse(-base*0.28,sg*base*0.92,base*0.88,base*0.4,-sg*0.42,0,TAU);g2.fill(); /* forewing */
+   g2.strokeStyle='rgba(24,14,10,.9)';g2.lineWidth=2.4;g2.stroke(); /* the black border */
+   g2.lineWidth=1.4; /* veins fan from the wing base */
+   for(const vv of [[-1.0,1.02],[-0.55,1.24],[-0.05,1.24],[0.35,1.0]]){
+    g2.beginPath();g2.moveTo(-base*0.02,sg*base*0.52);
+    g2.quadraticCurveTo(-base*0.2+base*vv[0]*0.4,sg*base*0.85,base*vv[0],sg*base*vv[1]);g2.stroke();}
+   g2.fillStyle='rgba(255,248,240,.9)'; /* white dots ride the border */
+   const ca9=Math.cos(-sg*0.42),sa9=Math.sin(-sg*0.42);
+   for(let k2=0;k2<5;k2++){const tt=-1.15+k2*0.56;
+    const ex9=Math.cos(tt+sg*1.25)*base*0.8,ey9=Math.sin(tt+sg*1.25)*base*0.34;
+    g2.beginPath();g2.arc(-base*0.28+ex9*ca9-ey9*sa9,sg*base*0.92+ex9*sa9+ey9*ca9,1.4,0,TAU);g2.fill();}}
+ }else if(style==='emberw'){ /* EMBERLACE second pass: charred membrane, LACE veins that breathe like coals one after another, a single ember drifting off the trailing edge - slow fire, worn honestly */
   for(const sg of [-1,1]){
-   g2.fillStyle='rgba(255,'+Math.round(120+80*wf)+',60,'+(0.34+0.3*wf)+')';
-   g2.beginPath();g2.ellipse(-base*0.38,sg*base*0.88,base*0.85,base*0.33,-sg*0.42,0,TAU);g2.fill();
-   g2.fillStyle='rgba(255,220,120,'+(0.2+0.2*wf)+')';
-   g2.beginPath();g2.ellipse(-base*0.42,sg*base*0.8,base*0.5,base*0.2,-sg*0.42,0,TAU);g2.fill();}
- }else if(style==='wasp'){
+   g2.fillStyle='rgba(34,18,14,'+(0.72+0.15*wf)+')';
+   g2.beginPath();g2.ellipse(-base*0.38,sg*base*0.88,base*0.86,base*0.36,-sg*0.42,0,TAU);g2.fill(); /* the charred pane */
+   for(let k2=0;k2<3;k2++){const ph9=0.5+0.5*Math.sin(t2*2.2+k2*2.1+sg);
+    g2.strokeStyle='rgba(255,'+Math.round(110+90*ph9)+',40,'+(0.35+0.5*ph9).toFixed(3)+')';g2.lineWidth=1.2;
+    g2.beginPath();g2.moveTo(-base*0.05,sg*base*0.5);
+    g2.quadraticCurveTo(-base*(0.3+k2*0.2),sg*base*(0.75+k2*0.14),-base*(0.9+k2*0.14),sg*base*(1.0+k2*0.05));g2.stroke();
+    g2.beginPath();g2.moveTo(-base*(0.3+k2*0.18),sg*base*(0.78+k2*0.1));
+    g2.quadraticCurveTo(-base*(0.42+k2*0.18),sg*base*(0.95+k2*0.08),-base*(0.3+k2*0.22),sg*base*(1.12+k2*0.03));g2.stroke();}
+   {const dr9=(t2*0.35+(sg>0?0.5:0))%1; /* one ember leaves, and dies on the wind */
+    g2.fillStyle='rgba(255,170,70,'+(0.8*(1-dr9)).toFixed(3)+')';
+    g2.beginPath();g2.arc(-base*(1.1+dr9*0.5),sg*base*(0.9-dr9*0.25),1.3+(1-dr9),0,TAU);g2.fill();}
+   g2.strokeStyle='rgba(255,120,40,'+(0.25+0.2*wf)+')';g2.lineWidth=1; /* the rim remembers */
+   g2.beginPath();g2.ellipse(-base*0.38,sg*base*0.88,base*0.86,base*0.36,-sg*0.42,0,TAU);g2.stroke();}
+ }else if(style==='wasp'){ /* WASPSIGN second pass: long amber wasp-blades with a dark leading vein and a small hindwing - the hazard chevrons live only at the TIP: a warning, not wallpaper */
   for(const sg of [-1,1]){
-   g2.fillStyle='rgba(255,210,60,'+(0.42+0.3*wf)+')';
-   g2.beginPath();g2.ellipse(-base*0.38,sg*base*0.87,base*0.85,base*0.34,-sg*0.42,0,TAU);g2.fill();
-   g2.strokeStyle='rgba(20,14,10,.85)';g2.lineWidth=2.2;
-   for(let k2=0;k2<3;k2++){g2.beginPath();
-    g2.moveTo(-2-base*0.5+k2*base*0.4,sg*base*0.55);g2.lineTo(-2-base*0.3+k2*base*0.4,sg*base*1.15);g2.stroke();}}
+   g2.fillStyle='rgba(255,196,70,'+(0.32+0.22*wf)+')';
+   g2.beginPath();g2.ellipse(-base*0.85,sg*base*0.66,base*0.42,base*0.2,-sg*0.24,0,TAU);g2.fill(); /* hindwing */
+   g2.fillStyle='rgba(255,206,80,'+(0.4+0.28*wf)+')';
+   g2.beginPath();g2.ellipse(-base*0.3,sg*base*0.9,base*0.95,base*0.3,-sg*0.5,0,TAU);g2.fill(); /* the long fore-blade */
+   g2.strokeStyle='rgba(40,26,10,.85)';g2.lineWidth=1.8; /* the leading-edge vein */
+   g2.beginPath();g2.moveTo(0,sg*base*0.58);g2.quadraticCurveTo(-base*0.5,sg*base*0.78,-base*1.15,sg*base*1.12);g2.stroke();
+   g2.fillStyle='rgba(24,16,8,.8)';
+   for(let k2=0;k2<2;k2++){const tt=0.72+k2*0.16;
+    g2.save();g2.translate(-base*(0.3+tt*0.85),sg*base*(0.9+tt*0.18));g2.rotate(-sg*0.5);
+    g2.fillRect(-base*0.045,-base*0.15,base*0.09,base*0.3);g2.restore();}}
  }else if(style==='hellspike'){
   for(const sg of [-1,1]){
    g2.fillStyle='rgba(30,14,16,'+(0.7+0.2*wf)+')';
@@ -4010,21 +4038,22 @@ function draw(){
   for(const [exx,eyy,er5] of [[0.62,-0.16,0.07],[0.62,0.16,0.07],[0.52,-0.26,0.05],[0.52,0.26,0.05],[0.7,-0.05,0.045],[0.7,0.05,0.045]]){
    ctx.fillStyle=sp5.provoked>0?'rgba(255,70,70,'+eg5+')':'rgba(255,190,80,'+eg5+')';
    ctx.beginPath();ctx.arc(sp5.r*exx,sp5.r*eyy,sp5.r*er5,0,TAU);ctx.fill();}
-  {const gn=sp5.gnash>0?(Math.sin(tnow*30)*0.5+0.5)*0.5:0.1; /* HER MANDIBLES, third pass: long slender scythes of dark chitin that SCISSOR inward - needle-tipped, glossy, wicked. Celery's verdict on the pillow teeth stands */
+  {const gn=sp5.gnash>0?(Math.sin(tnow*28)*0.5+0.5)*0.4:0; /* HER FANGS, fourth pass: two slender NEEDLES rooted at the jaw, angled INWARD so the tips nearly meet - they scissor PAST each other when she gnashes. The third pass splayed them outward like handlebars; Celery's verdict stands */
    for(const sd of [-1,1]){
-    ctx.fillStyle='#241826'; /* the basal boss the fang hinges on */
-    ctx.beginPath();ctx.ellipse(sp5.r*0.78,sd*sp5.r*0.14,sp5.r*0.1,sp5.r*0.07,sd*0.4,0,TAU);ctx.fill();
-    ctx.save();ctx.translate(sp5.r*0.78,sd*sp5.r*0.14);ctx.rotate(sd*(0.52-gn));
-    ctx.fillStyle='#1c1220';ctx.strokeStyle='#4a3a54';ctx.lineWidth=0.8;
-    ctx.beginPath();ctx.moveTo(-sp5.r*0.04,-sd*sp5.r*0.028); /* rooted in the boss */
-    ctx.quadraticCurveTo(sp5.r*0.34,-sd*sp5.r*0.05,sp5.r*0.56,sd*sp5.r*0.16); /* the long reach */
-    ctx.quadraticCurveTo(sp5.r*0.62,sd*sp5.r*0.23,sp5.r*0.58,sd*sp5.r*0.26); /* the NEEDLE tip, hooked in */
-    ctx.quadraticCurveTo(sp5.r*0.5,sd*sp5.r*0.2,sp5.r*0.3,sd*sp5.r*0.09); /* thin inner edge back */
-    ctx.quadraticCurveTo(sp5.r*0.1,sd*sp5.r*0.02,-sp5.r*0.04,sd*sp5.r*0.028);ctx.closePath();ctx.fill();ctx.stroke();
-    ctx.strokeStyle='rgba(200,180,220,.5)';ctx.lineWidth=0.7; /* the gloss line down the outer curve */
-    ctx.beginPath();ctx.moveTo(sp5.r*0.04,-sd*sp5.r*0.02);ctx.quadraticCurveTo(sp5.r*0.34,-sd*sp5.r*0.03,sp5.r*0.52,sd*sp5.r*0.15);ctx.stroke();
-    if(sp5.gnash>0){ctx.fillStyle='rgba(160,255,140,.85)'; /* venom at the needle */
-     ctx.beginPath();ctx.arc(sp5.r*0.58,sd*sp5.r*0.25,1.4,0,TAU);ctx.fill();}
+    ctx.fillStyle='#241826';
+    ctx.beginPath();ctx.ellipse(sp5.r*0.74,sd*sp5.r*0.19,sp5.r*0.09,sp5.r*0.065,sd*0.35,0,TAU);ctx.fill(); /* the basal boss */
+    ctx.save();ctx.translate(sp5.r*0.74,sd*sp5.r*0.19);ctx.rotate(-sd*(0.22+gn)); /* NEGATIVE: the blade leans IN toward its twin; the gnash drives it deeper */
+    ctx.fillStyle='#141018';ctx.strokeStyle='#4a3a54';ctx.lineWidth=0.7;
+    ctx.beginPath();ctx.moveTo(0,-sd*sp5.r*0.038);
+    ctx.quadraticCurveTo(sp5.r*0.32,-sd*sp5.r*0.012,sp5.r*0.64,sd*sp5.r*0.02); /* the outer edge runs almost straight to the point */
+    ctx.quadraticCurveTo(sp5.r*0.34,sd*sp5.r*0.1,sp5.r*0.12,sd*sp5.r*0.07); /* the belly: a scimitar thinning to NOTHING */
+    ctx.quadraticCurveTo(sp5.r*0.03,sd*sp5.r*0.05,0,sd*sp5.r*0.038);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.strokeStyle='rgba(210,190,235,.55)';ctx.lineWidth=0.6; /* the edge catches what light there is */
+    ctx.beginPath();ctx.moveTo(sp5.r*0.06,-sd*sp5.r*0.024);ctx.quadraticCurveTo(sp5.r*0.34,-sd*sp5.r*0.006,sp5.r*0.6,sd*sp5.r*0.018);ctx.stroke();
+    ctx.fillStyle='rgba(240,235,250,.9)'; /* the point, pale and honest */
+    ctx.beginPath();ctx.arc(sp5.r*0.64,sd*sp5.r*0.02,0.9,0,TAU);ctx.fill();
+    if(sp5.gnash>0){ctx.fillStyle='rgba(160,255,140,.85)';
+     ctx.beginPath();ctx.arc(sp5.r*0.66,sd*sp5.r*0.03,1.5,0,TAU);ctx.fill();}
     ctx.restore();}
    ctx.fillStyle='#c8a0d8'; /* spinnerets at her rear */
    for(const sg of [-1,1]){ctx.beginPath();ctx.arc(-sp5.r*1.42,sg*sp5.r*0.12,sp5.r*0.06,0,TAU);ctx.fill();}}

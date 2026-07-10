@@ -4163,6 +4163,7 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
    if(hpd9&&fx.length<430)addP(w9.x,w9.y,'#ffd7a8',4,120);}
   m9.tx=w9.x;m9.ty=w9.y;m9.hp=w9.h;m9.honey=w9.H;
   if(w9.y2){m9.say=w9.y2;m9.sayT=1.2;}
+  if(w9.u!==undefined){ /* a beat WITHOUT units is a diet beat for a strained pipe: keep the bodies we have, interpolation glides on its last targets - infinitely better than the old 64KB cliff where a struggling seat got NOTHING (555 frames withheld in one live session = the spikes + the invisible units) */
   const uu=w9.u||[];
   const old9=m9.uById||new Map(),nu9=[],nb9=new Map();
   for(let j=0;j<uu.length;j++){const t9=uu[j];const uid=t9[5];
@@ -4181,7 +4182,7 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
   if(old9.size&&!m9.dead){let dp9=0; /* THE FALLEN GET A DEATH: a soul on the wire last frame and gone this frame DIED - ring + sparks at her last position instead of silent deletion ("troops dying for no reason and disappearing") */
    old9.forEach((ou9,ouid9)=>{if(dp9>=6||nb9.has(ouid9))return;dp9++;
     if(fx.length<400){addRing(ou9.x,ou9.y,ou9.col||'#ffd7a8',Math.max(14,(ou9.r||6)*2.4));addP(ou9.x,ou9.y,ou9.col||'#ffd7a8',4,110);}});}
-  m9.units=nu9;m9.uById=nb9;
+  m9.units=nu9;m9.uById=nb9;}
   seen[w9.id]=1;}
  for(const id in NET.mirror)if(!seen[id]&&!NET.mirror[id].dead)NET.mirror[id].dead=true;
  for(const w9 of F.sw){const m8=NET.mirror[w9.id]; /* SECOND PASS: link wars by nid once every mirror exists - the war drums, the danger vignette and the HUD arrow all wake up online */

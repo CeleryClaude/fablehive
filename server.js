@@ -58,7 +58,7 @@ function start(port,htmlPath){
    res.end(JSON.stringify({ok:1,seats:Object.keys(seats).length,souls,
     tickAvg:+(TICKS.n?TICKS.sum/TICKS.n:0).toFixed(2),tickP95:p95,upMin:((Date.now()-BOOT)/60000)|0,
     ticks:TICKS.n,elLagMaxMs:elLag,gcCount:DIAG.gcCount,gcMaxMs:+gcMax.toFixed(0),gcTotalMs:+DIAG.gcTotalMs.toFixed(0),
-    stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:DIAG.netLateMax||0,
+    stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:DIAG.netLateMax||0,rateSkips:DIAG.rateSkips||0,
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else{res.writeHead(404);res.end('the meadow has no such door');}
  });
@@ -113,6 +113,10 @@ function start(port,htmlPath){
   {const nn=Date.now(),gp=nn-_lastNet;if(gp>66&&gp>(DIAG.netLateMax||0))DIAG.netLateMax=gp;_lastNet=nn;} /* how late do net beats actually run? */
   let base;try{base=(fN++%3===0)?G.netDyn():G.netDynLite();}catch(e){return;}
   for(const t in seats){const _w=seats[t];if(!_w)continue;
+   const _b0=_w.bufferedAmount||0; /* GRACEFUL DEGRADATION: a strained pipe gets FEWER, LIGHTER beats instead of falling off the 64KB silence cliff. 16KB backed up -> 15Hz; 40KB -> 10Hz; and past 8KB, OTHER swarms' unit lists ride every second beat only (headers+own troops always flow) */
+   if(_b0>40960&&(fN%3)){DIAG.rateSkips=(DIAG.rateSkips||0)+1;continue;}
+   if(_b0>16384&&(fN%2)){DIAG.rateSkips=(DIAG.rateSkips||0)+1;continue;}
+   const _diet=_b0>8192&&(fN%2===1);
    let f;
    try{
     const me9=G.swarms.find(z=>z.team===+t&&!z.ally);
@@ -122,7 +126,9 @@ function start(port,htmlPath){
      const o={...base};
      o.sw=base.sw.map(w=>{if(w.d||w.i===+t)return w; /* your own team (kin included) is never culled */
       const dx=w.x-qx,dy=w.y-qy;
-      return (dx*dx+dy*dy<AOI2)?w:{id:w.id,i:w.i,n:w.n,c:w.c,c2:w.c2,q:w.q,p:w.p,x:w.x,y:w.y,h:w.h,H:w.H,a:w.a,y2:w.y2,f:w.f,w:w.w,u:[]};}); /* far swarm: header stays (minimap, war arrows), units stay home */
+      if(dx*dx+dy*dy>=AOI2)return {id:w.id,i:w.i,n:w.n,c:w.c,c2:w.c2,q:w.q,p:w.p,x:w.x,y:w.y,h:w.h,H:w.H,a:w.a,y2:w.y2,f:w.f,w:w.w,u:[]}; /* far swarm: header stays (minimap, war arrows), units stay home */
+      if(_diet)return {id:w.id,i:w.i,n:w.n,c:w.c,c2:w.c2,q:w.q,p:w.p,x:w.x,y:w.y,h:w.h,H:w.H,a:w.a,y2:w.y2,f:w.f,w:w.w}; /* diet beat: u OMITTED (not emptied) - the client keeps its bodies */
+      return w;});
      if(o.dr)o.dr=o.dr.filter(d9=>{const dx=d9[0]-qx,dy=d9[1]-qy;return dx*dx+dy*dy<AOI2;});
      if(o.sh)o.sh=o.sh.filter(d9=>{const dx=d9[0]-qx,dy=d9[1]-qy;return dx*dx+dy*dy<AOI2;});
      if(o.wp)o.wp=o.wp.filter(d9=>{const dx=d9[0]-qx,dy=d9[1]-qy;return dx*dx+dy*dy<AOI2;});

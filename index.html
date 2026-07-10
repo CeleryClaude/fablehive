@@ -242,7 +242,7 @@ const EVOS=[
 ];
 const TUNE={qspd:224,qmass:0.12,qacc:8,zoom:1,zease:0.05,look:0.3,camease:0.09,honey:1}; /* FEEL CONSTANTS — the old tuning-bench panel is gone; these are its final numbers, inlined and law */
 let SPLIT_MAX=3;
-let SOUL_CAP=100;let NPLAY=1;let ROOM=false; /* flipped true only by the room server: multiplayer-only ecology keys off THIS, so solo stays exactly solo *//* live human players in the room; 1 offline. Drives caps+costs. */ /* THE MUSTER LIMIT (58): brought DOWN from 150 - still comfortably past every unlock (titans 60, stage-3 70) so nothing is ever locked out, but a leaner ceiling means more dogfights and fewer laggy deathmatches. Split to grow past it as more queens, not one bloated swarm a 60Hz tick can't hold. */
+let SOUL_CAP=100;let NPLAY=1;let ROOM=false;let ELDRT=420,SPDRT=420; /* boss respawn clocks, ROOM only */ /* flipped true only by the room server: multiplayer-only ecology keys off THIS, so solo stays exactly solo *//* live human players in the room; 1 offline. Drives caps+costs. */ /* THE MUSTER LIMIT (58): brought DOWN from 150 - still comfortably past every unlock (titans 60, stage-3 70) so nothing is ever locked out, but a leaner ceiling means more dogfights and fewer laggy deathmatches. Split to grow past it as more queens, not one bloated swarm a 60Hz tick can't hold. */
 /* meta (cosmetics only, ever — and EVERYTHING earnable with ✨: Royal Nectar only skips the grind) */
 let META={xp:0,skin:0,nectar:0,royal:false,sub:false,seasonXp:0,claimedF:[],claimedR:[],owned:{},eq:{pattern:'plain',crown:'none',trail:'none',wings:'standard',body:'sleek',tail:'notail',fleet:'plainfleet',aura:'noaura',plate:'noplate',eye:'simple'}};
 try{const m=(typeof localStorage!=='undefined')&&localStorage.getItem('brood_meta');if(m){const p=JSON.parse(m);META=Object.assign(META,p);META.owned=p.owned||{};META.eq=Object.assign({pattern:'plain',crown:'none',trail:'none',wings:'standard',body:'sleek',tail:'notail',fleet:'plainfleet',aura:'noaura',plate:'noplate',eye:'simple'},p.eq||{});META.claimedF=p.claimedF||[];META.claimedR=p.claimedR||[];}}catch(e){}
@@ -402,7 +402,6 @@ const ITEMS=[
  {id:'mandibleguard',cat:'crown',n:'Mandible Guard',xp:1600,d:'pincers that frame the face'},
  {id:'hornedcasque',cat:'crown',n:'Horned Casque',xp:2200,d:'chitin crowned with recurved horns'},
  {id:'dreadhelm', cat:'crown',  n:'Dreadhelm',   xp:4500,royal:true,d:'the slit still remembers the forge'},
- {id:'noeye',     cat:'eye',    n:'Unmarked',    xp:0,    d:'pure carapace - no gaze at all'},
  {id:'simple',    cat:'eye',    n:'The Point',   xp:0,    d:'the single white eye she has always worn'},
  {id:'doe',       cat:'eye',    n:'Doe Eyes',    xp:350,  d:'two dark pools with morning light in them'},
  {id:'compound',  cat:'eye',    n:'Compound Gaze',xp:900, d:'a hundred facets, insect-true'},
@@ -413,6 +412,8 @@ const ITEMS=[
  {id:'deathmoth', cat:'wings',  n:'Deathmoth',   xp:3600,royal:true,d:'beautiful the way omens are'},
  {id:'spidereyes',cat:'eye',    n:'Hunter'+String.fromCharCode(39)+'s Cluster',xp:1400,d:'six glossy reasons to be feared'},
  {id:'millipede', cat:'plate',  n:'Millipede Mail',xp:1700,d:'a hundred little legs, all marching'},
+ {id:'wildlimbs', cat:'plate',  n:'Wild Limbs',  xp:900,  d:'no armour at all - bare living limbs grown from her own body'},
+ {id:'tendrillimbs',cat:'plate',n:'Tendril Limbs',xp:2100, d:'reaching violet-lit tendrils - she does not walk, she DRIFTS'},
  {id:'moltaura', cat:'aura',   n:'Apex Shimmer',xp:-1,  d:'reach 120 souls once — wear the shimmer of the great'},
  {id:'algaeglow',cat:'aura',   n:'Grotto Glow', xp:-1,  d:'gather 200 honey inside the dark — the algae remember you'},
  {id:'plainfleet',cat:'fleet', n:'No Kit',      xp:0,   d:'your brood as it was born - no armour, just wings'},
@@ -801,14 +802,22 @@ function makeWorld(){
   for(const w of ways)w.frq=w.trib?0.012:TAU*Math.max(1,Math.round(ringTot*0.012/TAU))/ringTot;
  }
  /* the ELDER: one colossal territorial thing, far away, guarding riches. It does not track. */
+ spawnElder();
+ spawnSpider();
+ setupWorldTail();
+}
+function spawnElder(){
  let ex,ey,tr=0,bex9=0,bey9=0,bq9=-1;
- do{ex=rand(700,WORLD.w-700);ey=rand(700,WORLD.h-700);tr++;
+ do{ex=rand(700,WORLD.w*0.42);ey=rand(WORLD.h*0.58,WORLD.h-700);tr++; /* THE ELDER'S HAUNT IS THE SOUTH-WEST by decree: each corner keeps its nightmare - spider NW, elder SW, the eyes' eldritch garden NE-adjacent, honey vale SE */
   const q9=Math.min(d2(ex,ey,WORLD.w/2,WORLD.h/2),d2(ex,ey,2900,2900));
   if(q9>bq9){bq9=q9;bex9=ex;bey9=ey;}}
- while(tr<60&&(d2(ex,ey,WORLD.w/2,WORLD.h/2)<1500*1500||d2(ex,ey,2900,2900)<1550*1550||(ex<2900&&ey<2900)));
- if(d2(ex,ey,2900,2900)<1550*1550||d2(ex,ey,WORLD.w/2,WORLD.h/2)<1500*1500){ex=bex9;ey=bey9;} /* the LAW is "far from the cradle": the old loop gave up after 20 rolls and took whatever it held - one world in a while, that was an Elder CAMPING SPAWN. Now: explicit cradle radius, triple the patience, and on a truly cursed roll take the farthest candidate seen instead of the last */
+ while(tr<60&&(d2(ex,ey,WORLD.w/2,WORLD.h/2)<1500*1500||d2(ex,ey,2900,2900)<1550*1550));
+ if(d2(ex,ey,2900,2900)<1550*1550||d2(ex,ey,WORLD.w/2,WORLD.h/2)<1500*1500){ex=bex9;ey=bey9;} /* the placement LAWS hold: far from the cradle, far from the heart - on a cursed roll take the farthest candidate seen */
  elder={x:ex,y:ey,hx:ex,hy:ey,vx:0,vy:0,r:72,hp:3600,maxHp:3600,terr:520,sense:410,spd:122,atk:0,provoked:0,flash:0};
- for(let g=0;g<4;g++){const ga4=g/4*TAU+rand(-0.25,0.25),gr4=rand(185,235);groves.push({x:ex+Math.cos(ga4)*gr4,y:ey+Math.sin(ga4)*gr4,amt:210,max:210,vx:0,vy:0,mother:true,sp:6});}
+ if(groves.filter(g9=>g9.mother).length<6)for(let g=0;g<4;g++){const ga4=g/4*TAU+rand(-0.25,0.25),gr4=rand(185,235);groves.push({x:ex+Math.cos(ga4)*gr4,y:ey+Math.sin(ga4)*gr4,amt:210,max:210,vx:0,vy:0,mother:true,sp:6});}
+}
+function spawnSpider(){
+ const ex=elder?elder.hx:1e9,ey=elder?elder.hy:1e9; /* she dens far from HIM, wherever he haunts */
  /* THE BROODMOTHER: the meadow's other nightmare — patient, webbed, surrounded by her young */
  {let sx2,sy2,tr3=0,bsx9=1425,bsy9=1425,bsd9=-1;
   do{sx2=rand(900,1950);sy2=rand(900,1950);tr3++; /* DEEPER in the DARK REALM, clear of the wind road */
@@ -820,6 +829,8 @@ function makeWorld(){
   for(let k=0;k<5;k++)spider.kids.push({x:sx2+rand(-140,140),y:sy2+rand(-140,140),vx:0,vy:0,hp:160,r:11,wa:rand(0,TAU),atk:0});
   for(let g=0;g<5;g++){const ga5=g/5*TAU+rand(-0.22,0.22),gr5=rand(210,285);groves.push({x:sx2+Math.cos(ga5)*gr5,y:sy2+Math.sin(ga5)*gr5,amt:260,max:260,vx:0,vy:0,web:true,rich:true,sp:2,kind:'rich'});}
  }
+}
+function setupWorldTail(){ /* the rest of world-gen: caves, maws, oasis, decor - runs ONCE per world, never on a boss respawn */
  grottos=[];
  for(let gr=0;gr<1;gr++){ /* ONE cave now - deep in the dark north-west realm */
   let gx9,gy9,tr9=0;
@@ -1395,6 +1406,14 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
      else if(B.role==='forager'&&A.role!=='forager'){wA=0.08;wB=0.92;}
      const F=(mn-d3)*(inRank?0.3:0.5)/d3;A.x-=ex*F*wA;A.y-=ey*F*wA;B.x+=ex*F*wB;B.y+=ey*F*wB;}}}
 }
+function queenRearDist(st,body,base){ /* the TRUE rear edge of the drawn body - mirrors paintQueenBody's segment layout exactly, so trails are born at her tail: not mid-body, not in open air */
+ const serp=body==='serpent',plump=body==='plump',lithe=body==='lithe';
+ if(st===0&&!serp)return base*1.15;
+ const k=(serp?4:2)+Math.min(st,3)-1;
+ const sx=0.8-k*(serp?0.5:lithe?0.52:0.62);
+ const sr=Math.max((lithe?0.26:0.2),((plump?0.85:lithe?0.58:0.72)-k*(serp?0.06:0.1)));
+ return base*(sr-sx);
+}
 function trailTick(s,dt){ /* THE TRAIL, shared: solo step calls it for the player, netTick calls it for YOUR predicted queen - trails never existed online at all (team-0 gate = a bot on the server) */
  if(META.eq.trail==='notrail'||(s.spdNow||0)<=120)return;
 
@@ -1403,7 +1422,7 @@ function trailTick(s,dt){ /* THE TRAIL, shared: solo step calls it for the playe
     const tr=META.eq.trail;
     if(fx.length<430){
      const st8=s.ally?0:queenStage(s),base8=12+st8*3+(st8===3?2:0);
-     const rear8=base8*(1.2+0.92*Math.min(st8,3)); /* the emitter rides the TRUE last segment: big queens grow LONG - the old offset left the trail leaking from mid-body */
+     const rear8=queenRearDist(st8,META.eq.body,base8)+1.5; /* the emitter rides the TRUE last segment: big queens grow LONG - the old offset left the trail leaking from mid-body */
      const vm8=Math.hypot(s.vx,s.vy)||1;
      const bx2=s.x-(s.vx/vm8)*rear8,by2=s.y-(s.vy/vm8)*rear8;
      if(tr==='petal')fx.push({x:bx2,y:by2,vx:rand(-16,16),vy:rand(-4,22),t:0,life:0.95,col:'#ffb4d2',r:3.2,kind:'petal',rot:rand(0,TAU),rv:rand(-4,4)});
@@ -1757,6 +1776,9 @@ function step(dt){NPLAY=humanCount();
    if(kd.hp<=0){for(let q9=0;q9<3;q9++)dropAt(kd.x+rand(-10,10),kd.y+rand(-10,10),rand(5,9),10);addP(kd.x,kd.y,'#c8b8d8',9,130);if(near(kd))sfx('pop');sp5.kids.splice(i,1);}}
  }
  /* groves drift, regrow, and the drained POP */
+ if(ROOM){ /* THE CORNERS REFILL: in a shared room the nightmares respawn seven minutes after they fall (solo keeps once-per-run trophies sacred). ANSWER to "what are the boss respawn timers": solo NEVER (per world), rooms 420s */
+  if(!elder){ELDRT-=dt;if(ELDRT<=0){spawnElder();ELDRT=420;}}else ELDRT=420;
+  if(!spider){SPDRT-=dt;if(SPDRT<=0){spawnSpider();SPDRT=420;}}else SPDRT=420;}
  flowerTick(dt);
  for(let gi=groves.length-1;gi>=0;gi--){const g=groves[gi];
   if(POPPABLE[g.kind]&&!g.closed){if(g.amt<=Math.max(6,g.max*0.08)){popFlower(g);continue;}} /* pop at 6, not 3: foragers ABANDON a flower at 6, so anything between 4 and 6 was a husk squatting for minutes - unharvestable, unpoppable, regrowing at 0.35/s. The moment the rope lets go, the payout fires */
@@ -1818,7 +1840,8 @@ function step(dt){NPLAY=humanCount();
     if(near(g))sfx('pop');
     groves.splice(gi,1);continue;}
    continue;} /* tumble skips drift/regrow below */
-  if(g.amt<g.max&&!g.closed)g.amt+=(g.kind==='algae'?14:g.gild?0.9:g.rich?2.4:g.mother?1.6:g.grand?0.7:0.35)*dt; /* the algae RACE back */
+  if((g.kind==='comb'||(g.rich&&!g.web&&!g.mother))&&g.amt<g.max*0.14){popFlower(g);continue;} /* FAUCETS ARE DEAD, by Celery's decree: a drained comb or rich bloom VANISHES with a final payout - no nubs that crawl back. Cave algae and the boss larders still refill; they are the corners' treasure, not meadow pantry */
+  if(g.amt<g.max&&!g.closed&&(g.kind==='algae'||g.web||g.mother||g.gild||g.grand))g.amt+=(g.kind==='algae'?14:g.gild?0.9:g.web?2.4:g.mother?1.6:0.7)*dt;
   g.vx=0;g.vy=0; /* FLOWERS STAND STILL, by Celery's decree: drift made every forager look adjacent to her own bloom (the client eased a moving target), and a wandering pantry served nobody. The tumblebloom keeps its legs - it is CHASE by design */
  }
  for(let i=drops.length-1;i>=0;i--){const dr=drops[i];dr.t-=dt;
@@ -2450,7 +2473,7 @@ function drawNestQueen(){
    embertr:{kind:'ember',col:'#ff8c3c',rot:rand(0,TAU),rv:5,vy:-12},
    slimetr:{kind:'goo',col:'rgba(120,220,90,.8)',r:3.6,vy:4},
    watchertr:{eye:true,col:'#f4ede0'}}[trI]||{col:'#fff'};
-  if(Math.random()<0.7)nestFxA.push(Object.assign({x:115-base*1.4,y:60+rand(-7,7),vx:-rand(28,50),vy:rand(-6,6),t:0,r:2.8,life:1.2,lx:115,ly:60},TK));}
+  if(Math.random()<0.7)nestFxA.push(Object.assign({x:115-queenRearDist(nestSz,tryOn.body||META.eq.body,base)-2,y:60+rand(-7,7),vx:-rand(28,50),vy:rand(-6,6),t:0,r:2.8,life:1.2,lx:115,ly:60},TK));}
  for(let i=nestFxA.length-1;i>=0;i--){const p=nestFxA[i];p.t+=0.033;p.x+=p.vx*0.033;p.y+=(p.vy||0)*0.033;
   if(p.t>(p.life||1.2)||p.x<0){nestFxA.splice(i,1);continue;}
   const kk=p.t/(p.life||1.2);
@@ -2467,8 +2490,7 @@ function drawNestQueen(){
  c2.strokeStyle='rgba(255,255,255,.75)';c2.lineWidth=1.5;
  paintPattern(c2,base,t2,tryOn.pattern||META.eq.pattern,col,nestSz);
  paintPlate(c2,base,t2,tryOn.plate||META.eq.plate,col);
- paintEye(c2,base,t2,tryOn.eye||META.eq.eye);
- c2.fillStyle='#fff';c2.beginPath();c2.arc(base*0.55,0,3,0,TAU);c2.fill();
+ paintEye(c2,base,t2,tryOn.eye||META.eq.eye); /* the mirror's old hardcoded dot is DEAD - it sat at a fixed spot and size, floating off every big queen and defeating the whole eye category */
  paintCrown(c2,base,t2,tryOn.crown||META.eq.crown);
  c2.restore();
  /* FLEET preview: three little soldiers march below, dressed in your theme */
@@ -2907,7 +2929,8 @@ function paintPattern(g2,base,t2,pat,col){
   for(const sg of S9){g2.beginPath();g2.ellipse(sg.x,sg.y,sg.r*0.55,sg.r*0.45,0,0,TAU);g2.stroke();}}
 }
 function paintEye(g2,base,t2,ey){ /* THE GAZE: her eye is a CHOICE now. Anchored to the true head segment so no body type or stage can misplace it */
- if(!ey||ey==='noeye'||!QSEGS.length)return;
+ if(!ey||ey==='noeye')ey='simple'; /* the Unmarked no-eye option is retired: old saves fall back to the classic gleam - every queen has a gaze */
+ if(!QSEGS.length)return;
  const hx=QSEGS[0].x,hy=QSEGS[0].y,hr=QSEGS[0].r;
  g2.save();g2.translate(0,hy);
  if(ey==='simple'){g2.fillStyle='#fff';g2.beginPath();g2.arc(hx,0,hr*0.22+1.4,0,TAU);g2.fill();}
@@ -2943,9 +2966,35 @@ function paintPlate(g2,base,t2,pl,col){ /* QUEEN ARMOUR, amended law: trim by de
   chitin:{bug:1,w:4}, /* pairs with any BUG fleet: grown, not forged - tinted to HER colour exactly as her troops are */
   boneplate:{c:'#e8e0cc',e:'#a89878',w:3,bump:1},
   emberforge:{c:'#4a4048',e:'#241e26',w:3.4,glow:'#ff7a3a'},
-  millipede:{c:'#5a4a38',e:'#32281c',w:2,legs:1}}[pl];if(!C9)return;
+  millipede:{c:'#5a4a38',e:'#32281c',w:2,legs:1},
+  wildlimbs:{legsOnly:'chitin'}, /* BARE LIMBS: no armour at all - limbs GROW from her body */
+  tendrillimbs:{legsOnly:'tendril'}}[pl];if(!C9)return;
  if(C9.bug&&col){C9.c=shade(col,-0.05);C9.e=shade(col,-0.45);C9.scute=shade(col,0.35);}else if(C9.bug){C9.c='#3a2c44';C9.e='#1c1424';C9.scute='#7a5ea0';}
  g2.save();g2.lineCap='round';
+ if(C9.legsOnly){ /* LIMB SETS WITHOUT ARMOUR: rooted INSIDE the segment rim so they read as GROWN from the body, never stuck through a plate. Tinted to HER colour */
+  const lc=shade(col||'#c8b088',-0.22),lh=shade(col||'#c8b088',0.3);
+  for(let i9=1;i9<QSEGS.length;i9++){const sg=QSEGS[i9],rr=sg.r*0.92;
+   if(C9.legsOnly==='chitin'){ /* WILD LIMBS: jointed insect legs - femur sweeps out+back, tarsus hooks home */
+    for(const sd of [-1,1])for(let l9=0;l9<2;l9++){
+     const aa=sd*(0.9+l9*0.55),bx=sg.x+Math.cos(aa)*rr*0.72,by=sg.y+Math.sin(aa)*rr*0.72;
+     const ph9=Math.sin(t2*6+i9*1.4+l9*2.2)*sg.r*0.1,ln=sg.r*(0.85-l9*0.15);
+     g2.strokeStyle=lc;g2.lineWidth=2.2;
+     g2.beginPath();g2.moveTo(bx,by);
+     g2.quadraticCurveTo(bx-ln*0.18,by+sd*ln*0.72+ph9,bx-ln*0.72,by+sd*ln*1.02+ph9);g2.stroke();
+     g2.strokeStyle=lh;g2.lineWidth=1.2;
+     g2.beginPath();g2.moveTo(bx-ln*0.72,by+sd*ln*1.02+ph9);
+     g2.quadraticCurveTo(bx-ln*0.95,by+sd*ln*1.1+ph9,bx-ln*1.15,by+sd*ln*0.95+ph9);g2.stroke();}}
+   else{ /* TENDRILS: she does not walk, she DRIFTS - reaching violet-lit arms with a bud at each tip */
+    for(const sd of [-1,1]){const l9=i9%2,aa=sd*(1.05+l9*0.3),bx=sg.x+Math.cos(aa)*rr*0.7,by=sg.y+Math.sin(aa)*rr*0.7;
+     const wv=Math.sin(t2*2.8+i9*1.7+sd)*sg.r*0.24,ln=sg.r*1.25;
+     g2.strokeStyle=shade(col||'#5a4468',-0.28);g2.lineWidth=2.6;
+     g2.beginPath();g2.moveTo(bx,by);
+     g2.quadraticCurveTo(bx-ln*0.3,by+sd*ln*0.8+wv,bx-ln*0.95,by+sd*ln*0.55+wv*1.6);g2.stroke();
+     g2.strokeStyle=shade(col||'#5a4468',0.3);g2.lineWidth=1.1;
+     g2.beginPath();g2.moveTo(bx-ln*0.2,by+sd*ln*0.5+wv*0.7);g2.quadraticCurveTo(bx-ln*0.5,by+sd*ln*0.72+wv,bx-ln*0.9,by+sd*ln*0.53+wv*1.5);g2.stroke();
+     g2.fillStyle='rgba(200,160,255,.75)';
+     g2.beginPath();g2.arc(bx-ln*0.95,by+sd*ln*0.55+wv*1.6,1.7,0,TAU);g2.fill();}}}
+  g2.restore();return;}
  const SP9=[[-2.2,-0.94],[0.94,2.2]]; /* the two rim arcs: dorsal + ventral flanks, face and tail junctions always clear */
  for(let i9=0;i9<QSEGS.length;i9++){const sg=QSEGS[i9],rr=sg.r*0.92;
   if(C9.wrap&&C9.wrap.indexOf(i9)>=0){ /* FULL CUIRASS on this segment: solid plate, rim, a crescent of light - the pattern lives on her bare segments */
@@ -3702,7 +3751,7 @@ function draw(){
   else if(b.kind===0&&!b.cove){ /* mossy cap */
    ctx.fillStyle='rgba(122,168,96,.3)';
    ctx.beginPath();ctx.ellipse(b.x-b.r*0.2,b.y-b.r*0.34,b.r*0.5,b.r*0.3,0.4,0,TAU);ctx.fill();}
-  if(!b.cove&&b.y>WORLD.h*0.58&&((b.x*7+b.y)|0)%3===0){ /* HANGING BEEHIVE - the honey vale's own decor */
+  if(!b.cove&&b.y>WORLD.h*0.58&&(((b.x*7+b.y)|0)%3===0||(b.x>WORLD.w*0.55&&((b.x*7+b.y)|0)%3===1))){ /* HANGING BEEHIVE - the honey vale's own decor, and the SOUTH-EAST hums twice as loud by decree */
    const hx=b.x+b.r*0.6,hy=b.y+b.r*0.46,hs=Math.min(15,b.r*0.32);
    ctx.strokeStyle='rgba(60,40,20,.45)';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(hx,hy-hs*1.5);ctx.lineTo(hx,hy-hs*0.9);ctx.stroke();
    for(let hr=0;hr<3;hr++){ctx.fillStyle=hr%2?'#dfa636':'#f0c250';ctx.beginPath();ctx.ellipse(hx,hy-hs*0.5+hr*hs*0.5,hs*(0.92-hr*0.13),hs*0.34,0,0,TAU);ctx.fill();}
@@ -4702,7 +4751,7 @@ function applyInput(team,cmd){ /* THE HAND: remote players ride the same reins t
 
 window.__G={unlockAll(){for(const k in ROLES)unlocked[k]=true;},TUNE,netSnapshot,netWorldInit,netDyn,netDynLite,applyInput,NET,netApplyWorld,netApplyFrame,netTick,
  get swarms(){return swarms;},get groves(){return groves;},get boulders(){return boulders;},get coves(){return coves;},
- get ways(){return ways;},get drops(){return drops;},get elder(){return elder;},get tnow(){return tnow;},get shots(){return shots;},get goldT(){return goldT;},set goldT(v){goldT=v;},get FAIRY(){return FAIRY;},get dews(){return dews;},get comboN(){return comboN;},get spider(){return spider;},get webshots(){return webshots;},killSpider,get grottos(){return grottos;},get wasps(){return wasps;},get fieldMaws(){return fieldMaws;},get eyes(){return eyes;},get orbs(){return orbs;},get OASIS(){return OASIS;},realmOf,get ambient(){return ambient;},BOTS,get decor(){return decor;},get thorns(){return thorns;},honeyCap,
+ get ways(){return ways;},get drops(){return drops;},get elder(){return elder;},get tnow(){return tnow;},get shots(){return shots;},get goldT(){return goldT;},set goldT(v){goldT=v;},get FAIRY(){return FAIRY;},get dews(){return dews;},get comboN(){return comboN;},get spider(){return spider;},get webshots(){return webshots;},killSpider,killElder,get WORLD(){return WORLD;},get grottos(){return grottos;},get wasps(){return wasps;},get fieldMaws(){return fieldMaws;},get eyes(){return eyes;},get orbs(){return orbs;},get OASIS(){return OASIS;},realmOf,get ambient(){return ambient;},BOTS,get decor(){return decor;},get thorns(){return thorns;},honeyCap,
  get unlocked(){return unlocked;},get evoPending(){return evoPending;},get META(){return META;},
  ROLES,EVOS,SPLIT_MAX,setup,step,addUnit,buy,splitSwarm,recallAll,teamSize,teamSwarms,mainOf,queenSpd,count,
  killUnit,killQueen,chooseEvo,checkEvo,calcR,sweepBoulders,reviveSwarm,ITEMS,buyItem,equipItem,ownsItem,gainXP,grantRoyal(){META.royal=true;metaSave();},grantSub(){META.sub=true;metaSave();},revokeSub(){META.sub=false;metaSave();},

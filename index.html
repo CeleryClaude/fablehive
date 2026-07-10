@@ -515,6 +515,7 @@ function boulderNear(x,y,r,fn){const x0=((x-r)/128)|0,x1=((x+r)/128)|0,y0=((y-r)
  for(let cx=x0;cx<=x1;cx++)for(let cy=y0;cy<=y1;cy++){const c=BGRID.get(cx*100000+cy);if(!c)continue;
   for(let i=0;i<c.length;i++)fn(c[i]);}}
 function honeyCap(s){let f9=0;for(const u of s.units)if(u.role==='forager')f9++;return 500+40*f9;} /* THE LARDER LAW: the queen carries 500 herself; all beyond lives in forager bellies */
+function gainHoney(s,a){s.honey=Math.min(s.honey+a,Math.max(s.honey,honeyCap(s)));} /* passive pickups (nuggets, dew, popped-comb payouts) FILL the larder, never overflow it - R22's popping faucets spray nuggets mid-farm and were sneaking past the cap */
 function swarmMass(s){const us=s.units;if(!us||!us.length)return 0;
  if(!us[0]||!us[0].role)return us.length;
  let m=0;for(const u of us)m+=(ROLES[u.role]?ROLES[u.role].mass:1);return m;}
@@ -1140,7 +1141,7 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
     /* always working (28c). robbable. flees enemies. */
     /* scoop: a forager touching fallen honey takes it as cargo */
     for(let i2=drops.length-1;i2>=0;i2--){const dr=drops[i2];if(grottoOf(dr.x,dr.y)!==grottoOf(u.x,u.y))continue;
-     if(d2(dr.x,dr.y,u.x,u.y)<16*16){if(sim){s.honey+=dr.amt;drops.splice(i2,1);}addSpark(u.x,u.y,2);break;}}
+     if(d2(dr.x,dr.y,u.x,u.y)<16*16){if(sim){gainHoney(s,dr.amt);drops.splice(i2,1);}addSpark(u.x,u.y,2);break;}}
     if(u.load>=39||s.honey>=honeyCap(s)){ /* FULL BELLY (or full house): fall in beside the queen, a fat larder on the wing */
      u.node=null;
      const llat=(((u._fi||0)%2)?22:-22)*(1+Math.floor((u._fi||0)/2)*0.5);
@@ -1317,8 +1318,9 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
       gy=s.y+hy*(s.R*0.1-Math.min(rank,4)*22)+hx*side*rail;
       fast=true;
      } else { /* SENTRY ORBIT: outriders evenly spaced, all riding the same way round */
+      const orbR9=Math.max(s.R*1.45,115); /* a small wheel rides WIDER: the old tight orbit moved sentries at ~25px/s and their velocity-facings jittered - the <8 twitch. Constant angular speed, ALWAYS - a radius-scaled rate made the phase (tnow*rate) leap whenever R shifted */
       const la=((u._fi||0)/Math.max(1,lan))*TAU+tnow*0.4;
-      gx=s.x+Math.cos(la)*(s.R*1.45);gy=s.y+Math.sin(la)*(s.R*1.45);
+      gx=s.x+Math.cos(la)*orbR9;gy=s.y+Math.sin(la)*orbR9;
      }
     } else { /* soldier: the wall */
      if(moving){ /* PHALANX: forward-facing wedge ahead of the queen (15) */
@@ -1603,7 +1605,7 @@ function step(dt){NPLAY=humanCount();
    if(dq2<110*110){const a2=Math.atan2(s.y-dr.y,s.x-dr.x),pull=dt*(260+(1-Math.sqrt(dq2)/110)*1500); /* elastic: the closer, the hungrier */
     dr.x+=Math.cos(a2)*pull;dr.y+=Math.sin(a2)*pull;}
    if(dq2<32*32){
-    if(s.team===0){s.honey+=dr.amt*comboMult()*TUNE.honey;feedCombo();}else s.honey+=dr.amt;
+    if(s.team===0){gainHoney(s,dr.amt*comboMult()*TUNE.honey);feedCombo();}else gainHoney(s,dr.amt);
     if(s===M){sfx('feed');gainXP(dr.amt*0.2);s.gulp=0.16;addFloat(s.x,s.y-s.R-8,'+'+Math.round(dr.amt),'#ffd75e');addP(s.x,s.y,'#ffd75e',3,80);}
     drops.splice(i,1);}}
   /* auto defensive stomp — no button, it just happens */
@@ -1870,14 +1872,14 @@ function step(dt){NPLAY=humanCount();
     for(const u2 of s2.units){if(d2(dw.x,dw.y,u2.x,u2.y)<(u2.r+9)**2){taken=true;break;}}}
    if(taken){
     const amt=rand(0.7,1.3)*(dw.big?3.2:1);
-    if(s2.team===0){s2.honey+=amt*comboMult();feedCombo();gainXP(amt*0.15);
+    if(s2.team===0){gainHoney(s2,amt*comboMult());feedCombo();gainXP(amt*0.15);
      if(grottoOf(s2.x,s2.y)){s2.grottoHoney=(s2.grottoHoney||0)+amt;
       if(s2.grottoHoney>=200)trophy('algaeglow','GROTTO GLOW — THE ALGAE REMEMBER YOU');}
      if(s2===me()){s2.gulp=Math.max(s2.gulp||0,dw.big?0.2:0.12);
       if(!muted){const c9=ac();if(c9){const st9=Math.min(comboN,11);
        const f9=Math.min(1046,PENT[st9%6]*(st9>=6?2:1)); /* NEVER above soprano C — ears are sacred */
        env(f9,f9*0.99,.09,(dw.big?.03:.018)*(f9>700?0.7:1),'sine',2400);}}}}
-    else s2.honey+=amt;
+    else gainHoney(s2,amt);
     addSpark(dw.x,dw.y,dw.big?4:2);dews.splice(i,1);break;}}}
  if(dews.length<380&&Math.random()<dt*8){const p9=flowerSpot(false);dews.push({x:p9.x,y:p9.y,ph:rand(0,TAU),big:Math.random()<0.1});}
  /* pollen drifts; a star sometimes falls */
@@ -2429,8 +2431,8 @@ function doAct(a){
  else if(a==='recall'){act({recall:1});if(NET.on)sfx('recall');}
  else if(a.indexOf('unlock:')===0)chooseEvo(a.slice(7));
  else if(a.indexOf('buy:')===0){const role=a.slice(4);
-  if(NET.on){act({buy:role});r3=!!(M9&&!M9.dead&&M9.honey>=recruitCost(M9,role)&&M9.units.length<soulCap()&&canBuy(role));
-   if(r3){sfx('buy');if(M9)addRing(M9.x,M9.y,(ROLES[role]||{}).col||'#ffd75e',24);}else{sfx('full');}} /* OPTIMISTIC but HONEST: ring+sound only when the server will really say yes (honey AND muster cap AND unlock) - a promise the wire can keep. Denials thunk instead of ghost-ringing */
+  if(NET.on){const c9=M9?recruitCost(M9,role):1e9;act({buy:role});r3=!!(M9&&!M9.dead&&M9.honey>=c9&&M9.units.length<soulCap()&&canBuy(role));
+   if(r3){sfx('buy');if(M9){addRing(M9.x,M9.y,(ROLES[role]||{}).col||'#ffd75e',24);M9.honey-=c9;}}else{sfx('full');}} /* OPTIMISTIC but HONEST: ring+sound only when the server will really say yes. The mirror now SPENDS instantly too - under rate-skipped beats the stale honey made rapid buys mispredict: silent spawns and phantom denial-thunks. Server truth overwrites next beat */
   else r3=buy(me(),role);}
  resumeAudio();return r3;
 }
@@ -3258,6 +3260,10 @@ function paintCrown(g2,base,t2,cr){
 function queenStage(s){const n=teamSize(s.team);return n>=70?3:n>=34?2:n>=15?1:0;}
 function drawQueen(s){
  const a=Math.atan2(s.vy,s.vx)||0,st=s.ally?0:queenStage(s),base=(12+st*3+(st===3?2:0))*(1+Math.max(0,s.gulp||0)*0.45); /* kin stay humble-looking; only the TRUE queen wears her power */
+ if(!s.ally){const st9p=s._st9; /* THE EVOLUTION BURST: one ring, a handful of sparks, gone - a stage-up should ring like a bell and cost nothing */
+  if(st9p===undefined)s._st9=st;
+  else if(st>st9p){s._st9=st;addRing(s.x,s.y,s.col,base*3.4);addRing(s.x,s.y,'#fff8e0',base*2.2);addP(s.x,s.y,s.col,10,200);if(near(s))sfx('evolve');}
+  else if(st<st9p)s._st9=st;}
  ctx.save();ctx.translate(s.x,s.y);
  ctx.globalAlpha=(s.prot>0?0.55+0.35*Math.sin(tnow*10):1);
  ctx.rotate(a+((s.preenT||0)>5?Math.sin(tnow*7)*0.06:0)); /* she preens when the meadow is quiet */
@@ -3870,10 +3876,16 @@ function draw(){
   for(const [exx,eyy,er5] of [[0.62,-0.16,0.07],[0.62,0.16,0.07],[0.52,-0.26,0.05],[0.52,0.26,0.05],[0.7,-0.05,0.045],[0.7,0.05,0.045]]){
    ctx.fillStyle=sp5.provoked>0?'rgba(255,70,70,'+eg5+')':'rgba(255,190,80,'+eg5+')';
    ctx.beginPath();ctx.arc(sp5.r*exx,sp5.r*eyy,sp5.r*er5,0,TAU);ctx.fill();}
-  {const gn=sp5.gnash>0?Math.sin(tnow*34)*sp5.r*0.06:0; /* the fangs GNASH */
-   ctx.fillStyle='#e8dcf8';
-   ctx.beginPath();ctx.moveTo(sp5.r*0.82,-sp5.r*0.1-gn);ctx.lineTo(sp5.r*1.08,-sp5.r*0.02-gn*0.5);ctx.lineTo(sp5.r*0.84,sp5.r*0.02);ctx.closePath();ctx.fill();
-   ctx.beginPath();ctx.moveTo(sp5.r*0.82,sp5.r*0.1+gn);ctx.lineTo(sp5.r*1.08,sp5.r*0.02+gn*0.5);ctx.lineTo(sp5.r*0.84,-sp5.r*0.02);ctx.closePath();ctx.fill();
+  {const gn=sp5.gnash>0?(Math.sin(tnow*30)*0.5+0.5)*0.42:0.07; /* the fangs GNASH: chelicerae HINGE at the jaw and snap toward each other - recurved striking claws, never triangles */
+   for(const sd of [-1,1]){ctx.save();ctx.translate(sp5.r*0.8,sd*sp5.r*0.12);ctx.rotate(sd*(0.34-gn));
+    ctx.fillStyle='#e8dcf8';ctx.strokeStyle='#8a6aa0';ctx.lineWidth=1.1;
+    ctx.beginPath();ctx.moveTo(0,-sd*sp5.r*0.05);
+    ctx.quadraticCurveTo(sp5.r*0.28,-sd*sp5.r*0.03,sp5.r*0.38,sd*sp5.r*0.1);
+    ctx.quadraticCurveTo(sp5.r*0.33,sd*sp5.r*0.19,sp5.r*0.19,sd*sp5.r*0.15);
+    ctx.quadraticCurveTo(sp5.r*0.07,sd*sp5.r*0.07,0,sd*sp5.r*0.05);ctx.closePath();ctx.fill();ctx.stroke();
+    if(sp5.gnash>0){ctx.fillStyle='rgba(160,255,140,.8)'; /* venom beads at the tips while she works */
+     ctx.beginPath();ctx.arc(sp5.r*0.3,sd*sp5.r*0.14,1.6,0,TAU);ctx.fill();}
+    ctx.restore();}
    ctx.fillStyle='#c8a0d8'; /* spinnerets at her rear */
    for(const sg of [-1,1]){ctx.beginPath();ctx.arc(-sp5.r*1.42,sg*sp5.r*0.12,sp5.r*0.06,0,TAU);ctx.fill();}}
   ctx.restore();
@@ -4067,9 +4079,16 @@ function draw(){
   ctx.fillStyle='rgba(140,255,180,'+(0.12+0.06*Math.sin(tnow*2.2))+')';
   ctx.beginPath();ctx.ellipse(-elder.r*0.34,-elder.r*0.14,elder.r*0.28,elder.r*0.14,0.3,0,TAU);ctx.fill();
   /* tusks & brow horns */
-  ctx.fillStyle='#e8d0a8';
-  ctx.beginPath();ctx.moveTo(elder.r*0.8,-elder.r*0.34);ctx.quadraticCurveTo(elder.r*1.5,-elder.r*0.5,elder.r*1.55,-elder.r*0.12);ctx.lineTo(elder.r*0.86,-elder.r*0.12);ctx.closePath();ctx.fill();
-  ctx.beginPath();ctx.moveTo(elder.r*0.8,elder.r*0.34);ctx.quadraticCurveTo(elder.r*1.5,elder.r*0.5,elder.r*1.55,elder.r*0.12);ctx.lineTo(elder.r*0.86,elder.r*0.12);ctx.closePath();ctx.fill();
+  {const gn8=elder.atk>0?(Math.sin(tnow*26)*0.5+0.5)*0.22:0; /* the TUSKS HINGE when he strikes - recurved old ivory, forged by years, never a triangle */
+   for(const sd of [-1,1]){ctx.save();ctx.translate(elder.r*0.78,sd*elder.r*0.3);ctx.rotate(sd*(0.12-gn8));
+    ctx.fillStyle='#e8d0a8';ctx.strokeStyle='#8a6a3c';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(0,-sd*elder.r*0.08);
+    ctx.quadraticCurveTo(elder.r*0.52,-sd*elder.r*0.2,elder.r*0.78,0);
+    ctx.quadraticCurveTo(elder.r*0.64,sd*elder.r*0.16,elder.r*0.4,sd*elder.r*0.13);
+    ctx.quadraticCurveTo(elder.r*0.15,sd*elder.r*0.1,0,sd*elder.r*0.08);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.strokeStyle='rgba(122,90,50,.55)';ctx.lineWidth=0.9; /* age-rings on the ivory */
+    ctx.beginPath();ctx.moveTo(elder.r*0.1,-sd*elder.r*0.04);ctx.quadraticCurveTo(elder.r*0.32,-sd*elder.r*0.1,elder.r*0.52,-sd*elder.r*0.02);ctx.stroke();
+    ctx.restore();}}
   /* eyes: embers that GLOW when provoked */
   const eg=elder.provoked>0?0.9:0.45+0.15*Math.sin(tnow*3);
   ctx.fillStyle='rgba(255,190,60,'+eg+')';
@@ -4473,11 +4492,13 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
   else{if(!elder||!elder._net)elder={x:F.el[0],y:F.el[1],hp:F.el[2],maxHp:F.el[3],vx:F.el[4],vy:F.el[5],r:72,flash:0,provoked:0,atk:0,hx:F.el[0],hy:F.el[1],terr:520,sense:410,_net:1};
    if(F.el[2]<elder.hp-0.5)elder.flash=0.12; /* his wounds land white here too */
    elder._tx=F.el[0];elder._ty=F.el[1];elder._tvx=F.el[4]||0;elder._tvy=F.el[5]||0;elder._age=0;
-   elder.hp=F.el[2];elder.maxHp=F.el[3];}}
+   elder.hp=F.el[2];elder.maxHp=F.el[3];
+   elder.provoked=F.el[6]?0.5:0;elder.atk=F.el[7]?0.5:0;}} /* his FURY crosses the wire now: red gaze + hinging tusks were solo-only theatre - same disease as the maws, same cure */
  if(F.sp!==undefined){if(!F.sp)spider=null;
   else{if(!spider||!spider._net)spider={x:F.sp[0],y:F.sp[1],hp:F.sp[2],maxHp:F.sp[3],r:92,flash:0,gait:tnow*3,gnash:0,provoked:0,kids:[],_net:1};
    if(F.sp[2]<spider.hp-0.5)spider.flash=0.12;
    spider._tx=F.sp[0];spider._ty=F.sp[1];spider._age=0;spider.hp=F.sp[2];spider.maxHp=F.sp[3];
+   spider.provoked=F.sp[5]?0.6:0;spider.gnash=F.sp[6]?0.4:0; /* her red eyes + gnash cross the wire */
    const kk9=F.sp[4]||[]; /* kids matched by INDEX (they only leave by death-splice): targets, not teleports */
    while(spider.kids.length>kk9.length)spider.kids.pop();
    for(let ki9=0;ki9<kk9.length;ki9++){let kd9=spider.kids[ki9];
@@ -4734,8 +4755,8 @@ function netDyn(){ /* the LIVING world, streamed */
   gp:grottos.map(g=>(g.pricks||[]).map(p=>[p.x|0,p.y|0])), /* THE CAVE FIX: see netDynLite */
   fa:fieldMaws.map(m=>m.anim>0?1:0),gm:grottos.map(g=>(g.maws||[]).map(m=>m.anim>0?1:0)), /* THE MAW FIX: see netDynLite */
   ey:eyes.map(e=>[e.x|0,e.y|0,e.r|0,e.hp|0,e.maxHp||300,+(e.blink||0).toFixed(2),(e.dread||0)>0?1:0,+e.wa.toFixed(2),+(e.seed||0).toFixed(2),(e.whip&&e.whip.t>0)?(e.whip.x|0):0,(e.whip&&e.whip.t>0)?(e.whip.y|0):0]), /* the LASH rides the wire: eye tentacle strikes were server-only theatre - damage landed, nothing showed */
-  el:elder?[elder.x|0,elder.y|0,elder.hp|0,elder.maxHp,(elder.vx||0)|0,(elder.vy||0)|0]:0,
-  sp:spider?[spider.x|0,spider.y|0,spider.hp|0,spider.maxHp,(spider.kids||[]).map(k=>[k.x|0,k.y|0])]:0,
+  el:elder?[elder.x|0,elder.y|0,elder.hp|0,elder.maxHp,(elder.vx||0)|0,(elder.vy||0)|0,(elder.provoked>0?1:0),(elder.atk>0?1:0)]:0,
+  sp:spider?[spider.x|0,spider.y|0,spider.hp|0,spider.maxHp,(spider.kids||[]).map(k=>[k.x|0,k.y|0]),(spider.provoked>0?1:0),(spider.gnash>0?1:0)]:0,
   sw:netSnapshot().sw};}
 function applyInput(team,cmd){ /* THE HAND: remote players ride the same reins the bots do */
  const s=swarms.find(z=>z.team===team&&!z.ally);if(!s)return false;

@@ -414,6 +414,9 @@ const ITEMS=[
  {id:'sickle',    cat:'wings',  n:'Reaper'+String.fromCharCode(39)+'s Sickles',xp:2700,d:'they do not flutter - they loom'},
  {id:'deathmoth', cat:'wings',  n:'Deathmoth',   xp:3600,royal:true,d:'beautiful the way omens are'},
  {id:'spidereyes',cat:'eye',    n:'Hunter'+String.fromCharCode(39)+'s Cluster',xp:1400,d:'six glossy reasons to be feared'},
+ {id:'viper',     cat:'eye',    n:'Viper Slits', xp:1100,d:'amber almonds, pupils like knife-cuts'},
+ {id:'lanterns',  cat:'eye',    n:'Lantern Gaze', xp:1900,d:'two pale lights that never look away'},
+ {id:'weeper',    cat:'eye',    n:'The Weeper',   xp:2600,royal:true,d:'one dark eye, forever about to cry'},
  {id:'millipede', cat:'plate',  n:'Millipede Mail',xp:1700,d:'a hundred little legs, all marching'},
  {id:'wildlimbs', cat:'plate',  n:'Wild Limbs',  xp:900,  d:'no armour at all - bare living limbs grown from her own body'},
  {id:'tendrillimbs',cat:'plate',n:'Tendril Limbs',xp:2100, d:'reaching violet-lit tendrils - she does not walk, she DRIFTS'},
@@ -918,6 +921,10 @@ function setupWorldTail(){ /* the rest of world-gen: caves, maws, oasis, decor -
    if(k%2){x=rand(WORLD.w-360,WORLD.w-300);y=rand(500,WORLD.h*0.4);horiz=false;}
    else{x=rand(WORLD.w*0.6,WORLD.w-500);y=rand(300,360);horiz=true;}}
   thorns.push({x,y,horiz,edge:k<4?'dark':'bad',seed:rand(0,TAU)});}
+ for(let k=0;k<5;k++){ /* THE WORM HEDGE: the far NE corner grows a THICKET - blood-dark brakes coiling denser toward the corner where something is going to live */
+  const t9=k/5;
+  const x=rand(WORLD.w*(0.66+t9*0.24),WORLD.w-320),y=rand(320,Math.max(700,WORLD.h*(0.34-t9*0.2)));
+  thorns.push({x,y,horiz:k%2===0,edge:'worm',seed:rand(0,TAU)});}
  /* GROUND-COVER: each realm dresses its own floor */
  decor=[];
  for(let k=0;k<70;k++)decor.push({x:rand(500,WORLD.w-500),y:rand(WORLD.h*0.58,WORLD.h-400),ty:'tuft',ph:rand(0,TAU)});
@@ -3023,6 +3030,21 @@ function paintEye(g2,base,t2,ey){ /* THE GAZE: her eye is a CHOICE now. Anchored
    g2.fillStyle='#1c1418';g2.beginPath();g2.arc(ex,ey9,er9,0,TAU);g2.fill();
    g2.strokeStyle='#4a3a44';g2.lineWidth=0.8;g2.stroke();
    g2.fillStyle='rgba(255,255,255,.75)';g2.beginPath();g2.arc(ex+er9*0.3,ey9-er9*0.3,er9*0.3,0,TAU);g2.fill();}}
+ else if(ey==='viper'){for(const sd of [-1,1]){ /* VIPER SLITS: amber almonds, pupils like knife-cuts */
+   g2.fillStyle='#d8a83c';g2.beginPath();g2.ellipse(hx+hr*0.42,sd*hr*0.34,hr*0.24,hr*0.15,sd*0.55,0,TAU);g2.fill();
+   g2.strokeStyle='#8a6420';g2.lineWidth=0.8;g2.stroke();
+   g2.fillStyle='#1c1410';g2.beginPath();g2.ellipse(hx+hr*0.42,sd*hr*0.34,hr*0.05,hr*0.14,sd*0.55,0,TAU);g2.fill();
+   g2.fillStyle='rgba(255,246,220,.7)';g2.beginPath();g2.arc(hx+hr*0.48,sd*hr*0.28,hr*0.045,0,TAU);g2.fill();}}
+ else if(ey==='lanterns'){for(const sd of [-1,1]){const gl=0.6+0.3*Math.sin(t2*2.1+sd*0.7); /* LANTERN GAZE: two pale lights that never look away */
+   g2.fillStyle='rgba(216,240,255,'+(0.25*gl).toFixed(3)+')';g2.beginPath();g2.arc(hx+hr*0.4,sd*hr*0.32,hr*0.26,0,TAU);g2.fill();
+   g2.fillStyle='rgba(232,246,255,'+(0.9*gl).toFixed(3)+')';g2.beginPath();g2.arc(hx+hr*0.4,sd*hr*0.32,hr*0.11,0,TAU);g2.fill();}}
+ else if(ey==='weeper'){ /* THE WEEPER: one dark eye, forever about to cry */
+  g2.fillStyle='#241a20';g2.beginPath();g2.ellipse(hx+hr*0.1,0,hr*0.3,hr*0.24,0,0,TAU);g2.fill();
+  g2.strokeStyle='rgba(180,160,190,.4)';g2.lineWidth=0.8;g2.stroke();
+  g2.fillStyle='rgba(255,255,255,.85)';g2.beginPath();g2.arc(hx+hr*0.18,-hr*0.06,hr*0.07,0,TAU);g2.fill();
+  const tr=(t2*0.5)%1;
+  g2.fillStyle='rgba(170,216,255,'+(0.8*(1-tr)).toFixed(3)+')';
+  g2.beginPath();g2.arc(hx+hr*0.05,hr*(0.28+tr*0.5),hr*0.05*(1-tr*0.4)+0.6,0,TAU);g2.fill();}
  g2.restore();}
 function paintPlate(g2,base,t2,pl,col){ /* QUEEN ARMOUR, amended law: trim by default, and SOME sets fully WRAP chosen segments (the pattern lives on the bare ones). Sets pair with FLEETS - same metals, same tints - so queen and army read as one host */
  if(!pl||pl==='noplate'||!QSEGS.length)return;
@@ -3819,7 +3841,7 @@ function draw(){
    ctx.globalAlpha=draw._wA;ctx.fillStyle=WC;ctx.fillRect(vx0,vy0,vx1-vx0,vy1-vy0);ctx.globalAlpha=1;}}
  for(const tb of thorns){if(tb.x<vx0-200||tb.x>vx1+200||tb.y<vy0-200||tb.y>vy1+200)continue;
   for(let v=0;v<3;v++){ /* three knotted vines make one brake */
-   ctx.strokeStyle=(tb.edge==='dark'?'rgba(64,44,96,':'rgba(96,42,44,')+(0.55-v*0.13).toFixed(2)+')';
+   ctx.strokeStyle=(tb.edge==='dark'?'rgba(64,44,96,':tb.edge==='worm'?'rgba(96,26,32,':'rgba(96,42,44,')+(0.55-v*0.13).toFixed(2)+')';
    ctx.lineWidth=3.6-v*0.9;
    const off=v*8-8;
    ctx.beginPath();
@@ -3828,7 +3850,7 @@ function draw(){
     const px=tb.x+(tb.horiz?d:wob),py=tb.y+(tb.horiz?wob:d);
     d===-170?ctx.moveTo(px,py):ctx.lineTo(px,py);}
    ctx.stroke();}
-  ctx.strokeStyle=tb.edge==='dark'?'rgba(150,120,200,.45)':'rgba(190,120,110,.45)';ctx.lineWidth=1.3;
+  ctx.strokeStyle=tb.edge==='dark'?'rgba(150,120,200,.45)':tb.edge==='worm'?'rgba(230,90,80,.5)':'rgba(190,120,110,.45)';ctx.lineWidth=1.3;
   for(let d=-160;d<=160;d+=22){ /* the thorns themselves, alternating */
    const wob=Math.sin(d*0.045+tb.seed)*15;
    const px=tb.x+(tb.horiz?d:wob),py=tb.y+(tb.horiz?wob:d);
@@ -4425,6 +4447,21 @@ function draw(){
    ctx.fillStyle='rgba(90,76,102,.8)';
    for(const [px3,py3,pr3] of [[grz*0.14,grz*0.07,2.4],[grz*0.17,-grz*0.05,1.8],[grz*0.21,grz*0.015,1.5]])
     {ctx.beginPath();ctx.arc(px3,py3,pr3*cam.z,0,TAU);ctx.fill();}
+   /* STONE TEETH: a fringe of hanging fangs across the mouth - recurved drips of old stone. A THRESHOLD, not a hole */
+   ctx.fillStyle='rgba(52,42,62,.95)';ctx.strokeStyle='rgba(20,14,28,.8)';ctx.lineWidth=0.8*cam.z;
+   for(let t3=0;t3<5;t3++){const ty3=(t3-2)*grz*0.048,ln3=grz*(t3%2?0.05:0.078);
+    ctx.beginPath();ctx.moveTo(grz*0.1,ty3-grz*0.012);
+    ctx.quadraticCurveTo(grz*0.1-ln3*0.7,ty3+ln3*0.12,grz*0.1-ln3,ty3+ln3*0.05); /* each drip curls slightly, never a triangle */
+    ctx.quadraticCurveTo(grz*0.1-ln3*0.4,ty3+grz*0.014,grz*0.1,ty3+grz*0.012);ctx.closePath();ctx.fill();ctx.stroke();}
+   ctx.fillStyle='rgba(74,62,88,.9)'; /* two keeper-stones flank the way in */
+   for(const sd3 of [-1,1]){ctx.save();ctx.translate(grz*0.2,sd3*grz*0.17);ctx.rotate(sd3*0.18);
+    ctx.beginPath();ctx.ellipse(0,0,grz*0.032,grz*0.06,0,0,TAU);ctx.fill();ctx.restore();}
+   ctx.fillStyle='rgba(122,168,96,.5)';
+   ctx.beginPath();ctx.arc(grz*0.19,-grz*0.19,1.6*cam.z,0,TAU);ctx.fill(); /* lichen kisses one keeper */
+   ctx.strokeStyle='rgba(30,24,40,.28)';ctx.lineWidth=grz*0.05;ctx.lineCap='round'; /* the path is WORN: many feet came this way, fewer left */
+   ctx.beginPath();ctx.moveTo(grz*0.12,grz*0.02);ctx.quadraticCurveTo(grz*0.3,grz*0.03,grz*0.52,-grz*0.02);ctx.stroke();
+   ctx.lineWidth=grz*0.028;
+   ctx.beginPath();ctx.moveTo(grz*0.14,-grz*0.045);ctx.quadraticCurveTo(grz*0.34,-grz*0.05,grz*0.5,grz*0.015);ctx.stroke();
    ctx.restore();
    /* a single hairline crack wandering up the dome — geology, not signage */
    ctx.strokeStyle='rgba(20,12,26,.5)';ctx.lineWidth=1.2*cam.z;

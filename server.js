@@ -6,7 +6,10 @@ const fs=require('fs'),vm=require('vm'),path=require('path'),http=require('http'
 const {PerformanceObserver}=require('perf_hooks');
 const DIAG={gcCount:0,gcTotalMs:0,gcMaxMs:0,elLagMaxMs:0,maxBufBytes:0,dropped:0};
 try{new PerformanceObserver(l=>{for(const e of l.getEntries()){DIAG.gcCount++;DIAG.gcTotalMs+=e.duration;if(e.duration>DIAG.gcMaxMs)DIAG.gcMaxMs=e.duration;}}).observe({entryTypes:['gc']});}catch(e){}
-{let _t=Date.now();setInterval(()=>{const n=Date.now(),lag=n-_t-100;if(lag>DIAG.elLagMaxMs)DIAG.elLagMaxMs=lag;_t=n;},100);}
+const STALLS=[]; /* the SPIKE LEDGER: every event-loop freeze >300ms is logged with its moment, so a live healthz poll during a playtest shows exactly WHEN the world hitched and how hard */
+{let _t=Date.now();setInterval(()=>{const n=Date.now(),lag=n-_t-100;if(lag>DIAG.elLagMaxMs)DIAG.elLagMaxMs=lag;
+ if(lag>300){STALLS.push({t:n,ms:lag|0,heap:(process.memoryUsage().heapUsed/1048576)|0});if(STALLS.length>10)STALLS.shift();}
+ _t=n;},100);}
 
 function makeGame(htmlPath){
  const html=fs.readFileSync(htmlPath,'utf8');
@@ -55,6 +58,7 @@ function start(port,htmlPath){
    res.end(JSON.stringify({ok:1,seats:Object.keys(seats).length,souls,
     tickAvg:+(TICKS.n?TICKS.sum/TICKS.n:0).toFixed(2),tickP95:p95,upMin:((Date.now()-BOOT)/60000)|0,
     ticks:TICKS.n,elLagMaxMs:elLag,gcCount:DIAG.gcCount,gcMaxMs:+gcMax.toFixed(0),gcTotalMs:+DIAG.gcTotalMs.toFixed(0),
+    stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:DIAG.netLateMax||0,
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else{res.writeHead(404);res.end('the meadow has no such door');}
  });
@@ -103,9 +107,10 @@ function start(port,htmlPath){
    const el=Number(process.hrtime.bigint()-t0)/1e6;
    TICKS.n++;TICKS.sum+=el;TICKS.hist.push(el);if(TICKS.hist.length>300)TICKS.hist.shift();
    acc-=DT;n++;}},16);
- let fN=0;
+ let fN=0,_lastNet=Date.now();
  const AOI2=2400*2400; /* AREA OF INTEREST (#3b): each seat receives the units/drops/shots/wasps within 2400px of HER queen - beyond that lies pure invisible bandwidth. 2400 covers the widest screen at the zoom cap (~1830px half-width) plus the 520px troop leash, with margin. Queens/headers of ALL swarms still flow every frame (minimap + war-sense need them); authority is untouched - the FULL world simulates server-side, culling is presentation only */
  const netI=setInterval(()=>{ if(Object.keys(seats).length===0)return; /* 30Hz heartbeat: souls every beat, the slow world every third */
+  {const nn=Date.now(),gp=nn-_lastNet;if(gp>66&&gp>(DIAG.netLateMax||0))DIAG.netLateMax=gp;_lastNet=nn;} /* how late do net beats actually run? */
   let base;try{base=(fN++%3===0)?G.netDyn():G.netDynLite();}catch(e){return;}
   for(const t in seats){const _w=seats[t];if(!_w)continue;
    let f;

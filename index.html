@@ -2845,18 +2845,31 @@ function paintPattern(g2,base,t2,pat,col){
   S9.forEach((sg,k)=>{g2.beginPath();g2.arc(sg.x,sg.y+(k%2?1:-1)*sg.r*0.3,sg.r*0.3,0,TAU);g2.fill();});}
  else if(pat==='rings'){g2.strokeStyle='rgba(60,40,50,.55)';g2.lineWidth=1.6;
   for(const sg of S9){g2.beginPath();g2.ellipse(sg.x,sg.y,sg.r*0.72,sg.r*0.6,0,0,TAU);g2.stroke();}}
- else if(pat==='seafoam'){g2.fillStyle='rgba(120,220,200,.6)';
-  S9.forEach((sg,k)=>{for(let j=0;j<2;j++){const aa=k*2.4+j*2.8;
-   g2.beginPath();g2.arc(sg.x+Math.cos(aa)*sg.r*0.45,sg.y+Math.sin(aa)*sg.r*0.35,sg.r*0.14,0,TAU);g2.fill();}});}
+ else if(pat==='seafoam'){const td9=0.75+0.25*Math.sin(t2*1.7); /* SEAFOAM second pass: cresting wave-caps hugging each rim, breaking into bubbles - a tide, not confetti */
+  S9.forEach((sg,k)=>{
+   g2.strokeStyle='rgba(96,190,178,'+(0.55*td9).toFixed(3)+')';g2.lineWidth=Math.max(1.2,sg.r*0.14);g2.lineCap='round';
+   g2.beginPath();g2.arc(sg.x,sg.y+sg.r*0.15,sg.r*0.74,-2.55,-0.6);g2.stroke();
+   g2.strokeStyle='rgba(214,248,240,'+(0.85*td9).toFixed(3)+')';g2.lineWidth=Math.max(0.9,sg.r*0.08);
+   g2.beginPath();g2.arc(sg.x,sg.y+sg.r*0.08,sg.r*0.6,-2.4,-0.75);g2.stroke();
+   const bx9=sg.x+Math.cos(-0.72)*sg.r*0.62,by9=sg.y+sg.r*0.08+Math.sin(-0.72)*sg.r*0.62;
+   g2.fillStyle='rgba(230,252,248,'+(0.8*td9).toFixed(3)+')';
+   g2.beginPath();g2.arc(bx9,by9,sg.r*0.09,0,TAU);g2.fill();
+   g2.beginPath();g2.arc(bx9+sg.r*0.14,by9-sg.r*0.1,sg.r*0.06,0,TAU);g2.fill();
+   g2.beginPath();g2.arc(bx9+sg.r*0.05,by9-sg.r*0.2,sg.r*0.045,0,TAU);g2.fill();});}
  else if(pat==='gildband'){g2.strokeStyle='rgba(255,207,60,1)';g2.lineWidth=2.6;
   for(const sg of S9){g2.beginPath();g2.ellipse(sg.x,sg.y,sg.r*0.82,sg.r*0.68,0,0,TAU);g2.stroke();}}
- else if(pat==='frost'){
-  for(const sg of S9){g2.fillStyle='rgba(230,245,255,.3)';
-   g2.beginPath();g2.ellipse(sg.x,sg.y-sg.r*0.3,sg.r*0.8,sg.r*0.4,0,0,TAU);g2.fill();}
-  g2.strokeStyle='rgba(220,240,255,.75)';g2.lineWidth=1.2;
-  for(let k=0;k<4;k++){const aa=k/4*TAU+0.4;
-   g2.beginPath();g2.moveTo(head.x,head.y);
-   g2.lineTo(head.x+Math.cos(aa)*head.r*0.9,head.y+Math.sin(aa)*head.r*0.7);g2.stroke();}}
+ else if(pat==='frost'){ /* HOARFROST second pass: recurved rime-ferns climbing every rim, a pale sheen, glints that CATCH one at a time - winter kissed her and left */
+  for(const sg of S9){g2.fillStyle='rgba(230,245,255,.28)';
+   g2.beginPath();g2.ellipse(sg.x,sg.y-sg.r*0.3,sg.r*0.78,sg.r*0.36,0,0,TAU);g2.fill();}
+  g2.strokeStyle='rgba(224,242,255,.8)';g2.lineCap='round';
+  S9.forEach((sg,k)=>{for(const sd of [-1,1]){const aa=sd*1.15,bx9=sg.x+Math.cos(aa)*sg.r*0.7,by9=sg.y+Math.sin(aa)*sg.r*0.62;
+   g2.strokeStyle='rgba(224,242,255,.8)';g2.lineWidth=1.3;
+   g2.beginPath();g2.moveTo(bx9,by9);
+   g2.quadraticCurveTo(bx9-sg.r*0.1,by9+sd*sg.r*0.3,bx9-sg.r*0.34,by9+sd*sg.r*0.38);g2.stroke();
+   g2.lineWidth=0.9;
+   g2.beginPath();g2.moveTo(bx9-sg.r*0.12,by9+sd*sg.r*0.2);
+   g2.quadraticCurveTo(bx9-sg.r*0.26,by9+sd*sg.r*0.16,bx9-sg.r*0.3,by9+sd*sg.r*0.04);g2.stroke();
+   if(Math.sin(t2*3.1+k*2.3+sd)>0.86){g2.fillStyle='#fff';g2.beginPath();g2.arc(bx9-sg.r*0.34,by9+sd*sg.r*0.38,1.5,0,TAU);g2.fill();}}});}
  else if(pat==='tigerlily'){
   for(const sg of S9){g2.fillStyle='rgba(255,120,40,.55)';
    g2.beginPath();g2.ellipse(sg.x,sg.y,sg.r*0.9,sg.r*0.72,0,0,TAU);g2.fill();
@@ -2893,42 +2906,80 @@ function paintPattern(g2,base,t2,pat,col){
  else if(pat==='blush'){g2.fillStyle='rgba(255,150,160,.4)';
   g2.beginPath();g2.ellipse(head.x,head.y-head.r*0.45,head.r*0.4,head.r*0.2,0,0,TAU);g2.fill();
   g2.beginPath();g2.ellipse(head.x,head.y+head.r*0.45,head.r*0.4,head.r*0.2,0,0,TAU);g2.fill();}
- else if(pat==='motheyes'){
-  for(const sg9 of [-1,1]){
-   g2.fillStyle='rgba(40,22,30,.7)';g2.beginPath();g2.arc(mid.x,mid.y+sg9*mid.r*0.4,mid.r*0.3,0,TAU);g2.fill();
-   g2.fillStyle='rgba(255,235,170,.85)';g2.beginPath();g2.arc(mid.x,mid.y+sg9*mid.r*0.4,mid.r*0.15,0,TAU);g2.fill();
-   g2.fillStyle='rgba(40,22,30,.95)';g2.beginPath();g2.arc(mid.x+mid.r*0.05,mid.y+sg9*mid.r*0.38,mid.r*0.07,0,TAU);g2.fill();}}
- else if(pat==='warpaint'){g2.strokeStyle='rgba(220,40,60,.9)';g2.lineWidth=2.8;
-  for(let k=0;k<3;k++){const sx9=head.x+head.r*0.4-k*head.r*0.5;
-   g2.beginPath();g2.moveTo(sx9,head.y-head.r*0.6);g2.lineTo(sx9-head.r*0.3,head.y+head.r*0.6);g2.stroke();}}
- else if(pat==='constel'){
-  g2.strokeStyle='rgba(255,250,220,.3)';g2.lineWidth=0.8;g2.beginPath();
-  S9.forEach((sg,k)=>{k?g2.lineTo(sg.x,sg.y-sg.r*0.2):g2.moveTo(sg.x,sg.y-sg.r*0.2);});g2.stroke();
-  g2.fillStyle='rgba(255,250,220,.95)';
-  S9.forEach((sg,k)=>{g2.beginPath();g2.arc(sg.x,sg.y-sg.r*0.2,1.2+Math.sin(t2*4+k)*0.5,0,TAU);g2.fill();});}
- else if(pat==='voidmark'){
-  g2.fillStyle='rgba(20,10,30,.6)';
-  g2.beginPath();g2.ellipse(mid.x,mid.y,mid.r*0.8,mid.r*0.55,0,0,TAU);g2.fill();
-  g2.fillStyle='rgba(170,110,255,'+(0.5+0.3*Math.sin(t2*3))+')';
-  g2.beginPath();g2.arc(mid.x,mid.y,mid.r*0.2,0,TAU);g2.fill();}
+ else if(pat==='motheyes'){ /* MOTH EYES second pass: true ringed eyespots on the thorax, echoed smaller behind - watchers, not buttons */
+  const spots9=[[S9[Math.min(1,S9.length-1)],1],[S9[Math.min(2,S9.length-1)],0.62]];
+  for(const sp9 of spots9){const sg=sp9[0],sc9=sp9[1];if(!sg)continue;
+   for(const sd of [-1,1]){const ex9=sg.x,ey9=sg.y+sd*sg.r*0.42,er9=sg.r*0.34*sc9;
+    g2.strokeStyle='rgba(240,214,150,.5)';g2.lineWidth=Math.max(0.8,er9*0.14);
+    g2.beginPath();g2.arc(ex9,ey9,er9*1.12,0,TAU);g2.stroke();
+    g2.fillStyle='rgba(34,20,28,.85)';g2.beginPath();g2.arc(ex9,ey9,er9,0,TAU);g2.fill();
+    g2.fillStyle='rgba(255,205,110,.9)';g2.beginPath();g2.arc(ex9,ey9,er9*0.62,0,TAU);g2.fill();
+    g2.fillStyle='rgba(60,32,40,.95)';g2.beginPath();g2.arc(ex9+er9*0.18,ey9,er9*0.3,0,TAU);g2.fill();
+    g2.fillStyle='rgba(255,246,220,.9)';g2.beginPath();g2.arc(ex9+er9*0.28,ey9-er9*0.14,er9*0.1,0,TAU);g2.fill();}}}
+ else if(pat==='warpaint'){ /* WARPAINT second pass: three crimson vows as filled CLAW RAKES, plus the chevrons of the sworn - fearless, reads at battle zoom */
+  g2.fillStyle='rgba(214,36,52,.88)';
+  for(let k=0;k<3;k++){const sx9=head.x+head.r*(0.5-k*0.42),wy9=head.r*(0.16-k*0.02);
+   g2.beginPath();g2.moveTo(sx9,head.y-head.r*0.72);
+   g2.quadraticCurveTo(sx9-wy9-head.r*0.12,head.y,sx9-head.r*0.3,head.y+head.r*0.74);
+   g2.lineTo(sx9-head.r*0.3+wy9,head.y+head.r*0.6);
+   g2.quadraticCurveTo(sx9+wy9-head.r*0.06,head.y,sx9+wy9,head.y-head.r*0.66);g2.closePath();g2.fill();}
+  g2.strokeStyle='rgba(150,16,30,.8)';g2.lineWidth=1.6;g2.lineCap='round';
+  for(const sd of [-1,1])for(let k=0;k<2;k++){
+   g2.beginPath();g2.moveTo(mid.x-mid.r*(0.1+k*0.34),mid.y+sd*mid.r*0.62);
+   g2.lineTo(mid.x+mid.r*(0.3-k*0.34),mid.y+sd*mid.r*0.16);g2.stroke();}}
+ else if(pat==='constel'){ /* CONSTELLATION second pass: four-point stars that TWINKLE in turn, linked faint, one pole star burning at her crown */
+  g2.strokeStyle='rgba(255,250,220,.28)';g2.lineWidth=0.8;g2.beginPath();
+  S9.forEach((sg,k)=>{const oy9=(k%2?1:-1)*sg.r*0.24;k?g2.lineTo(sg.x,sg.y+oy9):g2.moveTo(sg.x,sg.y+oy9);});g2.stroke();
+  S9.forEach((sg,k)=>{const oy9=(k%2?1:-1)*sg.r*0.24,tw9=0.6+0.4*Math.sin(t2*3+k*2.1),ln9=sg.r*(0.2+0.1*tw9);
+   g2.strokeStyle='rgba(255,250,225,'+(0.85*tw9).toFixed(3)+')';g2.lineWidth=1;
+   g2.beginPath();g2.moveTo(sg.x-ln9,sg.y+oy9);g2.lineTo(sg.x+ln9,sg.y+oy9);g2.stroke();
+   g2.beginPath();g2.moveTo(sg.x,sg.y+oy9-ln9);g2.lineTo(sg.x,sg.y+oy9+ln9);g2.stroke();
+   g2.fillStyle='rgba(255,252,235,'+(0.7+0.3*tw9).toFixed(3)+')';
+   g2.beginPath();g2.arc(sg.x,sg.y+oy9,1.3+tw9*0.7,0,TAU);g2.fill();});
+  {const pl9=0.7+0.3*Math.sin(t2*1.6);
+   g2.fillStyle='rgba(190,220,255,'+(0.35*pl9).toFixed(3)+')';g2.beginPath();g2.arc(head.x+head.r*0.3,head.y-head.r*0.55,head.r*0.2,0,TAU);g2.fill();
+   g2.fillStyle='#fff';g2.beginPath();g2.arc(head.x+head.r*0.3,head.y-head.r*0.55,1.6+pl9,0,TAU);g2.fill();}}
+ else if(pat==='voidmark'){ /* VOIDMARK second pass: a RIFT torn down her whole spine, violet-edged and breathing, motes drifting the seam - something looked back */
+  const a9=S9[0],z9=S9[S9.length-1],br9=0.55+0.35*Math.sin(t2*2.2);
+  g2.fillStyle='rgba(12,6,20,.85)';
+  g2.beginPath();g2.moveTo(a9.x+a9.r*0.35,a9.y);
+  for(let k=0;k<S9.length;k++){const sg=S9[k];g2.lineTo(sg.x,sg.y-sg.r*(k%2?0.3:0.18));}
+  g2.lineTo(z9.x-z9.r*0.5,z9.y);
+  for(let k=S9.length-1;k>=0;k--){const sg=S9[k];g2.lineTo(sg.x,sg.y+sg.r*(k%2?0.18:0.3));}
+  g2.closePath();g2.fill();
+  g2.strokeStyle='rgba(170,110,255,'+(0.65*br9).toFixed(3)+')';g2.lineWidth=1.3;g2.stroke();
+  for(let k=0;k<3;k++){const tt9=(Math.sin(t2*0.9+k*2.1)*0.5+0.5)*(S9.length-1),i9=Math.min(S9.length-1,tt9|0),sg=S9[i9];
+   g2.fillStyle='rgba(210,170,255,'+(0.5+0.4*Math.sin(t2*3+k*2)).toFixed(3)+')';
+   g2.beginPath();g2.arc(sg.x,sg.y-sg.r*0.05+Math.sin(t2*2+k*2.6)*sg.r*0.14,1.4,0,TAU);g2.fill();}}
  else if(pat==='eldritcheyes'){
   S9.forEach((sg,k)=>{const bl=Math.sin(t2*1.4+k*1.7)>0.82?0.15:1; /* one eye per segment — they multiply as she grows */
    g2.fillStyle='#f4ede0';g2.beginPath();g2.ellipse(sg.x,sg.y,sg.r*0.34,sg.r*0.34*bl,0,0,TAU);g2.fill();
    g2.fillStyle='#5a2a6a';g2.beginPath();g2.arc(sg.x+sg.r*0.06,sg.y,sg.r*0.17*bl,0,TAU);g2.fill();
    g2.fillStyle='#241426';g2.beginPath();g2.arc(sg.x+sg.r*0.06,sg.y,sg.r*0.08*bl,0,TAU);g2.fill();});}
- else if(pat==='noctis'){
+ else if(pat==='noctis'){ /* NOCTIS second pass: deep night wash, ONE elegant crescent on the thorax, cold stars glinting behind - the old one stamped a moon on every segment */
   for(const sg of S9){g2.fillStyle='rgba(16,12,40,.82)';
    g2.beginPath();g2.ellipse(sg.x,sg.y,sg.r*0.88,sg.r*0.7,0,0,TAU);g2.fill();}
-  g2.fillStyle='#e8ecff';
-  S9.forEach((sg,k)=>{g2.beginPath();g2.arc(sg.x+sg.r*0.2,sg.y-sg.r*0.2,sg.r*0.22,0,TAU);g2.fill();
-   g2.fillStyle='rgba(16,12,40,1)';g2.beginPath();g2.arc(sg.x+sg.r*0.28,sg.y-sg.r*0.26,sg.r*0.18,0,TAU);g2.fill();
-   g2.fillStyle='#e8ecff';});}
- else if(pat==='broodsigil'){
-  g2.strokeStyle='rgba(232,220,248,.9)';g2.lineWidth=2.2;
-  g2.beginPath();g2.moveTo(mid.x+mid.r*0.4,mid.y-mid.r*0.4);g2.lineTo(mid.x-mid.r*0.4,mid.y+mid.r*0.4);g2.stroke();
-  g2.beginPath();g2.moveTo(mid.x-mid.r*0.4,mid.y-mid.r*0.4);g2.lineTo(mid.x+mid.r*0.4,mid.y+mid.r*0.4);g2.stroke();
-  g2.strokeStyle='rgba(200,160,255,.4)';g2.lineWidth=1;
-  for(const sg of S9){g2.beginPath();g2.ellipse(sg.x,sg.y,sg.r*0.55,sg.r*0.45,0,0,TAU);g2.stroke();}}
+  {const mr9=mid.r*0.42;
+   g2.fillStyle='#e8ecff';g2.beginPath();g2.arc(mid.x,mid.y-mid.r*0.12,mr9,0,TAU);g2.fill();
+   g2.fillStyle='rgba(16,12,40,1)';g2.beginPath();g2.arc(mid.x+mr9*0.42,mid.y-mid.r*0.12-mr9*0.18,mr9*0.86,0,TAU);g2.fill();}
+  S9.forEach((sg,k)=>{if(k<2)return;for(let j9=0;j9<2;j9++){const gl9=0.5+0.5*Math.sin(t2*2.4+k*1.7+j9*2.9);
+   g2.fillStyle='rgba(226,232,255,'+(0.35+0.55*gl9).toFixed(3)+')';
+   g2.beginPath();g2.arc(sg.x+Math.cos(k*2.7+j9*2.2)*sg.r*0.42,sg.y+Math.sin(k*1.9+j9*2.5)*sg.r*0.3,0.9+gl9*0.5,0,TAU);g2.fill();}});}
+ else if(pat==='broodsigil'){ /* HER SIGIL second pass: the widow's HOURGLASS worn in defiance - blood on dark silk, her filaments still reaching. It should look TAKEN, not doodled */
+  g2.fillStyle='rgba(26,14,32,.8)';
+  g2.beginPath();g2.ellipse(mid.x,mid.y,mid.r*0.62,mid.r*0.5,0,0,TAU);g2.fill();
+  g2.strokeStyle='rgba(200,160,255,.35)';g2.lineWidth=1;g2.stroke();
+  const hw9=mid.r*0.3,hh9=mid.r*0.36,pu9=0.8+0.2*Math.sin(t2*2.4);
+  g2.fillStyle='rgba(224,40,56,'+(0.92*pu9).toFixed(3)+')';
+  g2.beginPath();g2.moveTo(mid.x-hw9,mid.y-hh9);
+  g2.quadraticCurveTo(mid.x,mid.y-hh9*0.72,mid.x+hw9,mid.y-hh9);
+  g2.quadraticCurveTo(mid.x+hw9*0.14,mid.y-hh9*0.1,mid.x+hw9,mid.y+hh9);
+  g2.quadraticCurveTo(mid.x,mid.y+hh9*0.72,mid.x-hw9,mid.y+hh9);
+  g2.quadraticCurveTo(mid.x-hw9*0.14,mid.y+hh9*0.1,mid.x-hw9,mid.y-hh9);g2.closePath();g2.fill();
+  g2.strokeStyle='rgba(232,220,248,.5)';g2.lineWidth=0.9;
+  for(const fl9 of [[S9[0],-1],[S9[Math.min(2,S9.length-1)],1]]){const sg9=fl9[0];if(!sg9||sg9===mid)continue;
+   g2.beginPath();g2.moveTo(mid.x+fl9[1]*mid.r*0.5,mid.y-mid.r*0.2);
+   g2.quadraticCurveTo((mid.x+sg9.x)/2,(mid.y+sg9.y)/2-mid.r*0.3,sg9.x,sg9.y-sg9.r*0.24);g2.stroke();}}
 }
 function paintEye(g2,base,t2,ey){ /* THE GAZE: her eye is a CHOICE now. Anchored to the true head segment so no body type or stage can misplace it */
  if(!ey||ey==='noeye')ey='simple'; /* the Unmarked no-eye option is retired: old saves fall back to the classic gleam - every queen has a gaze */

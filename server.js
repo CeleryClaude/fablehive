@@ -29,6 +29,7 @@ function makeGame(htmlPath){
  return ctx.window.__G;
 }
 
+const HTMLCACHE={buf:null,t:0};
 function start(port,htmlPath){
  const {WebSocketServer}=require('ws');
  const HTML=htmlPath||path.join(__dirname,fs.existsSync(path.join(__dirname,'index.html'))?'index.html':'BROOD.html');
@@ -41,13 +42,20 @@ function start(port,htmlPath){
     FRESH, light meadow rather than an hours-old, overgrown one no 60Hz tick can hold. */
  function applyWild(){for(const t of SEATS){const sw=G.swarms.find(z=>z.team===t&&!z.ally);
   if(sw){if(seats[t]!==undefined){sw.bot=false;}else{sw.bot=true;delete sw.forceAim;if(t===0)sw.name='Wilder';}}}}
- function freshWorld(){G=makeGame(HTML);G.unlockAll&&G.unlockAll();G.setRoom&&G.setRoom(true);applyWild();}
+ let NEXTG=null,NEXTT=0;
+ function bakeNext(){try{NEXTG=makeGame(HTML);NEXTG.unlockAll&&NEXTG.unlockAll();NEXTG.setRoom&&NEXTG.setRoom(true);NEXTT=Date.now();}catch(e){NEXTG=null;}} /* the next meadow is BAKED while the room sleeps */
+ function freshWorld(){ /* a fresh world on JOIN used to be a full VM boot + world-gen in ONE tick (~400ms) - the join-moment ping spike. Now we serve the pre-baked one and bake a replacement in the idle that follows */
+  if(NEXTG&&Date.now()-NEXTT<20*60000){G=NEXTG;NEXTG=null;setTimeout(bakeNext,3000);}
+  else{G=makeGame(HTML);G.unlockAll&&G.unlockAll();G.setRoom&&G.setRoom(true);setTimeout(bakeNext,3000);}
+  applyWild();}
+ setTimeout(bakeNext,2500);
  applyWild();
  const httpSrv=http.createServer((req,res)=>{
   const u=(req.url||'/').split('?')[0];
   if(u==='/'||u==='/index.html'||u==='/BROOD.html'){
    res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});
-   res.end(fs.readFileSync(HTML));
+   if(!HTMLCACHE.buf||HTMLCACHE.t!==fs.statSync(HTML).mtimeMs){HTMLCACHE.buf=fs.readFileSync(HTML);HTMLCACHE.t=fs.statSync(HTML).mtimeMs;} /* the page lives in RAM: a 300KB synchronous disk read per refresh was a mid-session stall */
+   res.end(HTMLCACHE.buf);
   } else if(u==='/healthz'){ /* TELEMETRY: lag is measured here, never guessed again */
    const h=TICKS.hist.slice().sort((a,b)=>a-b);
    const p95=h.length?h[Math.min(h.length-1,(h.length*0.95)|0)]:0;
@@ -60,7 +68,8 @@ function start(port,htmlPath){
     ticks:TICKS.n,elLagMaxMs:elLag,gcCount:DIAG.gcCount,gcMaxMs:+gcMax.toFixed(0),gcTotalMs:+DIAG.gcTotalMs.toFixed(0),
     stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:DIAG.netLateMax||0,rateSkips:DIAG.rateSkips||0,
     buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
-    seatNet:Object.keys(seats).map(t9=>({t:+t9,rtt:(seats[t9]&&seats[t9]._rttS||0)|0,buf:(seats[t9]&&seats[t9].bufferedAmount||0)|0})),
+    seatNet:Object.keys(seats).map(t9=>{const w9=seats[t9],r9=(w9&&w9._rttMax||0)|0;if(w9)w9._rttMax=0;return {t:+t9,rtt:(w9&&w9._rttS||0)|0,rttMax:r9,buf:(w9&&w9.bufferedAmount||0)|0};}),
+    ver:'r10-worldbake',
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else{res.writeHead(404);res.end('the meadow has no such door');}
  });
@@ -94,7 +103,7 @@ function start(port,htmlPath){
      const a4=s9?s9.units.length:-1;
      BUYS.push({t:Date.now(),tm:team,r:(''+m.c.buy).slice(0,10),ok:a4>b4?1:0,u:a4,h:h4});if(BUYS.length>24)BUYS.shift();}
     else G.applyInput(team,m.c||{});}catch(e){}}
-   else if(m.k==='p'){const r9=+m.r||0;if(r9>0&&r9<60000)ws._rttS=(ws._rttS==null?r9:ws._rttS*0.7+r9*0.3); /* the client CONFESSES its ping; the server adapts to the pipe it cannot see (kernel/router queues hide from bufferedAmount) */
+   else if(m.k==='p'){const r9=+m.r||0;if(r9>0&&r9<60000){ws._rttS=(ws._rttS==null?r9:ws._rttS*0.7+r9*0.3);if(r9>(ws._rttMax||0))ws._rttMax=r9;} /* the client CONFESSES its ping; smoothed for control, MAX kept for the ledger (spikes between polls no longer hide) */
     try{ws.send(JSON.stringify({k:'p',t:m.t}));}catch(e){}}
   });
   ws.on('close',()=>{if(team!==null){delete seats[team];if(!Object.keys(seats).length)lastEmpty=Date.now();

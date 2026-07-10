@@ -118,10 +118,10 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
 <script>
 "use strict";
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
-let W=0,H=0,DPR=1;
+let W=0,H=0,DPR=1;const QGOV={q:1,accT:0,accN:0,worst:0}; /* ADAPTIVE QUALITY: when frames run long the game sheds pixels first and pride second - a 1000ms "ping" was often a 1000ms FRAME with the ping stuck behind it */
 let veilCv=null,veilCtx=null;
 try{veilCv=document.createElement('canvas');veilCtx=veilCv.getContext('2d');}catch(e){}
-function resize(){DPR=Math.min((('ontouchstart'in window)||((navigator&&navigator.maxTouchPoints)||0)>0)?1.75:2,window.devicePixelRatio||1); /* PHONES cap at 1.75: a 3x panel was pushing 2.25x the pixels for sharpness thumbs never see - that fill-rate goes to FEEL now */W=cv.width=innerWidth*DPR;H=cv.height=innerHeight*DPR;cv.style.width=innerWidth+'px';cv.style.height=innerHeight+'px';
+function resize(){DPR=Math.min((('ontouchstart'in window)||((navigator&&navigator.maxTouchPoints)||0)>0)?1.75:2,window.devicePixelRatio||1)*QGOV.q; /* PHONES cap at 1.75, and the QUALITY GOVERNOR scales below that when frames run long */W=cv.width=innerWidth*DPR;H=cv.height=innerHeight*DPR;cv.style.width=innerWidth+'px';cv.style.height=innerHeight+'px';
  if(veilCv){veilCv.width=W;veilCv.height=H;}}
 addEventListener('resize',resize);resize();
 addEventListener('beforeunload',()=>{try{metaSave();}catch(e){}});
@@ -4086,7 +4086,14 @@ function drawJoy(){ /* the thumb deserves an anchor: base ring at touch origin, 
   ctx.globalAlpha=0.20;ctx.strokeStyle='#ffe9c9';ctx.lineWidth=2.5*DPR;ctx.beginPath();ctx.arc(jx,jy,42*DPR,0,TAU);ctx.stroke();
   ctx.globalAlpha=0.30;ctx.fillStyle='#ffe9c9';ctx.beginPath();ctx.arc(jx+dx*DPR,jy+dy*DPR,15*DPR,0,TAU);ctx.fill();
   ctx.restore();}catch(e){}}
-function loop(){const now=performance.now();let dt=(now-last)/1000;last=now;if(dt>.05)dt=.05;
+function loop(){const now=performance.now();let dt=(now-last)/1000;last=now;
+ QGOV.accT+=dt;QGOV.accN++;if(dt>QGOV.worst)QGOV.worst=dt;
+ if(QGOV.accT>2){const avg9=QGOV.accT/Math.max(1,QGOV.accN),q0=QGOV.q; /* the GOVERNOR: sustained >26ms frames or any >200ms hitch sheds a quality step (min 50%); calm frames earn it back slowly */
+  if((avg9>0.026||QGOV.worst>0.2)&&QGOV.q>0.5)QGOV.q=Math.max(0.5,QGOV.q-0.25);
+  else if(avg9<0.015&&QGOV.worst<0.08&&QGOV.q<1)QGOV.q=Math.min(1,QGOV.q+0.125);
+  if(q0!==QGOV.q){try{resize();}catch(e){}}
+  QGOV.accT=0;QGOV.accN=0;QGOV.worst=0;}
+ if(dt>.05)dt=.05;
  const t1=performance.now();
  if(running){try{if(NET.on)netTick(dt);else step(dt);}catch(e){if(!loop._e1){loop._e1=1;console.error('sim wound:',e);}}}
  const t2=performance.now();
@@ -4096,7 +4103,7 @@ function loop(){const now=performance.now();let dt=(now-last)/1000;last=now;if(d
  const t3=performance.now();
  perfS+=t2-t1;perfD+=t3-t2;perfN++;perfT+=dt;
  if(perfT>0.5&&perfN){const pl=document.getElementById('perfLine');
-  if(pl)pl.textContent='sim '+(perfS/perfN).toFixed(1)+'ms · draw '+(perfD/perfN).toFixed(1)+'ms · '+(perfN/perfT).toFixed(0)+'fps'+((typeof NET!=='undefined'&&NET&&NET.on)?' · ping '+(NET.rtt||0)+' jit '+Math.round(NET.jit||0)+'ms':'');
+  if(pl)pl.textContent='sim '+(perfS/perfN).toFixed(1)+'ms · draw '+(perfD/perfN).toFixed(1)+'ms · '+(perfN/perfT).toFixed(0)+'fps · q'+((QGOV.q*100)|0)+'%'+((typeof NET!=='undefined'&&NET&&NET.on)?' · ping '+(NET.rtt||0)+' jit '+Math.round(NET.jit||0)+'ms':'');
   perfS=perfD=perfN=0;perfT=0;}
  requestAnimationFrame(loop);}
 
@@ -4217,7 +4224,7 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
  for(const s2 of swarms)if(!s2.dead)calcR(s2);}
 function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in the past, between two KNOWN truths */
  tnow+=dt;
- for(let i9=fx.length-1;i9>=0;i9--){const e9=fx[i9];e9.t+=dt;if(e9.t>=e9.life){fx.splice(i9,1);continue;}if(!e9.ring){e9.x+=e9.vx*dt;e9.y+=e9.vy*dt;e9.vx*=.9;e9.vy*=.9;}} /* fx lived in step() which never runs online - every ring/spark was IMMORTAL, haunting the meadow wherever it was born. Online they now age and die exactly like solo */
+ for(let i9=fx.length-1;i9>=0;i9--){const e9=fx[i9];e9.t+=dt*(QGOV.q<0.9?1.6:1);if(e9.t>=e9.life){fx.splice(i9,1);continue;}if(!e9.ring){e9.x+=e9.vx*dt;e9.y+=e9.vy*dt;e9.vx*=.9;e9.vy*=.9;}} /* fx age and die online like solo - and under the governor they burn out 1.6x faster, thinning the particle load when frames struggle */
  const MP=(swarms[0]&&swarms[0].team===NET.you&&!swarms[0].ally)?swarms[0]:null; /* IDENTITY IS SACRED: only a swarm that is PROVABLY yours is ever predicted or driven - if yours is missing a beat, you spectate that beat; you never ride a stranger */
  /* THE INTERP DELAY: was a flat 125ms for every connection. That's ~2.5x the server's 50ms send interval -
     safe margin against arrival jitter, but needlessly laggy for anyone on a fast/stable link, since this

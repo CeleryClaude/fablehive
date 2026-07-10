@@ -68,8 +68,8 @@ function start(port,htmlPath){
     ticks:TICKS.n,elLagMaxMs:elLag,gcCount:DIAG.gcCount,gcMaxMs:+gcMax.toFixed(0),gcTotalMs:+DIAG.gcTotalMs.toFixed(0),
     stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:(()=>{const v9=DIAG.netLateMax||0;DIAG.netLateMax=0;return v9;})(),rateSkips:DIAG.rateSkips||0,
     buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
-    seatNet:Object.keys(seats).map(t9=>{const w9=seats[t9],r9=(w9&&w9._rttMax||0)|0;if(w9)w9._rttMax=0;return {t:+t9,rtt:(w9&&w9._rttS||0)|0,rttMax:r9,buf:(w9&&w9.bufferedAmount||0)|0};}),
-    ver:'r11-flowers-pop',
+    seatNet:Object.keys(seats).map(t9=>{const w9=seats[t9],r9=(w9&&w9._rttMax||0)|0;if(w9)w9._rttMax=0;return Object.assign({t:+t9,rtt:(w9&&w9._rttS||0)|0,rttMax:r9,buf:(w9&&w9.bufferedAmount||0)|0},(w9&&w9._cli)||{});}),
+    ver:'r13-anchored-foragers',
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else{res.writeHead(404);res.end('the meadow has no such door');}
  });
@@ -103,7 +103,8 @@ function start(port,htmlPath){
      const a4=s9?s9.units.length:-1;
      BUYS.push({t:Date.now(),tm:team,r:(''+m.c.buy).slice(0,10),ok:a4>b4?1:0,u:a4,h:h4});if(BUYS.length>24)BUYS.shift();}
     else G.applyInput(team,m.c||{});}catch(e){}}
-   else if(m.k==='p'){const r9=+m.r||0;if(r9>0&&r9<60000){ws._rttS=(ws._rttS==null?r9:ws._rttS*0.7+r9*0.3);if(r9>(ws._rttMax||0))ws._rttMax=r9;} /* the client CONFESSES its ping; smoothed for control, MAX kept for the ledger (spikes between polls no longer hide) */
+   else if(m.k==='p'){const r9=+m.r||0;if(r9>0&&r9<60000){ws._rttS=(ws._rttS==null?r9:ws._rttS*0.7+r9*0.3);if(r9>(ws._rttMax||0))ws._rttMax=r9;}
+    ws._cli={d:(+m.d||0)|0,f:(+m.f||0)|0,q:(+m.q||0)|0,s:(+m.s||0)|0}; /* the client CONFESSES everything: ping, draw ms, fps, quality, sim - per-seat truth on the ledger */
     try{ws.send(JSON.stringify({k:'p',t:m.t}));}catch(e){}}
   });
   ws.on('close',()=>{if(team!==null){delete seats[team];if(!Object.keys(seats).length)lastEmpty=Date.now();

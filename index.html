@@ -4066,9 +4066,11 @@ function hud(){
  +'<span style="font-size:12px">'+st+'</span>';
  const rank=[];
  const seen={};
+ const myT9=(typeof NET!=='undefined'&&NET.on)?NET.you:0; /* the crown follows YOUR seat, not seat zero */
  for(const s of swarms){if(s.dead||seen[s.team])continue;seen[s.team]=1;
   const main2=s.ally?mainOf(s.team):s;
-  rank.push({name:main2?main2.name:s.name,col:(main2||s).col,n:teamSize(s.team),meF:s.team===0});}
+  let n9=0;for(const z9 of swarms)if(z9.team===s.team&&!z9.dead)n9+=(z9._sc!=null?z9._sc:z9.units.length); /* header truth beats culled lists */
+  rank.push({name:main2?main2.name:s.name,col:(main2||s).col,n:n9,meF:s.team===myT9});}
  rank.sort((a,b)=>b.n-a.n);
  {const lb9='<b style="opacity:.6;font-size:11px">BROODS · souls</b><br>'+rank.map((r,i)=>
   '<span class="'+(r.meF?'me':'')+'"><span style="color:'+r.col+'">●</span> '+r.name+' — '+r.n+'</span>').join('<br>');
@@ -4160,15 +4162,19 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
   while(NET.buf.length>14)NET.buf.shift();}
  goldT=F.g?3:-1;
  if(F.gv){const og9=groves,M0=swarms&&swarms[0];
-  groves=F.gv.map(g=>({x:g[0],y:g[1],kind:GKIND[g[2]],sp:g[3],amt:g[4],max:g[5],
+  const ng9=F.gv.map(g=>({x:g[0],y:g[1],_tx:g[0],_ty:g[1],kind:GKIND[g[2]],sp:g[3],amt:g[4],max:g[5],
   rock:!!(g[6]&1),rich:!!(g[6]&2),grand:!!(g[6]&4),gild:!!(g[6]&8),mother:!!(g[6]&16),web:!!(g[6]&32),lumen:!!(g[6]&64),closed:!!(g[6]&128),gilt:!!(g[6]&256),openT:g[7],surge:0,vx:0,vy:0}));
-  if(og9&&og9.length&&M0&&!M0.dead){let pp9=0; /* THE PAYOUT IS VISIBLE ONLINE: a flower that was in view last beat and gone this beat POPPED on the server - burst+ring+sound here too, not a silent deletion. (Beyond ~2200px it merely left the AoI - no fx for horizon bookkeeping) */
-   for(const g0 of og9){if(pp9>=4)break;
-    if(d2(g0.x,g0.y,M0.x,M0.y)>2200*2200)continue;
-    let fnd9=false;for(const gn of groves){if(Math.abs(gn.x-g0.x)<3&&Math.abs(gn.y-g0.y)<3){fnd9=true;break;}}
-    if(!fnd9){pp9++;
+  if(og9&&og9.length){ /* FLOWERS GLIDE: groves DRIFT server-side but were SNAPPED at 10Hz here - a forager tracking the true position hovered beside the lagging image of her own bloom. Match old bodies to new truths; frames set targets, the render loop eases */
+   for(const gn of ng9){let bq9=900,bo9=null; /* 30px matching radius */
+    for(const g0 of og9){if(g0._used)continue;const q9=(g0.x-gn._tx)*(g0.x-gn._tx)+(g0.y-gn._ty)*(g0.y-gn._ty);if(q9<bq9){bq9=q9;bo9=g0;}}
+    if(bo9){bo9._used=1;gn.x=bo9.x;gn.y=bo9.y;gn.surge=bo9.surge||0;}}
+   if(M0&&!M0.dead){let pp9=0; /* THE PAYOUT stays VISIBLE: an unmatched old flower near you POPPED on the server */
+    for(const g0 of og9){if(g0._used||pp9>=4)continue;
+     if(d2(g0.x,g0.y,M0.x,M0.y)>2200*2200)continue;
+     pp9++;
      if(fx.length<380){addP(g0.x,g0.y,'#ffd7e8',12,170);addRing(g0.x,g0.y,(g0.gild||g0.gilt)?'#ffdf7e':'#ffd7e8',g0.grand?80:46);}
-     if(d2(g0.x,g0.y,M0.x,M0.y)<1200*1200)sfx(g0.grand?'gild':'pop');}}}}
+     if(d2(g0.x,g0.y,M0.x,M0.y)<1200*1200)sfx(g0.grand?'gild':'pop');}}}
+  groves=ng9;}
  if(F.dr)drops=F.dr.map(d=>({x:d[0],y:d[1],amt:d[2],t:9}));
  if(F.sh)shots=F.sh.map(x=>({x:x[0],y:x[1],vx:x[2],vy:x[3],t:1,team:-9,dmg:0,col:'#8fe0c0'}));
  if(F.wp)wasps=F.wp.map(w=>({x:w[0],y:w[1],vx:w[2],vy:w[3],trio:w[4],hp:60,atk:0,wa:0,ax:w[0],ay:w[1]}));
@@ -4210,7 +4216,7 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
   if(!m9){m9=NET.mirror[w9.id]={nid:w9.id,team:w9.i,bot:true,ally:!!w9.a,x:w9.x,y:w9.y,vx:0,vy:0,tx:w9.x,ty:w9.y,
    maxHp:300,units:[],R:36,war:null,exposed:false,prot:0,gulp:0,flash:0,hitT:0,recalling:false,honey:0,hp:300,
    cosEq:null,warLoss:0,sayT:0,stompCd:0,expoT:0,lost:0,lostT:0,slots:{}};}
-  m9.dead=false;m9.prot=w9.p?1:0;
+  m9.dead=false;m9.prot=w9.p?1:0;if(w9.sc!=null)m9._sc=w9.sc;
   if(w9.n!==undefined){m9.name=w9.n;m9.col=w9.c;m9.col2=w9.c2||null;m9.cosEq=w9.q||null;} /* identity rides the full beats; between them, keep the last known */
   {const hpd9=(m9.hp!=null&&w9.h<m9.hp-0.5); /* TRUTH OVER FLAGS: a hit is an hp DROP, measured before the mirror updates. The flag-edge version re-armed screen-shake through every brawl - that was the mystery VIBRATION. Shake is gone (solo never shook for ordinary hits); white flash + sparks land exactly where damage landed */
    if((hpd9||w9.f)&&!(m9.flash>0))m9.flash=0.16;
@@ -4250,6 +4256,13 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
  for(const s2 of swarms)if(!s2.dead)calcR(s2);}
 function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in the past, between two KNOWN truths */
  tnow+=dt;
+ for(const g9 of groves)if(g9._tx!=null){const k9=Math.min(1,10*dt);g9.x+=(g9._tx-g9.x)*k9;g9.y+=(g9._ty-g9.y)*k9;} /* drifting blooms glide to their truths */
+ {const M0=swarms&&swarms[0]; /* THE SHROUD LIFTS ONLINE: geodeIn/geodeA lived in step() - solo-only, so entering a grotto online kept showing the OUTSIDE. Same law, run here */
+  if(M0&&!M0.dead&&M0.team===NET.you&&!M0.ally){
+   if(geodeIn){if(d2(M0.x,M0.y,geodeIn.x,geodeIn.y)>(geodeIn.r*1.07)**2)geodeIn=null;}
+   else{for(const g9 of grottos){if(d2(M0.x,M0.y,g9.x,g9.y)<(g9.r*0.97)**2){geodeIn=g9;break;}}}
+  } else geodeIn=null;
+  geodeA+=((geodeIn?1:0)-geodeA)*Math.min(1,6*dt);}
  if(elder&&elder._net){elder._age=(elder._age||0)+dt;const ax9=Math.min(elder._age,0.22);
   const px9=(elder._tx!=null?elder._tx:elder.x)+(elder._tvx||0)*ax9,py9=(elder._ty!=null?elder._ty:elder.y)+(elder._tvy||0)*ax9;
   const k9=Math.min(1,10*dt);elder.x+=(px9-elder.x)*k9;elder.y+=(py9-elder.y)*k9;
@@ -4390,7 +4403,7 @@ function netSnapshot(slim9){ /* THE WIRE: one compact frame of truth (server -> 
  const S9={t:+tnow.toFixed(2),g:goldT>=0?1:0,sw:[]};
  for(const s of swarms){
   if(s.dead){S9.sw.push({id:s.nid,i:s.team,a:s.ally?1:0,d:1});continue;}
-  {const o9={id:s.nid,i:s.team,p:s.prot>0?1:0,
+  {const o9={id:s.nid,i:s.team,p:s.prot>0?1:0,sc:s.units.length, /* TRUE soul-count in the header: AoI culls far unit LISTS, and the leaderboard was counting those empty lists - "everybody is 0 except me" */
    x:s.x|0,y:s.y|0,h:s.hp|0,H:s.honey|0,a:s.ally?1:0,y2:s.sayT>0?s.say:0,
    f:(s.flash>0||s.hitT>0)?1:0,w:(s.war&&s.war.nid)||0, /* COMBAT ON THE WIRE: the queen's hit-flash and WHO she wars with - the server has been fighting all along, the client just could not SEE it */
    u:s.units.map(u=>[u.x|0,u.y|0,ROLE_ID[u.role]||0,u.hp|0,(u.load||0)|0,u.uid||0,((u.atk>0?1:0)|(u.flash>0?2:0))])};

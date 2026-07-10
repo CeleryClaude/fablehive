@@ -248,7 +248,8 @@ let META={xp:0,skin:0,nectar:0,royal:false,sub:false,seasonXp:0,claimedF:[],clai
 try{const m=(typeof localStorage!=='undefined')&&localStorage.getItem('brood_meta');if(m){const p=JSON.parse(m);META=Object.assign(META,p);META.owned=p.owned||{};META.eq=Object.assign({pattern:'plain',crown:'none',trail:'none',wings:'standard',body:'sleek',tail:'notail',fleet:'plainfleet',aura:'noaura',plate:'noplate'},p.eq||{});META.claimedF=p.claimedF||[];META.claimedR=p.claimedR||[];}}catch(e){}
 function metaSave(){try{if(typeof localStorage!=='undefined')localStorage.setItem('brood_meta',JSON.stringify(META));}catch(e){}}
 let XP_RATE=0.4; /* slow the climb: quick first joys, a real road to royalty (single knob, tune me) */
-function gainXP(n2){META.xp+=n2*XP_RATE;}
+let RUNXP=0; /* what THIS flight has earned - so you know when a trip to the nest is worth it */
+function gainXP(n2){META.xp+=n2*XP_RATE;RUNXP+=n2*XP_RATE;}
 function trophy(id,msg){ /* achievements should FEEL like achievements */
  if(META.owned[id])return;
  META.owned[id]=true;metaSave();
@@ -402,6 +403,9 @@ const ITEMS=[
  {id:'hornedcasque',cat:'crown',n:'Horned Casque',xp:2200,d:'chitin crowned with recurved horns'},
  {id:'dreadhelm', cat:'crown',  n:'Dreadhelm',   xp:4500,royal:true,d:'the slit still remembers the forge'},
  {id:'eyestalks', cat:'crown',  n:'Snail Stalks',xp:600,  d:'two soft periscopes, always curious'},
+ {id:'voidtear',  cat:'wings',  n:'Torn Void',   xp:2100, d:'membranes of missing light, ragged at the edges'},
+ {id:'sickle',    cat:'wings',  n:'Reaper'+String.fromCharCode(39)+'s Sickles',xp:2700,d:'they do not flutter - they loom'},
+ {id:'deathmoth', cat:'wings',  n:'Deathmoth',   xp:3600,royal:true,d:'beautiful the way omens are'},
  {id:'spidereyes',cat:'crown',  n:'Hunter'+String.fromCharCode(39)+'s Cluster',xp:1400,d:'six glossy reasons to be feared'},
  {id:'millipede', cat:'plate',  n:'Millipede Mail',xp:1700,d:'a hundred little legs, all marching'},
  {id:'moltaura', cat:'aura',   n:'Apex Shimmer',xp:-1,  d:'reach 120 souls once — wear the shimmer of the great'},
@@ -2464,7 +2468,7 @@ const GLYPH={pattern:'◐',crown:'♛',trail:'✦',wings:'🦋',body:'🐝',tail
 function itemLabel(id){const it=itemById(id);return it?it.n:id;}
 function showHome(){
  document.getElementById('over').style.display='none';
- document.getElementById('xpTxt').innerHTML='<b style="color:#ffd75e">✨ '+Math.floor(META.xp)+'</b> <span style="opacity:.6;font-size:12px">nest xp — every treasure is earnable · 👑 sub unlocks all</span>'; /* royal NECTAR display retired by decree: the ship model is xp/achievements + the $5 sub, no third currency on screen */
+ document.getElementById('xpTxt').innerHTML='<b style="color:#ffd75e">✨ '+Math.floor(META.xp)+'</b>'+(typeof RUNXP!=='undefined'&&RUNXP>=1?' <b style="color:#ffe9a0;font-size:13px">(+'+Math.floor(RUNXP)+' this flight)</b>':'')+' <span style="opacity:.6;font-size:12px">nest xp — every treasure is earnable · 👑 sub unlocks all</span>'; /* the FLIGHT's earnings shown beside the hoard - you can finally tell when the trip to the nest was worth it */
  const next=SKINS.find(S=>META.xp<S.xp);
  const fill=document.getElementById('xpfill'),nx=document.getElementById('xpNext');
  const upcoming=ITEMS.filter(it=>it.xp>0&&!earnOnly(it)&&META.xp<it.xp).sort((a,b)=>a.xp-b.xp)[0];
@@ -2562,7 +2566,7 @@ document.getElementById('go').onclick=()=>{
  const nm=((document.getElementById('nameIn')||{}).value||'').trim().slice(0,16)||'Queen';
  try{META.name=nm;metaSave();}catch(e){}
  document.getElementById('start').style.display='none';
- barEl.style.display='flex';document.getElementById('gear').style.display='block';resumeAudio();setup();renderBar();running=true;
+ barEl.style.display='flex';document.getElementById('gear').style.display='block';resumeAudio();RUNXP=0;setup();renderBar();running=true; /* a new flight starts its own ledger */
  if(WS_URL&&!NET.on)NET.connect(WS_URL,nm);
  document.getElementById('hint').innerHTML=isTouch?'drag to fly · tap your queen to recall · buttons below':'WASD / arrows / hold mouse · 1–6 spawn · Q split · E recall · M mute';};
 
@@ -2653,7 +2657,34 @@ const FLEETS={plainfleet:null, /* ROLE-AWARE ARMOUR: each unit type wears a DIFF
  bronzefleet:{bug:true,motif:'spike'}};
 function paintWings(g2,base,t2,style){
  const wf=Math.sin(t2*38)*0.5+0.5;
- if(style==='glass'){
+ if(style==='voidtear'){ /* TORN VOID: tattered membranes of missing light, edges breathing */
+  for(const sg of [-1,1]){
+   g2.fillStyle='rgba(8,4,14,'+(0.72+0.15*wf)+')';
+   g2.beginPath();g2.moveTo(-base*0.05,sg*base*0.5);
+   g2.quadraticCurveTo(-base*0.5,sg*base*1.3,-base*1.25,sg*base*1.15); /* the leading sweep */
+   g2.lineTo(-base*1.05,sg*base*0.9);g2.lineTo(-base*1.3,sg*base*0.75); /* torn */
+   g2.lineTo(-base*0.95,sg*base*0.55);g2.lineTo(-base*1.1,sg*base*0.35); /* torn again */
+   g2.quadraticCurveTo(-base*0.55,sg*base*0.25,-base*0.05,sg*base*0.5);g2.closePath();g2.fill();
+   g2.strokeStyle='rgba(122,94,160,'+(0.35+0.3*wf)+')';g2.lineWidth=1;g2.stroke();}
+ }else if(style==='sickle'){ /* SCYTHE WINGS: two bone-dark blades, recurved - they do not flutter, they LOOM */
+  for(const sg of [-1,1]){
+   g2.fillStyle='rgba(26,20,30,.9)';g2.strokeStyle='#4a3a52';g2.lineWidth=1.1;
+   g2.beginPath();g2.moveTo(-base*0.1,sg*base*0.45);
+   g2.quadraticCurveTo(-base*0.35,sg*base*(1.5+0.12*wf),-base*1.55,sg*base*1.05); /* out and BACK like a scythe */
+   g2.quadraticCurveTo(-base*0.9,sg*base*0.85,-base*0.35,sg*base*0.4);g2.closePath();g2.fill();g2.stroke();
+   g2.strokeStyle='rgba(200,180,220,.35)';g2.lineWidth=0.8;
+   g2.beginPath();g2.moveTo(-base*0.3,sg*base*0.6);g2.quadraticCurveTo(-base*0.6,sg*base*1.15,-base*1.4,sg*base*1.0);g2.stroke();} /* the edge catches what little light dares */
+ }else if(style==='deathmoth'){ /* DEATHMOTH: broad dark spans, one pale sigil-eye each - beautiful the way omens are */
+  for(const sg of [-1,1]){
+   g2.fillStyle='rgba(30,24,26,'+(0.82+0.1*wf)+')';
+   g2.beginPath();g2.ellipse(-base*0.42,sg*base*0.95,base*1.0,base*0.44,-sg*0.38,0,TAU);g2.fill();
+   g2.strokeStyle='rgba(90,70,60,.6)';g2.lineWidth=1.2;g2.stroke();
+   g2.fillStyle='rgba(232,224,204,'+(0.5+0.2*wf)+')';
+   g2.beginPath();g2.ellipse(-base*0.52,sg*base*0.98,base*0.17,base*0.11,-sg*0.38,0,TAU);g2.fill();
+   g2.fillStyle='rgba(30,24,26,.9)';g2.beginPath();g2.arc(-base*0.52,sg*base*0.98,base*0.05,0,TAU);g2.fill(); /* the eye of the omen */
+   g2.strokeStyle='rgba(90,70,60,.4)';g2.lineWidth=0.8;
+   g2.beginPath();g2.moveTo(-base*0.15,sg*base*0.7);g2.lineTo(-base*1.2,sg*base*1.2);g2.stroke();}
+ }else if(style==='glass'){
   g2.fillStyle='rgba(235,250,255,'+(0.42+0.34*wf)+')';
   g2.beginPath();g2.ellipse(-base*0.38,-base*0.92,base*0.92,base*0.3,-0.42,0,TAU);g2.fill();
   g2.beginPath();g2.ellipse(-base*0.38,base*0.92,base*0.92,base*0.3,0.42,0,TAU);g2.fill();
@@ -4232,7 +4263,7 @@ function hud(){
  hud._dispH=hud._dispH===undefined?M.honey:hud._dispH+(M.honey-hud._dispH)*0.22; /* the odometer rolls */
  const shown=Math.floor(hud._dispH);
  const hb=Math.floor(M.honey)-(hud._lastH||0)>=15?' class="bnc"':'';hud._lastH=Math.floor(M.honey);
- hudEl.innerHTML='<b'+hb+' style="color:#ffd75e">🍯 '+shown+'</b>'+(comboN>=4?' <b style="color:#ff9ad0;font-size:16px">×'+comboN+'</b>':'')+' <span style="opacity:.5;font-size:11px">/ '+honeyCap(M)+' · carried in forager bellies</span><br>'
+ hudEl.innerHTML='<b'+hb+' style="color:#ffd75e">🍯 '+shown+'</b>'+(comboN>=4?' <b style="color:#ff9ad0;font-size:16px">×'+comboN+'</b>':'')+' <span style="opacity:.5;font-size:11px">/ '+honeyCap(M)+' · carried in forager bellies</span>'+(RUNXP>=1?' <span style="opacity:.75;font-size:11px;color:#ffe9a0">· ✨+'+Math.floor(RUNXP)+' this flight</span>':'')+'<br>'
  +'<span style="font-size:15px;font-weight:bold">'+total+'</span> <span style="opacity:.6;font-size:12px">souls · peak '+peak+'</span> <span style="opacity:.55;font-size:11px">· kin '+allies+'/'+SPLIT_MAX+' · ✨'+Math.floor(META.xp)+'</span><br>'
  +'<span style="font-size:12px">'+st+'</span>';
  const rank=[];

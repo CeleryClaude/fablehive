@@ -4108,7 +4108,7 @@ const NET={on:false,ws:null,you:0,mirror:{},aimT:0,deadShown:false,rtt:0,pingT:0
   NET._url=url;NET._name=name;
   const W9=new WebSocket(url);NET.ws=W9;
   W9.onopen=()=>{W9.send(JSON.stringify({k:'join',n:(name||'Queen').slice(0,16),c:((SKINS[META.skin]||{}).c)||0,c2:((SKINS[META.skin]||{}).c2)||0,q:META.eq||0})); /* she arrives DRESSED: colour + wardrobe ride the join, the server wears them into every frame */
-   clearInterval(NET._pi);NET._pi=setInterval(()=>{try{if(NET.ws&&NET.ws.readyState===1)NET.ws.send(JSON.stringify({k:'p',t:Date.now()}));}catch(e){}},2000);}; /* the PULSE rides a real timer, not the render loop - it beats even when the phone dims */
+   clearInterval(NET._pi);NET._pi=setInterval(()=>{try{if(NET.ws&&NET.ws.readyState===1)NET.ws.send(JSON.stringify({k:'p',t:Date.now(),r:(NET.rtt||0)|0}));}catch(e){}},2000);}; /* the PULSE rides a real timer, not the render loop - it beats even when the phone dims */
   W9.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}
    if(m.k==='init'){NET.you=m.you;NET.on=true;NET._rt=0;netApplyWorld(m.world);renderBar();toast('CONNECTED - realm '+m.you,'#9fd8ff',3);} /* refresh the bar THE MOMENT we (re)connect so tiers unlock instantly, never a stale 'at X souls' after a laggy reconnect */
    else if(m.k==='f')netApplyFrame(m);

@@ -60,10 +60,13 @@ function start(port,htmlPath){
     ticks:TICKS.n,elLagMaxMs:elLag,gcCount:DIAG.gcCount,gcMaxMs:+gcMax.toFixed(0),gcTotalMs:+DIAG.gcTotalMs.toFixed(0),
     stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:DIAG.netLateMax||0,rateSkips:DIAG.rateSkips||0,
     buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
+    seatNet:Object.keys(seats).map(t9=>({t:+t9,rtt:(seats[t9]&&seats[t9]._rttS||0)|0,buf:(seats[t9]&&seats[t9].bufferedAmount||0)|0})),
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else{res.writeHead(404);res.end('the meadow has no such door');}
  });
- const wss=new WebSocketServer({server:httpSrv});
+ const wss=new WebSocketServer({server:httpSrv,maxPayload:1<<20,
+  perMessageDeflate:{threshold:600,concurrencyLimit:4, /* THE GREAT COMPRESSION: JSON frames are digit-soup with identical keys every beat - a shared deflate window turns 196KB/s into ~44KB/s per client (probe-measured 4.5x). Level 1: the CPU cost is ~1.5ms/frame, the WiFi cost of NOT doing it was the whole ms hellhole */
+   zlibDeflateOptions:{level:1,memLevel:7}}});
  wss.on('connection',ws=>{
   try{ws._socket&&ws._socket.setNoDelay&&ws._socket.setNoDelay(true);}catch(e){} /* no Nagle: frames leave the MOMENT they exist */
   let team=null;
@@ -91,7 +94,8 @@ function start(port,htmlPath){
      const a4=s9?s9.units.length:-1;
      BUYS.push({t:Date.now(),tm:team,r:(''+m.c.buy).slice(0,10),ok:a4>b4?1:0,u:a4,h:h4});if(BUYS.length>24)BUYS.shift();}
     else G.applyInput(team,m.c||{});}catch(e){}}
-   else if(m.k==='p'){try{ws.send(JSON.stringify({k:'p',t:m.t}));}catch(e){}}
+   else if(m.k==='p'){const r9=+m.r||0;if(r9>0&&r9<60000)ws._rttS=(ws._rttS==null?r9:ws._rttS*0.7+r9*0.3); /* the client CONFESSES its ping; the server adapts to the pipe it cannot see (kernel/router queues hide from bufferedAmount) */
+    try{ws.send(JSON.stringify({k:'p',t:m.t}));}catch(e){}}
   });
   ws.on('close',()=>{if(team!==null){delete seats[team];if(!Object.keys(seats).length)lastEmpty=Date.now();
    const s=G.swarms.find(z=>z.team===team&&!z.ally);
@@ -120,10 +124,11 @@ function start(port,htmlPath){
   {const nn=Date.now(),gp=nn-_lastNet;if(gp>66&&gp>(DIAG.netLateMax||0))DIAG.netLateMax=gp;_lastNet=nn;} /* how late do net beats actually run? */
   let base;try{base=(fN++%3===0)?G.netDyn():G.netDynLite();}catch(e){return;}
   for(const t in seats){const _w=seats[t];if(!_w)continue;
-   const _b0=_w.bufferedAmount||0; /* GRACEFUL DEGRADATION: a strained pipe gets FEWER, LIGHTER beats instead of falling off the 64KB silence cliff. 16KB backed up -> 15Hz; 40KB -> 10Hz; and past 8KB, OTHER swarms' unit lists ride every second beat only (headers+own troops always flow) */
-   if(_b0>40960&&(fN%3)){DIAG.rateSkips=(DIAG.rateSkips||0)+1;continue;}
-   if(_b0>16384&&(fN%2)){DIAG.rateSkips=(DIAG.rateSkips||0)+1;continue;}
-   const _diet=_b0>8192&&(fN%2===1);
+   const _b0=_w.bufferedAmount||0,_rt0=_w._rttS||0; /* GRACEFUL DEGRADATION: strain is a backed-up buffer OR a confessed high ping (bufferbloat queues in the router where bufferedAmount cannot see). Strained pipes get FEWER, LIGHTER beats until the ping heals - a crude congestion controller, not a cliff */
+   const _lvl=(_b0>40960||_rt0>340)?2:(_b0>16384||_rt0>170)?1:0;
+   if(_lvl===2&&(fN%3)){DIAG.rateSkips=(DIAG.rateSkips||0)+1;continue;}
+   if(_lvl===1&&(fN%2)){DIAG.rateSkips=(DIAG.rateSkips||0)+1;continue;}
+   const _diet=(_lvl>0||_b0>8192)&&(fN%2===1);
    let f;
    try{
     const me9=G.swarms.find(z=>z.team===+t&&!z.ally);
@@ -136,6 +141,7 @@ function start(port,htmlPath){
       if(dx*dx+dy*dy>=AOI2)return {id:w.id,i:w.i,n:w.n,c:w.c,c2:w.c2,q:w.q,p:w.p,x:w.x,y:w.y,h:w.h,H:w.H,a:w.a,y2:w.y2,f:w.f,w:w.w,u:[]}; /* far swarm: header stays (minimap, war arrows), units stay home */
       if(_diet)return {id:w.id,i:w.i,n:w.n,c:w.c,c2:w.c2,q:w.q,p:w.p,x:w.x,y:w.y,h:w.h,H:w.H,a:w.a,y2:w.y2,f:w.f,w:w.w}; /* diet beat: u OMITTED (not emptied) - the client keeps its bodies */
       return w;});
+     if(o.gv)o.gv=o.gv.filter(g9=>{const dx=g9[0]-qx,dy=g9[1]-qy;return dx*dx+dy*dy<AOI2;}); /* groves were HALF the full frame (5.6KB of 10.9KB at 131 souls) - beyond the horizon they are pure invisible bandwidth */
      if(o.dr)o.dr=o.dr.filter(d9=>{const dx=d9[0]-qx,dy=d9[1]-qy;return dx*dx+dy*dy<AOI2;});
      if(o.sh)o.sh=o.sh.filter(d9=>{const dx=d9[0]-qx,dy=d9[1]-qy;return dx*dx+dy*dy<AOI2;});
      if(o.wp)o.wp=o.wp.filter(d9=>{const dx=d9[0]-qx,dy=d9[1]-qy;return dx*dx+dy*dy<AOI2;});

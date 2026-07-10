@@ -238,7 +238,7 @@ const EVOS=[
  {at:40,kind:'unlock',opts:['armourer'],label:'ARMOURERS'},
  {at:60,kind:'unlock',opts:['titan'],label:'TITANS'}
 ];
-const TUNE={qspd:224,qmass:0.12,qacc:8,zoom:1,zease:0.05,look:0.3,camease:0.09,honey:1}; /* THE TUNING BENCH — live feel knobs; press \\ in-game, drag, COPY, send me the numbers */
+const TUNE={qspd:224,qmass:0.12,qacc:8,zoom:1,zease:0.05,look:0.3,camease:0.09,honey:1}; /* FEEL CONSTANTS — the old tuning-bench panel is gone; these are its final numbers, inlined and law */
 let SPLIT_MAX=3;
 let SOUL_CAP=100;let NPLAY=1;/* live human players in the room; 1 offline. Drives caps+costs. */ /* THE MUSTER LIMIT (58): brought DOWN from 150 - still comfortably past every unlock (titans 60, stage-3 70) so nothing is ever locked out, but a leaner ceiling means more dogfights and fewer laggy deathmatches. Split to grow past it as more queens, not one bloated swarm a 60Hz tick can't hold. */
 /* meta (cosmetics only, ever — and EVERYTHING earnable with ✨: Royal Nectar only skips the grind) */
@@ -1011,8 +1011,8 @@ cv.addEventListener('touchstart',e=>{e.preventDefault();const t=e.changedTouches
  const wx=cam.x+(t.clientX*DPR-W/2)/cam.z,wy=cam.y+(t.clientY*DPR-H/2)/cam.z;
  if(d2(wx,wy,me().x,me().y)<40*40){recallAll(0);return;}
  input.joy={ox:t.clientX,oy:t.clientY,dx:0,dy:0,id:t.identifier};resumeAudio();},{passive:false});
-cv.addEventListener('touchmove',e=>{e.preventDefault();if(!input.joy)return;for(const t of e.changedTouches)if(t.identifier===input.joy.id){input.joy.dx=t.clientX-input.joy.ox;input.joy.dy=t.clientY-input.joy.oy;}},{passive:false});
-function tEnd(e){if(!input.joy)return;for(const t of e.changedTouches)if(t.identifier===input.joy.id)input.joy=null;}
+cv.addEventListener('touchmove',e=>{e.preventDefault();if(!input.joy)return;for(const t of e.changedTouches)if(t.identifier===input.joy.id){input.joy.dx=t.clientX-input.joy.ox;input.joy.dy=t.clientY-input.joy.oy;if(Math.hypot(input.joy.dx,input.joy.dy)>14)input.joy.moved=true;}},{passive:false});
+function tEnd(e){if(!input.joy)return;for(const t of e.changedTouches)if(t.identifier===input.joy.id){window._dragTap=!!input.joy.moved;input.joy=null;}}
 cv.addEventListener('touchend',tEnd);cv.addEventListener('touchcancel',tEnd);
 cv.addEventListener('click',e=>{const wx=cam.x+(e.clientX*DPR-W/2)/cam.z,wy=cam.y+(e.clientY*DPR-H/2)/cam.z;
  if(d2(wx,wy,me().x,me().y)<40*40)recallAll(0);});
@@ -1028,7 +1028,7 @@ cv.addEventListener('contextmenu',e=>{e.preventDefault();
 let lastTap=0,lastTX=0,lastTY=0;
 cv.addEventListener('touchstart',e=>{const t=e.changedTouches[0];if(!t)return;
  const n8=Date.now();
- if(n8-lastTap<320&&Math.abs(t.clientX-lastTX)<40&&Math.abs(t.clientY-lastTY)<40){
+ if(n8-lastTap<300&&!window._dragTap&&Math.abs(t.clientX-lastTX)<40&&Math.abs(t.clientY-lastTY)<40){ /* a STEER is not a wish to split: any drag in the last tap cancels the double-tap split, so thumbs can fly without shedding kin */
   const wx=cam.x+(t.clientX*DPR-W/2)/cam.z,wy=cam.y+(t.clientY*DPR-H/2)/cam.z;
   if(d2(wx,wy,me().x,me().y)>60*60)splitToward(wx,wy);}
  lastTap=n8;lastTX=t.clientX;lastTY=t.clientY;},{passive:true});
@@ -2361,8 +2361,8 @@ function doAct(a){
  else if(a==='recall'){act({recall:1});if(NET.on)sfx('recall');}
  else if(a.indexOf('unlock:')===0)chooseEvo(a.slice(7));
  else if(a.indexOf('buy:')===0){const role=a.slice(4);
-  if(NET.on){act({buy:role});r3=!!(M9&&M9.honey>=recruitCost(M9,role));
-   if(r3){sfx('buy');if(M9)addRing(M9.x,M9.y,(ROLES[role]||{}).col||'#ffd75e',24);}} /* OPTIMISTIC FEEL: the click lands with sound+ring NOW; the laggy wire just catches up (offline already gets this from the sim, online used to get nothing) */
+  if(NET.on){act({buy:role});r3=!!(M9&&!M9.dead&&M9.honey>=recruitCost(M9,role)&&M9.units.length<soulCap()&&canBuy(role));
+   if(r3){sfx('buy');if(M9)addRing(M9.x,M9.y,(ROLES[role]||{}).col||'#ffd75e',24);}else{sfx('full');}} /* OPTIMISTIC but HONEST: ring+sound only when the server will really say yes (honey AND muster cap AND unlock) - a promise the wire can keep. Denials thunk instead of ghost-ringing */
   else r3=buy(me(),role);}
  resumeAudio();return r3;
 }
@@ -2496,7 +2496,7 @@ function showHome(){
   requestAnimationFrame(mirrorLoop);}
 }
 document.getElementById('again').onclick=()=>{document.getElementById('over').style.display='none';
- if(NET.on){NET.cmd({respawn:1});}else{const M=me();M.respawn=0;reviveSwarm(M);}running=true;};
+ if(NET.on){NET.cmd({respawn:1});setTimeout(()=>{NET.deadShown=false;},1600);}else{const M=me();M.respawn=0;reviveSwarm(M);}running=true;}; /* online: if the wire dropped the plea, the overlay returns in 1.6s to ask again - never a dead queen staring at a hidden door */
 document.getElementById('homeBtn').onclick=showHome;
 document.getElementById('nestBtn').onclick=()=>{document.getElementById('start').style.display='none';nestFrom='start';showHome();};
 let nestFrom='over';
@@ -4142,27 +4142,35 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
    cosEq:null,warLoss:0,sayT:0,stompCd:0,expoT:0,lost:0,lostT:0,slots:{}};}
   m9.dead=false;m9.name=w9.n;m9.col=w9.c;m9.col2=w9.c2||null;m9.cosEq=w9.q||null;m9.prot=w9.p?1:0;
   m9.tx=w9.x;m9.ty=w9.y;m9.hp=w9.h;m9.honey=w9.H;
+  if(w9.f&&!(m9.flash>0))m9.flash=0.16; /* her hit lands white on screen, like solo */
   if(w9.y2){m9.say=w9.y2;m9.sayT=1.2;}
   const uu=w9.u||[];
   const old9=m9.uById||new Map(),nu9=[],nb9=new Map();
   for(let j=0;j<uu.length;j++){const t9=uu[j];const uid=t9[5];
    const role=ROLE_BY_ID[t9[2]]||'forager';const R9=ROLES[role];
    let u=old9.get(uid);
-   if(!u||u.role!==role)u={uid,role,x:t9[0],y:t9[1],tx:t9[0],ty:t9[1],vx:0,vy:0,r:R9.r,col:R9.col,shape:R9.shape,spd:R9.spd,dmg:R9.dmg,mass:R9.mass,
+   if(!u||u.role!==role){const fresh9=!u&&old9.size>0&&w9.i===NET.you&&!w9.a;
+    u={uid,role,x:t9[0],y:t9[1],tx:t9[0],ty:t9[1],vx:0,vy:0,r:R9.r,col:R9.col,shape:R9.shape,spd:R9.spd,dmg:R9.dmg,mass:R9.mass,
     maxHp:R9.hp,hp:t9[3],load:t9[4],seed:(uid*2.39)%TAU,zeal:1,slot:j,_fi:j,_gi:j,braced:false,aura:false,
     atk:0,flash:0,slow:0,fat:0,mend:0,wanA:0,wanV:1,per:false,sig:2,sigT:0,cl:0,home:false,load2:0};
+    if(fresh9&&typeof addRing==='function')addRing(u.x,u.y,R9.col,20);} /* the recruit POPS the moment truth delivers her - the buy-click ring was the promise, this is the arrival */
    u.tx=t9[0];u.ty=t9[1];u.hp=t9[3];u.load=t9[4];u.slot=j;u._fi=j;u._gi=j;
+   {const cb9=t9[6]||0; /* combat bits: rising edge arms the timer, netTick decays it - lunges and hit-flashes render online now */
+    if((cb9&1)&&!(u.atk>0))u.atk=0.3;
+    if((cb9&2)&&!(u.flash>0))u.flash=0.14;}
    nu9.push(u);nb9.set(uid,u);}
   m9.units=nu9;m9.uById=nb9;
   seen[w9.id]=1;}
  for(const id in NET.mirror)if(!seen[id]&&!NET.mirror[id].dead)NET.mirror[id].dead=true;
+ for(const w9 of F.sw){const m8=NET.mirror[w9.id]; /* SECOND PASS: link wars by nid once every mirror exists - the war drums, the danger vignette and the HUD arrow all wake up online */
+  if(m8)m8.war=(w9.w&&NET.mirror[w9.w]&&!NET.mirror[w9.w].dead)?NET.mirror[w9.w]:null;}
  const all=Object.values(NET.mirror);
  all.sort((a,b)=>(a.team===NET.you&&!a.ally?-1:b.team===NET.you&&!b.ally?1:0));
  swarms=all;
  for(const s2 of swarms)if(!s2.dead)calcR(s2);}
 function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in the past, between two KNOWN truths */
  tnow+=dt;
- const MP=swarms[0];
+ const MP=(swarms[0]&&swarms[0].team===NET.you&&!swarms[0].ally)?swarms[0]:null; /* IDENTITY IS SACRED: only a swarm that is PROVABLY yours is ever predicted or driven - if yours is missing a beat, you spectate that beat; you never ride a stranger */
  /* THE INTERP DELAY: was a flat 125ms for every connection. That's ~2.5x the server's 50ms send interval -
     safe margin against arrival jitter, but needlessly laggy for anyone on a fast/stable link, since this
     delay's job is to smooth JITTER, not to compensate for base RTT (which it structurally can't fix - we
@@ -4175,14 +4183,14 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
     mirror. If troops still stutter/hitch after this ships, that's the signal this needs to go back UP, not
     down further. */
  const nowR=(typeof performance!=='undefined'?performance.now():Date.now()),
-  interpDelay=Math.min(140,Math.max(65,48+(NET.rtt||0)*0.32)),rT=nowR-interpDelay;
+  interpDelay=Math.min(160,Math.max(65,48+(NET.rtt||0)*0.32+(NET.jit||0)*2.2)),rT=nowR-interpDelay; /* JITTER-AWARE: a lumpy server (GC bursts, timer skew) widens the safety margin automatically, so the starved-extrapolate branch stops firing every few frames - that oscillation was the TWITCH */
  let FA=null,FB=null;
  for(let i=NET.buf.length-1;i>=0;i--){if(NET.buf[i].rt<=rT){FA=NET.buf[i];FB=NET.buf[i+1]||NET.buf[i];break;}}
  if(!FA&&NET.buf.length){FA=FB=NET.buf[0];}
  let al;const newest9=NET.buf.length?NET.buf[NET.buf.length-1]:null;
  if(FA&&FB&&FB!==FA&&FB.rt>FA.rt){al=Math.min(1,Math.max(0,(rT-FA.rt)/(FB.rt-FA.rt)));} /* two known truths: interpolate BETWEEN them */
  else if(newest9&&NET.buf.length>=2&&rT>=newest9.rt){ /* STARVED — server stalled (shared-CPU steal): glide on the last known velocity instead of freezing into inert dots; capped so a long stall can't fling them away */
-  const P9=NET.buf[NET.buf.length-2];FA=P9;FB=newest9;al=(newest9.rt>P9.rt)?Math.min(1.8,(rT-P9.rt)/(newest9.rt-P9.rt)):1;}
+  const P9=NET.buf[NET.buf.length-2];FA=P9;FB=newest9;al=(newest9.rt>P9.rt)?Math.min(1.25,(rT-P9.rt)/(newest9.rt-P9.rt)):1;} /* extrapolate GENTLY (was 1.8): the further past truth we guess, the harder the snap-back when truth lands */
  else al=1;
  for(const s2 of swarms){if(s2.dead)continue;
   const wA=FA&&FA.m.get(s2.nid),wB=FB&&FB.m.get(s2.nid);
@@ -4201,16 +4209,19 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
    const staleMs9=nowR-(NET._lastArr||nowR); /* how long since a FRESH truth landed */
    if(staleMs9<120){ /* ONLY reconcile against CURRENT truth. During a server STALL the truth is FROZEN - dragging her back toward it is exactly the "stretching against invisible resistance / stuck on nothing" bug, so we don't. */
     const allow=Math.min(360,(s2.spdNow*((NET.rtt||120)/1000+0.14)+48)*(drv?1.8:1)); /* your hand on her = trust it; reconcile hard only when you ease off */
-    if(er9>600){s2.x=s2.tx;s2.y=s2.ty;} /* truly lost (respawn/teleport): come home */
+    if(er9>600){s2.x=s2.tx;s2.y=s2.ty;cam.x=s2.x;cam.y=s2.y;} /* truly lost (respawn/teleport): come home - and the CAMERA comes with you, no cross-world glide after rebirth */
     else if(er9>allow){const pull=Math.min(1,1.1*dt)*(er9-allow)/er9;s2.x+=ex*pull;s2.y+=ey*pull;}
    } /* stalled wire: she flies FREE on your hand; the reconcile lands gently the moment a frame arrives */
    if(er9<=1200){const swp=sweepBoulders(ox0,oy0,s2.x,s2.y,Math.max(12+queenStage(s2)*3.5,s2.R*0.26));s2.x=swp[0];s2.y=swp[1];} /* SWEPT for real-scale motion only; a teleport-scale snap (spawn/respawn, er9>1200) lands on truth freely so the sweep can never strand you in a corner */
    collideBoulders(s2,Math.max(12+queenStage(s2)*3.5,s2.R*0.26)); /* THE STONE VETO: the drift-tolerance pull above answers to your PING, never to solid rock - re-resolve once more, last word, every frame, so "honest drift" can never settle you on/inside a boulder. Verified safe (idempotent when clear) via boulder_rest_test.js; could not conclusively reproduce the reported fly-through/rest-on-top in a same-process sandbox (no real jitter/packet-loss to test against - see mirror_test.js's own caveat), so this ships as a hardening, not a confirmed fix */
    s2.spdNow=Math.hypot(s2.vx,s2.vy);
-  } else if(wA&&wB&&!wA.d&&!wB.d){ /* pure interpolation - no guessing, no snapping, ever */
+  } else if(wA&&wB&&!wA.d&&!wB.d){ /* interpolate along the buffer, then OUTPUT-FILTER: a queen tracks truth through a soft spring, so late frames land as a lean, never a jerk */
    const nx=wA.x+(wB.x-wA.x)*al,ny=wA.y+(wB.y-wA.y)*al;
-   s2.vx=(nx-s2.x)/Math.max(dt,0.001);s2.vy=(ny-s2.y)/Math.max(dt,0.001);
-   s2.x=nx;s2.y=ny;s2.spdNow=Math.min(400,Math.hypot(s2.vx,s2.vy));}
+   const ox9=s2.x,oy9=s2.y,gx9=nx-s2.x,gy9=ny-s2.y,gd9=Math.hypot(gx9,gy9);
+   if(gd9>240){s2.x=nx;s2.y=ny;} /* teleport-scale: land on truth */
+   else{const k8=Math.min(1,26*dt);s2.x+=gx9*k8;s2.y+=gy9*k8;}
+   s2.vx=(s2.x-ox9)/Math.max(dt,0.001);s2.vy=(s2.y-oy9)/Math.max(dt,0.001);
+   s2.spdNow=Math.min(400,Math.hypot(s2.vx,s2.vy));}
   else if(s2.tx!==undefined){const k9=Math.min(1,6*dt);
    s2.vx=(s2.tx-s2.x)*8;s2.vy=(s2.ty-s2.y)*8;s2.x+=(s2.tx-s2.x)*k9;s2.y+=(s2.ty-s2.y)*k9;
    s2.spdNow=Math.hypot(s2.vx,s2.vy);}
@@ -4223,24 +4234,28 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
     NET._foy=(NET._foy==null?roy:NET._foy+(roy-NET._foy)*Math.min(1,12*dt));
     OX=NET._fox;OY=NET._foy;}
    for(let j=0;j<s2.units.length;j++){const u=s2.units[j];
+    if(u.atk>0)u.atk-=dt;if(u.flash>0)u.flash-=dt;if(u.mend>0)u.mend-=dt;if(u.slow>0)u.slow-=dt; /* the client decays what the wire arms - no brain needed to ANIMATE combat */
     const tA=uA&&uA.get(u.uid),tB=uB&&uB.get(u.uid);
     if(s2===MP&&!s2.ally){ /* OWN troops interpolate from the wire like everyone else, offset by OX/OY so they sit around your PREDICTED queen — NO per-frame local swarm-brain (that pinned weak phones) */
      if(tB){const bx=(tA?tA[0]+(tB[0]-tA[0])*al:tB[0])+OX,by=(tA?tA[1]+(tB[1]-tA[1])*al:tB[1])+OY;
-      const jx9=bx-u.x,jy9=by-u.y,jd9=Math.hypot(jx9,jy9),cap9=150+(u.spd||300)*dt;
-      if(jd9>cap9){u.x+=jx9/jd9*cap9;u.y+=jy9/jd9*cap9;}else{u.x=bx;u.y=by;}
-      u.vx=jx9/Math.max(dt,0.001);u.vy=jy9/Math.max(dt,0.001);}
+      const ox9=u.x,oy9=u.y,jx9=bx-u.x,jy9=by-u.y,jd9=Math.hypot(jx9,jy9),cap9=150+(u.spd||300)*dt;
+      if(jd9>cap9){u.x+=jx9/jd9*cap9;u.y+=jy9/jd9*cap9;}
+      else{const k8=Math.min(1,26*dt);u.x+=jx9*k8;u.y+=jy9*k8;} /* OUTPUT FILTER: the 30Hz sawtooth and every extrapolation snap-back melt into a ~10px soft lean - this was the TWITCH */
+      u.vx=(u.x-ox9)/Math.max(dt,0.001);u.vy=(u.y-oy9)/Math.max(dt,0.001);}
      else if(u.tx!==undefined){const k9=Math.min(1,6*dt);u.vx=(u.tx-u.x)*8;u.vy=(u.ty-u.y)*8;u.x+=(u.tx-u.x)*k9;u.y+=(u.ty-u.y)*k9;}}
     else if(tB){const bx=tA?tA[0]+(tB[0]-tA[0])*al:tB[0],by=tA?tA[1]+(tB[1]-tA[1])*al:tB[1];
-     const jx9=bx-u.x,jy9=by-u.y,jd9=Math.hypot(jx9,jy9),cap9=150+(u.spd||300)*dt;
-     if(jd9>cap9){u.x+=jx9/jd9*cap9;u.y+=jy9/jd9*cap9;}else{u.x=bx;u.y=by;} /* glide over teleport-scale snaps (post-stall), never a jarring jump */
-     u.vx=jx9/Math.max(dt,0.001);u.vy=jy9/Math.max(dt,0.001);}
+     const ox9=u.x,oy9=u.y,jx9=bx-u.x,jy9=by-u.y,jd9=Math.hypot(jx9,jy9),cap9=150+(u.spd||300)*dt;
+     if(jd9>cap9){u.x+=jx9/jd9*cap9;u.y+=jy9/jd9*cap9;} /* glide over teleport-scale snaps (post-stall), never a jarring jump */
+     else{const k8=Math.min(1,26*dt);u.x+=jx9*k8;u.y+=jy9*k8;} /* same soft spring for every troop in the meadow */
+     u.vx=(u.x-ox9)/Math.max(dt,0.001);u.vy=(u.y-oy9)/Math.max(dt,0.001);}
     else{const k9=Math.min(1,6*dt);
      u.vx=(u.tx-u.x)*8;u.vy=(u.ty-u.y)*8;u.x+=(u.tx-u.x)*k9;u.y+=(u.ty-u.y)*k9;}}}
-  if(s2.sayT>0)s2.sayT-=dt;}
+  if(s2.sayT>0)s2.sayT-=dt;
+  if(s2.flash>0)s2.flash-=dt;if(s2.hitT>0)s2.hitT-=dt;}
  /* (removed) the per-frame LOCAL swarm-brain (gridBuild+boulderGridBuild+moveUnits, every client every frame). It felt solo-tight on a strong desktop but PINNED weak phones: a ~100-unit sim at 60fps could not keep pace AND drain the socket, so frames backlogged and the phone's ms CLIMBED (22s seen). Own troops now interpolate from the server like everyone else (branch above, offset to the predicted queen). The server stays sole authority for combat/kills/honey, so troops that looked inert online now render the server's REAL fighting. */
  NET.pingT-=dt;if(NET.pingT<=0){NET.pingT=2;NET.cmd&&NET.ws&&NET.ws.readyState===1&&NET.ws.send(JSON.stringify({k:'p',t:Date.now()}));}
  NET.aimT-=dt;
- const M9=swarms[0];
+ const M9=MP; /* aim/overlay follow the PROVEN own swarm only - never a stranger at index 0 */
  if(M9&&!M9.dead&&NET.aimT<=0){NET.aimT=0.08;
   let ax=null,ay=0,dr=false;const kv=keyVec();
   if(kv.on){ax=M9.x+kv.x*600;ay=M9.y+kv.y*600;dr=true;}
@@ -4256,7 +4271,8 @@ function netSnapshot(){ /* THE WIRE: one compact frame of truth (server -> clien
   if(s.dead){S9.sw.push({id:s.nid,i:s.team,a:s.ally?1:0,d:1});continue;}
   S9.sw.push({id:s.nid,i:s.team,n:s.name,c:s.col,c2:s.col2||0,q:s.cosEq||0,p:s.prot>0?1:0,
    x:s.x|0,y:s.y|0,h:s.hp|0,H:s.honey|0,a:s.ally?1:0,y2:s.sayT>0?s.say:0,
-   u:s.units.map(u=>[u.x|0,u.y|0,ROLE_ID[u.role]||0,u.hp|0,(u.load||0)|0,u.uid||0])});}
+   f:(s.flash>0||s.hitT>0)?1:0,w:(s.war&&s.war.nid)||0, /* COMBAT ON THE WIRE: the queen's hit-flash and WHO she wars with - the server has been fighting all along, the client just could not SEE it */
+   u:s.units.map(u=>[u.x|0,u.y|0,ROLE_ID[u.role]||0,u.hp|0,(u.load||0)|0,u.uid||0,((u.atk>0?1:0)|(u.flash>0?2:0))])});}
  return S9;}
 const GKIND=['bloom','sprout','grand','rock','bell','spray','puff','tumble','night','comb','fairy','rich','algae'];
 function netWorldInit(){ /* the STATIC world, sent once at the door */

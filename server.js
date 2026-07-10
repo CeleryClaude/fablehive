@@ -6,7 +6,7 @@ const fs=require('fs'),vm=require('vm'),path=require('path'),http=require('http'
 const {PerformanceObserver}=require('perf_hooks');
 const DIAG={gcCount:0,gcTotalMs:0,gcMaxMs:0,elLagMaxMs:0,maxBufBytes:0,dropped:0};
 try{new PerformanceObserver(l=>{for(const e of l.getEntries()){DIAG.gcCount++;DIAG.gcTotalMs+=e.duration;if(e.duration>DIAG.gcMaxMs)DIAG.gcMaxMs=e.duration;}}).observe({entryTypes:['gc']});}catch(e){}
-const STALLS=[]; /* the SPIKE LEDGER: every event-loop freeze >300ms is logged with its moment, so a live healthz poll during a playtest shows exactly WHEN the world hitched and how hard */
+const STALLS=[],BUYS=[]; /* the SPIKE LEDGER: every event-loop freeze >300ms is logged with its moment, so a live healthz poll during a playtest shows exactly WHEN the world hitched and how hard */
 {let _t=Date.now();setInterval(()=>{const n=Date.now(),lag=n-_t-100;if(lag>DIAG.elLagMaxMs)DIAG.elLagMaxMs=lag;
  if(lag>300){STALLS.push({t:n,ms:lag|0,heap:(process.memoryUsage().heapUsed/1048576)|0});if(STALLS.length>10)STALLS.shift();}
  _t=n;},100);}
@@ -32,7 +32,7 @@ function makeGame(htmlPath){
 function start(port,htmlPath){
  const {WebSocketServer}=require('ws');
  const HTML=htmlPath||path.join(__dirname,fs.existsSync(path.join(__dirname,'index.html'))?'index.html':'BROOD.html');
- let G=makeGame(HTML);G.unlockAll&&G.unlockAll();
+ let G=makeGame(HTML);G.unlockAll&&G.unlockAll();G.setRoom&&G.setRoom(true);
  const SEATS=[0,1,2,3,4,5];
  const seats={};
  let lastEmpty=Date.now();
@@ -41,7 +41,7 @@ function start(port,htmlPath){
     FRESH, light meadow rather than an hours-old, overgrown one no 60Hz tick can hold. */
  function applyWild(){for(const t of SEATS){const sw=G.swarms.find(z=>z.team===t&&!z.ally);
   if(sw){if(seats[t]!==undefined){sw.bot=false;}else{sw.bot=true;delete sw.forceAim;if(t===0)sw.name='Wilder';}}}}
- function freshWorld(){G=makeGame(HTML);G.unlockAll&&G.unlockAll();applyWild();}
+ function freshWorld(){G=makeGame(HTML);G.unlockAll&&G.unlockAll();G.setRoom&&G.setRoom(true);applyWild();}
  applyWild();
  const httpSrv=http.createServer((req,res)=>{
   const u=(req.url||'/').split('?')[0];
@@ -59,6 +59,7 @@ function start(port,htmlPath){
     tickAvg:+(TICKS.n?TICKS.sum/TICKS.n:0).toFixed(2),tickP95:p95,upMin:((Date.now()-BOOT)/60000)|0,
     ticks:TICKS.n,elLagMaxMs:elLag,gcCount:DIAG.gcCount,gcMaxMs:+gcMax.toFixed(0),gcTotalMs:+DIAG.gcTotalMs.toFixed(0),
     stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:DIAG.netLateMax||0,rateSkips:DIAG.rateSkips||0,
+    buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else{res.writeHead(404);res.end('the meadow has no such door');}
  });
@@ -83,7 +84,13 @@ function start(port,htmlPath){
       let q9=null;if(m.q&&typeof m.q==='object'&&!Array.isArray(m.q)){q9={};for(const k of ['pattern','crown','trail','wings','body','tail','fleet','aura']){const v=m.q[k];if(typeof v==='string'&&v.length<=24&&/^[a-zA-Z0-9_-]+$/.test(v))q9[k]=v;}if(!Object.keys(q9).length)q9=null;}
       s.cosEq=q9;}} /* FRESH QUEEN on join: never the wild bot's grown body - and she arrives with 150 honey, enough for her FIRST SOLDIER or two foragers, so the opening minute is choices, not poverty (30 was famine) */
     ws.send(JSON.stringify({k:'init',you:team,world:G.netWorldInit()}));
-   } else if(m.k==='cmd'&&team!==null){try{G.applyInput(team,m.c||{});}catch(e){}}
+   } else if(m.k==='cmd'&&team!==null){try{
+    if(m.c&&m.c.buy){ /* THE BUY LEDGER: every recruit order is receipted - "I paid and nothing spawned" becomes a lookup, not a mystery */
+     const s9=G.swarms.find(z=>z.team===team&&!z.ally);const b4=s9?s9.units.length:-1,h4=s9?(s9.honey|0):-1;
+     G.applyInput(team,m.c||{});
+     const a4=s9?s9.units.length:-1;
+     BUYS.push({t:Date.now(),tm:team,r:(''+m.c.buy).slice(0,10),ok:a4>b4?1:0,u:a4,h:h4});if(BUYS.length>24)BUYS.shift();}
+    else G.applyInput(team,m.c||{});}catch(e){}}
    else if(m.k==='p'){try{ws.send(JSON.stringify({k:'p',t:m.t}));}catch(e){}}
   });
   ws.on('close',()=>{if(team!==null){delete seats[team];if(!Object.keys(seats).length)lastEmpty=Date.now();

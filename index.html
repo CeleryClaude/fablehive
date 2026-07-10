@@ -242,7 +242,7 @@ const EVOS=[
 ];
 const TUNE={qspd:224,qmass:0.12,qacc:8,zoom:1,zease:0.05,look:0.3,camease:0.09,honey:1}; /* FEEL CONSTANTS — the old tuning-bench panel is gone; these are its final numbers, inlined and law */
 let SPLIT_MAX=3;
-let SOUL_CAP=100;let NPLAY=1;/* live human players in the room; 1 offline. Drives caps+costs. */ /* THE MUSTER LIMIT (58): brought DOWN from 150 - still comfortably past every unlock (titans 60, stage-3 70) so nothing is ever locked out, but a leaner ceiling means more dogfights and fewer laggy deathmatches. Split to grow past it as more queens, not one bloated swarm a 60Hz tick can't hold. */
+let SOUL_CAP=100;let NPLAY=1;let ROOM=false; /* flipped true only by the room server: multiplayer-only ecology keys off THIS, so solo stays exactly solo *//* live human players in the room; 1 offline. Drives caps+costs. */ /* THE MUSTER LIMIT (58): brought DOWN from 150 - still comfortably past every unlock (titans 60, stage-3 70) so nothing is ever locked out, but a leaner ceiling means more dogfights and fewer laggy deathmatches. Split to grow past it as more queens, not one bloated swarm a 60Hz tick can't hold. */
 /* meta (cosmetics only, ever — and EVERYTHING earnable with ✨: Royal Nectar only skips the grind) */
 let META={xp:0,skin:0,nectar:0,royal:false,sub:false,seasonXp:0,claimedF:[],claimedR:[],owned:{},eq:{pattern:'plain',crown:'none',trail:'none',wings:'standard',body:'sleek',tail:'notail',fleet:'plainfleet',aura:'noaura'}};
 try{const m=(typeof localStorage!=='undefined')&&localStorage.getItem('brood_meta');if(m){const p=JSON.parse(m);META=Object.assign(META,p);META.owned=p.owned||{};META.eq=Object.assign({pattern:'plain',crown:'none',trail:'none',wings:'standard',body:'sleek',tail:'notail',fleet:'plainfleet',aura:'noaura'},p.eq||{});META.claimedF=p.claimedF||[];META.claimedR=p.claimedR||[];}}catch(e){}
@@ -2179,6 +2179,8 @@ function canBuyBot(s,role){const U=botUnlocks[s.team]=botUnlocks[s.team]||{};
  return !!U[role];}
 function botBuy(s,role){
  if(s.recalling)return; /* a swarm flying home hoards the honey — no new mouths mid-recall */
+ if(ROOM){let tot9=0;for(const s9 of swarms)if(!s9.dead)tot9+=s9.units.length;
+  if(tot9>=140)return;} /* ROOM ECOLOGY: a shared meadow stops FEEDING past ~140 souls - every soul must cross the wire and be parsed by a phone 30 times a second. Solo keeps its endless wilds */
  if(s.units.length>=soulCap())return; /* bots hoard past the cap rather than recruit into it - same law as the player */
  if(role==='titan'&&teamSwarms(s.team).reduce((t2,x)=>t2+count(x,'titan'),0)>=1)return;
  if(role!=='forager'&&role!=='soldier'&&!canBuyBot(s,role))role='forager';
@@ -4163,16 +4165,21 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
  const seen={};
  for(const w9 of F.sw){
   let m9=NET.mirror[w9.id];
+  if(!m9&&w9.n===undefined&&!w9.d)continue; /* a newcomer waits for a FULL beat to be introduced - never born colourless */
   if(w9.d){if(m9&&!m9.dead){m9.dead=true; /* a QUEEN FALLS and the meadow says so - solo had the fountain, online only whispered */
     if(!m9.ally){const own9=(m9.team===NET.you);
-     toast(own9?'YOUR QUEEN FALLS':'👑 '+(m9.name||'a queen')+' FALLS','#ffdf7e',own9?4:3);
-     if(own9||(swarms[0]&&d2(m9.x,m9.y,swarms[0].x,swarms[0].y)<1600*1600))sfx('die');}}
+     const near9=swarms[0]&&d2(m9.x,m9.y,swarms[0].x,swarms[0].y)<1400*1400;
+     const wtgt9=swarms[0]&&swarms[0].war===m9;
+     if(own9)toast('YOUR QUEEN FALLS','#ffdf7e',4);
+     else if(wtgt9||near9)toast('👑 '+(m9.name||'a queen')+' FALLS','#ffdf7e',2.5); /* only falls that are YOURS to feel: your kill, your war, your screen - far bot drama stays far */
+     if(own9||near9)sfx('die');}}
    else if(m9)m9.dead=true;
    continue;}
   if(!m9){m9=NET.mirror[w9.id]={nid:w9.id,team:w9.i,bot:true,ally:!!w9.a,x:w9.x,y:w9.y,vx:0,vy:0,tx:w9.x,ty:w9.y,
    maxHp:300,units:[],R:36,war:null,exposed:false,prot:0,gulp:0,flash:0,hitT:0,recalling:false,honey:0,hp:300,
    cosEq:null,warLoss:0,sayT:0,stompCd:0,expoT:0,lost:0,lostT:0,slots:{}};}
-  m9.dead=false;m9.name=w9.n;m9.col=w9.c;m9.col2=w9.c2||null;m9.cosEq=w9.q||null;m9.prot=w9.p?1:0;
+  m9.dead=false;m9.prot=w9.p?1:0;
+  if(w9.n!==undefined){m9.name=w9.n;m9.col=w9.c;m9.col2=w9.c2||null;m9.cosEq=w9.q||null;} /* identity rides the full beats; between them, keep the last known */
   {const hpd9=(m9.hp!=null&&w9.h<m9.hp-0.5); /* TRUTH OVER FLAGS: a hit is an hp DROP, measured before the mirror updates. The flag-edge version re-armed screen-shake through every brawl - that was the mystery VIBRATION. Shake is gone (solo never shook for ordinary hits); white flash + sparks land exactly where damage landed */
    if((hpd9||w9.f)&&!(m9.flash>0))m9.flash=0.16;
    if(hpd9&&fx.length<430)addP(w9.x,w9.y,'#ffd7a8',4,120);
@@ -4266,12 +4273,15 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
    s2.spdNow=Math.hypot(s2.vx,s2.vy);
   } else if(wA&&wB&&!wA.d&&!wB.d){ /* interpolate along the buffer, then OUTPUT-FILTER: a queen tracks truth through a soft spring, so late frames land as a lean, never a jerk */
    let nx=wA.x+(wB.x-wA.x)*al,ny=wA.y+(wB.y-wA.y)*al;
-   if(FB.rt>FA.rt){const fdt9=(FB.rt-FA.rt)/1000,wvx9=(wB.x-wA.x)/fdt9,wvy9=(wB.y-wA.y)/fdt9,lv9=Math.hypot(wvx9,wvy9); /* THE PHANTOM SHOVE: she was drawn one interp-delay in the PAST, so her real body hit you before her image did. Project her forward along her wire velocity - what you SEE is where she IS */
-    if(lv9>40){const ld9=Math.min(110,lv9*((interpDelay+(NET.rtt||0)*0.5+16)/1000));nx+=wvx9/lv9*ld9;ny+=wvy9/lv9*ld9;}} /* the FULL gap: interp delay + half RTT + half a send tick - her image stands where her body is when it shoves you */
+   if(FB.rt>FA.rt){const fdt9=(FB.rt-FA.rt)/1000,rwx9=(wB.x-wA.x)/fdt9,rwy9=(wB.y-wA.y)/fdt9; /* THE PHANTOM SHOVE: she was drawn one interp-delay in the PAST. Project her forward - but through a LOW-PASS: raw frame-pair velocity swings on every juke and every shove, and that swing WAS the rapid-fire facing flicker */
+    s2._lvx=(s2._lvx==null?rwx9:s2._lvx+(rwx9-s2._lvx)*Math.min(1,7*dt));s2._lvy=(s2._lvy==null?rwy9:s2._lvy+(rwy9-s2._lvy)*Math.min(1,7*dt));
+    const lv9=Math.hypot(s2._lvx,s2._lvy);
+    if(lv9>40){const ld9=Math.min(110,lv9*((interpDelay+(NET.rtt||0)*0.5+16)/1000));nx+=s2._lvx/lv9*ld9;ny+=s2._lvy/lv9*ld9;}} /* the FULL gap: interp delay + half RTT + half a send tick */
    const ox9=s2.x,oy9=s2.y,gx9=nx-s2.x,gy9=ny-s2.y,gd9=Math.hypot(gx9,gy9);
    if(gd9>240){s2.x=nx;s2.y=ny;} /* teleport-scale: land on truth */
    else{const k8=Math.min(1,26*dt);s2.x+=gx9*k8;s2.y+=gy9*k8;}
-   s2.vx=(s2.x-ox9)/Math.max(dt,0.001);s2.vy=(s2.y-oy9)/Math.max(dt,0.001);
+   {const rvx9=(s2.x-ox9)/Math.max(dt,0.001),rvy9=(s2.y-oy9)/Math.max(dt,0.001),kf9=Math.min(1,9*dt); /* her FACING breathes instead of strobing: display velocity is eased, position is not */
+    s2.vx=(s2.vx||0)+(rvx9-(s2.vx||0))*kf9;s2.vy=(s2.vy||0)+(rvy9-(s2.vy||0))*kf9;}
    s2.spdNow=Math.min(400,Math.hypot(s2.vx,s2.vy));}
   else if(s2.tx!==undefined){const k9=Math.min(1,6*dt);
    s2.vx=(s2.tx-s2.x)*8;s2.vy=(s2.ty-s2.y)*8;s2.x+=(s2.tx-s2.x)*k9;s2.y+=(s2.ty-s2.y)*k9;
@@ -4279,13 +4289,17 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
   {const uA=wA&&wA.um,uB=wB&&wB.um;
    let OX=0,OY=0;
    if(s2===MP&&!s2.ally){ /* ONE stable anchor per frame: predicted queen MINUS the server queen at the troops' OWN interp time (temporally matched, not the newest frame - that mismatch made them trail), then low-passed to erase the ~7px-per-frame tx step that made the swarm SWIM */
-    const sqx=(wA&&wB)?wA.x+(wB.x-wA.x)*al:s2.tx,sqy=(wA&&wB)?wA.y+(wB.y-wA.y)*al:s2.ty;
-    const rox=s2.x-sqx,roy=s2.y-sqy;
-    NET._fox=(NET._fox==null?rox:NET._fox+(rox-NET._fox)*Math.min(1,12*dt));
-    NET._foy=(NET._foy==null?roy:NET._foy+(roy-NET._foy)*Math.min(1,12*dt));
+    const okAB9=(wA&&wB&&!wA.d&&!wB.d&&isFinite(wA.x)&&isFinite(wB.x)); /* THE RESPAWN GHOST-BROOD: a death-era frame in the bracket has NO coordinates - anchoring on it minted NaN, and the low-pass kept NaN FOREVER. Every own unit inherited it through OX/OY and turned invisible. Guard the bracket, immunize the filter */
+    const sqx=okAB9?wA.x+(wB.x-wA.x)*al:s2.tx,sqy=okAB9?wA.y+(wB.y-wA.y)*al:s2.ty;
+    let rox=s2.x-sqx,roy=s2.y-sqy;
+    if(!isFinite(rox)||!isFinite(roy)){rox=0;roy=0;}
+    NET._fox=(NET._fox==null||!isFinite(NET._fox)?rox:NET._fox+(rox-NET._fox)*Math.min(1,12*dt));
+    NET._foy=(NET._foy==null||!isFinite(NET._foy)?roy:NET._foy+(roy-NET._foy)*Math.min(1,12*dt));
     OX=NET._fox;OY=NET._foy;}
    for(let j=0;j<s2.units.length;j++){const u=s2.units[j];
     if(u.atk>0)u.atk-=dt;if(u.flash>0)u.flash-=dt;if(u.mend>0)u.mend-=dt;if(u.slow>0)u.slow-=dt; /* the client decays what the wire arms - no brain needed to ANIMATE combat */
+    u.braced=(u.role==='armourer')||(u.role==='soldier'&&Math.hypot(u.x-s2.x,u.y-s2.y)<s2.R*1.3); /* the BULWARK stands online: braced was computed only by the solo brain, so armourers LOOKED like naked beetles while invisibly tarring foes - same law as solo, run client-side */
+    if(!isFinite(u.x)||!isFinite(u.y)){u.x=isFinite(u.tx)?u.tx:s2.x;u.y=isFinite(u.ty)?u.ty:s2.y;u.vx=0;u.vy=0;} /* NaN never keeps a soul: any poisoned body snaps back to its last true position and lives again */
     const tA=uA&&uA.get(u.uid),tB=uB&&uB.get(u.uid);
     if(s2===MP&&!s2.ally){ /* OWN troops interpolate from the wire like everyone else, offset by OX/OY so they sit around your PREDICTED queen — NO per-frame local swarm-brain (that pinned weak phones) */
      if(tB){const hot8=(u.atk>0||u.flash>0); /* a FIGHTER renders at the NEWEST truth, not the padded past - reversals and nips arrive two frames sooner, which is the difference between a brawl and a smear */
@@ -4320,18 +4334,22 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
   else if(input.mDown){ax=cam.x+(input.mx*DPR-W/2)/cam.z;ay=cam.y+(input.my*DPR-H/2)/cam.z;dr=Math.hypot(ax-M9.x,ay-M9.y)>30;}
   if(ax!==null){NET.cmd({aim:[ax|0,ay|0,dr]});NET.wasDrv=dr;}
   else if(NET.wasDrv){NET.wasDrv=false;NET.cmd({aim:[M9.x|0,M9.y|0,false]});}} /* release the reins and the room reins in */
- if(M9&&!M9.dead&&M9.war&&M9.war.nid!==NET._warN){NET._warN=M9.war.nid;toast('WAR! '+(M9.war.name||'a rival')+' presses your line - keep your queen BEHIND it','#ff9a6a',4.5);sfx('alarm');} /* solo announces war; now the wire does too */
+ if(M9&&!M9.dead&&M9.war&&M9.war.nid!==NET._warN){NET._warN=M9.war.nid; /* WAR is told by DRUMS, not paragraphs: heat vignette + one sparing alarm on a 10s rest - the meadow is chaotic enough without subtitles */
+  const nw9=(typeof performance!=='undefined'?performance.now():Date.now());
+  if(!NET._warT||nw9-NET._warT>10000){NET._warT=nw9;sfx('alarm');}}
  if(M9&&(M9.dead||!M9.war))NET._warN=0;
  if(M9&&M9.dead&&!NET.deadShown){NET.deadShown=true;const ov=document.getElementById('over');if(ov)ov.style.display='flex';}
  if(M9&&!M9.dead&&NET.deadShown){NET.deadShown=false;const ov=document.getElementById('over');if(ov)ov.style.display='none';}}
-function netSnapshot(){ /* THE WIRE: one compact frame of truth (server -> clients) */
+function netSnapshot(slim9){ /* THE WIRE: one compact frame of truth (server -> clients). slim9: identity (name/colour/wardrobe) rides only the FULL beats - those fields never change frame to frame, yet were a fat slice of every lite frame, 30 times a second, per seat */
  const S9={t:+tnow.toFixed(2),g:goldT>=0?1:0,sw:[]};
  for(const s of swarms){
   if(s.dead){S9.sw.push({id:s.nid,i:s.team,a:s.ally?1:0,d:1});continue;}
-  S9.sw.push({id:s.nid,i:s.team,n:s.name,c:s.col,c2:s.col2||0,q:s.cosEq||0,p:s.prot>0?1:0,
+  {const o9={id:s.nid,i:s.team,p:s.prot>0?1:0,
    x:s.x|0,y:s.y|0,h:s.hp|0,H:s.honey|0,a:s.ally?1:0,y2:s.sayT>0?s.say:0,
    f:(s.flash>0||s.hitT>0)?1:0,w:(s.war&&s.war.nid)||0, /* COMBAT ON THE WIRE: the queen's hit-flash and WHO she wars with - the server has been fighting all along, the client just could not SEE it */
-   u:s.units.map(u=>[u.x|0,u.y|0,ROLE_ID[u.role]||0,u.hp|0,(u.load||0)|0,u.uid||0,((u.atk>0?1:0)|(u.flash>0?2:0))])});}
+   u:s.units.map(u=>[u.x|0,u.y|0,ROLE_ID[u.role]||0,u.hp|0,(u.load||0)|0,u.uid||0,((u.atk>0?1:0)|(u.flash>0?2:0))])};
+   if(!slim9){o9.n=s.name;o9.c=s.col;o9.c2=s.col2||0;o9.q=s.cosEq||0;}
+   S9.sw.push(o9);}}
  return S9;}
 const GKIND=['bloom','sprout','grand','rock','bell','spray','puff','tumble','night','comb','fairy','rich','algae'];
 function netWorldInit(){ /* the STATIC world, sent once at the door */
@@ -4352,7 +4370,7 @@ function netDynLite(){ /* the fast heartbeat: souls, honey, shots - and everythi
   sh:shots.map(x=>[x.x|0,x.y|0,x.vx|0,x.vy|0]),
   wp:wasps.map(w=>[w.x|0,w.y|0,w.vx|0,w.vy|0,w.trio||0]),
   gp:grottos.map(g=>(g.pricks||[]).map(p=>[p.x|0,p.y|0])), /* THE CAVE FIX: pricklers actually drift for connected clients now - previously sent once at netWorldInit and never again, so they appeared frozen in multiplayer while still dealing live server-authoritative damage from their true (moving) position - a real desync, now closed */
-  sw:netSnapshot().sw};}
+  sw:netSnapshot(1).sw};}
 function netDyn(){ /* the LIVING world, streamed */
  return {t:+tnow.toFixed(3),g:goldT>=0?1:0,np:NPLAY,
   gv:groves.map(g=>[g.x|0,g.y|0,Math.max(0,GKIND.indexOf(g.kind||'bloom')),g.sp||0,g.amt|0,g.max|0,
@@ -4386,7 +4404,8 @@ window.__G={unlockAll(){for(const k in ROLES)unlocked[k]=true;},TUNE,netSnapshot
  possess(s){s.bot=false;s.forceAim={x:s.x,y:s.y,drive:false};},
  drive(s,x,y,dr){s.forceAim={x,y,drive:dr!==false};},
  free(s){delete s.forceAim;},
- setRunning(v){running=v;}
+ setRunning(v){running=v;},
+ setRoom(v){ROOM=!!v;} /* the room server flips this on boot and freshWorld */
 };
 setup();requestAnimationFrame(loop);
 </script>

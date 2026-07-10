@@ -1813,22 +1813,27 @@ function step(dt){NPLAY=humanCount();
    if(d2(s2.x,s2.y,sp5.x,sp5.y)<(sp5.r+18)**2&&Math.random()<dt*3.4){sp5.gnash=0.4;s2.hp-=70;s2.flash=.12;if(s2===me())sfx('hurt');
     if(s2.hp<=0)killQueen(s2,null);}}
   /* THE BROODLINGS: they skitter, they defend, they are hers */
-  sp5.kidT-=dt;
-  if(sp5.kidT<=0&&sp5.kids.length<6){sp5.kidT=7;
-   sp5.kids.push({x:sp5.x+rand(-40,40),y:sp5.y+rand(-40,40),vx:0,vy:0,hp:160,r:11,wa:rand(0,TAU),atk:0});}
+  sp5.kidT-=dt; /* THE BROODLINGS, made REAL by decree: fewer, BIGGER, faster - they ORBIT her like a living crown, and they bite QUEENS now, not just soldiers */
+  if(sp5.kidT<=0&&sp5.kids.length<5){sp5.kidT=8;
+   sp5.kids.push({x:sp5.x+rand(-40,40),y:sp5.y+rand(-40,40),vx:0,vy:0,hp:190,r:14,wa:rand(0,TAU),atk:0,slot:sp5.kids.length});}
   for(let i=sp5.kids.length-1;i>=0;i--){const kd=sp5.kids[i];
    if(kd.atk>0)kd.atk-=dt;
-   let prey=null,pd5=300*300;
+   let prey=null,preyQ=null,pd5=320*320;
    if(sp5.provoked>0)for(const s2 of swarms){if(s2.dead)continue;
-    for(const u2 of s2.units){const q=d2(u2.x,u2.y,kd.x,kd.y);if(q<pd5){pd5=q;prey=u2;}}}
-   if(prey){const dd5=Math.sqrt(pd5)||1;
-    kd.vx=(prey.x-kd.x)/dd5*200;kd.vy=(prey.y-kd.y)/dd5*200;
-    if(pd5<(kd.r+8)**2&&kd.atk<=0){kd.atk=0.7;prey.hp-=22;prey.flash=.15;
-     if(prey.hp<=0)for(const s2 of swarms){const ii=s2.units.indexOf(prey);if(ii>=0){killUnit(s2,prey,null);break;}}}
-   } else {kd.wa+=rand(-0.6,0.6)*dt*3;
-    kd.vx=Math.cos(kd.wa)*90;kd.vy=Math.sin(kd.wa)*90;
-    const dm=Math.hypot(kd.x-sp5.x,kd.y-sp5.y);
-    if(dm>260){kd.wa=Math.atan2(sp5.y-kd.y,sp5.x-kd.x)+rand(-0.5,0.5);}}
+    const qq5=d2(s2.x,s2.y,kd.x,kd.y);if(qq5<pd5){pd5=qq5;prey=null;preyQ=s2;} /* a QUEEN in reach outranks her soldiers */
+    for(const u2 of s2.units){const q=d2(u2.x,u2.y,kd.x,kd.y);if(q<pd5){pd5=q;prey=u2;preyQ=null;}}}
+   if(prey||preyQ){const tx5=prey?prey.x:preyQ.x,ty5=prey?prey.y:preyQ.y,dd5=Math.sqrt(pd5)||1;
+    const lunge5=dd5<170?1.34:1; /* close prey is RUSHED */
+    kd.vx=(tx5-kd.x)/dd5*255*lunge5;kd.vy=(ty5-kd.y)/dd5*255*lunge5;
+    if(kd.atk<=0){
+     if(prey&&pd5<(kd.r+9)**2){kd.atk=0.7;prey.hp-=30;prey.flash=.15;
+      if(prey.hp<=0)for(const s2 of swarms){const ii=s2.units.indexOf(prey);if(ii>=0){killUnit(s2,prey,null);break;}}}
+     else if(preyQ&&pd5<(kd.r+16)**2){kd.atk=0.8;preyQ.hp-=18;preyQ.flash=.1;if(preyQ===me())sfx('hurt');
+      if(preyQ.hp<=0)killQueen(preyQ,null);}}
+   } else {const oa5=(kd.slot||0)/5*TAU+tnow*0.55; /* the ORBIT: each broodling keeps her post - a living crown around the mother */
+    const ox5=sp5.x+Math.cos(oa5)*150,oy5=sp5.y+Math.sin(oa5)*150;
+    const od5=Math.hypot(ox5-kd.x,oy5-kd.y)||1,osp5=Math.min(190,od5*2.4);
+    kd.vx+=((ox5-kd.x)/od5*osp5-kd.vx)*Math.min(1,6*dt);kd.vy+=((oy5-kd.y)/od5*osp5-kd.vy)*Math.min(1,6*dt);}
    kd.x+=kd.vx*dt;kd.y+=kd.vy*dt;
    /* the young can be slain — for a morsel */
    for(const s2 of swarms){if(s2.dead)continue;
@@ -4101,43 +4106,56 @@ function draw(){
   ctx.save();ctx.translate(sp5.x,sp5.y);ctx.rotate(fa5);
   ctx.fillStyle='rgba(16,8,20,.22)'; /* a modest ground-shadow, not an umbrella */
   ctx.beginPath();ctx.ellipse(3,7,sp5.r*0.95,sp5.r*0.6,0,0,TAU);ctx.fill();
-  for(const sg of [-1,1])for(let k=0;k<4;k++){
-   const ph5=sp5.gait*(sp5.gnash>0?3.4:2.2)+k*1.57+(sg>0?0.785:0); /* provoked, the legs FLURRY */
+  for(const sg of [-1,1])for(let k=0;k<4;k++){ /* HER LEGS, raised to the fang standard: glossy night-chitin, a light-line down each femur, violet joints */
+   const ph5=sp5.gait*(sp5.gnash>0?3.4:2.2)+k*1.57+(sg>0?0.785:0);
    const lift=Math.max(0,Math.sin(ph5))*8,swing=Math.cos(ph5)*10;
    const hipA=sg*(0.5+k*0.42);
    const hx5=Math.cos(hipA)*sp5.r*0.5,hy5=Math.sin(hipA)*sp5.r*0.55;
    const kx5=hx5+Math.cos(hipA+sg*0.4)*sp5.r*0.72,ky5=hy5+Math.sin(hipA+sg*0.4)*sp5.r*0.72-lift;
    const fx5=kx5+Math.cos(hipA+sg*0.9)*sp5.r*0.62+swing*0.4,fy5=ky5+Math.sin(hipA+sg*0.9)*sp5.r*0.62+lift;
-   ctx.strokeStyle=sp5.flash>0?'#fff':'#2e1e34';ctx.lineWidth=5;
+   ctx.strokeStyle=sp5.flash>0?'#fff':'#141018';ctx.lineWidth=5;ctx.lineCap='round';
    ctx.beginPath();ctx.moveTo(hx5,hy5);ctx.lineTo(kx5,ky5);ctx.stroke();
-   ctx.lineWidth=3.4;
+   ctx.strokeStyle='rgba(210,190,235,.16)';ctx.lineWidth=1.4; /* the gloss walks the femur */
+   ctx.beginPath();ctx.moveTo(hx5,hy5);ctx.lineTo(kx5,ky5);ctx.stroke();
+   ctx.strokeStyle=sp5.flash>0?'#fff':'#1c1220';ctx.lineWidth=3.4;
    ctx.beginPath();ctx.moveTo(kx5,ky5);ctx.lineTo(fx5,fy5);ctx.stroke();
-   ctx.fillStyle='#493052';ctx.beginPath();ctx.arc(kx5,ky5,2.6,0,TAU);ctx.fill();
-   ctx.strokeStyle='#1e1226';ctx.lineWidth=1.6;
+   ctx.fillStyle='#4a3a54';ctx.beginPath();ctx.arc(kx5,ky5,2.8,0,TAU);ctx.fill();
+   ctx.strokeStyle='#0e0a14';ctx.lineWidth=1.6;
    ctx.beginPath();ctx.moveTo(fx5,fy5);ctx.lineTo(fx5+Math.cos(hipA+sg*1.2)*4,fy5+Math.sin(hipA+sg*1.2)*4);ctx.stroke();}
   const pulse=1+Math.sin(tnow*(sp5.provoked>0?4.4:1.8))*0.04;
-  ctx.fillStyle=sp5.flash>0?'#fff':'#3a2444';
+  ctx.fillStyle=sp5.flash>0?'#fff':'#1e1426'; /* the ABDOMEN: deep night, one shade off her fangs */
   ctx.beginPath();ctx.ellipse(-sp5.r*0.55,0,sp5.r*0.92*pulse,sp5.r*0.78*pulse,0,0,TAU);ctx.fill();
-  ctx.strokeStyle='#1e1226';ctx.lineWidth=2.6;ctx.stroke();
-  for(let k=0;k<5;k++){const aa=k/5*TAU+0.5; /* the CLUTCH inside her — small lights, not a floating orb */
-   ctx.fillStyle='rgba(232,200,255,'+(0.14+0.1*Math.sin(tnow*2.6+k))+')';
+  ctx.strokeStyle='#0e0a14';ctx.lineWidth=2.6;ctx.stroke();
+  ctx.strokeStyle='rgba(200,160,255,'+(0.1+0.08*Math.sin(tnow*2.1)).toFixed(3)+')';ctx.lineWidth=2; /* the violet gleam BREATHES across the shell */
+  ctx.beginPath();ctx.ellipse(-sp5.r*0.55,0,sp5.r*0.8*pulse,sp5.r*0.66*pulse,0,3.5,5.2);ctx.stroke();
+  {const hw5=sp5.r*0.17,hh5=sp5.r*0.22; /* the HOURGLASS on her back: blood on night - the mark the meadow remembers */
+   ctx.fillStyle='rgba(160,40,56,'+(0.7+0.15*Math.sin(tnow*2.4)).toFixed(3)+')';
+   ctx.beginPath();ctx.moveTo(-sp5.r*0.55-hw5,-hh5);
+   ctx.quadraticCurveTo(-sp5.r*0.55,-hh5*0.7,-sp5.r*0.55+hw5,-hh5);
+   ctx.quadraticCurveTo(-sp5.r*0.55+hw5*0.14,0,-sp5.r*0.55+hw5,hh5);
+   ctx.quadraticCurveTo(-sp5.r*0.55,hh5*0.7,-sp5.r*0.55-hw5,hh5);
+   ctx.quadraticCurveTo(-sp5.r*0.55-hw5*0.14,0,-sp5.r*0.55-hw5,-hh5);ctx.closePath();ctx.fill();}
+  for(let k=0;k<5;k++){const aa=k/5*TAU+0.5; /* the CLUTCH inside her - colder now: small violet lives */
+   ctx.fillStyle='rgba(210,190,255,'+(0.12+0.09*Math.sin(tnow*2.6+k))+')';
    ctx.beginPath();ctx.arc(-sp5.r*0.55+Math.cos(aa)*sp5.r*0.3,Math.sin(aa)*sp5.r*0.26,sp5.r*0.11,0,TAU);ctx.fill();}
-  ctx.strokeStyle='rgba(80,50,90,.8)';ctx.lineWidth=1; /* BRISTLES on her abdomen rim */
+  ctx.strokeStyle='rgba(74,58,84,.85)';ctx.lineWidth=1; /* BRISTLES on her abdomen rim */
   for(let k=0;k<10;k++){const aa=k/10*TAU;
    const bx9=-sp5.r*0.55+Math.cos(aa)*sp5.r*0.9,by9=Math.sin(aa)*sp5.r*0.76;
    ctx.beginPath();ctx.moveTo(bx9,by9);
    ctx.lineTo(bx9+Math.cos(aa)*sp5.r*0.12,by9+Math.sin(aa)*sp5.r*0.12);ctx.stroke();}
-  ctx.strokeStyle='rgba(255,255,255,.08)';ctx.lineWidth=3; /* rim light */
+  ctx.strokeStyle='rgba(210,190,235,.14)';ctx.lineWidth=3; /* rim light, in the fangs' own pale */
   ctx.beginPath();ctx.ellipse(-sp5.r*0.55,-sp5.r*0.1,sp5.r*0.8*pulse,sp5.r*0.6*pulse,0,3.6,5.8);ctx.stroke();
-  ctx.strokeStyle='rgba(232,220,248,.6)';ctx.lineWidth=2;
+  ctx.strokeStyle='rgba(232,220,248,.35)';ctx.lineWidth=2; /* her silk marks, quieter */
   ctx.beginPath();ctx.moveTo(-sp5.r*0.35,-sp5.r*0.22);ctx.lineTo(-sp5.r*0.72,sp5.r*0.22);ctx.stroke();
   ctx.beginPath();ctx.moveTo(-sp5.r*0.72,-sp5.r*0.22);ctx.lineTo(-sp5.r*0.35,sp5.r*0.22);ctx.stroke();
-  ctx.fillStyle=sp5.flash>0?'#fff':'#493052';
+  ctx.fillStyle=sp5.flash>0?'#fff':'#241826'; /* the CEPHALOTHORAX matches the jaw her needles hinge on */
   ctx.beginPath();ctx.ellipse(sp5.r*0.42,0,sp5.r*0.5,sp5.r*0.42,0,0,TAU);ctx.fill();
-  ctx.strokeStyle='#1e1226';ctx.lineWidth=2;ctx.stroke();
+  ctx.strokeStyle='#0e0a14';ctx.lineWidth=2;ctx.stroke();
+  ctx.strokeStyle='rgba(210,190,235,.22)';ctx.lineWidth=1.2; /* one gloss crescent on the brow */
+  ctx.beginPath();ctx.ellipse(sp5.r*0.42,0,sp5.r*0.38,sp5.r*0.3,0,3.6,5.4);ctx.stroke();
   const eg5=sp5.provoked>0?1:0.55+0.15*Math.sin(tnow*2.2);
   for(const [exx,eyy,er5] of [[0.62,-0.16,0.07],[0.62,0.16,0.07],[0.52,-0.26,0.05],[0.52,0.26,0.05],[0.7,-0.05,0.045],[0.7,0.05,0.045]]){
-   ctx.fillStyle=sp5.provoked>0?'rgba(255,70,70,'+eg5+')':'rgba(255,190,80,'+eg5+')';
+   ctx.fillStyle=sp5.provoked>0?'rgba(255,70,70,'+eg5+')':'rgba(200,180,235,'+(eg5*0.8).toFixed(3)+')'; /* calm eyes are pale violet; her FURY stays red */
    ctx.beginPath();ctx.arc(sp5.r*exx,sp5.r*eyy,sp5.r*er5,0,TAU);ctx.fill();}
   {const gn=sp5.gnash>0?(Math.sin(tnow*28)*0.5+0.5)*0.4:0; /* HER FANGS, fourth pass: two slender NEEDLES rooted at the jaw, angled INWARD so the tips nearly meet - they scissor PAST each other when she gnashes. The third pass splayed them outward like handlebars; Celery's verdict stands */
    for(const sd of [-1,1]){
@@ -4160,14 +4178,27 @@ function draw(){
    for(const sg of [-1,1]){ctx.beginPath();ctx.arc(-sp5.r*1.42,sg*sp5.r*0.12,sp5.r*0.06,0,TAU);ctx.fill();}}
   ctx.restore();
   if(sp5.hp<sp5.maxHp)drawBar(sp5.x,sp5.y+sp5.r+20,140,sp5.hp/sp5.maxHp,true);
-  for(const kd of sp5.kids){
+  for(const kd of sp5.kids){ /* THE BROODLINGS, redrawn: little huntresses in her own night-chitin - eight true legs, a thread of her gloss, eyes that catch her fury */
    ctx.save();ctx.translate(kd.x,kd.y);ctx.rotate(Math.atan2(kd.vy,kd.vx)||0);
-   ctx.strokeStyle='#2e1e34';ctx.lineWidth=1.6;
-   for(const sg of [-1,1])for(let k=0;k<3;k++){const la=sg*(0.5+k*0.55),lp=Math.sin(tnow*14+k+sg)*2;
-    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(la)*9,Math.sin(la)*9+lp);ctx.stroke();}
-   ctx.fillStyle='#3a2444';ctx.beginPath();ctx.ellipse(-1,0,5,4,0,0,TAU);ctx.fill();
-   ctx.fillStyle='rgba(255,90,90,.85)';ctx.beginPath();ctx.arc(2.4,-1,0.9,0,TAU);ctx.fill();
-   ctx.beginPath();ctx.arc(2.4,1,0.9,0,TAU);ctx.fill();
+   const kg=tnow*10+(kd.slot||0)*1.7;
+   ctx.strokeStyle='#141018';ctx.lineWidth=1.8;ctx.lineCap='round';
+   for(const sg of [-1,1])for(let k=0;k<4;k++){const la=sg*(0.45+k*0.5),lp=Math.sin(kg+k*1.57+(sg>0?0.7:0))*2.4;
+    const jx=Math.cos(la)*kd.r*0.5,jy=Math.sin(la)*kd.r*0.5;
+    ctx.beginPath();ctx.moveTo(jx*0.3,jy*0.3);ctx.lineTo(jx+Math.cos(la+sg*0.3)*kd.r*0.5,jy+Math.sin(la+sg*0.3)*kd.r*0.5+lp);ctx.stroke();}
+   ctx.fillStyle='#1e1426';
+   ctx.beginPath();ctx.ellipse(-kd.r*0.4,0,kd.r*0.62,kd.r*0.5,0,0,TAU);ctx.fill();
+   ctx.strokeStyle='#0e0a14';ctx.lineWidth=1;ctx.stroke();
+   ctx.strokeStyle='rgba(210,190,235,.2)';ctx.lineWidth=0.8;
+   ctx.beginPath();ctx.ellipse(-kd.r*0.4,0,kd.r*0.48,kd.r*0.36,0,3.6,5.2);ctx.stroke();
+   ctx.fillStyle='#241826';
+   ctx.beginPath();ctx.ellipse(kd.r*0.34,0,kd.r*0.4,kd.r*0.32,0,0,TAU);ctx.fill();
+   const keg=sp5.provoked>0?0.95:0.55+0.15*Math.sin(tnow*2.2+(kd.slot||0));
+   ctx.fillStyle=sp5.provoked>0?'rgba(255,70,70,'+keg+')':'rgba(200,180,235,'+keg.toFixed(3)+')';
+   ctx.beginPath();ctx.arc(kd.r*0.5,-kd.r*0.14,1.1,0,TAU);ctx.fill();
+   ctx.beginPath();ctx.arc(kd.r*0.5,kd.r*0.14,1.1,0,TAU);ctx.fill();
+   if(kd.atk>0.4){ctx.strokeStyle='#e8dcd0';ctx.lineWidth=1; /* tiny fangs flare on the strike */
+    for(const sd of [-1,1]){ctx.beginPath();ctx.moveTo(kd.r*0.62,sd*kd.r*0.1);
+     ctx.quadraticCurveTo(kd.r*0.86,sd*kd.r*0.16,kd.r*0.92,sd*kd.r*0.02);ctx.stroke();}}
    ctx.restore();}
  }
  /* groves: species in bloom — FULLNESS is petal size, never a dimmer switch */
@@ -4822,7 +4853,7 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
    const kk9=F.sp[4]||[]; /* kids matched by INDEX (they only leave by death-splice): targets, not teleports */
    while(spider.kids.length>kk9.length)spider.kids.pop();
    for(let ki9=0;ki9<kk9.length;ki9++){let kd9=spider.kids[ki9];
-    if(!kd9){kd9={x:kk9[ki9][0],y:kk9[ki9][1],vx:0,vy:0,hp:160,r:11,wa:0,atk:0};spider.kids.push(kd9);}
+    if(!kd9){kd9={x:kk9[ki9][0],y:kk9[ki9][1],vx:0,vy:0,hp:190,r:14,wa:0,atk:0,slot:ki9};spider.kids.push(kd9);}
     kd9._tx=kk9[ki9][0];kd9._ty=kk9[ki9][1];}}}
  if(F.wm!==undefined){ /* the worms arrive: index-matched, glided like the kids */
   while(worms.length>F.wm.length)worms.pop();

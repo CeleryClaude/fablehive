@@ -15,7 +15,8 @@ button,.ab,.btn,.btn2,.tab,.szBtn,#gear,#bar,#tip,#subRail,.panel{touch-action:m
 #bar{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;display:none;gap:8px;z-index:7;flex-wrap:wrap;justify-content:center;max-width:96vw}
 @media (pointer:coarse), (max-width:820px){#bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;max-width:none;left:76px;right:4px;transform:none;justify-content:flex-start;padding:0 5px;-webkit-overflow-scrolling:touch}.ab{min-width:44px;padding:6px 3px;flex:0 0 auto}.ab span{font-size:10.5px}.ab small{font-size:8px}#tip{max-width:82vw;font-size:11px;padding:5px 9px;bottom:52px;max-height:22vh;overflow:hidden}#hint{display:none}#lb{font-size:11px}}
 html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;max-width:none;left:76px;right:4px;transform:none;justify-content:flex-start;padding:0 5px;-webkit-overflow-scrolling:touch}html.mob .ab{min-width:44px;padding:6px 3px;flex:0 0 auto}html.mob .ab span{font-size:10.5px}html.mob .ab small{font-size:8px}html.mob #tip{max-width:82vw;font-size:11px;padding:5px 9px;bottom:52px;max-height:22vh;overflow:hidden}html.mob #hint{display:none}html.mob #lb{font-size:11px}
-html.mob #subRail{position:fixed;left:6px;right:auto;bottom:6px;top:auto;width:auto;max-width:47vw;padding:5px 10px;display:flex;align-items:center;justify-content:flex-start;gap:7px;flex-wrap:nowrap;z-index:12;font-size:10px;line-height:1.25}html.mob #subRail .subMore{display:none}html.mob #subRail .subOne{display:block!important;text-align:left;white-space:nowrap}html.mob #subRail button{width:auto!important;margin-top:0!important;padding:5px 10px;font-size:10px}html.mob #home{padding-bottom:56px}#subRail .subOne{display:none}
+#subRail{position:absolute;left:10px;top:12%;width:150px;padding:14px 12px;background:linear-gradient(180deg,rgba(70,40,20,.85),rgba(40,22,44,.9));border:1.5px solid #ffd75e88;border-radius:14px;text-align:center;font-size:12px;line-height:1.5}#subRail .subOne{display:none}
+@media (pointer:coarse),(max-width:820px),(max-height:500px){#subRail{position:fixed!important;left:6px!important;right:auto!important;bottom:6px!important;top:auto!important;width:auto!important;max-width:46vw!important;padding:5px 10px!important;background:linear-gradient(90deg,rgba(70,40,20,.92),rgba(40,22,44,.94));display:flex;align-items:center;justify-content:flex-start;gap:7px;flex-wrap:nowrap;z-index:12;font-size:10px;line-height:1.25;text-align:left}#subRail .subMore{display:none!important}#subRail .subOne{display:block!important;white-space:nowrap}#subRail button{width:auto!important;margin-top:0!important;padding:5px 10px!important;font-size:10px!important}#subRail div{font-size:12px!important;margin:0!important}#home{padding-bottom:56px}} /* the CUSTOMISATION SCREEN belongs to the player: on any coarse-pointer or small/short screen the royal rail is a corner pill, never a wall. Media queries, not the mob class - landscape phones never earned that class, which is why a dozen fixes never landed */
 #tip{position:fixed;left:50%;transform:translateX(-50%);bottom:86px;max-width:340px;padding:9px 13px;background:rgba(30,16,32,.92);border:1px solid rgba(255,220,150,.4);border-radius:12px;font-size:12.5px;line-height:1.45;display:none;z-index:8;pointer-events:none;text-align:center;box-shadow:0 4px 20px #0008}
 #tip b{color:#ffd75e;letter-spacing:1px}
 #xpbar{width:240px;height:9px;background:rgba(255,255,255,.12);border-radius:6px;margin:8px auto 2px;overflow:hidden}
@@ -92,7 +93,7 @@ html.mob #subRail{position:fixed;left:6px;right:auto;bottom:6px;top:auto;width:a
  <button class="btn2" id="homeBtn">HOME · customise</button>
 </div>
 <div id="home" class="panel">
- <div id="subRail" style="position:absolute;left:10px;top:12%;width:150px;padding:14px 12px;background:linear-gradient(180deg,rgba(70,40,20,.85),rgba(40,22,44,.9));border:1.5px solid #ffd75e88;border-radius:14px;text-align:center;font-size:12px;line-height:1.5">
+ <div id="subRail">
   <div class="subMore" style="font-size:26px">👑</div>
   <b style="color:#ffd75e;letter-spacing:1px">👑 ROYAL SUB</b>
   <span class="subOne" style="font-size:10px;opacity:.9">every skin+treasure · $5/mo</span>
@@ -127,7 +128,7 @@ addEventListener('beforeunload',()=>{try{metaSave();}catch(e){}});
 if(typeof document!=='undefined'&&document.addEventListener)document.addEventListener('visibilitychange',()=>{try{metaSave();}catch(e){}});
 const isTouch=('ontouchstart'in window)||navigator.maxTouchPoints>0;
 let MOB=false;
-function setMobClass(){try{MOB=Math.min((window.innerWidth||9999),((window.screen&&window.screen.width)||9999))<820;document.documentElement.classList.toggle('mob',MOB);}catch(e){}}
+function setMobClass(){try{MOB=((window.matchMedia&&matchMedia('(pointer:coarse)').matches)||Math.min((window.innerWidth||9999),((window.screen&&window.screen.width)||9999))<820);document.documentElement.classList.toggle('mob',MOB);}catch(e){}} /* a landscape phone is STILL a phone: coarse pointer counts, not just width */
 setMobClass();if(typeof addEventListener!=='undefined')addEventListener('resize',setMobClass);
 const WORLD={w:7200,h:7200}; /* a quarter larger - four realms need room */
 const rand=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t;
@@ -773,9 +774,12 @@ function makeWorld(){
   for(const w of ways)w.frq=w.trib?0.012:TAU*Math.max(1,Math.round(ringTot*0.012/TAU))/ringTot;
  }
  /* the ELDER: one colossal territorial thing, far away, guarding riches. It does not track. */
- let ex,ey,tr=0;
- do{ex=rand(700,WORLD.w-700);ey=rand(700,WORLD.h-700);tr++;}
- while(tr<20&&(d2(ex,ey,WORLD.w/2,WORLD.h/2)<1500*1500||(ex<2900&&ey<2900)));
+ let ex,ey,tr=0,bex9=0,bey9=0,bq9=-1;
+ do{ex=rand(700,WORLD.w-700);ey=rand(700,WORLD.h-700);tr++;
+  const q9=Math.min(d2(ex,ey,WORLD.w/2,WORLD.h/2),d2(ex,ey,2900,2900));
+  if(q9>bq9){bq9=q9;bex9=ex;bey9=ey;}}
+ while(tr<60&&(d2(ex,ey,WORLD.w/2,WORLD.h/2)<1500*1500||d2(ex,ey,2900,2900)<1550*1550||(ex<2900&&ey<2900)));
+ if(d2(ex,ey,2900,2900)<1550*1550||d2(ex,ey,WORLD.w/2,WORLD.h/2)<1500*1500){ex=bex9;ey=bey9;} /* the LAW is "far from the cradle": the old loop gave up after 20 rolls and took whatever it held - one world in a while, that was an Elder CAMPING SPAWN. Now: explicit cradle radius, triple the patience, and on a truly cursed roll take the farthest candidate seen instead of the last */
  elder={x:ex,y:ey,hx:ex,hy:ey,vx:0,vy:0,r:72,hp:3600,maxHp:3600,terr:520,sense:410,spd:122,atk:0,provoked:0,flash:0};
  for(let g=0;g<4;g++){const ga4=g/4*TAU+rand(-0.25,0.25),gr4=rand(185,235);groves.push({x:ex+Math.cos(ga4)*gr4,y:ey+Math.sin(ga4)*gr4,amt:210,max:210,vx:0,vy:0,mother:true,sp:6});}
  /* THE BROODMOTHER: the meadow's other nightmare — patient, webbed, surrounded by her young */
@@ -4153,10 +4157,10 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
    maxHp:300,units:[],R:36,war:null,exposed:false,prot:0,gulp:0,flash:0,hitT:0,recalling:false,honey:0,hp:300,
    cosEq:null,warLoss:0,sayT:0,stompCd:0,expoT:0,lost:0,lostT:0,slots:{}};}
   m9.dead=false;m9.name=w9.n;m9.col=w9.c;m9.col2=w9.c2||null;m9.cosEq=w9.q||null;m9.prot=w9.p?1:0;
+  {const hpd9=(m9.hp!=null&&w9.h<m9.hp-0.5); /* TRUTH OVER FLAGS: a hit is an hp DROP, measured before the mirror updates. The flag-edge version re-armed screen-shake through every brawl - that was the mystery VIBRATION. Shake is gone (solo never shook for ordinary hits); white flash + sparks land exactly where damage landed */
+   if((hpd9||w9.f)&&!(m9.flash>0))m9.flash=0.16;
+   if(hpd9&&fx.length<430)addP(w9.x,w9.y,'#ffd7a8',4,120);}
   m9.tx=w9.x;m9.ty=w9.y;m9.hp=w9.h;m9.honey=w9.H;
-  if(w9.f&&!(m9.flash>0)){m9.flash=0.16; /* her hit lands white on screen, like solo - with SPARKS, and a kick of shake if it is YOUR crown */
-   if(fx.length<430)addP(w9.x,w9.y,'#ffd7a8',4,120);
-   if(w9.i===NET.you&&!w9.a)shake=Math.min(14,shake+5);}
   if(w9.y2){m9.say=w9.y2;m9.sayT=1.2;}
   const uu=w9.u||[];
   const old9=m9.uById||new Map(),nu9=[],nb9=new Map();
@@ -4168,11 +4172,14 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
     maxHp:R9.hp,hp:t9[3],load:t9[4],seed:(uid*2.39)%TAU,zeal:1,slot:j,_fi:j,_gi:j,braced:false,aura:false,
     atk:0,flash:0,slow:0,fat:0,mend:0,wanA:0,wanV:1,per:false,sig:2,sigT:0,cl:0,home:false,load2:0};
     if(fresh9&&typeof addRing==='function')addRing(u.x,u.y,R9.col,20);} /* the recruit POPS the moment truth delivers her - the buy-click ring was the promise, this is the arrival */
+   {const cb9=t9[6]||0,hpd8=(u.hp!=null&&t9[3]<u.hp-0.4); /* a hit is an hp DROP (bit as backup) - and an attacker KICKS forward as the blow lands. Nips and lunges, not mush */
+    if((cb9&1)&&!(u.atk>0)){u.atk=0.3;const vv8=Math.hypot(u.vx||0,u.vy||0);if(vv8>40){u.x+=(u.vx/vv8)*7;u.y+=(u.vy/vv8)*7;}}
+    if((hpd8||(cb9&2))&&!(u.flash>0)){u.flash=0.14;if(hpd8&&fx.length<400)addP(t9[0],t9[1],'#ffe9c9',2,80);}}
    u.tx=t9[0];u.ty=t9[1];u.hp=t9[3];u.load=t9[4];u.slot=j;u._fi=j;u._gi=j;
-   {const cb9=t9[6]||0; /* combat bits: rising edge arms the timer, netTick decays it - and every landed hit SPARKS, so a battle looks like a battle */
-    if((cb9&1)&&!(u.atk>0))u.atk=0.3;
-    if((cb9&2)&&!(u.flash>0)){u.flash=0.14;if(fx.length<400)addP(t9[0],t9[1],'#ffe9c9',2,80);}}
    nu9.push(u);nb9.set(uid,u);}
+  if(old9.size&&!m9.dead){let dp9=0; /* THE FALLEN GET A DEATH: a soul on the wire last frame and gone this frame DIED - ring + sparks at her last position instead of silent deletion ("troops dying for no reason and disappearing") */
+   old9.forEach((ou9,ouid9)=>{if(dp9>=6||nb9.has(ouid9))return;dp9++;
+    if(fx.length<400){addRing(ou9.x,ou9.y,ou9.col||'#ffd7a8',Math.max(14,(ou9.r||6)*2.4));addP(ou9.x,ou9.y,ou9.col||'#ffd7a8',4,110);}});}
   m9.units=nu9;m9.uById=nb9;
   seen[w9.id]=1;}
  for(const id in NET.mirror)if(!seen[id]&&!NET.mirror[id].dead)NET.mirror[id].dead=true;
@@ -4234,7 +4241,7 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
   } else if(wA&&wB&&!wA.d&&!wB.d){ /* interpolate along the buffer, then OUTPUT-FILTER: a queen tracks truth through a soft spring, so late frames land as a lean, never a jerk */
    let nx=wA.x+(wB.x-wA.x)*al,ny=wA.y+(wB.y-wA.y)*al;
    if(FB.rt>FA.rt){const fdt9=(FB.rt-FA.rt)/1000,wvx9=(wB.x-wA.x)/fdt9,wvy9=(wB.y-wA.y)/fdt9,lv9=Math.hypot(wvx9,wvy9); /* THE PHANTOM SHOVE: she was drawn one interp-delay in the PAST, so her real body hit you before her image did. Project her forward along her wire velocity - what you SEE is where she IS */
-    if(lv9>40){const ld9=Math.min(80,lv9*(interpDelay/1000)*0.9);nx+=wvx9/lv9*ld9;ny+=wvy9/lv9*ld9;}}
+    if(lv9>40){const ld9=Math.min(110,lv9*((interpDelay+(NET.rtt||0)*0.5+16)/1000));nx+=wvx9/lv9*ld9;ny+=wvy9/lv9*ld9;}} /* the FULL gap: interp delay + half RTT + half a send tick - her image stands where her body is when it shoves you */
    const ox9=s2.x,oy9=s2.y,gx9=nx-s2.x,gy9=ny-s2.y,gd9=Math.hypot(gx9,gy9);
    if(gd9>240){s2.x=nx;s2.y=ny;} /* teleport-scale: land on truth */
    else{const k8=Math.min(1,26*dt);s2.x+=gx9*k8;s2.y+=gy9*k8;}
@@ -4258,15 +4265,17 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
      if(tB){const bx=(tA?tA[0]+(tB[0]-tA[0])*al:tB[0])+OX,by=(tA?tA[1]+(tB[1]-tA[1])*al:tB[1])+OY;
       const ox9=u.x,oy9=u.y,jx9=bx-u.x,jy9=by-u.y,jd9=Math.hypot(jx9,jy9),cap9=150+(u.spd||300)*dt;
       if(jd9>cap9){u.x+=jx9/jd9*cap9;u.y+=jy9/jd9*cap9;}
-      else{const k8=Math.min(1,26*dt);u.x+=jx9*k8;u.y+=jy9*k8;} /* OUTPUT FILTER: the 30Hz sawtooth and every extrapolation snap-back melt into a ~10px soft lean - this was the TWITCH */
+      else{const k8=Math.min(1,(u.atk>0||u.flash>0?46:26)*dt);u.x+=jx9*k8;u.y+=jy9*k8;} /* OUTPUT FILTER, combat-adaptive: fighters track truth twice as hard so jabs read as jabs; roamers keep the silky 26 */
       u.vx=(u.x-ox9)/Math.max(dt,0.001);u.vy=(u.y-oy9)/Math.max(dt,0.001);}
      else if(u.tx!==undefined){const k9=Math.min(1,6*dt);u.vx=(u.tx-u.x)*8;u.vy=(u.ty-u.y)*8;u.x+=(u.tx-u.x)*k9;u.y+=(u.ty-u.y)*k9;}}
     else if(tB){let bx=tA?tA[0]+(tB[0]-tA[0])*al:tB[0],by=tA?tA[1]+(tB[1]-tA[1])*al:tB[1];
-     if(tA&&FB.rt>FA.rt){const fdt8=(FB.rt-FA.rt)/1000,uvx8=(tB[0]-tA[0])/fdt8,uvy8=(tB[1]-tA[1])/fdt8,ul8=Math.hypot(uvx8,uvy8); /* enemy TROOPS get the same forward-projection as their queen: without it they struck from one interp-delay in the PAST - ghost hits from bugs that visually flew past you */
-      if(ul8>60){const ld8=Math.min(60,ul8*(interpDelay/1000)*0.85);bx+=uvx8/ul8*ld8;by+=uvy8/ul8*ld8;}}
+     if(tA&&FB.rt>FA.rt){const fdt8=(FB.rt-FA.rt)/1000,rvx8=(tB[0]-tA[0])/fdt8,rvy8=(tB[1]-tA[1])/fdt8; /* enemy TROOPS project forward like their queen - through a LOW-PASS, because raw frame-pair velocity wobbles with every shove, and that wobble was the residual TWITCH */
+      u._pvx=(u._pvx==null?rvx8:u._pvx+(rvx8-u._pvx)*Math.min(1,9*dt));u._pvy=(u._pvy==null?rvy8:u._pvy+(rvy8-u._pvy)*Math.min(1,9*dt));
+      const ul8=Math.hypot(u._pvx,u._pvy);
+      if(ul8>60){const ld8=Math.min(60,ul8*(interpDelay/1000)*0.85);bx+=u._pvx/ul8*ld8;by+=u._pvy/ul8*ld8;}}
      const ox9=u.x,oy9=u.y,jx9=bx-u.x,jy9=by-u.y,jd9=Math.hypot(jx9,jy9),cap9=150+(u.spd||300)*dt;
      if(jd9>cap9){u.x+=jx9/jd9*cap9;u.y+=jy9/jd9*cap9;} /* glide over teleport-scale snaps (post-stall), never a jarring jump */
-     else{const k8=Math.min(1,26*dt);u.x+=jx9*k8;u.y+=jy9*k8;} /* same soft spring for every troop in the meadow */
+     else{const k8=Math.min(1,(u.atk>0||u.flash>0?46:26)*dt);u.x+=jx9*k8;u.y+=jy9*k8;} /* same spring, combat-adaptive: a striking or struck troop snaps to truth, the rest glide */
      u.vx=(u.x-ox9)/Math.max(dt,0.001);u.vy=(u.y-oy9)/Math.max(dt,0.001);}
     else{const k9=Math.min(1,6*dt);
      u.vx=(u.tx-u.x)*8;u.vy=(u.ty-u.y)*8;u.x+=(u.tx-u.x)*k9;u.y+=(u.ty-u.y)*k9;}}}

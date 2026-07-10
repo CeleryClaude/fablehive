@@ -242,7 +242,7 @@ const EVOS=[
 ];
 const TUNE={qspd:224,qmass:0.12,qacc:8,zoom:1,zease:0.05,look:0.3,camease:0.09,honey:1}; /* FEEL CONSTANTS — the old tuning-bench panel is gone; these are its final numbers, inlined and law */
 let SPLIT_MAX=3;
-let SOUL_CAP=100;let NPLAY=1;let ROOM=false;let ELDRT=420,SPDRT=420; /* boss respawn clocks, ROOM only */ /* flipped true only by the room server: multiplayer-only ecology keys off THIS, so solo stays exactly solo *//* live human players in the room; 1 offline. Drives caps+costs. */ /* THE MUSTER LIMIT (58): brought DOWN from 150 - still comfortably past every unlock (titans 60, stage-3 70) so nothing is ever locked out, but a leaner ceiling means more dogfights and fewer laggy deathmatches. Split to grow past it as more queens, not one bloated swarm a 60Hz tick can't hold. */
+let SOUL_CAP=100;let NPLAY=1;let ROOM=false;let ELDRT=420,SPDRT=420,WMRT=240; /* boss + worm respawn clocks, ROOM only */ /* flipped true only by the room server: multiplayer-only ecology keys off THIS, so solo stays exactly solo *//* live human players in the room; 1 offline. Drives caps+costs. */ /* THE MUSTER LIMIT (58): brought DOWN from 150 - still comfortably past every unlock (titans 60, stage-3 70) so nothing is ever locked out, but a leaner ceiling means more dogfights and fewer laggy deathmatches. Split to grow past it as more queens, not one bloated swarm a 60Hz tick can't hold. */
 /* meta (cosmetics only, ever — and EVERYTHING earnable with ✨: Royal Nectar only skips the grind) */
 let META={xp:0,skin:0,nectar:0,royal:false,sub:false,seasonXp:0,claimedF:[],claimedR:[],owned:{},eq:{pattern:'plain',crown:'none',trail:'none',wings:'standard',body:'sleek',tail:'notail',fleet:'plainfleet',aura:'noaura',plate:'noplate',eye:'simple'}};
 try{const m=(typeof localStorage!=='undefined')&&localStorage.getItem('brood_meta');if(m){const p=JSON.parse(m);META=Object.assign(META,p);META.owned=p.owned||{};META.eq=Object.assign({pattern:'plain',crown:'none',trail:'none',wings:'standard',body:'sleek',tail:'notail',fleet:'plainfleet',aura:'noaura',plate:'noplate',eye:'simple'},p.eq||{});META.claimedF=p.claimedF||[];META.claimedR=p.claimedR||[];}}catch(e){}
@@ -839,7 +839,7 @@ function spawnSpider(){
   if(d2(sx2,sy2,ex,ey)<2100*2100&&bsd9>0){sx2=bsx9;sy2=bsy9;} /* two nightmares NEVER share a horizon: same generator law as the Elder's cradle fix - if the dice keep failing, take the farthest den seen, never the last */
   spider={x:sx2,y:sy2,hx:sx2,hy:sy2,vx:0,vy:0,r:92,hp:9000,maxHp:9000,terr:600,sense:450,spd:150,
    provoked:0,flash:0,gait:0,kids:[],kidT:9,gnash:0,tgtRef:null,tgtT:0};
-  for(let k=0;k<5;k++)spider.kids.push({x:sx2+rand(-140,140),y:sy2+rand(-140,140),vx:0,vy:0,hp:160,r:11,wa:rand(0,TAU),atk:0});
+  /* THE BROODLINGS ARE GONE, by Celery's decree: "she is already too much to handle on her own." The kids plumbing stays dormant; nothing ever fills it */
   for(let g=0;g<5;g++){const ga5=g/5*TAU+rand(-0.22,0.22),gr5=rand(210,285);groves.push({x:sx2+Math.cos(ga5)*gr5,y:sy2+Math.sin(ga5)*gr5,amt:260,max:260,vx:0,vy:0,web:true,rich:true,sp:2,kind:'rich'});}
  }
 }
@@ -1812,40 +1812,17 @@ function step(dt){NPLAY=humanCount();
     if(u2.hp<=0)killUnit(s2,u2,null);}}
    if(d2(s2.x,s2.y,sp5.x,sp5.y)<(sp5.r+18)**2&&Math.random()<dt*3.4){sp5.gnash=0.4;s2.hp-=70;s2.flash=.12;if(s2===me())sfx('hurt');
     if(s2.hp<=0)killQueen(s2,null);}}
-  /* THE BROODLINGS: they skitter, they defend, they are hers */
-  sp5.kidT-=dt; /* THE BROODLINGS, made REAL by decree: fewer, BIGGER, faster - they ORBIT her like a living crown, and they bite QUEENS now, not just soldiers */
-  if(sp5.kidT<=0&&sp5.kids.length<5){sp5.kidT=8;
-   sp5.kids.push({x:sp5.x+rand(-40,40),y:sp5.y+rand(-40,40),vx:0,vy:0,hp:190,r:14,wa:rand(0,TAU),atk:0,slot:sp5.kids.length});}
-  for(let i=sp5.kids.length-1;i>=0;i--){const kd=sp5.kids[i];
-   if(kd.atk>0)kd.atk-=dt;
-   let prey=null,preyQ=null,pd5=320*320;
-   if(sp5.provoked>0)for(const s2 of swarms){if(s2.dead)continue;
-    const qq5=d2(s2.x,s2.y,kd.x,kd.y);if(qq5<pd5){pd5=qq5;prey=null;preyQ=s2;} /* a QUEEN in reach outranks her soldiers */
-    for(const u2 of s2.units){const q=d2(u2.x,u2.y,kd.x,kd.y);if(q<pd5){pd5=q;prey=u2;preyQ=null;}}}
-   if(prey||preyQ){const tx5=prey?prey.x:preyQ.x,ty5=prey?prey.y:preyQ.y,dd5=Math.sqrt(pd5)||1;
-    const lunge5=dd5<170?1.34:1; /* close prey is RUSHED */
-    kd.vx=(tx5-kd.x)/dd5*255*lunge5;kd.vy=(ty5-kd.y)/dd5*255*lunge5;
-    if(kd.atk<=0){
-     if(prey&&pd5<(kd.r+9)**2){kd.atk=0.7;prey.hp-=30;prey.flash=.15;
-      if(prey.hp<=0)for(const s2 of swarms){const ii=s2.units.indexOf(prey);if(ii>=0){killUnit(s2,prey,null);break;}}}
-     else if(preyQ&&pd5<(kd.r+16)**2){kd.atk=0.8;preyQ.hp-=18;preyQ.flash=.1;if(preyQ===me())sfx('hurt');
-      if(preyQ.hp<=0)killQueen(preyQ,null);}}
-   } else {const oa5=(kd.slot||0)/5*TAU+tnow*0.55; /* the ORBIT: each broodling keeps her post - a living crown around the mother */
-    const ox5=sp5.x+Math.cos(oa5)*150,oy5=sp5.y+Math.sin(oa5)*150;
-    const od5=Math.hypot(ox5-kd.x,oy5-kd.y)||1,osp5=Math.min(190,od5*2.4);
-    kd.vx+=((ox5-kd.x)/od5*osp5-kd.vx)*Math.min(1,6*dt);kd.vy+=((oy5-kd.y)/od5*osp5-kd.vy)*Math.min(1,6*dt);}
-   kd.x+=kd.vx*dt;kd.y+=kd.vy*dt;
-   /* the young can be slain — for a morsel */
-   for(const s2 of swarms){if(s2.dead)continue;
-    if(d2(kd.x,kd.y,s2.x,s2.y)>(s2.R+560)**2)continue;
-    for(const u2 of s2.units){if(u2.dmg>0&&u2.atk<=0&&d2(u2.x,u2.y,kd.x,kd.y)<(u2.r+kd.r)**2){
-     u2.atk=0.8;kd.hp-=u2.dmg;addSpark(kd.x,kd.y,2);break;}}}
-   if(kd.hp<=0){for(let q9=0;q9<3;q9++)dropAt(kd.x+rand(-10,10),kd.y+rand(-10,10),rand(5,9),10,1);addP(kd.x,kd.y,'#c8b8d8',9,130);if(near(kd))sfx('pop');sp5.kids.splice(i,1);}}
+  /* THE BROODLINGS ARE GONE, by Celery's decree: she was already too much to handle alone, let alone with heat-seeking daughters. She hunts UNACCOMPANIED now */
  }
  /* groves drift, regrow, and the drained POP */
  if(ROOM){ /* THE CORNERS REFILL: in a shared room the nightmares respawn seven minutes after they fall (solo keeps once-per-run trophies sacred). ANSWER to "what are the boss respawn timers": solo NEVER (per world), rooms 420s */
   if(!elder){ELDRT-=dt;if(ELDRT<=0){spawnElder();ELDRT=420;}}else ELDRT=420;
-  if(!spider){SPDRT-=dt;if(SPDRT<=0){spawnSpider();SPDRT=420;}}else SPDRT=420;}
+  if(!spider){SPDRT-=dt;if(SPDRT<=0){spawnSpider();SPDRT=420;}}else SPDRT=420;
+  if(worms.length<3){WMRT-=dt;if(WMRT<=0){WMRT=240; /* the hedge re-worms one at a time - wild bots kept emptying the corner for good */
+   const wx=rand(WORLD.w*0.76,WORLD.w-460),wy=rand(430,WORLD.h*0.24);
+   const w9={x:wx,y:wy,hx:wx,hy:wy,r:13,a:rand(0,TAU),hp:260,maxHp:260,prov:0,flash:0,bur:0,burT:rand(6,14),bite:0,seed:rand(0,TAU),_worm:1,seg:[]};
+   for(let s9=0;s9<7;s9++)w9.seg.push({x:wx-s9*16,y:wy});
+   worms.push(w9);}}else WMRT=240;}
  wormTick(dt);
  flowerTick(dt);
  for(let gi=groves.length-1;gi>=0;gi--){const g=groves[gi];
@@ -3156,25 +3133,7 @@ function paintPlate(g2,base,t2,pl,col){ /* QUEEN ARMOUR, amended law: trim by de
   g2.restore();return;}
  const SP9=[[-2.2,-0.94],[0.94,2.2]]; /* the two rim arcs: dorsal + ventral flanks, face and tail junctions always clear */
  for(let i9=0;i9<QSEGS.length;i9++){const sg=QSEGS[i9],rr=sg.r*0.92;
-  if(C9.wrap&&C9.wrap.indexOf(i9)>=0){ /* FULL CUIRASS on this segment: solid plate, rim, a crescent of light - the pattern lives on her bare segments */
-   g2.fillStyle=C9.c;g2.beginPath();g2.arc(sg.x,sg.y,rr*1.02,0,TAU);g2.fill();
-   g2.strokeStyle=C9.e;g2.lineWidth=2;g2.stroke();
-   if(C9.lite){g2.strokeStyle=C9.lite;g2.lineWidth=1.6;g2.beginPath();g2.arc(sg.x,sg.y,rr*0.78,-2.4,-0.7);g2.stroke();}
-   g2.strokeStyle=C9.e;g2.lineWidth=1.1;g2.beginPath();g2.moveTo(sg.x-rr*0.9,sg.y);g2.lineTo(sg.x+rr*0.9,sg.y);g2.stroke(); /* the forge seam */
-   if(C9.elytra){g2.strokeStyle='rgba(90,200,176,'+(0.35+0.25*Math.sin(t2*2.1+i9)).toFixed(3)+')';g2.lineWidth=1.2; /* iridescence WALKS the shell */
-    g2.beginPath();g2.arc(sg.x,sg.y,rr*0.7,-2.6,-1.6);g2.stroke();
-    g2.beginPath();g2.arc(sg.x,sg.y,rr*0.7,0.5,1.5);g2.stroke();
-    g2.fillStyle=C9.lite;for(const sd of [-1,1]){g2.beginPath();g2.arc(sg.x-rr*0.3,sg.y+sd*rr*0.45,1.2,0,TAU);g2.fill();}}
-   if(C9.comb){g2.strokeStyle=C9.e;g2.lineWidth=1; /* the comb: hex cells across the cuirass */
-    for(const hc6 of [[0,0,0.34],[-0.52,0.3,0.28],[-0.52,-0.3,0.28],[0.52,0.3,0.28],[0.52,-0.3,0.28]]){
-     g2.beginPath();for(let h6=0;h6<6;h6++){const ha6=h6/6*TAU+0.52,px6=sg.x+rr*hc6[0]+Math.cos(ha6)*rr*hc6[2]*0.5,py6=sg.y+rr*hc6[1]+Math.sin(ha6)*rr*hc6[2]*0.5;h6?g2.lineTo(px6,py6):g2.moveTo(px6,py6);}g2.closePath();g2.stroke();}
-    g2.fillStyle='rgba(255,233,160,'+(0.25+0.15*Math.sin(t2*2.4)).toFixed(3)+')';
-    g2.beginPath();g2.arc(sg.x,sg.y,rr*0.17,0,TAU);g2.fill();}
-   if(C9.mspike)for(const sd of [-1,1]){const aa=sd*1.5,bx=sg.x+Math.cos(aa)*rr,by=sg.y+Math.sin(aa)*rr,ln=sg.r*0.4; /* obsidian studs: small recurved, never triangles */
-    g2.fillStyle=C9.lite;g2.beginPath();g2.moveTo(bx+2.2,by);
-    g2.quadraticCurveTo(bx+0.8,by+sd*ln*0.8,bx-ln*0.85,by+sd*ln*0.4);
-    g2.quadraticCurveTo(bx-ln*0.2,by+sd*ln*0.24,bx-2.2,by);g2.closePath();g2.fill();}
-   continue;}
+  if(C9.wrap&&C9.wrap.indexOf(i9)>=0)continue; /* the CUIRASS paints in its own LAST pass now - the neighbouring segment's trim was overlapping the breastplate, and the breastplate is the TOP layer, by decree */
   if(C9.scute){ /* CHITIN: overlapping scutes hug the rim, gaps breathe between them */
    for(const sp of [[-2.45,-1.35],[-0.55,0.55],[1.35,2.45]]){
     g2.strokeStyle=C9.c;g2.lineWidth=C9.w;g2.beginPath();g2.arc(sg.x,sg.y,rr*1.02,sp[0],sp[1]);g2.stroke();
@@ -3209,6 +3168,25 @@ function paintPlate(g2,base,t2,pl,col){ /* QUEEN ARMOUR, amended law: trim by de
     g2.quadraticCurveTo(bx-ln*0.25,by+sd*ln*0.28,bx-3.2,by);
     g2.closePath();g2.fill();g2.stroke();}
   }}
+ if(C9.wrap)for(const i9 of C9.wrap){const sg=QSEGS[i9];if(!sg)continue;const rr=sg.r*0.92; /* THE CUIRASS PASS: breastplates paint OVER every neighbour's trim */
+  g2.fillStyle=C9.c;g2.beginPath();g2.arc(sg.x,sg.y,rr*1.02,0,TAU);g2.fill();
+  g2.strokeStyle=C9.e;g2.lineWidth=2;g2.stroke();
+  if(C9.lite){g2.strokeStyle=C9.lite;g2.lineWidth=1.6;g2.beginPath();g2.arc(sg.x,sg.y,rr*0.78,-2.4,-0.7);g2.stroke();}
+  g2.strokeStyle=C9.e;g2.lineWidth=1.1;g2.beginPath();g2.moveTo(sg.x-rr*0.9,sg.y);g2.lineTo(sg.x+rr*0.9,sg.y);g2.stroke(); /* the forge seam */
+  if(C9.elytra){g2.strokeStyle='rgba(90,200,176,'+(0.35+0.25*Math.sin(t2*2.1+i9)).toFixed(3)+')';g2.lineWidth=1.2; /* iridescence WALKS the shell */
+   g2.beginPath();g2.arc(sg.x,sg.y,rr*0.7,-2.6,-1.6);g2.stroke();
+   g2.beginPath();g2.arc(sg.x,sg.y,rr*0.7,0.5,1.5);g2.stroke();
+   g2.fillStyle=C9.lite;for(const sd of [-1,1]){g2.beginPath();g2.arc(sg.x-rr*0.3,sg.y+sd*rr*0.45,1.2,0,TAU);g2.fill();}}
+  if(C9.comb){g2.strokeStyle=C9.e;g2.lineWidth=1; /* the comb: hex cells across the cuirass */
+   for(const hc6 of [[0,0,0.34],[-0.52,0.3,0.28],[-0.52,-0.3,0.28],[0.52,0.3,0.28],[0.52,-0.3,0.28]]){
+    g2.beginPath();for(let h6=0;h6<6;h6++){const ha6=h6/6*TAU+0.52,px6=sg.x+rr*hc6[0]+Math.cos(ha6)*rr*hc6[2]*0.5,py6=sg.y+rr*hc6[1]+Math.sin(ha6)*rr*hc6[2]*0.5;h6?g2.lineTo(px6,py6):g2.moveTo(px6,py6);}g2.closePath();g2.stroke();}
+   g2.fillStyle='rgba(255,233,160,'+(0.25+0.15*Math.sin(t2*2.4)).toFixed(3)+')';
+   g2.beginPath();g2.arc(sg.x,sg.y,rr*0.17,0,TAU);g2.fill();}
+  if(C9.mspike)for(const sd of [-1,1]){const aa=sd*1.5,bx=sg.x+Math.cos(aa)*rr,by=sg.y+Math.sin(aa)*rr,ln=sg.r*0.4; /* obsidian studs: small recurved, never triangles */
+   g2.fillStyle=C9.lite;g2.beginPath();g2.moveTo(bx+2.2,by);
+   g2.quadraticCurveTo(bx+0.8,by+sd*ln*0.8,bx-ln*0.85,by+sd*ln*0.4);
+   g2.quadraticCurveTo(bx-ln*0.2,by+sd*ln*0.24,bx-2.2,by);g2.closePath();g2.fill();}
+  }
  if(!C9.scute){const th=QSEGS[Math.min(1,QSEGS.length-1)]; /* pauldrons: two studs on the thorax RIM */
   g2.fillStyle=C9.c;g2.strokeStyle=C9.e;g2.lineWidth=1.2;
   for(const sd of [-1,1]){g2.beginPath();g2.ellipse(th.x,th.y+sd*th.r*0.95,th.r*0.34,th.r*0.16,0,0,TAU);g2.fill();g2.stroke();}}
@@ -3671,10 +3649,17 @@ function drawUnitLocal(g,s,u,a,vm,col,fleetId){ /* the unit's LOCAL-frame art (s
   g.bezierCurveTo(-u.r*1.05,0.0,-u.r*1.05,0,-u.r*0.8,u.r*0.28);
   g.bezierCurveTo(-u.r*0.4,u.r*1.0,u.r*0.9,u.r*0.9,u.r*0.9,0);
   g.closePath();g.fill();
-  g.fillStyle='rgba(255,255,255,.92)'; /* the MEDIC CROSS: readable in any livery, at any zoom */
-  g.fillRect(-u.r*0.14,-u.r*0.46,u.r*0.28,u.r*0.92);
-  g.fillRect(-u.r*0.46,-u.r*0.14,u.r*0.92,u.r*0.28);
-  g.strokeStyle='rgba(255,255,255,.7)';g.lineWidth=1;g.stroke();
+  g.fillStyle='rgba(255,255,255,.9)'; /* the MENDING BLOOM: a four-petal lily where the hospital cross once sat - the meadow's own sign for care, by decree */
+  for(let p9=0;p9<4;p9++){const pa9=p9*1.5708+0.785;
+   g.beginPath();g.ellipse(Math.cos(pa9)*u.r*0.3,Math.sin(pa9)*u.r*0.3,u.r*0.26,u.r*0.14,pa9,0,TAU);g.fill();}
+  g.fillStyle='rgba(168,240,184,.95)'; /* the living core */
+  g.beginPath();g.arc(0,0,u.r*0.17,0,TAU);g.fill();
+  g.strokeStyle='rgba(255,255,255,.65)';g.lineWidth=1;g.lineCap='round'; /* two tender feelers, always reaching for someone */
+  for(const sd of [-1,1]){g.beginPath();g.moveTo(u.r*0.7,sd*u.r*0.2);
+   g.quadraticCurveTo(u.r*1.15,sd*u.r*0.4,u.r*1.3,sd*u.r*0.24);g.stroke();}
+  {const m9=(tnow*0.9+u.seed)%1; /* one mend-mote rises off her and fades - she TRAILS renewal */
+   g.fillStyle='rgba(200,255,215,'+(0.7*(1-m9)).toFixed(3)+')';
+   g.beginPath();g.arc(-u.r*(0.3+m9*0.8),-u.r*(0.2+m9*0.6),0.9+(1-m9)*0.9,0,TAU);g.fill();}
  } else if(u.shape==='tri'){ /* LANCER: a wasp-dart — narrow waist, blurred wings, a sting you can read */
   const wf9=Math.sin(tnow*46*u.zeal+u.seed)*0.5+0.5;
   g.fillStyle='rgba(255,250,235,'+(0.2+0.24*wf9)+')';

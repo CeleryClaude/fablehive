@@ -244,8 +244,8 @@ const TUNE={qspd:224,qmass:0.12,qacc:8,zoom:1,zease:0.05,look:0.3,camease:0.09,h
 let SPLIT_MAX=3;
 let SOUL_CAP=100;let NPLAY=1;let ROOM=false; /* flipped true only by the room server: multiplayer-only ecology keys off THIS, so solo stays exactly solo *//* live human players in the room; 1 offline. Drives caps+costs. */ /* THE MUSTER LIMIT (58): brought DOWN from 150 - still comfortably past every unlock (titans 60, stage-3 70) so nothing is ever locked out, but a leaner ceiling means more dogfights and fewer laggy deathmatches. Split to grow past it as more queens, not one bloated swarm a 60Hz tick can't hold. */
 /* meta (cosmetics only, ever — and EVERYTHING earnable with ✨: Royal Nectar only skips the grind) */
-let META={xp:0,skin:0,nectar:0,royal:false,sub:false,seasonXp:0,claimedF:[],claimedR:[],owned:{},eq:{pattern:'plain',crown:'none',trail:'none',wings:'standard',body:'sleek',tail:'notail',fleet:'plainfleet',aura:'noaura',plate:'noplate'}};
-try{const m=(typeof localStorage!=='undefined')&&localStorage.getItem('brood_meta');if(m){const p=JSON.parse(m);META=Object.assign(META,p);META.owned=p.owned||{};META.eq=Object.assign({pattern:'plain',crown:'none',trail:'none',wings:'standard',body:'sleek',tail:'notail',fleet:'plainfleet',aura:'noaura',plate:'noplate'},p.eq||{});META.claimedF=p.claimedF||[];META.claimedR=p.claimedR||[];}}catch(e){}
+let META={xp:0,skin:0,nectar:0,royal:false,sub:false,seasonXp:0,claimedF:[],claimedR:[],owned:{},eq:{pattern:'plain',crown:'none',trail:'none',wings:'standard',body:'sleek',tail:'notail',fleet:'plainfleet',aura:'noaura',plate:'noplate',eye:'simple'}};
+try{const m=(typeof localStorage!=='undefined')&&localStorage.getItem('brood_meta');if(m){const p=JSON.parse(m);META=Object.assign(META,p);META.owned=p.owned||{};META.eq=Object.assign({pattern:'plain',crown:'none',trail:'none',wings:'standard',body:'sleek',tail:'notail',fleet:'plainfleet',aura:'noaura',plate:'noplate',eye:'simple'},p.eq||{});META.claimedF=p.claimedF||[];META.claimedR=p.claimedR||[];}}catch(e){}
 function metaSave(){try{if(typeof localStorage!=='undefined')localStorage.setItem('brood_meta',JSON.stringify(META));}catch(e){}}
 let XP_RATE=0.4; /* slow the climb: quick first joys, a real road to royalty (single knob, tune me) */
 let RUNXP=0; /* what THIS flight has earned - so you know when a trip to the nest is worth it */
@@ -402,11 +402,16 @@ const ITEMS=[
  {id:'mandibleguard',cat:'crown',n:'Mandible Guard',xp:1600,d:'pincers that frame the face'},
  {id:'hornedcasque',cat:'crown',n:'Horned Casque',xp:2200,d:'chitin crowned with recurved horns'},
  {id:'dreadhelm', cat:'crown',  n:'Dreadhelm',   xp:4500,royal:true,d:'the slit still remembers the forge'},
- {id:'eyestalks', cat:'crown',  n:'Snail Stalks',xp:600,  d:'two soft periscopes, always curious'},
+ {id:'noeye',     cat:'eye',    n:'Unmarked',    xp:0,    d:'pure carapace - no gaze at all'},
+ {id:'simple',    cat:'eye',    n:'The Point',   xp:0,    d:'the single white eye she has always worn'},
+ {id:'doe',       cat:'eye',    n:'Doe Eyes',    xp:350,  d:'two dark pools with morning light in them'},
+ {id:'compound',  cat:'eye',    n:'Compound Gaze',xp:900, d:'a hundred facets, insect-true'},
+ {id:'emberorbs', cat:'eye',    n:'Ember Orbs',  xp:1600, d:'two coals that never quite go out'},
+ {id:'eyestalks', cat:'eye',    n:'Snail Stalks',xp:600,  d:'two soft periscopes, always curious'},
  {id:'voidtear',  cat:'wings',  n:'Torn Void',   xp:2100, d:'membranes of missing light, ragged at the edges'},
  {id:'sickle',    cat:'wings',  n:'Reaper'+String.fromCharCode(39)+'s Sickles',xp:2700,d:'they do not flutter - they loom'},
  {id:'deathmoth', cat:'wings',  n:'Deathmoth',   xp:3600,royal:true,d:'beautiful the way omens are'},
- {id:'spidereyes',cat:'crown',  n:'Hunter'+String.fromCharCode(39)+'s Cluster',xp:1400,d:'six glossy reasons to be feared'},
+ {id:'spidereyes',cat:'eye',    n:'Hunter'+String.fromCharCode(39)+'s Cluster',xp:1400,d:'six glossy reasons to be feared'},
  {id:'millipede', cat:'plate',  n:'Millipede Mail',xp:1700,d:'a hundred little legs, all marching'},
  {id:'moltaura', cat:'aura',   n:'Apex Shimmer',xp:-1,  d:'reach 120 souls once — wear the shimmer of the great'},
  {id:'algaeglow',cat:'aura',   n:'Grotto Glow', xp:-1,  d:'gather 200 honey inside the dark — the algae remember you'},
@@ -1390,6 +1395,37 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
      else if(B.role==='forager'&&A.role!=='forager'){wA=0.08;wB=0.92;}
      const F=(mn-d3)*(inRank?0.3:0.5)/d3;A.x-=ex*F*wA;A.y-=ey*F*wA;B.x+=ex*F*wB;B.y+=ey*F*wB;}}}
 }
+function trailTick(s,dt){ /* THE TRAIL, shared: solo step calls it for the player, netTick calls it for YOUR predicted queen - trails never existed online at all (team-0 gate = a bot on the server) */
+ if(META.eq.trail==='notrail'||(s.spdNow||0)<=120)return;
+
+   s._trT=(s._trT||0)-dt;
+   if(s._trT<=0){s._trT=0.062;
+    const tr=META.eq.trail;
+    if(fx.length<430){
+     const st8=s.ally?0:queenStage(s),base8=12+st8*3+(st8===3?2:0);
+     const rear8=base8*(1.2+0.92*Math.min(st8,3)); /* the emitter rides the TRUE last segment: big queens grow LONG - the old offset left the trail leaking from mid-body */
+     const vm8=Math.hypot(s.vx,s.vy)||1;
+     const bx2=s.x-(s.vx/vm8)*rear8,by2=s.y-(s.vy/vm8)*rear8;
+     if(tr==='petal')fx.push({x:bx2,y:by2,vx:rand(-16,16),vy:rand(-4,22),t:0,life:0.95,col:'#ffb4d2',r:3.2,kind:'petal',rot:rand(0,TAU),rv:rand(-4,4)});
+     else if(tr==='breeze')fx.push({x:bx2,y:by2,vx:rand(-10,10),vy:rand(-6,6),t:0,life:0.7,col:'rgba(255,255,255,.5)',r:6,kind:'wisp2',rot:Math.atan2(s.vy,s.vx)+rand(-0.4,0.4)});
+     else if(tr==='cloverleaf')fx.push({x:bx2,y:by2,vx:rand(-10,10),vy:rand(2,14),t:0,life:0.9,col:'#7fc86a',r:2.6,kind:'clover',rot:rand(0,TAU)});
+     else if(tr==='bubbles')fx.push({x:bx2,y:by2,t:0,life:0.9,col:'rgba(200,235,255,.7)',ring:true,r0:1.5,r1:9});
+     else if(tr==='stardust')fx.push({x:bx2,y:by2,vx:rand(-8,8),vy:rand(-8,8),t:0,life:0.8,col:'#fff6d8',r:rand(2.2,3.4),kind:'star',rot:rand(0,TAU),rv:rand(-3,3)});
+     else if(tr==='honeydrip')fx.push({x:bx2,y:by2,vx:rand(-4,4),vy:34,t:0,life:0.85,col:'#ffbe46',r:2.8,kind:'drop'});
+     else if(tr==='mothtr')fx.push({x:bx2+rand(-10,10),y:by2+rand(-10,10),vx:rand(-24,24),vy:rand(-24,24),t:0,life:0.9,col:'#eef4dc',r:2.6,kind:'moth',rot:rand(0,TAU)});
+     else if(tr==='aurora')fx.push({x:bx2,y:by2,vx:rand(-6,6),vy:rand(-14,-4),t:0,life:1.1,col:'hsla('+((tnow*80)%360)+',80%,70%,.7)',r:9,kind:'ribbon',rot:Math.atan2(s.vy,s.vx)});
+     else if(tr==='petalgold')fx.push({x:bx2,y:by2,vx:rand(-14,14),vy:rand(0,20),t:0,life:0.95,col:'#ffd75e',r:3,kind:'petal',rot:rand(0,TAU),rv:rand(-4,4)});
+     else if(tr==='midnight'){fx.push({x:bx2,y:by2,vx:rand(-6,6),vy:rand(-6,6),t:0,life:1.0,col:'#8278ff',r:rand(2.4,3.2),kind:'star',rot:rand(0,TAU),rv:2});
+      if(Math.random()<0.4)fx.push({x:bx2,y:by2,vx:rand(-4,4),vy:rand(-4,4),t:0,life:1.3,col:'rgba(40,34,80,.5)',r:rand(5,8)});}
+     else if(tr==='silkstrand')fx.push({x:bx2,y:by2,vx:rand(-3,3),vy:rand(-3,3),t:0,life:1.6,col:'rgba(232,220,248,.6)',r:7,kind:'ribbon',rot:Math.atan2(s.vy,s.vx)});
+     else if(tr==='venomdrip')fx.push({x:bx2,y:by2,vx:rand(-3,3),vy:rand(16,30),t:0,life:1.1,col:'rgba(120,255,120,.9)',r:rand(2.6,3.4),kind:'venom'});
+     else if(tr==='flametr')fx.push({x:bx2,y:by2,vx:rand(-12,12),vy:rand(-34,-14),t:0,life:0.55,col:'#ff7820',r:rand(3.4,4.6),kind:'flame',rot:rand(-0.3,0.3)});
+     else if(tr==='willowisp')fx.push({x:bx2+rand(-12,12),y:by2+rand(-12,12),vx:rand(-6,6),vy:rand(-12,-4),t:0,life:1.5,col:'rgba(180,255,230,.8)',r:rand(2.6,3.4),kind:'orb',rot:rand(0,TAU)});
+     else if(tr==='lanterntr')fx.push({x:bx2,y:by2+rand(-8,8),vx:0,vy:-3,t:0,life:2.0,col:'rgba(255,200,90,.9)',r:3.4,kind:'lantern',rot:rand(-0.2,0.2)});
+     else if(tr==='slimetr')fx.push({x:bx2,y:by2,vx:0,vy:2,t:0,life:1.8,col:'rgba(120,220,90,.8)',r:rand(3.4,4.8),kind:'goo'});
+     else if(tr==='watchertr')fx.push({x:bx2+rand(-10,10),y:by2+rand(-10,10),vx:0,vy:0,t:0,life:2.4,col:'#f4ede0',eye:true,r:rand(2.6,3.6)});
+     else if(tr==='embertr')fx.push({x:bx2,y:by2,vx:rand(-12,12),vy:rand(-18,-6),t:0,life:0.7,col:'#ff8c3c',r:rand(2,3),kind:'ember',rot:rand(0,TAU),rv:rand(-6,6)});
+    }}}
 function step(dt){NPLAY=humanCount();
  tnow+=dt;const M=me();
  const sepPar=(step._sepPar=1-(step._sepPar||0)); /* THE STAGGER CLOCK: flips exactly ONCE per tick, unlike step._par
@@ -1507,35 +1543,8 @@ function step(dt){NPLAY=humanCount();
    fx.push({x:s.x+rand(-8,8),y:s.y+rand(-8,8),vx:rand(-14,14),vy:rand(6,26),t:0,life:0.8,col:s.col,r:2});
   if((s.spdNow||0)<18){s.preenT=(s.preenT||0)+dt;}else s.preenT=0;
   /* the TRAIL you paid your patience for */
-  if(s.team===0&&META.eq.trail!=='notrail'&&s.spdNow>120){
-   s._trT=(s._trT||0)-dt;
-   if(s._trT<=0){s._trT=0.062;
-    const tr=META.eq.trail;
-    if(fx.length<430){
-     const st8=s.ally?0:queenStage(s),base8=12+st8*3+(st8===3?2:0);
-     const rear8=base8*(1.15+0.6*Math.min(st8,3)); /* the emitter rides her TRUE tail at every stage */
-     const vm8=Math.hypot(s.vx,s.vy)||1;
-     const bx2=s.x-(s.vx/vm8)*rear8,by2=s.y-(s.vy/vm8)*rear8;
-     if(tr==='petal')fx.push({x:bx2,y:by2,vx:rand(-16,16),vy:rand(-4,22),t:0,life:0.95,col:'#ffb4d2',r:3.2,kind:'petal',rot:rand(0,TAU),rv:rand(-4,4)});
-     else if(tr==='breeze')fx.push({x:bx2,y:by2,vx:rand(-10,10),vy:rand(-6,6),t:0,life:0.7,col:'rgba(255,255,255,.5)',r:6,kind:'wisp2',rot:Math.atan2(s.vy,s.vx)+rand(-0.4,0.4)});
-     else if(tr==='cloverleaf')fx.push({x:bx2,y:by2,vx:rand(-10,10),vy:rand(2,14),t:0,life:0.9,col:'#7fc86a',r:2.6,kind:'clover',rot:rand(0,TAU)});
-     else if(tr==='bubbles')fx.push({x:bx2,y:by2,t:0,life:0.9,col:'rgba(200,235,255,.7)',ring:true,r0:1.5,r1:9});
-     else if(tr==='stardust')fx.push({x:bx2,y:by2,vx:rand(-8,8),vy:rand(-8,8),t:0,life:0.8,col:'#fff6d8',r:rand(2.2,3.4),kind:'star',rot:rand(0,TAU),rv:rand(-3,3)});
-     else if(tr==='honeydrip')fx.push({x:bx2,y:by2,vx:rand(-4,4),vy:34,t:0,life:0.85,col:'#ffbe46',r:2.8,kind:'drop'});
-     else if(tr==='mothtr')fx.push({x:bx2+rand(-10,10),y:by2+rand(-10,10),vx:rand(-24,24),vy:rand(-24,24),t:0,life:0.9,col:'#eef4dc',r:2.6,kind:'moth',rot:rand(0,TAU)});
-     else if(tr==='aurora')fx.push({x:bx2,y:by2,vx:rand(-6,6),vy:rand(-14,-4),t:0,life:1.1,col:'hsla('+((tnow*80)%360)+',80%,70%,.7)',r:9,kind:'ribbon',rot:Math.atan2(s.vy,s.vx)});
-     else if(tr==='petalgold')fx.push({x:bx2,y:by2,vx:rand(-14,14),vy:rand(0,20),t:0,life:0.95,col:'#ffd75e',r:3,kind:'petal',rot:rand(0,TAU),rv:rand(-4,4)});
-     else if(tr==='midnight'){fx.push({x:bx2,y:by2,vx:rand(-6,6),vy:rand(-6,6),t:0,life:1.0,col:'#8278ff',r:rand(2.4,3.2),kind:'star',rot:rand(0,TAU),rv:2});
-      if(Math.random()<0.4)fx.push({x:bx2,y:by2,vx:rand(-4,4),vy:rand(-4,4),t:0,life:1.3,col:'rgba(40,34,80,.5)',r:rand(5,8)});}
-     else if(tr==='silkstrand')fx.push({x:bx2,y:by2,vx:rand(-3,3),vy:rand(-3,3),t:0,life:1.6,col:'rgba(232,220,248,.6)',r:7,kind:'ribbon',rot:Math.atan2(s.vy,s.vx)});
-     else if(tr==='venomdrip')fx.push({x:bx2,y:by2,vx:rand(-3,3),vy:rand(16,30),t:0,life:1.1,col:'rgba(120,255,120,.9)',r:rand(2.6,3.4),kind:'venom'});
-     else if(tr==='flametr')fx.push({x:bx2,y:by2,vx:rand(-12,12),vy:rand(-34,-14),t:0,life:0.55,col:'#ff7820',r:rand(3.4,4.6),kind:'flame',rot:rand(-0.3,0.3)});
-     else if(tr==='willowisp')fx.push({x:bx2+rand(-12,12),y:by2+rand(-12,12),vx:rand(-6,6),vy:rand(-12,-4),t:0,life:1.5,col:'rgba(180,255,230,.8)',r:rand(2.6,3.4),kind:'orb',rot:rand(0,TAU)});
-     else if(tr==='lanterntr')fx.push({x:bx2,y:by2+rand(-8,8),vx:0,vy:-3,t:0,life:2.0,col:'rgba(255,200,90,.9)',r:3.4,kind:'lantern',rot:rand(-0.2,0.2)});
-     else if(tr==='slimetr')fx.push({x:bx2,y:by2,vx:0,vy:2,t:0,life:1.8,col:'rgba(120,220,90,.8)',r:rand(3.4,4.8),kind:'goo'});
-     else if(tr==='watchertr')fx.push({x:bx2+rand(-10,10),y:by2+rand(-10,10),vx:0,vy:0,t:0,life:2.4,col:'#f4ede0',eye:true,r:rand(2.6,3.6)});
-     else if(tr==='embertr')fx.push({x:bx2,y:by2,vx:rand(-12,12),vy:rand(-18,-6),t:0,life:0.7,col:'#ff8c3c',r:rand(2,3),kind:'ember',rot:rand(0,TAU),rv:rand(-6,6)});
-    }}}
+  if(s.team===0)trailTick(s,dt);
+
   /* WALL-GLIDE: pressing into stone redirects you along it — rock is a banister, not a snare */
   if(drive&&s.spdNow<spd*0.35){
    let nb=null,nq=1e18;
@@ -2004,6 +2013,12 @@ function step(dt){NPLAY=humanCount();
      eu.hp-=dm;eu.flash=.12;eu.slow=0.5;hit=true;
      if(eu.hp<=0)killUnit(es,eu,sh.by);}});
    if(hit)break;}
+  if(!hit&&elder&&d2(sh.x,sh.y,elder.x,elder.y)<(elder.r*0.85)**2){ /* QUARRELS BITE THE COLOSSI: shots only ever collided with swarms - a spitter army did literally ZERO boss damage, and the healthbar never woke to say so */
+   elder.hp-=sh.dmg*1.4;elder.flash=.1;elder.provoked=6;hit=true;
+   if(elder.hp<=0)killElder(mainOf(sh.team)||null);}
+  if(!hit&&spider&&d2(sh.x,sh.y,spider.x,spider.y)<(spider.r*0.8)**2){
+   spider.hp-=sh.dmg*1.4;spider.flash=.1;spider.provoked=6;hit=true;
+   if(spider.hp<=0)killSpider(mainOf(sh.team)||null);}
   if(hit){addP(sh.x,sh.y,'#8fe0c0',4,90);shots.splice(i,1);continue;}
   if(sh.t<=0){addP(sh.x,sh.y,'#8fe0c0',2,50);shots.splice(i,1);}
  }
@@ -2452,6 +2467,7 @@ function drawNestQueen(){
  c2.strokeStyle='rgba(255,255,255,.75)';c2.lineWidth=1.5;
  paintPattern(c2,base,t2,tryOn.pattern||META.eq.pattern,col,nestSz);
  paintPlate(c2,base,t2,tryOn.plate||META.eq.plate,col);
+ paintEye(c2,base,t2,tryOn.eye||META.eq.eye);
  c2.fillStyle='#fff';c2.beginPath();c2.arc(base*0.55,0,3,0,TAU);c2.fill();
  paintCrown(c2,base,t2,tryOn.crown||META.eq.crown);
  c2.restore();
@@ -2462,7 +2478,7 @@ function drawNestQueen(){
   mk('forager',40,1.25);mk('soldier',82,1.05);mk('lancer',126,1.1);mk('spitter',176,1.15);}
 }
 let nestI=null,nestTab='skins',nestSz=1,nestFxA=[];
-const TABS=[['skins','COLOURS'],['body','BODY'],['pattern','PATTERNS'],['crown','CROWNS'],['wings','WINGS'],['trail','TRAILS'],['tail','TAILS'],['plate','🛡 ARMOUR'],['aura','◎ AURAS'],['fleet','⚔ FLEET']];
+const TABS=[['skins','COLOURS'],['body','BODY'],['eye','◉ EYES'],['pattern','PATTERNS'],['crown','CROWNS'],['wings','WINGS'],['trail','TRAILS'],['tail','TAILS'],['plate','🛡 ARMOUR'],['aura','◎ AURAS'],['fleet','⚔ FLEET']];
 let tryOn={};
 const GLYPH={pattern:'◐',crown:'♛',trail:'✦',wings:'🦋',body:'🐝',tail:'〰',fleet:'⚔',aura:'◎'};
 function itemLabel(id){const it=itemById(id);return it?it.n:id;}
@@ -2499,7 +2515,7 @@ function showHome(){
     else{if(trying)delete tryOn.skin;else tryOn.skin=i;sfx('feed');showHome();}});
    sk.appendChild(d);});
   } else {
-  const DEF={pattern:'plain',crown:'none',trail:'notrail',wings:'standard',body:'sleek',tail:'notail',fleet:'plainfleet',aura:'noaura',plate:'noplate'};
+  const DEF={pattern:'plain',crown:'none',trail:'notrail',wings:'standard',body:'sleek',tail:'notail',fleet:'plainfleet',aura:'noaura',plate:'noplate',eye:'simple'};
   const list=ITEMS.filter(it=>it.cat===nestTab).sort((a,b)=>(a.id===DEF[nestTab]?-1:0)-(b.id===DEF[nestTab]?-1:0)||a.xp-b.xp);
   for(const it of list){
    const d=document.createElement('div');
@@ -2565,6 +2581,10 @@ let WS_URL=null;
 document.getElementById('go').onclick=()=>{
  const nm=((document.getElementById('nameIn')||{}).value||'').trim().slice(0,16)||'Queen';
  try{META.name=nm;metaSave();}catch(e){}
+ {const DEF9={pattern:'plain',crown:'none',trail:'notrail',wings:'standard',body:'sleek',tail:'notail',fleet:'plainfleet',aura:'noaura',plate:'noplate',eye:'simple'}; /* THE OWNERSHIP LID: dress-up in the mirror is free, but you cannot RIDE TO BATTLE in what you do not own - any unowned piece snaps back to its default at the gate */
+  for(const k9 in META.eq){const it9=itemById(META.eq[k9]);
+   if(it9&&it9.xp>0&&!ownsItem(it9.id))META.eq[k9]=DEF9[k9]||META.eq[k9];}
+  metaSave();}
  document.getElementById('start').style.display='none';
  barEl.style.display='flex';document.getElementById('gear').style.display='block';resumeAudio();RUNXP=0;setup();renderBar();running=true; /* a new flight starts its own ledger */
  if(WS_URL&&!NET.on)NET.connect(WS_URL,nm);
@@ -2886,6 +2906,32 @@ function paintPattern(g2,base,t2,pat,col){
   g2.strokeStyle='rgba(200,160,255,.4)';g2.lineWidth=1;
   for(const sg of S9){g2.beginPath();g2.ellipse(sg.x,sg.y,sg.r*0.55,sg.r*0.45,0,0,TAU);g2.stroke();}}
 }
+function paintEye(g2,base,t2,ey){ /* THE GAZE: her eye is a CHOICE now. Anchored to the true head segment so no body type or stage can misplace it */
+ if(!ey||ey==='noeye'||!QSEGS.length)return;
+ const hx=QSEGS[0].x,hy=QSEGS[0].y,hr=QSEGS[0].r;
+ g2.save();g2.translate(0,hy);
+ if(ey==='simple'){g2.fillStyle='#fff';g2.beginPath();g2.arc(hx,0,hr*0.22+1.4,0,TAU);g2.fill();}
+ else if(ey==='doe'){for(const sd of [-1,1]){g2.fillStyle='#241a20';g2.beginPath();g2.arc(hx+hr*0.42,sd*hr*0.34,hr*0.24,0,TAU);g2.fill();
+   g2.fillStyle='rgba(255,255,255,.85)';g2.beginPath();g2.arc(hx+hr*0.5,sd*hr*0.28,hr*0.09,0,TAU);g2.fill();}}
+ else if(ey==='compound'){for(const sd of [-1,1]){g2.fillStyle='#2c2030';g2.beginPath();g2.ellipse(hx+hr*0.36,sd*hr*0.44,hr*0.3,hr*0.22,sd*0.5,0,TAU);g2.fill();
+   g2.fillStyle='rgba(160,220,255,'+(0.3+0.2*Math.sin(t2*3+sd))+')';
+   for(let k=0;k<4;k++){const aa=sd*0.5+k*1.5;g2.beginPath();g2.arc(hx+hr*0.36+Math.cos(aa)*hr*0.12,sd*hr*0.44+Math.sin(aa)*hr*0.08,hr*0.05,0,TAU);g2.fill();}}}
+ else if(ey==='emberorbs'){for(const sd of [-1,1]){g2.save();g2.globalAlpha=0.75+0.25*Math.sin(t2*3.4+sd);
+   g2.fillStyle='#ff7a3a';g2.beginPath();g2.arc(hx+hr*0.44,sd*hr*0.32,hr*0.14,0,TAU);g2.fill();
+   g2.fillStyle='#ffd7a8';g2.beginPath();g2.arc(hx+hr*0.44,sd*hr*0.32,hr*0.06,0,TAU);g2.fill();g2.restore();}}
+ else if(ey==='eyestalks'){for(const sd of [-1,1]){const bx=hx+Math.cos(sd*0.62)*hr*0.99,by=Math.sin(sd*0.62)*hr*0.99;
+   const sw9=Math.sin(t2*2.2+sd)*hr*0.11;
+   g2.strokeStyle='#b8a890';g2.lineWidth=2.6;g2.lineCap='round';
+   g2.beginPath();g2.moveTo(bx,by);
+   g2.quadraticCurveTo(bx+hr*0.6,by+sd*hr*0.31+sw9,bx+hr*1.26,by+sd*hr*0.55+sw9);g2.stroke();
+   g2.fillStyle='#2c2420';g2.beginPath();g2.arc(bx+hr*1.26,by+sd*hr*0.55+sw9,hr*0.19,0,TAU);g2.fill();
+   g2.fillStyle='rgba(255,255,255,.7)';g2.beginPath();g2.arc(bx+hr*1.3,by+sd*hr*0.5+sw9,hr*0.055,0,TAU);g2.fill();}}
+ else if(ey==='spidereyes'){const EY=[[0.55,-0.34,0.2],[0.55,0.34,0.2],[0.86,-0.14,0.11],[0.86,0.14,0.11],[0.34,-0.6,0.1],[0.34,0.6,0.1]];
+  for(const e9 of EY){const ex=hx+hr*e9[0]*0.99,ey9=hr*e9[1]*1.1,er9=hr*e9[2]*1.1;
+   g2.fillStyle='#1c1418';g2.beginPath();g2.arc(ex,ey9,er9,0,TAU);g2.fill();
+   g2.strokeStyle='#4a3a44';g2.lineWidth=0.8;g2.stroke();
+   g2.fillStyle='rgba(255,255,255,.75)';g2.beginPath();g2.arc(ex+er9*0.3,ey9-er9*0.3,er9*0.3,0,TAU);g2.fill();}}
+ g2.restore();}
 function paintPlate(g2,base,t2,pl,col){ /* QUEEN ARMOUR, amended law: trim by default, and SOME sets fully WRAP chosen segments (the pattern lives on the bare ones). Sets pair with FLEETS - same metals, same tints - so queen and army read as one host */
  if(!pl||pl==='noplate'||!QSEGS.length)return;
  const C9={bronzetrim:{c:'#b08048',e:'#6e4a26',w:2.2},
@@ -3036,20 +3082,6 @@ function paintCrown(g2,base,t2,cr){
   for(let k2=0;k2<3;k2++){g2.strokeStyle=CS[k2];g2.lineWidth=3.4-k2*0.5;
    g2.beginPath();g2.arc(hx8,0,hr8*(1.02-k2*0.2),-1.9+k2*0.18,1.9-k2*0.18);g2.stroke();}
   g2.fillStyle='#cfd6e0';for(const sd of [-1,1]){g2.beginPath();g2.arc(hx8+Math.cos(sd*1.9)*hr8,Math.sin(sd*1.9)*hr8,1.8,0,TAU);g2.fill();}}
- else if(cr==='eyestalks'){ /* SNAIL EYES: two soft stalks reaching forward, ball-tipped, alive */
-  for(const sd of [-1,1]){const bx=hx8+Math.cos(sd*0.62)*hr8*0.9,by=Math.sin(sd*0.62)*hr8*0.9;
-   const sw9=Math.sin(t2*2.2+sd)*hr8*0.1;
-   g2.strokeStyle='#b8a890';g2.lineWidth=2.6;g2.lineCap='round';
-   g2.beginPath();g2.moveTo(bx,by);
-   g2.quadraticCurveTo(bx+hr8*0.55,by+sd*hr8*0.28+sw9,bx+hr8*1.15,by+sd*hr8*0.5+sw9);g2.stroke();
-   g2.fillStyle='#2c2420';g2.beginPath();g2.arc(bx+hr8*1.15,by+sd*hr8*0.5+sw9,hr8*0.17,0,TAU);g2.fill();
-   g2.fillStyle='rgba(255,255,255,.7)';g2.beginPath();g2.arc(bx+hr8*1.19,by+sd*hr8*0.46+sw9,hr8*0.05,0,TAU);g2.fill();}}
- else if(cr==='spidereyes'){ /* HUNTER'S CLUSTER: two great orbs, four small, all glossy */
-  const EY=[[0.55,-0.34,0.2],[0.55,0.34,0.2],[0.86,-0.14,0.11],[0.86,0.14,0.11],[0.34,-0.6,0.1],[0.34,0.6,0.1]];
-  for(const e9 of EY){const ex=hx8+hr8*e9[0]*0.9,ey9=hr8*e9[1],er9=hr8*e9[2];
-   g2.fillStyle='#1c1418';g2.beginPath();g2.arc(ex,ey9,er9,0,TAU);g2.fill();
-   g2.strokeStyle='#4a3a44';g2.lineWidth=0.8;g2.stroke();
-   g2.fillStyle='rgba(255,255,255,.75)';g2.beginPath();g2.arc(ex+er9*0.3,ey9-er9*0.3,er9*0.3,0,TAU);g2.fill();}}
  else if(cr==='laurel'){ /* LAUREL, second pass: a full victor's wreath - two arcs of leaves meeting at the brow, gold-tipped */
   for(const sd of [-1,1])for(let k2=0;k2<4;k2++){const aa=sd*(0.28+k2*0.34);
    const lx=base*0.95+Math.cos(aa)*base*0.5,ly=Math.sin(aa)*base*0.6;
@@ -3191,7 +3223,7 @@ function drawQueen(s){
  ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=1.5;ctx.stroke();
  if(eq2)paintPattern(ctx,base,tnow,eq2.pattern,s.col,st);
  if(eq2)paintPlate(ctx,base,tnow,eq2.plate,s.col);
- ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(base*0.55,0,2.6+st*0.5,0,TAU);ctx.fill();
+ paintEye(ctx,base,tnow,mine?META.eq.eye:((eq2&&eq2.eye)||'simple')); /* the white dot was hardcoded on every queen forever - now it is merely the DEFAULT of a category */
  if(eq2)paintCrown(ctx,base,tnow,eq2.crown);
  if(s.gilded2){ctx.strokeStyle='rgba(255,223,126,'+(0.6+0.2*Math.sin(tnow*4))+')';ctx.lineWidth=2;
   ctx.beginPath();ctx.arc(base*0.9,0,base*0.5,0,TAU);ctx.stroke();} /* elder-slayer's gold */
@@ -4387,7 +4419,7 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
   if(F.fa[i9]&&!(mw9.anim>0)){mw9.anim=0.4;const M0=swarms&&swarms[0];if(M0&&!M0.dead&&d2(mw9.x,mw9.y,M0.x,M0.y)<900*900)sfx('pop');}}
  if(F.gm)for(let gi9=0;gi9<F.gm.length&&gi9<grottos.length;gi9++){const ms9=grottos[gi9].maws;if(!ms9)continue;
   for(let mi9=0;mi9<F.gm[gi9].length&&mi9<ms9.length;mi9++)if(F.gm[gi9][mi9]&&!(ms9[mi9].anim>0))ms9[mi9].anim=0.4;}
- if(F.ey)eyes=F.ey.map(e=>({x:e[0],y:e[1],r:e[2],hp:e[3],maxHp:e[4],blink:e[5],dread:e[6]?1:0,wa:e[7],seed:e[8],cd:0}));
+ if(F.ey)eyes=F.ey.map(e=>({x:e[0],y:e[1],r:e[2],hp:e[3],maxHp:e[4],blink:e[5],dread:e[6]?1:0,wa:e[7],seed:e[8],cd:0,whip:(e[9]||e[10])?{x:e[9],y:e[10],t:0.18}:null})); /* the lash lands VISIBLY online */
  if(F.el!==undefined){if(!F.el)elder=null; /* BOSS INTERPOLATION: the Elder was REBUILT raw at 10Hz - a colossus teleporting between snapshots, "twitchy as hell, freakishly so". He keeps ONE body now; frames set targets, the render loop glides him like every other soul */
   else{if(!elder||!elder._net)elder={x:F.el[0],y:F.el[1],hp:F.el[2],maxHp:F.el[3],vx:F.el[4],vy:F.el[5],r:72,flash:0,provoked:0,atk:0,hx:F.el[0],hy:F.el[1],terr:520,sense:410,_net:1};
    if(F.el[2]<elder.hp-0.5)elder.flash=0.12; /* his wounds land white here too */
@@ -4411,7 +4443,7 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
      const near9=swarms[0]&&d2(m9.x,m9.y,swarms[0].x,swarms[0].y)<1400*1400;
      const wtgt9=swarms[0]&&swarms[0].war===m9;
      if(own9)toast('YOUR QUEEN FALLS','#ffdf7e',4);
-     else if(wtgt9||near9)toast('👑 '+(m9.name||'a queen')+' FALLS','#ffdf7e',2.5); /* only falls that are YOURS to feel: your kill, your war, your screen - far bot drama stays far */
+     else if(wtgt9||near9){toast('👑 '+(m9.name||'a queen')+' FALLS','#ffdf7e',2.5);gainXP(45);} /* only falls that are YOURS to feel - and a fallen rival near you PAYS, online as anywhere */
      if(own9||near9)sfx('die');}}
    else if(m9)m9.dead=true;
    continue;}
@@ -4420,6 +4452,7 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
    cosEq:null,warLoss:0,sayT:0,stompCd:0,expoT:0,lost:0,lostT:0,slots:{}};}
   m9.dead=false;m9.prot=w9.p?1:0;if(w9.sc!=null)m9._sc=w9.sc;
   if(w9.n!==undefined){m9.name=w9.n;m9.col=w9.c;m9.col2=w9.c2||null;m9.cosEq=w9.q||null;} /* identity rides the full beats; between them, keep the last known */
+  if(w9.i===NET.you&&!w9.a&&m9.honey!=null&&w9.H>m9.honey&&w9.H-m9.honey<60)gainXP((w9.H-m9.honey)*0.1); /* ONLINE XP: the meadow pays here too - honey banked earns at the solo forager rate, tracked from the wire's own truth (big jumps like respawn banking are ignored) */
   {const hpd9=(m9.hp!=null&&w9.h<m9.hp-0.5); /* TRUTH OVER FLAGS: a hit is an hp DROP, measured before the mirror updates. The flag-edge version re-armed screen-shake through every brawl - that was the mystery VIBRATION. Shake is gone (solo never shook for ordinary hits); white flash + sparks land exactly where damage landed */
    if((hpd9||w9.f)&&!(m9.flash>0))m9.flash=0.16;
    if(hpd9&&fx.length<430)addP(w9.x,w9.y,'#ffd7a8',4,120);
@@ -4595,6 +4628,7 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
  /* (removed) the per-frame LOCAL swarm-brain (gridBuild+boulderGridBuild+moveUnits, every client every frame). It felt solo-tight on a strong desktop but PINNED weak phones: a ~100-unit sim at 60fps could not keep pace AND drain the socket, so frames backlogged and the phone's ms CLIMBED (22s seen). Own troops now interpolate from the server like everyone else (branch above, offset to the predicted queen). The server stays sole authority for combat/kills/honey, so troops that looked inert online now render the server's REAL fighting. */
  /* pings moved to a real 2s interval inside NET.connect: this RAF loop PAUSES whenever a phone dims or backgrounds the tab, which silenced the pulse and got LIVE seats reaped as ghosts */
  NET.aimT-=dt;
+ if(MP&&!MP.dead)trailTick(MP,dt); /* your trail flies online too */
  const M9=MP; /* aim/overlay follow the PROVEN own swarm only - never a stranger at index 0 */
  if(M9&&!M9.dead&&NET.aimT<=0){NET.aimT=0.08;
   let ax=null,ay=0,dr=false;const kv=keyVec();
@@ -4650,7 +4684,7 @@ function netDyn(){ /* the LIVING world, streamed */
   wp:wasps.map(w=>[w.x|0,w.y|0,w.vx|0,w.vy|0,w.trio||0]),
   gp:grottos.map(g=>(g.pricks||[]).map(p=>[p.x|0,p.y|0])), /* THE CAVE FIX: see netDynLite */
   fa:fieldMaws.map(m=>m.anim>0?1:0),gm:grottos.map(g=>(g.maws||[]).map(m=>m.anim>0?1:0)), /* THE MAW FIX: see netDynLite */
-  ey:eyes.map(e=>[e.x|0,e.y|0,e.r|0,e.hp|0,e.maxHp||300,+(e.blink||0).toFixed(2),(e.dread||0)>0?1:0,+e.wa.toFixed(2),+(e.seed||0).toFixed(2)]),
+  ey:eyes.map(e=>[e.x|0,e.y|0,e.r|0,e.hp|0,e.maxHp||300,+(e.blink||0).toFixed(2),(e.dread||0)>0?1:0,+e.wa.toFixed(2),+(e.seed||0).toFixed(2),(e.whip&&e.whip.t>0)?(e.whip.x|0):0,(e.whip&&e.whip.t>0)?(e.whip.y|0):0]), /* the LASH rides the wire: eye tentacle strikes were server-only theatre - damage landed, nothing showed */
   el:elder?[elder.x|0,elder.y|0,elder.hp|0,elder.maxHp,(elder.vx||0)|0,(elder.vy||0)|0]:0,
   sp:spider?[spider.x|0,spider.y|0,spider.hp|0,spider.maxHp,(spider.kids||[]).map(k=>[k.x|0,k.y|0])]:0,
   sw:netSnapshot().sw};}

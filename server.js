@@ -63,7 +63,7 @@ function start(port,htmlPath){
     stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:(()=>{const v9=DIAG.netLateMax||0;DIAG.netLateMax=0;return v9;})(),rateSkips:DIAG.rateSkips||0,
     buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
     seatNet:Object.keys(seats).map(t9=>{const w9=seats[t9],r9=(w9&&w9._rttMax||0)|0;if(w9)w9._rttMax=0;return Object.assign({t:+t9,rtt:(w9&&w9._rttS||0)|0,rttMax:r9,buf:(w9&&w9.bufferedAmount||0)|0},(w9&&w9._cli)||{});}),
-    ver:'r17-honest-jaws',
+    ver:'r21-the-gaze',
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else{res.writeHead(404);res.end('the meadow has no such door');}
  });
@@ -87,7 +87,7 @@ function start(port,htmlPath){
      s.dead=false;try{G.reviveSwarm(s);}catch(e){}s.honey=150;
      {const okc=v=>(typeof v==='string'&&/^#[0-9a-fA-F]{6}$/.test(v))?v:null; /* SHE ARRIVES DRESSED: colour + wardrobe ride the join (sanitized), so every frame shows the player as they chose to look - not as the seat's random bot */
       const c9=okc(m.c);if(c9)s.col=c9;s.col2=okc(m.c2);
-      let q9=null;if(m.q&&typeof m.q==='object'&&!Array.isArray(m.q)){q9={};for(const k of ['pattern','crown','trail','wings','body','tail','fleet','aura','plate']){const v=m.q[k];if(typeof v==='string'&&v.length<=24&&/^[a-zA-Z0-9_-]+$/.test(v))q9[k]=v;}if(!Object.keys(q9).length)q9=null;}
+      let q9=null;if(m.q&&typeof m.q==='object'&&!Array.isArray(m.q)){q9={};for(const k of ['pattern','crown','trail','wings','body','tail','fleet','aura','plate','eye']){const v=m.q[k];if(typeof v==='string'&&v.length<=24&&/^[a-zA-Z0-9_-]+$/.test(v))q9[k]=v;}if(!Object.keys(q9).length)q9=null;}
       s.cosEq=q9;}} /* FRESH QUEEN on join: never the wild bot's grown body - and she arrives with 150 honey, enough for her FIRST SOLDIER or two foragers, so the opening minute is choices, not poverty (30 was famine) */
     ws.send(JSON.stringify({k:'init',you:team,world:G.netWorldInit()}));
    } else if(m.k==='cmd'&&team!==null){try{

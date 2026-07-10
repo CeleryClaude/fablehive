@@ -390,6 +390,19 @@ const ITEMS=[
  {id:'bronzetrim',cat:'plate',  n:'Bronze Trim', xp:520, d:'edges kissed with old metal'},
  {id:'lamellar',  cat:'plate',  n:'Silver Lamellar',xp:1500,d:'moon-scales laced at the seams'},
  {id:'warplate',  cat:'plate',  n:'Gilded Warplate',xp:3200,royal:true,d:'the crown-forge'+String.fromCharCode(39)+'s masterwork'},
+ {id:'steelbands',cat:'plate',  n:'Warsteel Bands',xp:900, d:'broad steel, cold and honest'},
+ {id:'chitin',    cat:'plate',  n:'Umbral Chitin',xp:1300, d:'grown, not forged - the insect way'},
+ {id:'spikedcarapace',cat:'plate',n:'Thornplate', xp:1900, d:'recurved hooks that mean it'},
+ {id:'boneplate', cat:'plate',  n:'Wyrmbone',    xp:2400, d:'something old lent you its knuckles'},
+ {id:'emberforge',cat:'plate',  n:'Emberforged', xp:4200,royal:true,d:'the seams still breathe fire'},
+ {id:'warhelm',   cat:'crown',  n:'Warhelm',     xp:800,  d:'steel shell, cheek-hooked'},
+ {id:'lamellarhood',cat:'crown',n:'Lamellar Hood',xp:1200,d:'scales drawn low over the brow'},
+ {id:'mandibleguard',cat:'crown',n:'Mandible Guard',xp:1600,d:'pincers that frame the face'},
+ {id:'hornedcasque',cat:'crown',n:'Horned Casque',xp:2200,d:'chitin crowned with recurved horns'},
+ {id:'dreadhelm', cat:'crown',  n:'Dreadhelm',   xp:4500,royal:true,d:'the slit still remembers the forge'},
+ {id:'eyestalks', cat:'crown',  n:'Snail Stalks',xp:600,  d:'two soft periscopes, always curious'},
+ {id:'spidereyes',cat:'crown',  n:'Hunter'+String.fromCharCode(39)+'s Cluster',xp:1400,d:'six glossy reasons to be feared'},
+ {id:'millipede', cat:'plate',  n:'Millipede Mail',xp:1700,d:'a hundred little legs, all marching'},
  {id:'moltaura', cat:'aura',   n:'Apex Shimmer',xp:-1,  d:'reach 120 souls once — wear the shimmer of the great'},
  {id:'algaeglow',cat:'aura',   n:'Grotto Glow', xp:-1,  d:'gather 200 honey inside the dark — the algae remember you'},
  {id:'plainfleet',cat:'fleet', n:'No Kit',      xp:0,   d:'your brood as it was born - no armour, just wings'},
@@ -787,9 +800,11 @@ function makeWorld(){
  elder={x:ex,y:ey,hx:ex,hy:ey,vx:0,vy:0,r:72,hp:3600,maxHp:3600,terr:520,sense:410,spd:122,atk:0,provoked:0,flash:0};
  for(let g=0;g<4;g++){const ga4=g/4*TAU+rand(-0.25,0.25),gr4=rand(185,235);groves.push({x:ex+Math.cos(ga4)*gr4,y:ey+Math.sin(ga4)*gr4,amt:210,max:210,vx:0,vy:0,mother:true,sp:6});}
  /* THE BROODMOTHER: the meadow's other nightmare — patient, webbed, surrounded by her young */
- {let sx2,sy2,tr3=0;
-  do{sx2=rand(900,1950);sy2=rand(900,1950);tr3++;} /* DEEPER in the DARK REALM, clear of the wind road */
+ {let sx2,sy2,tr3=0,bsx9=1425,bsy9=1425,bsd9=-1;
+  do{sx2=rand(900,1950);sy2=rand(900,1950);tr3++; /* DEEPER in the DARK REALM, clear of the wind road */
+   const q3=d2(sx2,sy2,ex,ey);if(q3>bsd9&&d2(sx2,sy2,WORLD.w/2,WORLD.h/2)>=1500*1500){bsd9=q3;bsx9=sx2;bsy9=sy2;}}
   while(tr3<80&&(d2(sx2,sy2,WORLD.w/2,WORLD.h/2)<1500*1500||d2(sx2,sy2,ex,ey)<2600*2600));
+  if(d2(sx2,sy2,ex,ey)<2100*2100&&bsd9>0){sx2=bsx9;sy2=bsy9;} /* two nightmares NEVER share a horizon: same generator law as the Elder's cradle fix - if the dice keep failing, take the farthest den seen, never the last */
   spider={x:sx2,y:sy2,hx:sx2,hy:sy2,vx:0,vy:0,r:92,hp:9000,maxHp:9000,terr:600,sense:450,spd:150,
    provoked:0,flash:0,gait:0,kids:[],kidT:9,gnash:0,tgtRef:null,tgtT:0};
   for(let k=0;k<5;k++)spider.kids.push({x:sx2+rand(-140,140),y:sy2+rand(-140,140),vx:0,vy:0,hp:160,r:11,wa:rand(0,TAU),atk:0});
@@ -1153,7 +1168,7 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
        if(eu.role==='forager')sc+=240; /* first break the LINE, then rob the larder */
        if(sc<bs){bs=sc;u.tgt=eu;u.tgtS=war;}}}
      foe=u.tgt&&!u.tgt.slain?u.tgt:null;
-     if((u._fi%13)<1&&u.role!=='armourer'&&war.prot<=0&&d2(s.x,s.y,war.x,war.y)<(s.R+war.R+720)**2)foe=war; /* ~8% DEDICATED regicides dive the crown, embroiled or not (fills the void left by removing the queen-ram) */
+     if((u._fi%13)<1&&u.role!=='armourer'&&u.role!=='titan'&&war.prot<=0&&d2(s.x,s.y,war.x,war.y)<(s.R+war.R+720)**2)foe=war; /* ~8% DEDICATED regicides dive the crown - but never TITANS: "wins head-on battles, slowly" is their own creed, and a siege engine assassin-diving past every line romped queens and betrayed the wall */
      else if(!foe&&war.prot<=0&&(war.units.length<=2||d2(u.x,u.y,war.x,war.y)<160*160)&&d2(s.x,s.y,war.x,war.y)<(s.R+war.R+240)**2)foe=war; /* and regicide when her LINE is broken or she strays into reach */
     }
     if(elder&&!foe&&u.role!=='nurse'&&elder.provoked>0&&d2(u.x,u.y,elder.x,elder.y)<300*300)foe=elder;
@@ -1790,10 +1805,7 @@ function step(dt){NPLAY=humanCount();
     groves.splice(gi,1);continue;}
    continue;} /* tumble skips drift/regrow below */
   if(g.amt<g.max&&!g.closed)g.amt+=(g.kind==='algae'?14:g.gild?0.9:g.rich?2.4:g.mother?1.6:g.grand?0.7:0.35)*dt; /* the algae RACE back */
-  if(g.vx){g.x+=g.vx*dt;g.y+=g.vy*dt;
-   if(g.x<260||g.x>WORLD.w-260)g.vx*=-1;if(g.y<260||g.y>WORLD.h-260)g.vy*=-1;
-   for(const b of boulders){const ddx=g.x-b.x,ddy=g.y-b.y;
-    if(ddx*ddx+ddy*ddy<(b.r+34)**2){g.vx*=-1;g.vy*=-1;g.x+=g.vx*dt*3;g.y+=g.vy*dt*3;break;}}}
+  g.vx=0;g.vy=0; /* FLOWERS STAND STILL, by Celery's decree: drift made every forager look adjacent to her own bloom (the client eased a moving target), and a wandering pantry served nobody. The tumblebloom keeps its legs - it is CHASE by design */
  }
  for(let i=drops.length-1;i>=0;i--){const dr=drops[i];dr.t-=dt;
   if(dr.seed){dr.x+=dr.vx*dt;dr.y+=dr.vy*dt;dr.vx*=0.985;dr.vy*=0.985;
@@ -1844,9 +1856,9 @@ function step(dt){NPLAY=humanCount();
    if(mw.cd<=0)for(const s2 of swarms){if(s2.dead)continue;
     if(d2(mw.x,mw.y,s2.x,s2.y)>(s2.R+560)**2)continue;
     let bit=false;
-    if(d2(mw.x,mw.y,s2.x,s2.y)<42*42){s2.hp-=24;s2.flash=.12;bit=true;if(s2===me())sfx('hurt');
-     if(s2.hp<=0)killQueen(s2,null);}
-    else for(const u2 of s2.units){if(d2(mw.x,mw.y,u2.x,u2.y)<(u2.r+24)**2){
+    if(d2(mw.x,mw.y,s2.x,s2.y)<(25*(mw.big||1.8))**2){s2.hp-=24;s2.flash=.12;bit=true;if(s2===me())sfx('hurt');
+     if(s2.hp<=0)killQueen(s2,null);} /* cave teeth: same law - the bite is the picture */
+    else for(const u2 of s2.units){if(d2(mw.x,mw.y,u2.x,u2.y)<(u2.r+13*(mw.big||1.8))**2){
      u2.hp-=16;u2.flash=.2;bit=true;
      const aa=Math.atan2(u2.y-mw.y,u2.x-mw.x);u2.vx+=Math.cos(aa)*300;u2.vy+=Math.sin(aa)*300;
      if(u2.hp<=0)killUnit(s2,u2,null);break;}}
@@ -1902,8 +1914,8 @@ function step(dt){NPLAY=humanCount();
   if(mw.cd<=0)for(const s2 of swarms){if(s2.dead)continue;
    if(d2(mw.x,mw.y,s2.x,s2.y)>(s2.R+560)**2)continue;
    let bit=false;
-   if(d2(mw.x,mw.y,s2.x,s2.y)<40*40){s2.hp-=18;s2.flash=.12;bit=true;if(s2===me())sfx('hurt');if(s2.hp<=0)killQueen(s2,null);}
-   else for(const u2 of s2.units){if(d2(mw.x,mw.y,u2.x,u2.y)<(u2.r+20)**2){
+   if(d2(mw.x,mw.y,s2.x,s2.y)<(25*(mw.big||1.6))**2){s2.hp-=18;s2.flash=.12;bit=true;if(s2===me())sfx('hurt');if(s2.hp<=0)killQueen(s2,null);} /* the BITE matches the JAWS: reach scales with the drawn plant (a 2.6x maw LOOKED huge but bit a fixed 40px - you could nap in the picture, outside the teeth) */
+   else for(const u2 of s2.units){if(d2(mw.x,mw.y,u2.x,u2.y)<(u2.r+13*(mw.big||1.6))**2){
     u2.hp-=12;u2.flash=.2;bit=true;
     const aa=Math.atan2(u2.y-mw.y,u2.x-mw.x);u2.vx+=Math.cos(aa)*260;u2.vy+=Math.sin(aa)*260;
     if(u2.hp<=0)killUnit(s2,u2,null);break;}}
@@ -2844,15 +2856,46 @@ function paintPattern(g2,base,t2,pat,col){
 }
 function paintPlate(g2,base,t2,pl){ /* QUEEN ARMOUR, by Celery's layering law: plates are EDGE-TRIM, never lids. Bands ride the segment rims, interiors stay BARE (your pattern shows through), and no plate reaches the crown, wing or tail anchors */
  if(!pl||pl==='noplate'||!QSEGS.length)return;
- const C9={bronzetrim:{c:'#b08048',e:'#6e4a26',w:2.2,riv:0},lamellar:{c:'#cfd6e0',e:'#8a94a4',w:2.6,riv:1},warplate:{c:'#ffd75e',e:'#a8842e',w:3.2,riv:2}}[pl];if(!C9)return;
+ const C9={bronzetrim:{c:'#b08048',e:'#6e4a26',w:2.2},
+  lamellar:{c:'#cfd6e0',e:'#8a94a4',w:2.6,riv:1},
+  warplate:{c:'#ffd75e',e:'#a8842e',w:3.2,riv:2},
+  steelbands:{c:'#9aa4b2',e:'#4e5866',w:4.6,chan:'#3e4854'},
+  spikedcarapace:{c:'#8a6a48',e:'#463020',w:2.4,thorn:'#c8b088',thornE:'#6e5430'},
+  chitin:{c:'#3a2c44',e:'#1c1424',w:4,scute:'#7a5ea0'},
+  boneplate:{c:'#e8e0cc',e:'#a89878',w:3,bump:1},
+  emberforge:{c:'#4a4048',e:'#241e26',w:3.4,glow:'#ff7a3a'},
+  millipede:{c:'#5a4a38',e:'#32281c',w:2,legs:1}}[pl];if(!C9)return;
  g2.save();g2.lineCap='round';
+ const SP9=[[-2.2,-0.94],[0.94,2.2]]; /* the two rim arcs: dorsal + ventral flanks, face and tail junctions always clear */
  for(let i9=0;i9<QSEGS.length;i9++){const sg=QSEGS[i9],rr=sg.r*0.92;
-  g2.strokeStyle=C9.e;g2.lineWidth=C9.w+1.6;
-  g2.beginPath();g2.arc(sg.x,sg.y,rr,-2.2,-0.94);g2.stroke();g2.beginPath();g2.arc(sg.x,sg.y,rr,0.94,2.2);g2.stroke();
-  g2.strokeStyle=C9.c;g2.lineWidth=C9.w;
-  g2.beginPath();g2.arc(sg.x,sg.y,rr,-2.2,-0.94);g2.stroke();g2.beginPath();g2.arc(sg.x,sg.y,rr,0.94,2.2);g2.stroke();
-  if(C9.riv)for(const aa of [-1.57,1.57]){g2.fillStyle=C9.c;g2.beginPath();g2.arc(sg.x+Math.cos(aa)*rr,sg.y+Math.sin(aa)*rr,C9.w*0.7,0,TAU);g2.fill();}}
- {const th=QSEGS[Math.min(1,QSEGS.length-1)]; /* pauldrons: two studs on the thorax RIM */
+  if(C9.scute){ /* CHITIN: overlapping scutes hug the rim, gaps breathe between them */
+   for(const sp of [[-2.45,-1.35],[-0.55,0.55],[1.35,2.45]]){
+    g2.strokeStyle=C9.c;g2.lineWidth=C9.w;g2.beginPath();g2.arc(sg.x,sg.y,rr*1.02,sp[0],sp[1]);g2.stroke();
+    g2.strokeStyle=C9.scute;g2.lineWidth=1.3;g2.beginPath();g2.arc(sg.x,sg.y,rr*1.02-C9.w*0.5,sp[0]+0.12,sp[1]-0.12);g2.stroke();}
+  } else {
+   for(const sp of SP9){
+    g2.strokeStyle=C9.e;g2.lineWidth=C9.w+1.6;g2.beginPath();g2.arc(sg.x,sg.y,rr,sp[0],sp[1]);g2.stroke();
+    g2.strokeStyle=C9.c;g2.lineWidth=C9.w;g2.beginPath();g2.arc(sg.x,sg.y,rr,sp[0],sp[1]);g2.stroke();
+    if(C9.chan){g2.strokeStyle=C9.chan;g2.lineWidth=1.4;g2.beginPath();g2.arc(sg.x,sg.y,rr,sp[0]+0.1,sp[1]-0.1);g2.stroke();} /* WARSTEEL: a dark channel down the band's spine */
+    if(C9.glow){g2.save();g2.globalAlpha=0.4+0.3*Math.sin(t2*2.6+i9*1.7);g2.strokeStyle=C9.glow;g2.lineWidth=1.2;g2.beginPath();g2.arc(sg.x,sg.y,rr,sp[0]+0.08,sp[1]-0.08);g2.stroke();g2.restore();} /* EMBERFORGE: the seams remember the fire */
+   }
+   if(C9.riv)for(const aa of [-1.57,1.57]){g2.fillStyle=C9.c;g2.beginPath();g2.arc(sg.x+Math.cos(aa)*rr,sg.y+Math.sin(aa)*rr,C9.w*0.7,0,TAU);g2.fill();}
+   if(C9.bump)for(const aa of [-2.2,-0.94,0.94,2.2]){g2.fillStyle=C9.c;g2.strokeStyle=C9.e;g2.lineWidth=1;
+    g2.beginPath();g2.arc(sg.x+Math.cos(aa)*rr,sg.y+Math.sin(aa)*rr,C9.w*0.85,0,TAU);g2.fill();g2.stroke();} /* WYRMBONE: knuckled joints */
+   if(C9.legs)for(const sd of [-1,1])for(let l9=0;l9<3;l9++){ /* MILLIPEDE: little legs in marching rows, alive with the walk */
+    const aa=sd*(0.75+l9*0.5),bx=sg.x+Math.cos(aa)*rr,by=sg.y+Math.sin(aa)*rr,ph9=Math.sin(t2*7+i9*1.3+l9*2.1)*1.6;
+    g2.strokeStyle='#c8b088';g2.lineWidth=1.5;g2.lineCap='round';
+    g2.beginPath();g2.moveTo(bx,by);
+    g2.quadraticCurveTo(bx-2+ph9*0.4,by+sd*4.4,bx-4.6+ph9,by+sd*6.4);g2.stroke();}
+   if(C9.thorn&&i9<QSEGS.length-1)for(const sd of [-1,1]){ /* THORNPLATE: recurved HOOKS swept backward - forged, never a childish triangle */
+    const aa=sd*1.45,bx=sg.x+Math.cos(aa)*rr,by=sg.y+Math.sin(aa)*rr,ln=sg.r*0.62;
+    g2.fillStyle=C9.thorn;g2.strokeStyle=C9.thornE;g2.lineWidth=1;
+    g2.beginPath();g2.moveTo(bx+3.2,by);
+    g2.quadraticCurveTo(bx+1.5,by+sd*ln*0.85,bx-ln*0.95,by+sd*ln*0.42); /* out, then the tip hooks BACK */
+    g2.quadraticCurveTo(bx-ln*0.25,by+sd*ln*0.28,bx-3.2,by);
+    g2.closePath();g2.fill();g2.stroke();}
+  }}
+ if(!C9.scute){const th=QSEGS[Math.min(1,QSEGS.length-1)]; /* pauldrons: two studs on the thorax RIM */
   g2.fillStyle=C9.c;g2.strokeStyle=C9.e;g2.lineWidth=1.2;
   for(const sd of [-1,1]){g2.beginPath();g2.ellipse(th.x,th.y+sd*th.r*0.95,th.r*0.34,th.r*0.16,0,0,TAU);g2.fill();g2.stroke();}}
  g2.restore();}
@@ -2891,7 +2934,61 @@ function paintCrown(g2,base,t2,cr){
  const hy9=QSEGS.length?QSEGS[0].y:0;
  g2.save();g2.translate(0,hy9); /* the crown rides the HEAD, sway and all */
  try{
- if(cr==='laurel'){g2.fillStyle='#7fc86a';
+ const hx8=QSEGS.length?QSEGS[0].x:base*0.55,hr8=(QSEGS.length?QSEGS[0].r:base*0.5)*1.1; /* helmets fit the TRUE head */
+ if(cr==='warhelm'){ /* STEEL SHELL: covers the head, open at the rear - the thorax and her pattern stay hers */
+  g2.fillStyle='#9aa4b2';g2.strokeStyle='#4e5866';g2.lineWidth=2;
+  g2.beginPath();g2.arc(hx8,0,hr8,-2.3,2.3);g2.closePath();g2.fill();g2.stroke();
+  g2.fillStyle='#6e7884';g2.beginPath();g2.moveTo(hx8+hr8*1.02,0);g2.lineTo(hx8-hr8*0.35,-hr8*0.16);g2.lineTo(hx8-hr8*0.35,hr8*0.16);g2.closePath();g2.fill(); /* the nasal ridge */
+  for(const sd of [-1,1]){const bx=hx8+Math.cos(sd*1.95)*hr8,by=Math.sin(sd*1.95)*hr8; /* cheek hooks, recurved */
+   g2.fillStyle='#7e8894';g2.beginPath();g2.moveTo(bx+2.5,by);
+   g2.quadraticCurveTo(bx-hr8*0.15,by+sd*hr8*0.7,bx-hr8*0.75,by+sd*hr8*0.34);
+   g2.quadraticCurveTo(bx-hr8*0.25,by+sd*hr8*0.2,bx-2.5,by);g2.closePath();g2.fill();}}
+ else if(cr==='dreadhelm'){ /* DARK CREST, ember slit, horns swept long */
+  g2.fillStyle='#2e2434';g2.strokeStyle='#151019';g2.lineWidth=2.2;
+  g2.beginPath();g2.arc(hx8,0,hr8,-2.45,2.45);g2.closePath();g2.fill();g2.stroke();
+  for(const sd of [-1,1]){const bx=hx8+Math.cos(sd*1.7)*hr8,by=Math.sin(sd*1.7)*hr8;
+   g2.fillStyle='#3e3048';g2.strokeStyle='#6a5484';g2.lineWidth=1;
+   g2.beginPath();g2.moveTo(bx+3,by);
+   g2.quadraticCurveTo(bx-hr8*0.4,by+sd*hr8*1.25,bx-hr8*1.75,by+sd*hr8*0.7); /* long horn, backswept */
+   g2.quadraticCurveTo(bx-hr8*0.55,by+sd*hr8*0.42,bx-3,by);g2.closePath();g2.fill();g2.stroke();}
+  g2.save();g2.globalAlpha=0.55+0.3*Math.sin(t2*3.1);g2.strokeStyle='#ff7a3a';g2.lineWidth=1.6;
+  g2.beginPath();g2.arc(hx8,0,hr8*0.62,-0.75,0.75);g2.stroke();g2.restore();} /* the slit remembers the forge */
+ else if(cr==='hornedcasque'){ /* CHITIN CASQUE: insectoid shell, two long recurved horns */
+  g2.fillStyle='#3a2c44';g2.strokeStyle='#6a5484';g2.lineWidth=1.8;
+  g2.beginPath();g2.arc(hx8,0,hr8*0.98,-2.2,2.2);g2.closePath();g2.fill();g2.stroke();
+  for(const aa of [-1.05,0,1.05]){g2.strokeStyle='#584070';g2.lineWidth=1.1;
+   g2.beginPath();g2.arc(hx8,0,hr8*0.72,aa-0.32,aa+0.32);g2.stroke();} /* growth lines */
+  for(const sd of [-1,1]){const bx=hx8+Math.cos(sd*1.35)*hr8,by=Math.sin(sd*1.35)*hr8;
+   g2.fillStyle='#2c2136';g2.strokeStyle='#6a5484';g2.lineWidth=1;
+   g2.beginPath();g2.moveTo(bx+2.5,by);
+   g2.quadraticCurveTo(bx+hr8*0.30,by+sd*hr8*1.05,bx-hr8*1.35,by+sd*hr8*1.0); /* the horn rises OUT then hooks back */
+   g2.quadraticCurveTo(bx-hr8*0.45,by+sd*hr8*0.5,bx-2.5,by);g2.closePath();g2.fill();g2.stroke();}}
+ else if(cr==='mandibleguard'){ /* MANDIBLES: forward pincer plates framing the face - they never quite meet */
+  for(const sd of [-1,1]){const bx=hx8+Math.cos(sd*0.95)*hr8,by=Math.sin(sd*0.95)*hr8;
+   g2.fillStyle='#8a6a3e';g2.strokeStyle='#5e4426';g2.lineWidth=1.2;
+   g2.beginPath();g2.moveTo(bx-2,by+sd*2);
+   g2.quadraticCurveTo(bx+hr8*0.8,by+sd*hr8*0.35,hx8+hr8*1.55,sd*hr8*0.16); /* reaches forward */
+   g2.quadraticCurveTo(bx+hr8*0.55,by-sd*hr8*0.05,bx+2,by-sd*2);g2.closePath();g2.fill();g2.stroke();}}
+ else if(cr==='lamellarhood'){ /* HOOD of layered scale, crown to brow */
+  const CS=['#cfd6e0','#aab4c2','#8a94a4'];
+  for(let k2=0;k2<3;k2++){g2.strokeStyle=CS[k2];g2.lineWidth=3.4-k2*0.5;
+   g2.beginPath();g2.arc(hx8,0,hr8*(1.02-k2*0.2),-1.9+k2*0.18,1.9-k2*0.18);g2.stroke();}
+  g2.fillStyle='#cfd6e0';for(const sd of [-1,1]){g2.beginPath();g2.arc(hx8+Math.cos(sd*1.9)*hr8,Math.sin(sd*1.9)*hr8,1.8,0,TAU);g2.fill();}}
+ else if(cr==='eyestalks'){ /* SNAIL EYES: two soft stalks reaching forward, ball-tipped, alive */
+  for(const sd of [-1,1]){const bx=hx8+Math.cos(sd*0.62)*hr8*0.9,by=Math.sin(sd*0.62)*hr8*0.9;
+   const sw9=Math.sin(t2*2.2+sd)*hr8*0.1;
+   g2.strokeStyle='#b8a890';g2.lineWidth=2.6;g2.lineCap='round';
+   g2.beginPath();g2.moveTo(bx,by);
+   g2.quadraticCurveTo(bx+hr8*0.55,by+sd*hr8*0.28+sw9,bx+hr8*1.15,by+sd*hr8*0.5+sw9);g2.stroke();
+   g2.fillStyle='#2c2420';g2.beginPath();g2.arc(bx+hr8*1.15,by+sd*hr8*0.5+sw9,hr8*0.17,0,TAU);g2.fill();
+   g2.fillStyle='rgba(255,255,255,.7)';g2.beginPath();g2.arc(bx+hr8*1.19,by+sd*hr8*0.46+sw9,hr8*0.05,0,TAU);g2.fill();}}
+ else if(cr==='spidereyes'){ /* HUNTER'S CLUSTER: two great orbs, four small, all glossy */
+  const EY=[[0.55,-0.34,0.2],[0.55,0.34,0.2],[0.86,-0.14,0.11],[0.86,0.14,0.11],[0.34,-0.6,0.1],[0.34,0.6,0.1]];
+  for(const e9 of EY){const ex=hx8+hr8*e9[0]*0.9,ey9=hr8*e9[1],er9=hr8*e9[2];
+   g2.fillStyle='#1c1418';g2.beginPath();g2.arc(ex,ey9,er9,0,TAU);g2.fill();
+   g2.strokeStyle='#4a3a44';g2.lineWidth=0.8;g2.stroke();
+   g2.fillStyle='rgba(255,255,255,.75)';g2.beginPath();g2.arc(ex+er9*0.3,ey9-er9*0.3,er9*0.3,0,TAU);g2.fill();}}
+ else if(cr==='laurel'){g2.fillStyle='#7fc86a';
   for(let k2=0;k2<5;k2++){const aa=-0.9+k2*0.45;
    g2.beginPath();g2.ellipse(base*0.95+Math.cos(aa)*base*0.42,Math.sin(aa)*base*0.55,base*0.13,base*0.06,aa,0,TAU);g2.fill();}}
  else if(cr==='thorn'){g2.strokeStyle='#5a3a4a';g2.lineWidth=2;
@@ -3478,7 +3575,10 @@ function draw(){
   ctx.strokeStyle='rgba(207,224,138,.3)';ctx.lineWidth=1.5;
   ctx.beginPath();ctx.moveTo(g.x-g.vx/dl*16,g.y-g.vy/dl*16);ctx.lineTo(g.x-g.vx/dl*28,g.y-g.vy/dl*28);ctx.stroke();}
  /* boulders — big, friendly, solid */
- for(const b of boulders){if(b.hide)continue;if(b.x<vx0-b.r||b.x>vx1+b.r||b.y<vy0-b.r||b.y>vy1+b.r)continue;
+ for(const b of boulders){
+  if(b.hide){if(!(geodeIn&&geodeA>0.4&&d2(b.x,b.y,geodeIn.x,geodeIn.y)<(geodeIn.r+120)*(geodeIn.r+120)))continue;} /* the cave's BONES: rim stones hide under the dome art outside, but INSIDE they were invisible walls - now they show faintly when the shroud is lifted */
+  if(b.x<vx0-b.r||b.x>vx1+b.r||b.y<vy0-b.r||b.y>vy1+b.r)continue;
+  if(b.hide){ctx.save();ctx.globalAlpha=0.38;}
   ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,TAU);
   ctx.fillStyle=b.cove?'#463a58':b.kind===1?'#3e3a50':b.kind===2?'#4a3e58':'#443648';ctx.fill();
   ctx.strokeStyle='rgba(190,170,210,.3)';ctx.lineWidth=2.5;ctx.stroke();
@@ -3500,6 +3600,7 @@ function draw(){
    ctx.strokeStyle='rgba(60,40,20,.45)';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(hx,hy-hs*1.5);ctx.lineTo(hx,hy-hs*0.9);ctx.stroke();
    for(let hr=0;hr<3;hr++){ctx.fillStyle=hr%2?'#dfa636':'#f0c250';ctx.beginPath();ctx.ellipse(hx,hy-hs*0.5+hr*hs*0.5,hs*(0.92-hr*0.13),hs*0.34,0,0,TAU);ctx.fill();}
    ctx.fillStyle='#3a2410';ctx.beginPath();ctx.arc(hx,hy+hs*0.28,hs*0.14,0,TAU);ctx.fill();}
+  if(b.hide)ctx.restore();
  }
  /* THE CRYSTAL COURT: floor and facets, drawn beneath every living thing */
  if(geodeA>0.02&&geodeIn){const g9=geodeIn;
@@ -3634,6 +3735,12 @@ function draw(){
  /* groves: species in bloom — FULLNESS is petal size, never a dimmer switch */
  const SPECIES=[['#ff9ab0','#ffd0da'],['#9ab8ff','#d0e0ff'],['#fff3e0','#ffffff'],['#c9a6ff','#e6d8ff'],['#ff8a70','#ffc0a8'],['#ffd7e8','#ffeef6'],['#ffdf7e','#fff3c0']];
  for(const g of groves){if(g.x<vx0-60||g.x>vx1+60||g.y<vy0-60||g.y>vy1+60)continue;
+  if((g.kind==='comb'||g.rich||g.kind==='algae')&&g.amt<g.max*0.14){ /* a DRAINED FAUCET is a closed bud, not a husk: these kinds refill by design and must never read as harvestable while empty */
+   ctx.save();ctx.globalAlpha=0.55;ctx.fillStyle=g.kind==='comb'?'#b98a2e':g.kind==='algae'?'#3e7a5a':'#c95e78';
+   ctx.beginPath();ctx.arc(g.x,g.y,7.5,0,TAU);ctx.fill();
+   ctx.strokeStyle='rgba(255,255,255,'+(0.25+0.15*Math.sin(tnow*2.4+g.x)).toFixed(2)+')';ctx.lineWidth=1.6;
+   ctx.beginPath();ctx.arc(g.x,g.y,10,-0.6+Math.sin(tnow*1.2+g.y)*0.4,0.9+Math.sin(tnow*1.2+g.y)*0.4);ctx.stroke(); /* the regrowing shimmer */
+   ctx.restore();continue;}
   if(g.kind==='algae'){ /* HYPER-LUMINOUS tendrils, forever reaching, forever regrowing */
    const k9=clamp(g.amt/g.max,0,1);
    for(let t5=0;t5<4;t5++){const baseA=t5/4*TAU+g.x*0.02;
@@ -4111,9 +4218,9 @@ function drawJoy(){ /* the thumb deserves an anchor: base ring at touch origin, 
   ctx.restore();}catch(e){}}
 function loop(){const now=performance.now();let dt=(now-last)/1000;last=now;
  QGOV.accT+=dt;QGOV.accN++;if(dt>QGOV.worst)QGOV.worst=dt;
- if(QGOV.accT>2){const avg9=QGOV.accT/Math.max(1,QGOV.accN),q0=QGOV.q; /* the GOVERNOR: sustained >26ms frames or any >200ms hitch sheds a quality step (min 50%); calm frames earn it back slowly */
-  if((avg9>0.026||QGOV.worst>0.2)&&QGOV.q>0.5)QGOV.q=Math.max(0.5,QGOV.q-0.25);
-  else if(avg9<0.015&&QGOV.worst<0.08&&QGOV.q<1)QGOV.q=Math.min(1,QGOV.q+0.125);
+ if(QGOV.accT>2){const avg9=QGOV.accT/Math.max(1,QGOV.accN),q0=QGOV.q; /* the GOVERNOR judges SPIKES, never steady cadence: a browser capped at 30fps is CALM (33ms, flat) and deserves full crispness - only true struggle (sub-25fps average or >220ms hitches) sheds pixels */
+  if((avg9>0.041||QGOV.worst>0.22)&&QGOV.q>0.5)QGOV.q=Math.max(0.5,QGOV.q-0.25);
+  else if(avg9<0.036&&QGOV.worst<0.1&&QGOV.q<1)QGOV.q=Math.min(1,QGOV.q+0.125);
   if(q0!==QGOV.q){try{resize();}catch(e){}}
   QGOV.accT=0;QGOV.accN=0;QGOV.worst=0;}
  if(dt>.05)dt=.05;
@@ -4352,7 +4459,7 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
    if(FB.rt>FA.rt){const fdt9=(FB.rt-FA.rt)/1000,rwx9=(wB.x-wA.x)/fdt9,rwy9=(wB.y-wA.y)/fdt9; /* THE PHANTOM SHOVE: she was drawn one interp-delay in the PAST. Project her forward - but through a LOW-PASS: raw frame-pair velocity swings on every juke and every shove, and that swing WAS the rapid-fire facing flicker */
     s2._lvx=(s2._lvx==null?rwx9:s2._lvx+(rwx9-s2._lvx)*Math.min(1,7*dt));s2._lvy=(s2._lvy==null?rwy9:s2._lvy+(rwy9-s2._lvy)*Math.min(1,7*dt));
     const lv9=Math.hypot(s2._lvx,s2._lvy);
-    if(lv9>40){const ld9=Math.min(110,lv9*((interpDelay+(NET.rtt||0)*0.5+16)/1000));nx+=s2._lvx/lv9*ld9;ny+=s2._lvy/lv9*ld9;}} /* the FULL gap: interp delay + half RTT + half a send tick */
+    if(lv9>40){const ld9=Math.min(80,lv9*((interpDelay+16)/1000));nx+=s2._lvx/lv9*ld9;ny+=s2._lvy/lv9*ld9;}} /* lead covers the INTERP GAP only: the old +rtt/2 term overshot under spiky pings and her image ran AHEAD of her true body - you were shoved by a queen behind her own ghost */
    const ox9=s2.x,oy9=s2.y,gx9=nx-s2.x,gy9=ny-s2.y,gd9=Math.hypot(gx9,gy9);
    if(gd9>240){s2.x=nx;s2.y=ny;} /* teleport-scale: land on truth */
    else{const k8=Math.min(1,26*dt);s2.x+=gx9*k8;s2.y+=gy9*k8;}
@@ -4388,7 +4495,7 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
       else{const k8=Math.min(1,(hot8?70:26)*dt);u.x+=jx9*k8;u.y+=jy9*k8;} /* OUTPUT FILTER, combat-adaptive: fighters bite, roamers glide */
       u.vx=(u.x-ox9)/Math.max(dt,0.001);u.vy=(u.y-oy9)/Math.max(dt,0.001);}
      else if(u.tx!==undefined){const k9=Math.min(1,6*dt);u.vx=(u.tx-u.x)*8;u.vy=(u.ty-u.y)*8;u.x+=(u.tx-u.x)*k9;u.y+=(u.ty-u.y)*k9;}}
-    else if(tB){const hot8=(u.atk>0||u.flash>0); /* fighters everywhere render at the NEWEST truth */
+    else if(tB){const hot8=(u.atk>0||u.flash>0||(MP&&!MP.dead&&Math.hypot(u.x-MP.x,u.y-MP.y)<150)); /* fighters - and ANYTHING crowding your queen - render at the NEWEST truth: a mob mid-swing-cooldown used to smooth into idle drifters while its damage landed as ghosts */
      let bx=hot8?tB[0]:(tA?tA[0]+(tB[0]-tA[0])*al:tB[0]),by=hot8?tB[1]:(tA?tA[1]+(tB[1]-tA[1])*al:tB[1]);
      if(tA&&FB.rt>FA.rt){const fdt8=(FB.rt-FA.rt)/1000,rvx8=(tB[0]-tA[0])/fdt8,rvy8=(tB[1]-tA[1])/fdt8; /* enemy TROOPS project forward like their queen - through a LOW-PASS, because raw frame-pair velocity wobbles with every shove, and that wobble was the residual TWITCH */
       u._pvx=(u._pvx==null?rvx8:u._pvx+(rvx8-u._pvx)*Math.min(1,9*dt));u._pvy=(u._pvy==null?rvy8:u._pvy+(rvy8-u._pvy)*Math.min(1,9*dt));

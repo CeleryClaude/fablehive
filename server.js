@@ -42,13 +42,7 @@ function start(port,htmlPath){
     FRESH, light meadow rather than an hours-old, overgrown one no 60Hz tick can hold. */
  function applyWild(){for(const t of SEATS){const sw=G.swarms.find(z=>z.team===t&&!z.ally);
   if(sw){if(seats[t]!==undefined){sw.bot=false;}else{sw.bot=true;delete sw.forceAim;if(t===0)sw.name='Wilder';}}}}
- let NEXTG=null,NEXTT=0;
- function bakeNext(){try{NEXTG=makeGame(HTML);NEXTG.unlockAll&&NEXTG.unlockAll();NEXTG.setRoom&&NEXTG.setRoom(true);NEXTT=Date.now();}catch(e){NEXTG=null;}} /* the next meadow is BAKED while the room sleeps */
- function freshWorld(){ /* a fresh world on JOIN used to be a full VM boot + world-gen in ONE tick (~400ms) - the join-moment ping spike. Now we serve the pre-baked one and bake a replacement in the idle that follows */
-  if(NEXTG&&Date.now()-NEXTT<20*60000){G=NEXTG;NEXTG=null;setTimeout(bakeNext,3000);}
-  else{G=makeGame(HTML);G.unlockAll&&G.unlockAll();G.setRoom&&G.setRoom(true);setTimeout(bakeNext,3000);}
-  applyWild();}
- setTimeout(bakeNext,2500);
+ function freshWorld(){G=makeGame(HTML);G.unlockAll&&G.unlockAll();G.setRoom&&G.setRoom(true);applyWild();} /* the BAKERY is reverted: pre-baking spare worlds cost ~400ms ON THE MAIN LOOP whenever it ran - a stall generator hitting OCCUPIED rooms, plus a permanently-parked spare VM (~100MB RSS). The original "cost" it cured only ever hit an EMPTY room's first joiner, once */
  applyWild();
  const httpSrv=http.createServer((req,res)=>{
   const u=(req.url||'/').split('?')[0];
@@ -69,7 +63,7 @@ function start(port,htmlPath){
     stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:(()=>{const v9=DIAG.netLateMax||0;DIAG.netLateMax=0;return v9;})(),rateSkips:DIAG.rateSkips||0,
     buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
     seatNet:Object.keys(seats).map(t9=>{const w9=seats[t9],r9=(w9&&w9._rttMax||0)|0;if(w9)w9._rttMax=0;return Object.assign({t:+t9,rtt:(w9&&w9._rttS||0)|0,rttMax:r9,buf:(w9&&w9.bufferedAmount||0)|0},(w9&&w9._cli)||{});}),
-    ver:'r16-armoury',
+    ver:'r17-honest-jaws',
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else{res.writeHead(404);res.end('the meadow has no such door');}
  });

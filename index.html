@@ -3196,9 +3196,7 @@ function drawBar(x,y,w,frac,big){frac=clamp(frac,0,1);const h=big?6:4.5;
 function drawMaw(mw){ /* THE MAW: a deliberate garden horror - hinged V-jaws, thin cilia curving INWARD */
  const B9=mw.big||1.8,open=mw.anim>0?0.06:0.5+0.2*Math.sin(tnow*1.1+mw.rot);
  ctx.save();ctx.translate(mw.x,mw.y);ctx.rotate(mw.rot);ctx.scale(B9,B9);
- ctx.globalAlpha=0.15+0.09*Math.sin(tnow*2.2+mw.rot); /* the hunger-glow, readable from afar */
- ctx.fillStyle=mw.anim>0?'#ff4a5a':'#8fe07a';
- ctx.beginPath();ctx.arc(0,-7,24,0,TAU);ctx.fill();ctx.globalAlpha=1;
+ /* (the hunger-glow halo is GONE by Celery's decree - the plant's own jaws are the warning) */
  ctx.fillStyle='#2e6a2c'; /* base rosette: it GROWS here, on purpose */
  for(const la of [-0.8,0,0.8]){ctx.save();ctx.translate(0,11);ctx.rotate(la);
   ctx.beginPath();ctx.ellipse(0,4,3,6.5,0,0,TAU);ctx.fill();ctx.restore();}
@@ -4173,6 +4171,10 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
  /* THE CAVE FIX: pricklers actually update position now - matched to grotto/prickler INDEX (they never spawn/despawn individually, so index is a stable, safe key here) */
  if(F.gp)for(let gi9=0;gi9<F.gp.length&&gi9<grottos.length;gi9++){const pr9=grottos[gi9].pricks;if(!pr9)continue;
   for(let pi9=0;pi9<F.gp[gi9].length&&pi9<pr9.length;pi9++){pr9[pi9].x=F.gp[gi9][pi9][0];pr9[pi9].y=F.gp[gi9][pi9][1];}}
+ if(F.fa)for(let i9=0;i9<F.fa.length&&i9<fieldMaws.length;i9++){const mw9=fieldMaws[i9];
+  if(F.fa[i9]&&!(mw9.anim>0)){mw9.anim=0.4;const M0=swarms&&swarms[0];if(M0&&!M0.dead&&d2(mw9.x,mw9.y,M0.x,M0.y)<900*900)sfx('pop');}}
+ if(F.gm)for(let gi9=0;gi9<F.gm.length&&gi9<grottos.length;gi9++){const ms9=grottos[gi9].maws;if(!ms9)continue;
+  for(let mi9=0;mi9<F.gm[gi9].length&&mi9<ms9.length;mi9++)if(F.gm[gi9][mi9]&&!(ms9[mi9].anim>0))ms9[mi9].anim=0.4;}
  if(F.ey)eyes=F.ey.map(e=>({x:e[0],y:e[1],r:e[2],hp:e[3],maxHp:e[4],blink:e[5],dread:e[6]?1:0,wa:e[7],seed:e[8],cd:0}));
  if(F.el!==undefined)elder=F.el?{x:F.el[0],y:F.el[1],hp:F.el[2],maxHp:F.el[3],vx:F.el[4],vy:F.el[5],r:72,flash:0,provoked:0,atk:0,hx:F.el[0],hy:F.el[1],terr:520,sense:410}:null;
  if(F.sp!==undefined)spider=F.sp?{x:F.sp[0],y:F.sp[1],hp:F.sp[2],maxHp:F.sp[3],r:92,flash:0,gait:tnow*3,gnash:0,provoked:0,
@@ -4213,6 +4215,7 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
     atk:0,flash:0,slow:0,fat:0,mend:0,wanA:0,wanV:1,per:false,sig:2,sigT:0,cl:0,home:false,load2:0};
     if(fresh9&&typeof addRing==='function')addRing(u.x,u.y,R9.col,20);} /* the recruit POPS the moment truth delivers her - the buy-click ring was the promise, this is the arrival */
    {const cb9=t9[6]||0,hpd8=(u.hp!=null&&t9[3]<u.hp-0.4); /* a hit is an hp DROP (bit as backup) - and an attacker KICKS forward as the blow lands. Nips and lunges, not mush */
+    if(u.load!=null&&t9[4]>u.load+0.4)u._sipT=0.6; /* load rising = she is DRINKING: track truth hard for a beat so the sip-dance survives the smoothing */
     if((cb9&1)&&!(u.atk>0)){u.atk=0.3;const vv8=Math.hypot(u.vx||0,u.vy||0);if(vv8>40){u.x+=(u.vx/vv8)*7;u.y+=(u.vy/vv8)*7;}}
     if((hpd8||(cb9&2))&&!(u.flash>0)){u.flash=0.14;if(hpd8&&fx.length<400)addP(t9[0],t9[1],'#ffe9c9',2,80);}}
    u.tx=t9[0];u.ty=t9[1];u.hp=t9[3];u.load=t9[4];u.slot=j;u._fi=j;u._gi=j;
@@ -4232,6 +4235,8 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
  for(const s2 of swarms)if(!s2.dead)calcR(s2);}
 function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in the past, between two KNOWN truths */
  tnow+=dt;
+ for(const mw9 of fieldMaws)if(mw9.anim>0)mw9.anim-=dt;
+ for(const g9 of grottos)if(g9.maws)for(const mw9 of g9.maws)if(mw9.anim>0)mw9.anim-=dt; /* jaws re-open client-side */
  for(let i9=fx.length-1;i9>=0;i9--){const e9=fx[i9];e9.t+=dt*(QGOV.q<0.9?1.6:1);if(e9.t>=e9.life){fx.splice(i9,1);continue;}if(!e9.ring){e9.x+=e9.vx*dt;e9.y+=e9.vy*dt;e9.vx*=.9;e9.vy*=.9;}} /* fx age and die online like solo - and under the governor they burn out 1.6x faster, thinning the particle load when frames struggle */
  const MP=(swarms[0]&&swarms[0].team===NET.you&&!swarms[0].ally)?swarms[0]:null; /* IDENTITY IS SACRED: only a swarm that is PROVABLY yours is ever predicted or driven - if yours is missing a beat, you spectate that beat; you never ride a stranger */
  /* THE INTERP DELAY: was a flat 125ms for every connection. That's ~2.5x the server's 50ms send interval -
@@ -4312,12 +4317,12 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
     NET._foy=(NET._foy==null||!isFinite(NET._foy)?roy:NET._foy+(roy-NET._foy)*Math.min(1,12*dt));
     OX=NET._fox;OY=NET._foy;}
    for(let j=0;j<s2.units.length;j++){const u=s2.units[j];
-    if(u.atk>0)u.atk-=dt;if(u.flash>0)u.flash-=dt;if(u.mend>0)u.mend-=dt;if(u.slow>0)u.slow-=dt; /* the client decays what the wire arms - no brain needed to ANIMATE combat */
+    if(u.atk>0)u.atk-=dt;if(u.flash>0)u.flash-=dt;if(u.mend>0)u.mend-=dt;if(u.slow>0)u.slow-=dt;if(u._sipT>0)u._sipT-=dt; /* the client decays what the wire arms - no brain needed to ANIMATE combat */
     u.braced=(u.role==='armourer')||(u.role==='soldier'&&Math.hypot(u.x-s2.x,u.y-s2.y)<s2.R*1.3); /* the BULWARK stands online: braced was computed only by the solo brain, so armourers LOOKED like naked beetles while invisibly tarring foes - same law as solo, run client-side */
     if(!isFinite(u.x)||!isFinite(u.y)){u.x=isFinite(u.tx)?u.tx:s2.x;u.y=isFinite(u.ty)?u.ty:s2.y;u.vx=0;u.vy=0;} /* NaN never keeps a soul: any poisoned body snaps back to its last true position and lives again */
     const tA=uA&&uA.get(u.uid),tB=uB&&uB.get(u.uid);
     if(s2===MP&&!s2.ally){ /* OWN troops interpolate from the wire like everyone else, offset by OX/OY so they sit around your PREDICTED queen — NO per-frame local swarm-brain (that pinned weak phones) */
-     if(tB){const hot8=(u.atk>0||u.flash>0); /* a FIGHTER renders at the NEWEST truth, not the padded past - reversals and nips arrive two frames sooner, which is the difference between a brawl and a smear */
+     if(tB){const hot8=(u.atk>0||u.flash>0||u._sipT>0); /* a FIGHTER - or a DRINKING forager - renders at the NEWEST truth, not the padded past */
       const bx=(hot8?tB[0]:(tA?tA[0]+(tB[0]-tA[0])*al:tB[0]))+OX,by=(hot8?tB[1]:(tA?tA[1]+(tB[1]-tA[1])*al:tB[1]))+OY;
       const ox9=u.x,oy9=u.y,jx9=bx-u.x,jy9=by-u.y,jd9=Math.hypot(jx9,jy9),cap9=150+(u.spd||300)*dt;
       if(jd9>cap9){u.x+=jx9/jd9*cap9;u.y+=jy9/jd9*cap9;}
@@ -4328,8 +4333,8 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
      let bx=hot8?tB[0]:(tA?tA[0]+(tB[0]-tA[0])*al:tB[0]),by=hot8?tB[1]:(tA?tA[1]+(tB[1]-tA[1])*al:tB[1]);
      if(tA&&FB.rt>FA.rt){const fdt8=(FB.rt-FA.rt)/1000,rvx8=(tB[0]-tA[0])/fdt8,rvy8=(tB[1]-tA[1])/fdt8; /* enemy TROOPS project forward like their queen - through a LOW-PASS, because raw frame-pair velocity wobbles with every shove, and that wobble was the residual TWITCH */
       u._pvx=(u._pvx==null?rvx8:u._pvx+(rvx8-u._pvx)*Math.min(1,9*dt));u._pvy=(u._pvy==null?rvy8:u._pvy+(rvy8-u._pvy)*Math.min(1,9*dt));
-      const ul8=Math.hypot(u._pvx,u._pvy);
-      if(ul8>60){const ld8=Math.min(60,ul8*(hot8?0.05:(interpDelay/1000)*0.85));bx+=u._pvx/ul8*ld8;by+=u._pvy/ul8*ld8;}} /* a fighter at the newest frame needs only ~a tick of lead */
+      const ul8=Math.hypot(u._pvx,u._pvy),rl8=Math.hypot(rvx8,rvy8);
+      if(ul8>60){const ld8=Math.min(60,Math.min(ul8,rl8)*(hot8?0.05:(interpDelay/1000)*0.85));bx+=u._pvx/ul8*ld8;by+=u._pvy/ul8*ld8;}} /* lead magnitude obeys the RAW speed: a decelerating forager STOPS at her flower instead of ghosting past it (the smoothed lead lagged every stop) */
      const ox9=u.x,oy9=u.y,jx9=bx-u.x,jy9=by-u.y,jd9=Math.hypot(jx9,jy9),cap9=150+(u.spd||300)*dt;
      if(jd9>cap9){u.x+=jx9/jd9*cap9;u.y+=jy9/jd9*cap9;} /* glide over teleport-scale snaps (post-stall), never a jarring jump */
      else{const k8=Math.min(1,(hot8?70:26)*dt);u.x+=jx9*k8;u.y+=jy9*k8;} /* same spring, combat-adaptive: a striking or struck troop snaps to truth, the rest glide */
@@ -4385,6 +4390,7 @@ function netDynLite(){ /* the fast heartbeat: souls, honey, shots - and everythi
   sh:shots.map(x=>[x.x|0,x.y|0,x.vx|0,x.vy|0]),
   wp:wasps.map(w=>[w.x|0,w.y|0,w.vx|0,w.vy|0,w.trio||0]),
   gp:grottos.map(g=>(g.pricks||[]).map(p=>[p.x|0,p.y|0])), /* THE CAVE FIX: pricklers actually drift for connected clients now - previously sent once at netWorldInit and never again, so they appeared frozen in multiplayer while still dealing live server-authoritative damage from their true (moving) position - a real desync, now closed */
+  fa:fieldMaws.map(m=>m.anim>0?1:0),gm:grottos.map(g=>(g.maws||[]).map(m=>m.anim>0?1:0)), /* THE MAW FIX, same disease as the pricklers: snap states never crossed the wire, so flytraps chomped invisibly and looked like dead props */
   sw:netSnapshot(1).sw};}
 function netDyn(){ /* the LIVING world, streamed */
  return {t:+tnow.toFixed(3),g:goldT>=0?1:0,np:NPLAY,
@@ -4394,6 +4400,7 @@ function netDyn(){ /* the LIVING world, streamed */
   sh:shots.map(x=>[x.x|0,x.y|0,x.vx|0,x.vy|0]),
   wp:wasps.map(w=>[w.x|0,w.y|0,w.vx|0,w.vy|0,w.trio||0]),
   gp:grottos.map(g=>(g.pricks||[]).map(p=>[p.x|0,p.y|0])), /* THE CAVE FIX: see netDynLite */
+  fa:fieldMaws.map(m=>m.anim>0?1:0),gm:grottos.map(g=>(g.maws||[]).map(m=>m.anim>0?1:0)), /* THE MAW FIX: see netDynLite */
   ey:eyes.map(e=>[e.x|0,e.y|0,e.r|0,e.hp|0,e.maxHp||300,+(e.blink||0).toFixed(2),(e.dread||0)>0?1:0,+e.wa.toFixed(2),+(e.seed||0).toFixed(2)]),
   el:elder?[elder.x|0,elder.y|0,elder.hp|0,elder.maxHp,(elder.vx||0)|0,(elder.vy||0)|0]:0,
   sp:spider?[spider.x|0,spider.y|0,spider.hp|0,spider.maxHp,(spider.kids||[]).map(k=>[k.x|0,k.y|0])]:0,

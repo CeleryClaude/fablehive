@@ -73,7 +73,7 @@ function start(port,htmlPath){
     if(wasEmpty&&Date.now()-lastEmpty>15000)freshWorld(); /* only reset a LONG-empty room, so devices/friends joining close together SHARE the world */ /* a lone arrival into an empty room begins in a clean, light meadow */
     const s=G.swarms.find(z=>z.team===team&&!z.ally);
     if(s){s.bot=false;s.name=(''+(m.n||'Queen')).slice(0,16).replace(/[<>&"']/g,'');delete s.forceAim;
-     s.dead=false;try{G.reviveSwarm(s);}catch(e){}s.honey=150;} /* FRESH QUEEN on join: never the wild bot's grown body - and she arrives with 150 honey, enough for her FIRST SOLDIER or two foragers, so the opening minute is choices, not poverty (30 was famine) */
+     s.dead=false;try{G.reviveSwarm(s);}catch(e){}s.honey=150;s.cosEq=null;s.col2=null;} /* FRESH QUEEN on join: never the wild bot's grown body - and she arrives with 150 honey, enough for her FIRST SOLDIER or two foragers, so the opening minute is choices, not poverty (30 was famine) */
     ws.send(JSON.stringify({k:'init',you:team,world:G.netWorldInit()}));
    } else if(m.k==='cmd'&&team!==null){try{G.applyInput(team,m.c||{});}catch(e){}}
    else if(m.k==='p'){try{ws.send(JSON.stringify({k:'p',t:m.t}));}catch(e){}}
@@ -82,9 +82,9 @@ function start(port,htmlPath){
    const s=G.swarms.find(z=>z.team===team&&!z.ally);
    if(s){s.bot=true;delete s.forceAim;}}});
  });
- const reapI=setInterval(()=>{ /* GHOST REAPER: a phone that dropped WiFi leaves a socket that never says close - it would HOLD ITS SEAT for minutes while its player rejoins into a second seat, two half-alive queens tangling. 12s of silence (clients ping every 2s) = terminate, seat frees, world moves on */
+ const reapI=setInterval(()=>{ /* GHOST REAPER: a phone that dropped WiFi leaves a socket that never says close - it would HOLD ITS SEAT for minutes while its player rejoins into a second seat, two half-alive queens tangling. 45s of silence (clients ping every 2s on a REAL timer; phones that dim the screen stop ticking for a while and must not be executed for it) = terminate, seat frees, world moves on */
   const now=Date.now();
-  for(const t in seats){const w=seats[t];if(w&&now-(w._seen||0)>12000){try{w.terminate();}catch(e){}}}
+  for(const t in seats){const w=seats[t];if(w&&now-(w._seen||0)>45000){try{w.terminate();}catch(e){}}}
  },5000);
  const BOOT=Date.now(),TICKS={n:0,sum:0,hist:[]};
  const DT=1/30;let acc=0,last=Date.now(); /* 30Hz authoritative sim: HALVES sustained CPU so the shared-cpu-1x burst credits stop draining (was 60Hz=~36% CPU nonstop -> throttle -> multi-second stalls). Queen physics verified dt-robust (4px/3s drift vs 60Hz); client predicts her at 60fps + interpolates troops, so nothing looks slower. */

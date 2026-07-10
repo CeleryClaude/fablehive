@@ -4,7 +4,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
 html,body{width:100%;height:100%;overflow:hidden;background:#241426;font-family:'Trebuchet MS',system-ui,sans-serif;color:#fff2dc;touch-action:none}
-button,.ab,.btn,.btn2,.tab,.szBtn,#gear{touch-action:manipulation}
+button,.ab,.btn,.btn2,.tab,.szBtn,#gear,#bar,#tip,#subRail,.panel{touch-action:manipulation}
 #cv{display:block;position:fixed;inset:0}
 #hud{position:fixed;top:10px;left:12px;font-size:14px;line-height:1.5;text-shadow:0 1px 3px #000;pointer-events:none}
 #hud b{font-size:23px;color:#ffe9a0;display:inline-block;transition:transform .12s}
@@ -15,7 +15,7 @@ button,.ab,.btn,.btn2,.tab,.szBtn,#gear{touch-action:manipulation}
 #bar{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;display:none;gap:8px;z-index:7;flex-wrap:wrap;justify-content:center;max-width:96vw}
 @media (pointer:coarse), (max-width:820px){#bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;max-width:none;left:76px;right:4px;transform:none;justify-content:flex-start;padding:0 5px;-webkit-overflow-scrolling:touch}.ab{min-width:44px;padding:6px 3px;flex:0 0 auto}.ab span{font-size:10.5px}.ab small{font-size:8px}#tip{max-width:82vw;font-size:11px;padding:5px 9px;bottom:52px;max-height:22vh;overflow:hidden}#hint{display:none}#lb{font-size:11px}}
 html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;max-width:none;left:76px;right:4px;transform:none;justify-content:flex-start;padding:0 5px;-webkit-overflow-scrolling:touch}html.mob .ab{min-width:44px;padding:6px 3px;flex:0 0 auto}html.mob .ab span{font-size:10.5px}html.mob .ab small{font-size:8px}html.mob #tip{max-width:82vw;font-size:11px;padding:5px 9px;bottom:52px;max-height:22vh;overflow:hidden}html.mob #hint{display:none}html.mob #lb{font-size:11px}
-html.mob #subRail{position:fixed;left:6px;right:6px;bottom:6px;top:auto;width:auto;padding:7px 12px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;z-index:12}html.mob #subRail .subMore{display:none}html.mob #subRail button{width:auto!important;margin-top:0!important;padding:6px 16px}html.mob #home{padding-bottom:70px}
+html.mob #subRail{position:fixed;left:6px;right:auto;bottom:6px;top:auto;width:auto;max-width:47vw;padding:5px 10px;display:flex;align-items:center;justify-content:flex-start;gap:7px;flex-wrap:nowrap;z-index:12;font-size:10px;line-height:1.25}html.mob #subRail .subMore{display:none}html.mob #subRail .subOne{display:block!important;text-align:left;white-space:nowrap}html.mob #subRail button{width:auto!important;margin-top:0!important;padding:5px 10px;font-size:10px}html.mob #home{padding-bottom:56px}#subRail .subOne{display:none}
 #tip{position:fixed;left:50%;transform:translateX(-50%);bottom:86px;max-width:340px;padding:9px 13px;background:rgba(30,16,32,.92);border:1px solid rgba(255,220,150,.4);border-radius:12px;font-size:12.5px;line-height:1.45;display:none;z-index:8;pointer-events:none;text-align:center;box-shadow:0 4px 20px #0008}
 #tip b{color:#ffd75e;letter-spacing:1px}
 #xpbar{width:240px;height:9px;background:rgba(255,255,255,.12);border-radius:6px;margin:8px auto 2px;overflow:hidden}
@@ -95,6 +95,7 @@ html.mob #subRail{position:fixed;left:6px;right:6px;bottom:6px;top:auto;width:au
  <div id="subRail" style="position:absolute;left:10px;top:12%;width:150px;padding:14px 12px;background:linear-gradient(180deg,rgba(70,40,20,.85),rgba(40,22,44,.9));border:1.5px solid #ffd75e88;border-radius:14px;text-align:center;font-size:12px;line-height:1.5">
   <div class="subMore" style="font-size:26px">👑</div>
   <b style="color:#ffd75e;letter-spacing:1px">👑 ROYAL SUB</b>
+  <span class="subOne" style="font-size:10px;opacity:.9">every skin+treasure · $5/mo</span>
   <div class="subMore" style="opacity:.85;margin:6px 0">wear <b>EVERYTHING</b><br>every treasure<br>every fleet<br>every future season</div>
   <div style="font-size:17px;color:#ffd75e;font-weight:bold">$5<span style="font-size:11px">/mo</span></div>
   <button class="btn2" id="subBtn" style="margin-top:8px;border-color:#ffd75e;width:100%">SUBSCRIBE</button>
@@ -2073,6 +2074,7 @@ function reviveSwarm(s){
  for(let k=0;k<24;k++){const x=rand(400,WORLD.w-400),y=rand(400,WORLD.h-400);
   if(elder&&d2(x,y,elder.hx,elder.hy)<900*900)continue;
   if(d2(x,y,WORLD.w/2,WORLD.h/2)<1000*1000)continue; /* no rebirth in the contested heart */
+  {let bC9=false;for(const b9 of boulders){if(d2(x,y,b9.x,b9.y)<(b9.r+90)*(b9.r+90)){bC9=true;break;}}if(bC9)continue;} /* and never INSIDE STONE: a queen reborn in a boulder spent her first breath being spat out of it */
   let md=1e18;for(const e of swarms){if(e.dead||e.team===s.team)continue;md=Math.min(md,d2(x,y,e.x,e.y));}
   if(md>bs){bs=md;bx=x;by=y;}}
  s.x=bx;s.y=by;s.vx=s.vy=0;s.prot=3;
@@ -2328,6 +2330,7 @@ if(barEl&&barEl.addEventListener){
  });
  addEventListener('pointerup',()=>{stopHold();hideTip();});addEventListener('pointercancel',()=>{stopHold();hideTip();});
  addEventListener('blur',stopHold);
+ try{document.addEventListener('dblclick',ev=>{if(ev.target&&ev.target.closest&&ev.target.closest('#bar,#tip,.panel,#subRail'))ev.preventDefault();},{passive:false});}catch(e){} /* a double-tap on a BUTTON is eagerness, not a wish to zoom */
  barEl.addEventListener('pointerover',ev=>{if(ev.pointerType!=='mouse')return;showTipFor(ev.target);});
  barEl.addEventListener('pointerout',ev=>{if(ev.pointerType==='mouse')hideTip();});
  barEl.addEventListener('pointerdown',ev=>{showTipFor(ev.target);});
@@ -4084,19 +4087,28 @@ function loop(){const now=performance.now();let dt=(now-last)/1000;last=now;if(d
 /* ============ test API ============ */
 const ROLE_ID={forager:0,soldier:1,lancer:2,spitter:3,nurse:4,armourer:5,titan:6};
 const ROLE_BY_ID=['forager','soldier','lancer','spitter','nurse','armourer','titan'];
-const NET={on:false,ws:null,you:0,mirror:{},aimT:0,deadShown:false,rtt:0,pingT:0,lastT:0,buf:[],
+const NET={on:false,ws:null,you:0,mirror:{},aimT:0,deadShown:false,rtt:0,pingT:0,lastT:0,buf:[],_url:null,_name:null,_rt:0,_pi:0,
  connect(url,name){try{
+  NET._url=url;NET._name=name;
   const W9=new WebSocket(url);NET.ws=W9;
-  W9.onopen=()=>{W9.send(JSON.stringify({k:'join',n:(name||'Queen').slice(0,16)}));};
+  W9.onopen=()=>{W9.send(JSON.stringify({k:'join',n:(name||'Queen').slice(0,16)}));
+   clearInterval(NET._pi);NET._pi=setInterval(()=>{try{if(NET.ws&&NET.ws.readyState===1)NET.ws.send(JSON.stringify({k:'p',t:Date.now()}));}catch(e){}},2000);}; /* the PULSE rides a real timer, not the render loop - it beats even when the phone dims */
   W9.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}
-   if(m.k==='init'){NET.you=m.you;NET.on=true;netApplyWorld(m.world);renderBar();toast('CONNECTED - realm '+m.you,'#9fd8ff',3);} /* refresh the bar THE MOMENT we (re)connect so tiers unlock instantly, never a stale 'at X souls' after a laggy reconnect */
+   if(m.k==='init'){NET.you=m.you;NET.on=true;NET._rt=0;netApplyWorld(m.world);renderBar();toast('CONNECTED - realm '+m.you,'#9fd8ff',3);} /* refresh the bar THE MOMENT we (re)connect so tiers unlock instantly, never a stale 'at X souls' after a laggy reconnect */
    else if(m.k==='f')netApplyFrame(m);
    else if(m.k==='p')NET.rtt=Date.now()-m.t;};
-  W9.onclose=()=>{NET.on=false;toast('THE WIRE CLOSED - meadow is yours alone again','#ff9a6a',4);};
+  W9.onclose=()=>{const was=NET.on;NET.on=false;clearInterval(NET._pi);
+   if(NET._url){ /* THE WIRE NEVER JUST DIES ANYMORE: a dropped socket (phone sleep, WiFi blink, seat reaped) quietly reweaves itself - and the rejoin brings a FRESH world init, so you can never be left playing a stale ghost meadow where buys eat honey but nothing real happens */
+    if(was)toast('THE WIRE SLIPPED - reweaving...','#ffd75e',3);
+    NET._rt=Math.min(8000,(NET._rt||1200)*1.5);
+    setTimeout(()=>{if(!NET.on&&NET._url)NET.connect(NET._url,NET._name);},NET._rt);}
+   else toast('THE WIRE CLOSED - meadow is yours alone again','#ff9a6a',4);};
  }catch(e){}},
  cmd(c9){if(NET.ws&&NET.ws.readyState===1)NET.ws.send(JSON.stringify({k:'cmd',c:c9}));}};
+try{document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!NET.on&&NET._url)NET.connect(NET._url,NET._name);});}catch(e){} /* waking the phone rejoins INSTANTLY */
 function act(c9){if(NET.on){NET.cmd(c9);return;}applyInput(0,c9);} /* one verb surface, local or wired */
-function netApplyWorld(D){ /* the STATIC world takes the client's stage */
+function netApplyWorld(D){ /* the STATIC world takes the client's stage - and SCRUBS the old one: stale mirrors, stale frames, stale rings. A reconnect lands you in the world as it IS (the invisible-rocks bug was a client keeping dead boulders after the server regrew the meadow) */
+ NET.mirror={};NET.buf.length=0;NET.clock=null;NET._lastArr=0;NET._fox=null;NET._foy=null;NET.deadShown=false;fx.length=0;
  WORLD.w=D.w;WORLD.h=D.h;
  boulders=D.b.map(b=>({x:b[0],y:b[1],r:b[2],kind:b[3],cove:!!b[4],hide:!!b[5]}));
  coves=D.c.map(c=>({x:c[0],y:c[1],r:c[2],m:c[3],tight:!!c[4]}));
@@ -4142,7 +4154,9 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
    cosEq:null,warLoss:0,sayT:0,stompCd:0,expoT:0,lost:0,lostT:0,slots:{}};}
   m9.dead=false;m9.name=w9.n;m9.col=w9.c;m9.col2=w9.c2||null;m9.cosEq=w9.q||null;m9.prot=w9.p?1:0;
   m9.tx=w9.x;m9.ty=w9.y;m9.hp=w9.h;m9.honey=w9.H;
-  if(w9.f&&!(m9.flash>0))m9.flash=0.16; /* her hit lands white on screen, like solo */
+  if(w9.f&&!(m9.flash>0)){m9.flash=0.16; /* her hit lands white on screen, like solo - with SPARKS, and a kick of shake if it is YOUR crown */
+   if(fx.length<430)addP(w9.x,w9.y,'#ffd7a8',4,120);
+   if(w9.i===NET.you&&!w9.a)shake=Math.min(14,shake+5);}
   if(w9.y2){m9.say=w9.y2;m9.sayT=1.2;}
   const uu=w9.u||[];
   const old9=m9.uById||new Map(),nu9=[],nb9=new Map();
@@ -4155,9 +4169,9 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
     atk:0,flash:0,slow:0,fat:0,mend:0,wanA:0,wanV:1,per:false,sig:2,sigT:0,cl:0,home:false,load2:0};
     if(fresh9&&typeof addRing==='function')addRing(u.x,u.y,R9.col,20);} /* the recruit POPS the moment truth delivers her - the buy-click ring was the promise, this is the arrival */
    u.tx=t9[0];u.ty=t9[1];u.hp=t9[3];u.load=t9[4];u.slot=j;u._fi=j;u._gi=j;
-   {const cb9=t9[6]||0; /* combat bits: rising edge arms the timer, netTick decays it - lunges and hit-flashes render online now */
+   {const cb9=t9[6]||0; /* combat bits: rising edge arms the timer, netTick decays it - and every landed hit SPARKS, so a battle looks like a battle */
     if((cb9&1)&&!(u.atk>0))u.atk=0.3;
-    if((cb9&2)&&!(u.flash>0))u.flash=0.14;}
+    if((cb9&2)&&!(u.flash>0)){u.flash=0.14;if(fx.length<400)addP(t9[0],t9[1],'#ffe9c9',2,80);}}
    nu9.push(u);nb9.set(uid,u);}
   m9.units=nu9;m9.uById=nb9;
   seen[w9.id]=1;}
@@ -4170,6 +4184,7 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
  for(const s2 of swarms)if(!s2.dead)calcR(s2);}
 function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in the past, between two KNOWN truths */
  tnow+=dt;
+ for(let i9=fx.length-1;i9>=0;i9--){const e9=fx[i9];e9.t+=dt;if(e9.t>=e9.life){fx.splice(i9,1);continue;}if(!e9.ring){e9.x+=e9.vx*dt;e9.y+=e9.vy*dt;e9.vx*=.9;e9.vy*=.9;}} /* fx lived in step() which never runs online - every ring/spark was IMMORTAL, haunting the meadow wherever it was born. Online they now age and die exactly like solo */
  const MP=(swarms[0]&&swarms[0].team===NET.you&&!swarms[0].ally)?swarms[0]:null; /* IDENTITY IS SACRED: only a swarm that is PROVABLY yours is ever predicted or driven - if yours is missing a beat, you spectate that beat; you never ride a stranger */
  /* THE INTERP DELAY: was a flat 125ms for every connection. That's ~2.5x the server's 50ms send interval -
     safe margin against arrival jitter, but needlessly laggy for anyone on a fast/stable link, since this
@@ -4204,6 +4219,7 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
    s2.vx+=((dx/dl)*want-s2.vx)*Math.min(1,TUNE.qacc*dt);
    s2.vy+=((dy/dl)*want-s2.vy)*Math.min(1,TUNE.qacc*dt);
    s2.x+=s2.vx*dt;s2.y+=s2.vy*dt;
+   s2.x=clamp(s2.x,26,WORLD.w-26);s2.y=clamp(s2.y,26,WORLD.h-26); /* the world EDGE binds the predicted queen exactly as it binds the solo one - no more flying past the rim into nothing */
    collideBoulders(s2,Math.max(12+queenStage(s2)*3.5,s2.R*0.26));
    const ex=s2.tx-s2.x,ey=s2.ty-s2.y,er9=Math.hypot(ex,ey);
    const staleMs9=nowR-(NET._lastArr||nowR); /* how long since a FRESH truth landed */
@@ -4216,7 +4232,9 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
    collideBoulders(s2,Math.max(12+queenStage(s2)*3.5,s2.R*0.26)); /* THE STONE VETO: the drift-tolerance pull above answers to your PING, never to solid rock - re-resolve once more, last word, every frame, so "honest drift" can never settle you on/inside a boulder. Verified safe (idempotent when clear) via boulder_rest_test.js; could not conclusively reproduce the reported fly-through/rest-on-top in a same-process sandbox (no real jitter/packet-loss to test against - see mirror_test.js's own caveat), so this ships as a hardening, not a confirmed fix */
    s2.spdNow=Math.hypot(s2.vx,s2.vy);
   } else if(wA&&wB&&!wA.d&&!wB.d){ /* interpolate along the buffer, then OUTPUT-FILTER: a queen tracks truth through a soft spring, so late frames land as a lean, never a jerk */
-   const nx=wA.x+(wB.x-wA.x)*al,ny=wA.y+(wB.y-wA.y)*al;
+   let nx=wA.x+(wB.x-wA.x)*al,ny=wA.y+(wB.y-wA.y)*al;
+   if(FB.rt>FA.rt){const fdt9=(FB.rt-FA.rt)/1000,wvx9=(wB.x-wA.x)/fdt9,wvy9=(wB.y-wA.y)/fdt9,lv9=Math.hypot(wvx9,wvy9); /* THE PHANTOM SHOVE: she was drawn one interp-delay in the PAST, so her real body hit you before her image did. Project her forward along her wire velocity - what you SEE is where she IS */
+    if(lv9>40){const ld9=Math.min(80,lv9*(interpDelay/1000)*0.9);nx+=wvx9/lv9*ld9;ny+=wvy9/lv9*ld9;}}
    const ox9=s2.x,oy9=s2.y,gx9=nx-s2.x,gy9=ny-s2.y,gd9=Math.hypot(gx9,gy9);
    if(gd9>240){s2.x=nx;s2.y=ny;} /* teleport-scale: land on truth */
    else{const k8=Math.min(1,26*dt);s2.x+=gx9*k8;s2.y+=gy9*k8;}
@@ -4243,7 +4261,9 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
       else{const k8=Math.min(1,26*dt);u.x+=jx9*k8;u.y+=jy9*k8;} /* OUTPUT FILTER: the 30Hz sawtooth and every extrapolation snap-back melt into a ~10px soft lean - this was the TWITCH */
       u.vx=(u.x-ox9)/Math.max(dt,0.001);u.vy=(u.y-oy9)/Math.max(dt,0.001);}
      else if(u.tx!==undefined){const k9=Math.min(1,6*dt);u.vx=(u.tx-u.x)*8;u.vy=(u.ty-u.y)*8;u.x+=(u.tx-u.x)*k9;u.y+=(u.ty-u.y)*k9;}}
-    else if(tB){const bx=tA?tA[0]+(tB[0]-tA[0])*al:tB[0],by=tA?tA[1]+(tB[1]-tA[1])*al:tB[1];
+    else if(tB){let bx=tA?tA[0]+(tB[0]-tA[0])*al:tB[0],by=tA?tA[1]+(tB[1]-tA[1])*al:tB[1];
+     if(tA&&FB.rt>FA.rt){const fdt8=(FB.rt-FA.rt)/1000,uvx8=(tB[0]-tA[0])/fdt8,uvy8=(tB[1]-tA[1])/fdt8,ul8=Math.hypot(uvx8,uvy8); /* enemy TROOPS get the same forward-projection as their queen: without it they struck from one interp-delay in the PAST - ghost hits from bugs that visually flew past you */
+      if(ul8>60){const ld8=Math.min(60,ul8*(interpDelay/1000)*0.85);bx+=uvx8/ul8*ld8;by+=uvy8/ul8*ld8;}}
      const ox9=u.x,oy9=u.y,jx9=bx-u.x,jy9=by-u.y,jd9=Math.hypot(jx9,jy9),cap9=150+(u.spd||300)*dt;
      if(jd9>cap9){u.x+=jx9/jd9*cap9;u.y+=jy9/jd9*cap9;} /* glide over teleport-scale snaps (post-stall), never a jarring jump */
      else{const k8=Math.min(1,26*dt);u.x+=jx9*k8;u.y+=jy9*k8;} /* same soft spring for every troop in the meadow */
@@ -4253,7 +4273,7 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
   if(s2.sayT>0)s2.sayT-=dt;
   if(s2.flash>0)s2.flash-=dt;if(s2.hitT>0)s2.hitT-=dt;}
  /* (removed) the per-frame LOCAL swarm-brain (gridBuild+boulderGridBuild+moveUnits, every client every frame). It felt solo-tight on a strong desktop but PINNED weak phones: a ~100-unit sim at 60fps could not keep pace AND drain the socket, so frames backlogged and the phone's ms CLIMBED (22s seen). Own troops now interpolate from the server like everyone else (branch above, offset to the predicted queen). The server stays sole authority for combat/kills/honey, so troops that looked inert online now render the server's REAL fighting. */
- NET.pingT-=dt;if(NET.pingT<=0){NET.pingT=2;NET.cmd&&NET.ws&&NET.ws.readyState===1&&NET.ws.send(JSON.stringify({k:'p',t:Date.now()}));}
+ /* pings moved to a real 2s interval inside NET.connect: this RAF loop PAUSES whenever a phone dims or backgrounds the tab, which silenced the pulse and got LIVE seats reaped as ghosts */
  NET.aimT-=dt;
  const M9=MP; /* aim/overlay follow the PROVEN own swarm only - never a stranger at index 0 */
  if(M9&&!M9.dead&&NET.aimT<=0){NET.aimT=0.08;

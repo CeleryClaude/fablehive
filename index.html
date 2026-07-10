@@ -918,7 +918,7 @@ function setupWorldTail(){ /* the rest of world-gen: caves, maws, oasis, decor -
  fieldMaws=fieldMaws.filter(m=>boulders.some(b=>Math.hypot(m.x-b.x,m.y-b.y)<b.r+30)&&!groves.some(g=>Math.hypot(m.x-g.x,m.y-g.y)<160)); /* orphans and harvest-crowders are weeded */
  eyes=[];for(let k=0;k<4;k++)eyes.push({x:rand(380,1050),y:rand(380,1050),r:rand(15,22),hp:300,maxHp:300,wa:rand(0,TAU),cd:0,blink:0,seed:rand(0,TAU)}); /* THE WATCHING: the far corner has grown eyes */
  worms=[];for(let k=0;k<3;k++){const wx=rand(WORLD.w*0.76,WORLD.w-460),wy=rand(430,WORLD.h*0.24); /* THE BLOOD WORMS: the far NE belongs to something segmented. Three, corner-locked, burrowing - the mirror of the Watching. Built to Celery's gate: cheap ticks, tiny wire */
-  const w9={x:wx,y:wy,hx:wx,hy:wy,r:13,a:rand(0,TAU),hp:260,maxHp:260,prov:0,flash:0,bur:0,burT:rand(6,14),bite:0,seed:rand(0,TAU),_worm:1,seg:[]};
+  const w9={x:wx,y:wy,hx:wx,hy:wy,r:13,a:rand(0,TAU),hp:260,maxHp:260,prov:0,flash:0,bur:0,burT:rand(10,22),bite:0,seed:rand(0,TAU),_worm:1,seg:[]};
   for(let s9=0;s9<7;s9++)w9.seg.push({x:wx-s9*16,y:wy});
   worms.push(w9);}
  /* THORN BRAKES: bramble ribbons knotted along the WILD edges - the gentle south stays open */
@@ -1442,7 +1442,8 @@ function wormTick(dt){ /* THE BLOOD WORMS: idle they meander and burrow; provoke
    worms.splice(wi,1);continue;}
   if(w9.bur>0){w9.bur-=dt; /* under the soil: untouchable, unseen */
    if(w9.bur<=0){w9.x=clamp(w9.hx+rand(-240,240),WORLD.w*0.64,WORLD.w-140);w9.y=clamp(w9.hy+rand(-180,180),140,WORLD.h*0.36);
-    for(const sg of w9.seg){sg.x=w9.x;sg.y=w9.y;}}
+    for(const sg of w9.seg){sg.x=w9.x;sg.y=w9.y;}
+    addP(w9.x,w9.y,'#7a4432',10,150);addRing(w9.x,w9.y,'#7a4432',30);} /* it ERUPTS, it does not arrive */
    continue;}
   let tgt=null;
   {let bd=250*250;
@@ -1453,7 +1454,7 @@ function wormTick(dt){ /* THE BLOOD WORMS: idle they meander and burrow; provoke
   if(w9.prov>0&&tgt){ta9=Math.atan2(tgt.y-w9.y,tgt.x-w9.x);sp9=165;}
   else{w9.a+=Math.sin(tnow*0.7+w9.seed)*1.1*dt;ta9=w9.a;
    if(d2(w9.x,w9.y,w9.hx,w9.hy)>380*380)ta9=Math.atan2(w9.hy-w9.y,w9.hx-w9.x);
-   w9.burT-=dt;if(w9.burT<=0){w9.bur=rand(1.6,2.6);w9.burT=rand(8,16);addP(w9.x,w9.y,'#7a4432',8,110);skip9=true;}}
+   w9.burT-=dt;if(w9.burT<=0){w9.bur=rand(3.5,6);w9.burT=rand(16,28);addP(w9.x,w9.y,'#7a4432',8,110);skip9=true;}} /* calmer rhythm: the old 1.6-2.6s dips every ~12s read as broken flicker */
   if(skip9)continue;
   let da9=ta9-w9.a;while(da9>Math.PI)da9-=TAU;while(da9<-Math.PI)da9+=TAU;
   w9.a+=clamp(da9,-2.6*dt,2.6*dt);
@@ -4671,6 +4672,8 @@ function draw(){
   ctx.fillRect(mx+g.x*sc-gsz/2,my+g.y*sc-gsz/2,gsz,gsz);}
  if(elder){ctx.strokeStyle='rgba(255,150,90,.5)';ctx.beginPath();ctx.arc(mx+elder.x*sc,my+elder.y*sc,elder.terr*sc,0,TAU);ctx.stroke();}
  if(spider){ctx.strokeStyle='rgba(200,160,255,.5)';ctx.beginPath();ctx.arc(mx+spider.x*sc,my+spider.y*sc,spider.terr*sc,0,TAU);ctx.stroke();}
+ for(const w9 of worms){if(w9.bur>0)continue; /* the worms show on the map - only while surfaced */
+  ctx.fillStyle='rgba(232,72,72,.9)';ctx.fillRect(mx+w9.x*sc-1.5,my+w9.y*sc-1.5,3,3);}
  for(const g9 of grottos){ctx.fillStyle='rgba(90,80,105,.8)';ctx.beginPath();ctx.arc(mx+g9.x*sc,my+g9.y*sc,g9.r*sc,0,TAU);ctx.fill();
   ctx.fillStyle='rgba(106,255,216,'+(0.5+0.4*Math.sin(tnow*2))+')';ctx.beginPath();ctx.arc(mx+g9.x*sc+Math.cos(g9.m)*g9.r*sc,my+g9.y*sc+Math.sin(g9.m)*g9.r*sc,1.4,0,TAU);ctx.fill();}
  for(const s of swarms){if(s.dead)continue;const r=Math.max(1.6,s.R*0.045)*DPR;
@@ -4925,8 +4928,11 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
    spider.gait+=Math.hypot(spider.vx,spider.vy)*dt*0.05;}
  for(const w9 of worms){if(!w9._net)continue;const kw9=Math.min(1,10*dt);
   if(w9.bite>0)w9.bite-=dt;if(w9.flash>0)w9.flash-=dt;
-  if(w9._tx!==undefined){w9.x+=(w9._tx-w9.x)*kw9;w9.y+=(w9._ty-w9.y)*kw9;}
-  for(const sg of w9.seg){if(sg._tx!==undefined){sg.x+=(sg._tx-sg.x)*kw9;sg.y+=(sg._ty-sg.y)*kw9;}}}
+  if(w9._tx!==undefined){
+   if(Math.hypot(w9._tx-w9.x,w9._ty-w9.y)>120){ /* a resurface or a death-shuffle is a TELEPORT, never a slide: snap the whole body and let the rise-anim carry the moment */
+    w9.x=w9._tx;w9.y=w9._ty;for(const sg of w9.seg){if(sg._tx!==undefined){sg.x=sg._tx;sg.y=sg._ty;}}
+   }else{w9.x+=(w9._tx-w9.x)*kw9;w9.y+=(w9._ty-w9.y)*kw9;
+    for(const sg of w9.seg){if(sg._tx!==undefined){sg.x+=(sg._tx-sg.x)*kw9;sg.y+=(sg._ty-sg.y)*kw9;}}}}}
   if(spider.flash>0)spider.flash-=dt;
   for(const kd9 of spider.kids)if(kd9._tx!=null){const kox9=kd9.x,koy9=kd9.y;
    kd9.x+=(kd9._tx-kd9.x)*Math.min(1,12*dt);kd9.y+=(kd9._ty-kd9.y)*Math.min(1,12*dt);

@@ -4095,7 +4095,7 @@ const NET={on:false,ws:null,you:0,mirror:{},aimT:0,deadShown:false,rtt:0,pingT:0
  connect(url,name){try{
   NET._url=url;NET._name=name;
   const W9=new WebSocket(url);NET.ws=W9;
-  W9.onopen=()=>{W9.send(JSON.stringify({k:'join',n:(name||'Queen').slice(0,16)}));
+  W9.onopen=()=>{W9.send(JSON.stringify({k:'join',n:(name||'Queen').slice(0,16),c:((SKINS[META.skin]||{}).c)||0,c2:((SKINS[META.skin]||{}).c2)||0,q:META.eq||0})); /* she arrives DRESSED: colour + wardrobe ride the join, the server wears them into every frame */
    clearInterval(NET._pi);NET._pi=setInterval(()=>{try{if(NET.ws&&NET.ws.readyState===1)NET.ws.send(JSON.stringify({k:'p',t:Date.now()}));}catch(e){}},2000);}; /* the PULSE rides a real timer, not the render loop - it beats even when the phone dims */
   W9.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}
    if(m.k==='init'){NET.you=m.you;NET.on=true;NET._rt=0;netApplyWorld(m.world);renderBar();toast('CONNECTED - realm '+m.you,'#9fd8ff',3);} /* refresh the bar THE MOMENT we (re)connect so tiers unlock instantly, never a stale 'at X souls' after a laggy reconnect */
@@ -4124,7 +4124,8 @@ function netApplyWorld(D){ /* the STATIC world takes the client's stage - and SC
  fieldMaws=D.fm.map(m=>({x:m[0],y:m[1],rot:m[2],big:m[3],cd:0,anim:0}));
  OASIS=D.oa;decor=D.dc.map(d=>({x:d[0],y:d[1],ty:['tuft','rubble','swirl'][d[2]],ph:d[3]}));
  thorns=D.th;groves=[];drops=[];shots=[];orbs=[];wasps=[];eyes=[];elder=null;spider=null;
- for(const s2 of swarms){s2.dead=true;s2.gone=true;}swarms=[];}
+ for(const s2 of swarms){s2.dead=true;s2.gone=true;}swarms=[];
+ try{boulderGridBuild();}catch(e){} /* THE STONE GRID was only ever built inside step(), which never runs online - collideBoulders searched an EMPTY net, so the predicted queen sailed through rocks and cove rims until the server yanked her back. The invisible walls, and half the drift-shove */}
 function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - stamped by OUR clock, not the server's lumpy one */
  {const fm=new Map();
   for(const w9 of F.sw){fm.set(w9.id,w9);
@@ -4222,7 +4223,14 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
    if(kv.on){dx=kv.x;dy=kv.y;drv=true;}
    else if(input.joy){const m2=Math.hypot(input.joy.dx,input.joy.dy);if(m2>10){dx=input.joy.dx;dy=input.joy.dy;drv=true;}}
    else if(input.mDown){dx=cam.x+(input.mx*DPR-W/2)/cam.z-s2.x;dy=cam.y+(input.my*DPR-H/2)/cam.z-s2.y;drv=Math.hypot(dx,dy)>30;}
-   const dl=Math.hypot(dx,dy)||1,want=drv?queenSpd(s2):0;
+   const dl=Math.hypot(dx,dy)||1;
+   let wb9=1; /* THE WIND blows online too: same river test as step(), so the boost you SEE is the boost the server GRANTS - without this the server surged ahead and the reconcile turned tailwind into rubber-band */
+   if(drv)for(const wway of ways){const L29=(wway.x2-wway.x1)**2+(wway.y2-wway.y1)**2;if(!L29)continue;
+    let t9=((s2.x-wway.x1)*(wway.x2-wway.x1)+(s2.y-wway.y1)*(wway.y2-wway.y1))/L29;t9=clamp(t9,0,1);
+    const px9=wway.x1+(wway.x2-wway.x1)*t9,py9=wway.y1+(wway.y2-wway.y1)*t9;
+    if(d2(s2.x,s2.y,px9,py9)<wway.w*wway.w){const along9=(dx/dl)*wway.dx+(dy/dl)*wway.dy;
+     if(along9>0.2)wb9=1.45;break;}}
+   const want=drv?queenSpd(s2)*wb9:0;
    s2.vx+=((dx/dl)*want-s2.vx)*Math.min(1,TUNE.qacc*dt);
    s2.vy+=((dy/dl)*want-s2.vy)*Math.min(1,TUNE.qacc*dt);
    s2.x+=s2.vx*dt;s2.y+=s2.vy*dt;
@@ -4262,20 +4270,22 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
     if(u.atk>0)u.atk-=dt;if(u.flash>0)u.flash-=dt;if(u.mend>0)u.mend-=dt;if(u.slow>0)u.slow-=dt; /* the client decays what the wire arms - no brain needed to ANIMATE combat */
     const tA=uA&&uA.get(u.uid),tB=uB&&uB.get(u.uid);
     if(s2===MP&&!s2.ally){ /* OWN troops interpolate from the wire like everyone else, offset by OX/OY so they sit around your PREDICTED queen — NO per-frame local swarm-brain (that pinned weak phones) */
-     if(tB){const bx=(tA?tA[0]+(tB[0]-tA[0])*al:tB[0])+OX,by=(tA?tA[1]+(tB[1]-tA[1])*al:tB[1])+OY;
+     if(tB){const hot8=(u.atk>0||u.flash>0); /* a FIGHTER renders at the NEWEST truth, not the padded past - reversals and nips arrive two frames sooner, which is the difference between a brawl and a smear */
+      const bx=(hot8?tB[0]:(tA?tA[0]+(tB[0]-tA[0])*al:tB[0]))+OX,by=(hot8?tB[1]:(tA?tA[1]+(tB[1]-tA[1])*al:tB[1]))+OY;
       const ox9=u.x,oy9=u.y,jx9=bx-u.x,jy9=by-u.y,jd9=Math.hypot(jx9,jy9),cap9=150+(u.spd||300)*dt;
       if(jd9>cap9){u.x+=jx9/jd9*cap9;u.y+=jy9/jd9*cap9;}
-      else{const k8=Math.min(1,(u.atk>0||u.flash>0?46:26)*dt);u.x+=jx9*k8;u.y+=jy9*k8;} /* OUTPUT FILTER, combat-adaptive: fighters track truth twice as hard so jabs read as jabs; roamers keep the silky 26 */
+      else{const k8=Math.min(1,(hot8?70:26)*dt);u.x+=jx9*k8;u.y+=jy9*k8;} /* OUTPUT FILTER, combat-adaptive: fighters bite, roamers glide */
       u.vx=(u.x-ox9)/Math.max(dt,0.001);u.vy=(u.y-oy9)/Math.max(dt,0.001);}
      else if(u.tx!==undefined){const k9=Math.min(1,6*dt);u.vx=(u.tx-u.x)*8;u.vy=(u.ty-u.y)*8;u.x+=(u.tx-u.x)*k9;u.y+=(u.ty-u.y)*k9;}}
-    else if(tB){let bx=tA?tA[0]+(tB[0]-tA[0])*al:tB[0],by=tA?tA[1]+(tB[1]-tA[1])*al:tB[1];
+    else if(tB){const hot8=(u.atk>0||u.flash>0); /* fighters everywhere render at the NEWEST truth */
+     let bx=hot8?tB[0]:(tA?tA[0]+(tB[0]-tA[0])*al:tB[0]),by=hot8?tB[1]:(tA?tA[1]+(tB[1]-tA[1])*al:tB[1]);
      if(tA&&FB.rt>FA.rt){const fdt8=(FB.rt-FA.rt)/1000,rvx8=(tB[0]-tA[0])/fdt8,rvy8=(tB[1]-tA[1])/fdt8; /* enemy TROOPS project forward like their queen - through a LOW-PASS, because raw frame-pair velocity wobbles with every shove, and that wobble was the residual TWITCH */
       u._pvx=(u._pvx==null?rvx8:u._pvx+(rvx8-u._pvx)*Math.min(1,9*dt));u._pvy=(u._pvy==null?rvy8:u._pvy+(rvy8-u._pvy)*Math.min(1,9*dt));
       const ul8=Math.hypot(u._pvx,u._pvy);
-      if(ul8>60){const ld8=Math.min(60,ul8*(interpDelay/1000)*0.85);bx+=u._pvx/ul8*ld8;by+=u._pvy/ul8*ld8;}}
+      if(ul8>60){const ld8=Math.min(60,ul8*(hot8?0.05:(interpDelay/1000)*0.85));bx+=u._pvx/ul8*ld8;by+=u._pvy/ul8*ld8;}} /* a fighter at the newest frame needs only ~a tick of lead */
      const ox9=u.x,oy9=u.y,jx9=bx-u.x,jy9=by-u.y,jd9=Math.hypot(jx9,jy9),cap9=150+(u.spd||300)*dt;
      if(jd9>cap9){u.x+=jx9/jd9*cap9;u.y+=jy9/jd9*cap9;} /* glide over teleport-scale snaps (post-stall), never a jarring jump */
-     else{const k8=Math.min(1,(u.atk>0||u.flash>0?46:26)*dt);u.x+=jx9*k8;u.y+=jy9*k8;} /* same spring, combat-adaptive: a striking or struck troop snaps to truth, the rest glide */
+     else{const k8=Math.min(1,(hot8?70:26)*dt);u.x+=jx9*k8;u.y+=jy9*k8;} /* same spring, combat-adaptive: a striking or struck troop snaps to truth, the rest glide */
      u.vx=(u.x-ox9)/Math.max(dt,0.001);u.vy=(u.y-oy9)/Math.max(dt,0.001);}
     else{const k9=Math.min(1,6*dt);
      u.vx=(u.tx-u.x)*8;u.vy=(u.ty-u.y)*8;u.x+=(u.tx-u.x)*k9;u.y+=(u.ty-u.y)*k9;}}}

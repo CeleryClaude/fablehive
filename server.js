@@ -73,7 +73,11 @@ function start(port,htmlPath){
     if(wasEmpty&&Date.now()-lastEmpty>15000)freshWorld(); /* only reset a LONG-empty room, so devices/friends joining close together SHARE the world */ /* a lone arrival into an empty room begins in a clean, light meadow */
     const s=G.swarms.find(z=>z.team===team&&!z.ally);
     if(s){s.bot=false;s.name=(''+(m.n||'Queen')).slice(0,16).replace(/[<>&"']/g,'');delete s.forceAim;
-     s.dead=false;try{G.reviveSwarm(s);}catch(e){}s.honey=150;s.cosEq=null;s.col2=null;} /* FRESH QUEEN on join: never the wild bot's grown body - and she arrives with 150 honey, enough for her FIRST SOLDIER or two foragers, so the opening minute is choices, not poverty (30 was famine) */
+     s.dead=false;try{G.reviveSwarm(s);}catch(e){}s.honey=150;
+     {const okc=v=>(typeof v==='string'&&/^#[0-9a-fA-F]{6}$/.test(v))?v:null; /* SHE ARRIVES DRESSED: colour + wardrobe ride the join (sanitized), so every frame shows the player as they chose to look - not as the seat's random bot */
+      const c9=okc(m.c);if(c9)s.col=c9;s.col2=okc(m.c2);
+      let q9=null;if(m.q&&typeof m.q==='object'&&!Array.isArray(m.q)){q9={};for(const k of ['pattern','crown','trail','wings','body','tail','fleet','aura']){const v=m.q[k];if(typeof v==='string'&&v.length<=24&&/^[a-zA-Z0-9_-]+$/.test(v))q9[k]=v;}if(!Object.keys(q9).length)q9=null;}
+      s.cosEq=q9;}} /* FRESH QUEEN on join: never the wild bot's grown body - and she arrives with 150 honey, enough for her FIRST SOLDIER or two foragers, so the opening minute is choices, not poverty (30 was famine) */
     ws.send(JSON.stringify({k:'init',you:team,world:G.netWorldInit()}));
    } else if(m.k==='cmd'&&team!==null){try{G.applyInput(team,m.c||{});}catch(e){}}
    else if(m.k==='p'){try{ws.send(JSON.stringify({k:'p',t:m.t}));}catch(e){}}
@@ -93,7 +97,7 @@ function start(port,htmlPath){
   acc+=(now-last)/1000;last=now;
   if(acc>0.25)acc=0.25;let n=0;
   /* TRUE PER-STEP TIMING: a catch-up burst of 5 steps must never be counted as one slow tick */
-  while(acc>=DT&&n<5){
+  while(acc>=DT&&n<3){ /* catch-up capped at 3 (was 5): after a GC or timer hiccup a 5-step burst cost 75ms+ in one gulp, starving the very next net frame - the 1000ms ping SPIKES. Better a hair of time-dilation than a spike */
    const t0=process.hrtime.bigint();
    G.step(DT);
    const el=Number(process.hrtime.bigint()-t0)/1e6;

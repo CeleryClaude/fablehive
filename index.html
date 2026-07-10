@@ -422,6 +422,10 @@ const ITEMS=[
  {id:'millipede', cat:'plate',  n:'Millipede Mail',xp:1700,d:'a hundred little legs, all marching'},
  {id:'wildlimbs', cat:'plate',  n:'Wild Limbs',  xp:900,  d:'no armour at all - bare living limbs grown from her own body'},
  {id:'tendrillimbs',cat:'plate',n:'Tendril Limbs',xp:2100, d:'reaching violet-lit tendrils - she does not walk, she DRIFTS'},
+ {id:'beetleplate',cat:'plate', n:'Beetle Elytra',xp:2000, d:'split shells of night-iridescence'},
+ {id:'combplate', cat:'plate',  n:'Comb Plate',   xp:1500, d:'wax-gold cells - one still holds the light'},
+ {id:'leafplate', cat:'plate',  n:'Leafguard',    xp:1100, d:'the meadow armours its own'},
+ {id:'warchitin', cat:'plate',  n:'War Chitin',   xp:3800,royal:true,d:'grown armour that COVERS - only her head stays bare'},
  {id:'moltaura', cat:'aura',   n:'Apex Shimmer',xp:-1,  d:'reach 120 souls once — wear the shimmer of the great'},
  {id:'algaeglow',cat:'aura',   n:'Grotto Glow', xp:-1,  d:'gather 200 honey inside the dark — the algae remember you'},
  {id:'plainfleet',cat:'fleet', n:'No Kit',      xp:0,   d:'your brood as it was born - no armour, just wings'},
@@ -2907,12 +2911,21 @@ function paintWings(g2,base,t2,style){
  }else if(style==='prismatic'){
   for(const sg of [-1,1]){g2.fillStyle='hsla('+((t2*90+(sg>0?40:0))%360)+',85%,72%,'+(0.36+0.3*wf)+')';
    g2.beginPath();g2.ellipse(-base*0.38,sg*base*0.87,base*0.84,base*0.34,-sg*0.42,0,TAU);g2.fill();}
- }else if(style==='phoenix'){
+ }else if(style==='phoenix'){const pb=Math.sin(t2*9)*0.5+0.5; /* PHOENIX second pass: it beats SLOW and burns in three layers - coal, living flame, white heat - filaments trailing, one ember rising to die. The fire remembers her */
   for(const sg of [-1,1]){
-   g2.fillStyle='rgba(255,'+Math.round(110+90*wf)+',40,'+(0.4+0.32*wf)+')';
-   g2.beginPath();g2.ellipse(-base*0.38,sg*base*0.9,base*0.95,base*0.38,-sg*0.42,0,TAU);g2.fill();
-   g2.fillStyle='rgba(255,230,140,'+(0.3+0.25*wf)+')';
-   g2.beginPath();g2.ellipse(-base*0.42,sg*base*0.8,base*0.55,base*0.2,-sg*0.42,0,TAU);g2.fill();}
+   g2.fillStyle='rgba(178,40,24,'+(0.5+0.2*pb).toFixed(3)+')';
+   g2.beginPath();g2.ellipse(-base*0.42,sg*base*(0.94+0.08*pb),base*1.05,base*0.42,-sg*(0.4+0.06*pb),0,TAU);g2.fill();
+   g2.fillStyle='rgba(255,'+Math.round(120+70*pb)+',36,'+(0.55+0.25*pb).toFixed(3)+')';
+   g2.beginPath();g2.ellipse(-base*0.38,sg*base*(0.86+0.07*pb),base*0.82,base*0.3,-sg*(0.42+0.05*pb),0,TAU);g2.fill();
+   g2.fillStyle='rgba(255,240,180,'+(0.4+0.3*pb).toFixed(3)+')';
+   g2.beginPath();g2.ellipse(-base*0.3,sg*base*(0.74+0.06*pb),base*0.5,base*0.16,-sg*0.45,0,TAU);g2.fill();
+   g2.strokeStyle='rgba(255,200,90,'+(0.5+0.3*pb).toFixed(3)+')';g2.lineWidth=1.2;
+   for(let f6=0;f6<3;f6++){const fo6=0.25+f6*0.28;
+    g2.beginPath();g2.moveTo(-base*(0.2+fo6*0.7),sg*base*(0.62+fo6*0.5));
+    g2.quadraticCurveTo(-base*(0.5+fo6*0.8),sg*base*(0.8+fo6*0.55),-base*(0.85+fo6*0.9),sg*base*(0.7+fo6*0.6));g2.stroke();}
+   {const em6=(t2*0.42+(sg>0?0.5:0))%1;
+    g2.fillStyle='rgba(255,214,120,'+(0.85*(1-em6)).toFixed(3)+')';
+    g2.beginPath();g2.arc(-base*(0.5+em6*0.45),sg*base*(0.95+em6*0.4),1.2+(1-em6)*1.2,0,TAU);g2.fill();}}
  }else{
   g2.fillStyle='rgba(255,250,235,'+(0.3+0.3*wf)+')';
   g2.beginPath();g2.ellipse(-base*0.38,-base*0.85,base*0.8,base*0.34,-0.42,0,TAU);g2.fill();
@@ -3094,9 +3107,9 @@ function paintEye(g2,base,t2,ey){ /* THE GAZE: her eye is a CHOICE now. Anchored
  g2.restore();}
 function paintPlate(g2,base,t2,pl,col){ /* QUEEN ARMOUR, amended law: trim by default, and SOME sets fully WRAP chosen segments (the pattern lives on the bare ones). Sets pair with FLEETS - same metals, same tints - so queen and army read as one host */
  if(!pl||pl==='noplate'||!QSEGS.length)return;
- const C9={bronzetrim:{c:'#b08048',e:'#6e4a26',w:2.2},
-  lamellar:{c:'#cfd6e0',e:'#8a94a4',w:2.6,riv:1},
-  warplate:{c:'#f0c94a',e:'#8a6410',lite:'#fff2b0',w:3.2,riv:2}, /* pairs with the GOLD fleet */
+ const C9={bronzetrim:{c:'#b08048',e:'#6e4a26',lite:'#e8c890',w:2.2,wrap:[1]}, /* the BREASTPLATE completes the look, by decree - bronze wears its cuirass now */
+  lamellar:{c:'#cfd6e0',e:'#8a94a4',lite:'#f4f8fc',w:2.6,riv:1,wrap:[1]}, /* and silver */
+  warplate:{c:'#f0c94a',e:'#8a6410',lite:'#fff2b0',w:3.2,riv:2,wrap:[1]}, /* and gold. pairs with the GOLD fleet */
   steelbands:{c:'#b9c2cb',e:'#5b6672',lite:'#eef3f7',w:4.4,chan:'#3e4854',wrap:[1]}, /* pairs with the IRON fleet - full cuirass on the mid segment */
   obsidianplate:{c:'#2e2a36',e:'#0a0810',lite:'#8a84a0',w:3,wrap:[1],mspike:1}, /* pairs with the OBSIDIAN fleet - wrapped mid, recurved dark studs */
   spikedcarapace:{c:'#8a6a48',e:'#463020',w:2.4,thorn:'#c8b088',thornE:'#6e5430'},
@@ -3105,7 +3118,11 @@ function paintPlate(g2,base,t2,pl,col){ /* QUEEN ARMOUR, amended law: trim by de
   emberforge:{c:'#4a4048',e:'#241e26',w:3.4,glow:'#ff7a3a'},
   millipede:{c:'#5a4a38',e:'#32281c',w:2,legs:1},
   wildlimbs:{legsOnly:'chitin'}, /* BARE LIMBS: no armour at all - limbs GROW from her body */
-  tendrillimbs:{legsOnly:'tendril'}}[pl];if(!C9)return;
+  tendrillimbs:{legsOnly:'tendril'},
+  beetleplate:{c:'#2a3438',e:'#101a1e',lite:'#5ac8b0',w:3,wrap:[1],elytra:1}, /* BEETLE: split elytra, iridescence walking the shell */
+  combplate:{c:'#e8b430',e:'#8a6410',lite:'#ffe9a0',w:2.4,wrap:[1],comb:1}, /* HONEYCOMB: true hex cells, one still holding light - pairs with the COMB fleet */
+  leafplate:{c:'#5e9a4a',e:'#2e5424',lite:'#a8d878',w:2.6,leafy:1}, /* LEAFGUARD: the meadow armours its own */
+  warchitin:{bug:1,w:4,wrap:[1,2]}}[pl];if(!C9)return; /* WAR CHITIN: grown armour that COVERS - cuirass on thorax AND abdomen, scutes elsewhere, tinted to HER */
  if(C9.bug&&col){C9.c=shade(col,-0.05);C9.e=shade(col,-0.45);C9.scute=shade(col,0.35);}else if(C9.bug){C9.c='#3a2c44';C9.e='#1c1424';C9.scute='#7a5ea0';}
  g2.save();g2.lineCap='round';
  if(C9.legsOnly){ /* LIMB SETS WITHOUT ARMOUR: rooted INSIDE the segment rim so they read as GROWN from the body, never stuck through a plate. Tinted to HER colour */
@@ -3139,6 +3156,15 @@ function paintPlate(g2,base,t2,pl,col){ /* QUEEN ARMOUR, amended law: trim by de
    g2.strokeStyle=C9.e;g2.lineWidth=2;g2.stroke();
    if(C9.lite){g2.strokeStyle=C9.lite;g2.lineWidth=1.6;g2.beginPath();g2.arc(sg.x,sg.y,rr*0.78,-2.4,-0.7);g2.stroke();}
    g2.strokeStyle=C9.e;g2.lineWidth=1.1;g2.beginPath();g2.moveTo(sg.x-rr*0.9,sg.y);g2.lineTo(sg.x+rr*0.9,sg.y);g2.stroke(); /* the forge seam */
+   if(C9.elytra){g2.strokeStyle='rgba(90,200,176,'+(0.35+0.25*Math.sin(t2*2.1+i9)).toFixed(3)+')';g2.lineWidth=1.2; /* iridescence WALKS the shell */
+    g2.beginPath();g2.arc(sg.x,sg.y,rr*0.7,-2.6,-1.6);g2.stroke();
+    g2.beginPath();g2.arc(sg.x,sg.y,rr*0.7,0.5,1.5);g2.stroke();
+    g2.fillStyle=C9.lite;for(const sd of [-1,1]){g2.beginPath();g2.arc(sg.x-rr*0.3,sg.y+sd*rr*0.45,1.2,0,TAU);g2.fill();}}
+   if(C9.comb){g2.strokeStyle=C9.e;g2.lineWidth=1; /* the comb: hex cells across the cuirass */
+    for(const hc6 of [[0,0,0.34],[-0.52,0.3,0.28],[-0.52,-0.3,0.28],[0.52,0.3,0.28],[0.52,-0.3,0.28]]){
+     g2.beginPath();for(let h6=0;h6<6;h6++){const ha6=h6/6*TAU+0.52,px6=sg.x+rr*hc6[0]+Math.cos(ha6)*rr*hc6[2]*0.5,py6=sg.y+rr*hc6[1]+Math.sin(ha6)*rr*hc6[2]*0.5;h6?g2.lineTo(px6,py6):g2.moveTo(px6,py6);}g2.closePath();g2.stroke();}
+    g2.fillStyle='rgba(255,233,160,'+(0.25+0.15*Math.sin(t2*2.4)).toFixed(3)+')';
+    g2.beginPath();g2.arc(sg.x,sg.y,rr*0.17,0,TAU);g2.fill();}
    if(C9.mspike)for(const sd of [-1,1]){const aa=sd*1.5,bx=sg.x+Math.cos(aa)*rr,by=sg.y+Math.sin(aa)*rr,ln=sg.r*0.4; /* obsidian studs: small recurved, never triangles */
     g2.fillStyle=C9.lite;g2.beginPath();g2.moveTo(bx+2.2,by);
     g2.quadraticCurveTo(bx+0.8,by+sd*ln*0.8,bx-ln*0.85,by+sd*ln*0.4);
@@ -3163,6 +3189,13 @@ function paintPlate(g2,base,t2,pl,col){ /* QUEEN ARMOUR, amended law: trim by de
     g2.strokeStyle='#c8b088';g2.lineWidth=1.5;g2.lineCap='round';
     g2.beginPath();g2.moveTo(bx,by);
     g2.quadraticCurveTo(bx-2+ph9*0.4,by+sd*4.4,bx-4.6+ph9,by+sd*6.4);g2.stroke();}
+   if(C9.leafy)for(const sd of [-1,1]){ /* LEAFGUARD: two overlapped leaf-plates on each flank, veined */
+    for(let l6=0;l6<2;l6++){const aa=sd*(1.05+l6*0.5),bx=sg.x+Math.cos(aa)*rr*0.9,by=sg.y+Math.sin(aa)*rr*0.9,ln=sg.r*(0.62-l6*0.12);
+     g2.save();g2.translate(bx,by);g2.rotate(aa+sd*0.5);
+     g2.fillStyle=l6?C9.lite:C9.c;g2.strokeStyle=C9.e;g2.lineWidth=0.9;
+     g2.beginPath();g2.moveTo(0,0);g2.quadraticCurveTo(ln*0.4,-ln*0.34,ln,0);g2.quadraticCurveTo(ln*0.4,ln*0.34,0,0);g2.closePath();g2.fill();g2.stroke();
+     g2.beginPath();g2.moveTo(ln*0.12,0);g2.lineTo(ln*0.84,0);g2.stroke();
+     g2.restore();}}
    if(C9.thorn&&i9<QSEGS.length-1)for(const sd of [-1,1]){ /* THORNPLATE: recurved HOOKS swept backward - forged, never a childish triangle */
     const aa=sd*1.45,bx=sg.x+Math.cos(aa)*rr,by=sg.y+Math.sin(aa)*rr,ln=sg.r*0.62;
     g2.fillStyle=C9.thorn;g2.strokeStyle=C9.thornE;g2.lineWidth=1;
@@ -4538,16 +4571,7 @@ function draw(){
    ctx.fillStyle='rgba(90,76,102,.8)';
    for(const [px3,py3,pr3] of [[grz*0.14,grz*0.07,2.4],[grz*0.17,-grz*0.05,1.8],[grz*0.21,grz*0.015,1.5]])
     {ctx.beginPath();ctx.arc(px3,py3,pr3*cam.z,0,TAU);ctx.fill();}
-   ctx.fillStyle='rgba(74,62,88,.9)'; /* two keeper-stones flank the way in */
-   for(const sd3 of [-1,1]){ctx.save();ctx.translate(grz*0.2,sd3*grz*0.17);ctx.rotate(sd3*0.18);
-    ctx.beginPath();ctx.ellipse(0,0,grz*0.032,grz*0.06,0,0,TAU);ctx.fill();ctx.restore();}
-   ctx.fillStyle='rgba(122,168,96,.5)';
-   ctx.beginPath();ctx.arc(grz*0.19,-grz*0.19,1.6*cam.z,0,TAU);ctx.fill(); /* lichen kisses one keeper */
-   ctx.strokeStyle='rgba(30,24,40,.28)';ctx.lineWidth=grz*0.05;ctx.lineCap='round'; /* the path is WORN: many feet came this way, fewer left */
-   ctx.beginPath();ctx.moveTo(grz*0.12,grz*0.02);ctx.quadraticCurveTo(grz*0.3,grz*0.03,grz*0.52,-grz*0.02);ctx.stroke();
-   ctx.lineWidth=grz*0.028;
-   ctx.beginPath();ctx.moveTo(grz*0.14,-grz*0.045);ctx.quadraticCurveTo(grz*0.34,-grz*0.05,grz*0.5,grz*0.015);ctx.stroke();
-   ctx.restore();
+   ctx.restore(); /* the keeper-stones and the worn path are GONE by verdict ("cosmic streamers") - the mouth is now only the hollow, its lip, the quiet breath and three pebbles: subtle, recognisable, nothing more */
    /* a single hairline crack wandering up the dome — geology, not signage */
    ctx.strokeStyle='rgba(20,12,26,.5)';ctx.lineWidth=1.2*cam.z;
    ctx.beginPath();ctx.moveTo(mx9-Math.cos(ma9)*grz*0.06,my9-Math.sin(ma9)*grz*0.06);

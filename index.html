@@ -855,7 +855,7 @@ function setupWorldTail(){ /* the rest of world-gen: caves, maws, oasis, decor -
   {const n9=21,half9=0.44,span9=TAU-half9*2; /* bones OVERLAP: one wall, one door, no secret leaks */
    for(let i=0;i<n9;i++){
     const a9=ga9+half9+(i/(n9-1))*span9;
-    boulders.push({x:gx9+Math.cos(a9)*(GR-42),y:gy9+Math.sin(a9)*(GR-42),r:66,cove:true,kind:1,hide:true});}}
+    boulders.push({x:gx9+Math.cos(a9)*(GR-76),y:gy9+Math.sin(a9)*(GR-76),r:66,cove:true,kind:1,hide:true});}} /* THE INVISIBLE OBJECTS, found at last: these rim stones sat at GR-42 with r=66, poking 24px of collision BEYOND the drawn dome - every cave wore an invisible ring you could crash into from the open meadow. Pulled inward: outer edge now ~10px INSIDE the art */
   /* the crystal court within */
   const g0=grottos[grottos.length-1];
   g0.crystals=[];g0.maws=[];g0.pricks=[];
@@ -2509,7 +2509,7 @@ function drawNestQueen(){
  const pv=document.getElementById('qprev');if(!pv||!pv.getContext)return;
  const c2=pv.getContext('2d');if(!c2||!c2.clearRect)return;
  const SK9=SKINS[tryOn.skin!==undefined?tryOn.skin:META.skin];
- const col=SK9.c,base=[12,17,23,30][nestSz]||17;
+ const col=SK9.c,base=[12,15,18,23][nestSz]||15; /* the GLASS was fatter than the FIELD ([12,17,23,30] vs the field's 12+st*3+(st3?2:0)) - crowns fitted in the mirror sat differently on the real queen. The mirror now uses the field's own formula */
  c2.clearRect(0,0,230,120);
  const t2=Date.now()/1000;
  /* the mirror MOVES: trail particles stream behind her */
@@ -4294,10 +4294,26 @@ function draw(){
   if(worth===2&&Math.random()<0.02)addSpark(dr.x,dr.y,1);}
  for(const w9 of worms){ /* THE BLOOD WORMS drawn: tapered crimson chain, ring-plated. Burrowed, they are a mound and a promise */
   if(w9.x<vx0-260||w9.x>vx1+260||w9.y<vy0-260||w9.y>vy1+260)continue;
-  if(w9.bur>0){ctx.fillStyle='rgba(90,58,44,.7)';
-   ctx.beginPath();ctx.ellipse(w9.x,w9.y,16,9,0,0,TAU);ctx.fill();
-   ctx.strokeStyle='rgba(200,60,50,'+(0.3+0.2*Math.sin(tnow*3+w9.seed)).toFixed(3)+')';ctx.lineWidth=1.4;
-   ctx.beginPath();ctx.moveTo(w9.x-8,w9.y);ctx.quadraticCurveTo(w9.x,w9.y-4,w9.x+9,w9.y+1);ctx.stroke();continue;}
+  {if((w9.bur>0)!==(w9._burWas===true)){w9._burT0=tnow;w9._burWas=w9.bur>0;} /* the SINK and the RISE are animated client-side - the old cut was lacklustre by verdict */
+   const bp9=Math.min(1,((tnow-(w9._burT0||0))*2.4)),sink9=w9.bur>0?bp9:1-bp9;
+   if(sink9>0.02){ /* churned earth while anything is below */
+    ctx.fillStyle='rgba(90,58,44,'+(0.7*sink9).toFixed(3)+')';
+    ctx.beginPath();ctx.ellipse(w9.x,w9.y,16+4*Math.sin(tnow*2.2+w9.seed),9,0,0,TAU);ctx.fill();
+    ctx.strokeStyle='rgba(60,38,30,'+(0.5*sink9).toFixed(3)+')';ctx.lineWidth=1.2;
+    for(let c9=0;c9<3;c9++){const ca9=w9.seed+c9*2.1;
+     ctx.beginPath();ctx.moveTo(w9.x+Math.cos(ca9)*6,w9.y+Math.sin(ca9)*4);
+     ctx.quadraticCurveTo(w9.x+Math.cos(ca9)*13,w9.y+Math.sin(ca9)*8,w9.x+Math.cos(ca9+0.5)*18,w9.y+Math.sin(ca9+0.5)*10);ctx.stroke();} /* cracked soil rays */
+    if(w9.bur>0&&sink9>=1){const ba9=tnow*1.4+w9.seed,bx9=w9.x+Math.cos(ba9)*14,by9=w9.y+Math.sin(ba9)*8; /* the ground BULGES where it roams beneath */
+     ctx.fillStyle='rgba(104,68,50,.55)';
+     ctx.beginPath();ctx.ellipse(bx9,by9,7,4.4,0,0,TAU);ctx.fill();}
+    ctx.strokeStyle='rgba(200,60,50,'+((0.3+0.2*Math.sin(tnow*3+w9.seed))*sink9).toFixed(3)+')';ctx.lineWidth=1.4;
+    ctx.beginPath();ctx.moveTo(w9.x-8,w9.y);ctx.quadraticCurveTo(w9.x,w9.y-4,w9.x+9,w9.y+1);ctx.stroke();
+    if(sink9>0.1&&sink9<0.95){ctx.fillStyle='rgba(122,82,60,.8)'; /* soil thrown while it churns through */
+     for(let f9=0;f9<4;f9++){const fa9=w9.seed+f9*1.7+tnow*5;
+      ctx.beginPath();ctx.arc(w9.x+Math.cos(fa9)*(10+6*Math.sin(tnow*7+f9)),w9.y+Math.sin(fa9)*(6+4*Math.cos(tnow*6+f9)),1.3,0,TAU);ctx.fill();}}}
+   if(w9.bur>0&&sink9>=0.98)continue; /* fully under: the mound is the whole story */
+   if(sink9>0.02){ctx.save();ctx.translate(w9.x,w9.y);ctx.scale(1-sink9*0.85,1-sink9*0.85);ctx.translate(-w9.x,-w9.y);}else ctx.save(); /* the body SINKS as the earth takes it */
+   var wormScaled9=true;}
   for(let s9=w9.seg.length-1;s9>=0;s9--){const sg=w9.seg[s9],rr9=12-s9*1.3;
    ctx.fillStyle=w9.flash>0?'#fff':(s9%2?'#8a2430':'#a83240');
    ctx.beginPath();ctx.arc(sg.x,sg.y,rr9,0,TAU);ctx.fill();
@@ -4318,7 +4334,8 @@ function draw(){
    ctx.beginPath();ctx.arc(6,-4.5,1.6,0,TAU);ctx.fill();
    ctx.beginPath();ctx.arc(6,4.5,1.6,0,TAU);ctx.fill();
    ctx.restore();
-   if(w9.hp<w9.maxHp)drawBar(w9.x,w9.y+22,42,w9.hp/w9.maxHp,false);}}
+   ctx.restore(); /* the sink-scale closes */
+   if(w9.hp<w9.maxHp&&!(w9.bur>0))drawBar(w9.x,w9.y+22,42,w9.hp/w9.maxHp,false);}}
  /* the elder */
  if(elder&&elder.x>vx0-220&&elder.x<vx1+220&&elder.y>vy0-220&&elder.y<vy1+220){
   ctx.save();ctx.translate(elder.x,elder.y);
@@ -4503,29 +4520,24 @@ function draw(){
    /* the ENTRANCE: a recessed stone arch, breathing the faintest inner light */
    const ma9=g9.m,mx9=gs9[0]+Math.cos(ma9)*grz*0.96,my9=gs9[1]+Math.sin(ma9)*grz*0.96;
    ctx.save();ctx.translate(mx9,my9);ctx.rotate(ma9);
-   /* recess shadowing: three nested arches sinking inward */
-   for(let k3=0;k3<3;k3++){
-    ctx.fillStyle='rgba('+(30-k3*8)+','+(22-k3*6)+','+(38-k3*10)+',0.95)';
-    ctx.beginPath();ctx.ellipse(-k3*4*cam.z,0,grz*(0.17-k3*0.035),grz*(0.115-k3*0.024),0,-1.62,1.62);ctx.fill();}
-   /* the dark of the passage itself */
-   ctx.fillStyle='rgba(4,2,9,.96)';
-   ctx.beginPath();ctx.ellipse(-10*cam.z,0,grz*0.085,grz*0.062,0,0,TAU);ctx.fill();
-   /* the faint breath of light from within — the only invitation */
-   const br3=0.16+0.1*Math.sin(tnow*1.7);
-   const bg3=ctx.createRadialGradient(-6*cam.z,0,1,-6*cam.z,0,grz*0.3);
+   /* THE MOUTH, remade by verdict: no stacked archways, no teeth - ONE soft hollow that fades from the dome's own dusk into true dark, a shadow the rock has always had. (The dome itself is perfect and untouched) */
+   {const mg3=ctx.createRadialGradient(-grz*0.06,0,grz*0.01,-grz*0.02,0,grz*0.2);
+    mg3.addColorStop(0,'rgba(4,2,9,.95)');mg3.addColorStop(0.55,'rgba(22,16,30,.75)');mg3.addColorStop(1,'rgba(42,34,50,0)');
+    ctx.fillStyle=mg3;
+    ctx.beginPath();ctx.ellipse(-grz*0.02,0,grz*0.2,grz*0.14,0,0,TAU);ctx.fill();}
+   ctx.strokeStyle='rgba(30,22,38,.5)';ctx.lineWidth=2.2*cam.z; /* the upper lip: one stratum line sagging over the dark, in the dome's own ink */
+   ctx.beginPath();ctx.ellipse(-grz*0.02,0,grz*0.15,grz*0.105,0,-2.4,-0.7);ctx.stroke();
+   ctx.strokeStyle='rgba(88,74,99,.4)';ctx.lineWidth=1.2*cam.z; /* the worn lower edge, catching what little light reaches in */
+   ctx.beginPath();ctx.ellipse(-grz*0.02,0,grz*0.15,grz*0.105,0,0.7,2.4);ctx.stroke();
+   const br3=0.1+0.07*Math.sin(tnow*1.7); /* the breath stays - quieter now */
+   const bg3=ctx.createRadialGradient(-6*cam.z,0,1,-6*cam.z,0,grz*0.24);
    bg3.addColorStop(0,'rgba(126,235,210,'+br3+')');bg3.addColorStop(1,'rgba(126,235,210,0)');
    ctx.fillStyle=bg3;
-   ctx.beginPath();ctx.arc(-6*cam.z,0,grz*0.3,0,TAU);ctx.fill();
+   ctx.beginPath();ctx.arc(-6*cam.z,0,grz*0.24,0,TAU);ctx.fill();
    /* worn threshold pebbles */
    ctx.fillStyle='rgba(90,76,102,.8)';
    for(const [px3,py3,pr3] of [[grz*0.14,grz*0.07,2.4],[grz*0.17,-grz*0.05,1.8],[grz*0.21,grz*0.015,1.5]])
     {ctx.beginPath();ctx.arc(px3,py3,pr3*cam.z,0,TAU);ctx.fill();}
-   /* STONE TEETH: a fringe of hanging fangs across the mouth - recurved drips of old stone. A THRESHOLD, not a hole */
-   ctx.fillStyle='rgba(52,42,62,.95)';ctx.strokeStyle='rgba(20,14,28,.8)';ctx.lineWidth=0.8*cam.z;
-   for(let t3=0;t3<5;t3++){const ty3=(t3-2)*grz*0.048,ln3=grz*(t3%2?0.05:0.078);
-    ctx.beginPath();ctx.moveTo(grz*0.1,ty3-grz*0.012);
-    ctx.quadraticCurveTo(grz*0.1-ln3*0.7,ty3+ln3*0.12,grz*0.1-ln3,ty3+ln3*0.05); /* each drip curls slightly, never a triangle */
-    ctx.quadraticCurveTo(grz*0.1-ln3*0.4,ty3+grz*0.014,grz*0.1,ty3+grz*0.012);ctx.closePath();ctx.fill();ctx.stroke();}
    ctx.fillStyle='rgba(74,62,88,.9)'; /* two keeper-stones flank the way in */
    for(const sd3 of [-1,1]){ctx.save();ctx.translate(grz*0.2,sd3*grz*0.17);ctx.rotate(sd3*0.18);
     ctx.beginPath();ctx.ellipse(0,0,grz*0.032,grz*0.06,0,0,TAU);ctx.fill();ctx.restore();}
@@ -5041,8 +5053,9 @@ function netDynLite(){ /* the fast heartbeat: souls, honey, shots - and everythi
   fa:fieldMaws.map(m=>m.anim>0?1:0),gm:grottos.map(g=>(g.maws||[]).map(m=>m.anim>0?1:0)), /* THE MAW FIX, same disease as the pricklers: snap states never crossed the wire, so flytraps chomped invisibly and looked like dead props */
   sw:netSnapshot(1).sw};}
 function netDyn(){ /* the LIVING world, streamed */
+ netDyn._n=(netDyn._n||0)+1; /* groves are HALF of every full frame (5.6KB of 10.9KB at 131 souls) and they barely move - 5Hz is plenty. The WiFi leg is the one still hurting; every byte spared is jitter spared */
  return {t:+tnow.toFixed(3),g:goldT>=0?1:0,np:NPLAY,
-  gv:groves.map(g=>[g.x|0,g.y|0,Math.max(0,GKIND.indexOf(g.kind||'bloom')),g.sp||0,g.amt|0,g.max|0,
+  gv:(netDyn._n%2)?undefined:groves.map(g=>[g.x|0,g.y|0,Math.max(0,GKIND.indexOf(g.kind||'bloom')),g.sp||0,g.amt|0,g.max|0,
    (g.rock?1:0)|(g.rich?2:0)|(g.grand?4:0)|(g.gild?8:0)|(g.mother?16:0)|(g.web?32:0)|(g.lumen?64:0)|(g.closed?128:0)|(g.gilt?256:0),+((g.openT||0)).toFixed(2)]),
   dr:drops.map(d=>[d.x|0,d.y|0,+d.amt.toFixed(1)]),
   sh:shots.map(x=>[x.x|0,x.y|0,x.vx|0,x.vy|0]),

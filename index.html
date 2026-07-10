@@ -3169,10 +3169,13 @@ function drawUnitLocal(g,s,u,a,vm,col,fleetId){ /* the unit's LOCAL-frame art (s
  if(s.team===0){const FL=FLEETS[fleetId||META.eq.fleet];if(FL)drawArmour(g,u,FL,col);} /* ARMOUR: role-aware clip-ons over the team-coloured body */
 }
 function drawUnit(s,u,LOD){
- let baseCol=u.col;
- {if(s.col)baseCol=mixc(u.col,s.col,0.85);} /* THE LIVERY LAW: every brood wears its QUEEN's colour. Fleets add ARMOUR on top - they NEVER recolour the body */
+ {const ck9=u.col+'|'+(s.col||''); /* THE LIVERY LAW, memoized: mixc+sicken hex-parse strings and were paid PER UNIT PER FRAME (~24k string allocs/sec in a big fight - GC food, phone jank). Colour depends only on (unit, queen, wellness step) - compute once, wear forever */
+  if(u._ck!==ck9){u._ck=ck9;u._cb=s.col?mixc(u.col,s.col,0.85):u.col;u._wb=-1;}}
+ let baseCol=u._cb;
  const well=clamp(u.hp/(u.maxHp||1),0,1); /* WELLNESS is worn, not barred: the hurt grey and dim */
- if(well<0.97)baseCol=sicken(baseCol,(1-well)*0.88); /* the hurt go DULL - that is the only health language */
+ if(well<0.97){const wb9=(well*20)|0;
+  if(u._wb!==wb9){u._wb=wb9;u._cs=sicken(u._cb,(1-wb9/20)*0.88);}
+  baseCol=u._cs;}
  const col=u.flash>0?'#fff':(u.fat>0.6?shade(baseCol,-0.25):baseCol);
  if(LOD===2){ /* far: a dot of the right colour and size */
   ctx.fillStyle=col;
@@ -4177,9 +4180,20 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
  if(F.gm)for(let gi9=0;gi9<F.gm.length&&gi9<grottos.length;gi9++){const ms9=grottos[gi9].maws;if(!ms9)continue;
   for(let mi9=0;mi9<F.gm[gi9].length&&mi9<ms9.length;mi9++)if(F.gm[gi9][mi9]&&!(ms9[mi9].anim>0))ms9[mi9].anim=0.4;}
  if(F.ey)eyes=F.ey.map(e=>({x:e[0],y:e[1],r:e[2],hp:e[3],maxHp:e[4],blink:e[5],dread:e[6]?1:0,wa:e[7],seed:e[8],cd:0}));
- if(F.el!==undefined)elder=F.el?{x:F.el[0],y:F.el[1],hp:F.el[2],maxHp:F.el[3],vx:F.el[4],vy:F.el[5],r:72,flash:0,provoked:0,atk:0,hx:F.el[0],hy:F.el[1],terr:520,sense:410}:null;
- if(F.sp!==undefined)spider=F.sp?{x:F.sp[0],y:F.sp[1],hp:F.sp[2],maxHp:F.sp[3],r:92,flash:0,gait:tnow*3,gnash:0,provoked:0,
-  kids:F.sp[4].map(k=>({x:k[0],y:k[1],vx:0,vy:0,hp:160,r:11,wa:0,atk:0}))}:null;else if(F.sp===undefined){}
+ if(F.el!==undefined){if(!F.el)elder=null; /* BOSS INTERPOLATION: the Elder was REBUILT raw at 10Hz - a colossus teleporting between snapshots, "twitchy as hell, freakishly so". He keeps ONE body now; frames set targets, the render loop glides him like every other soul */
+  else{if(!elder||!elder._net)elder={x:F.el[0],y:F.el[1],hp:F.el[2],maxHp:F.el[3],vx:F.el[4],vy:F.el[5],r:72,flash:0,provoked:0,atk:0,hx:F.el[0],hy:F.el[1],terr:520,sense:410,_net:1};
+   if(F.el[2]<elder.hp-0.5)elder.flash=0.12; /* his wounds land white here too */
+   elder._tx=F.el[0];elder._ty=F.el[1];elder._tvx=F.el[4]||0;elder._tvy=F.el[5]||0;elder._age=0;
+   elder.hp=F.el[2];elder.maxHp=F.el[3];}}
+ if(F.sp!==undefined){if(!F.sp)spider=null;
+  else{if(!spider||!spider._net)spider={x:F.sp[0],y:F.sp[1],hp:F.sp[2],maxHp:F.sp[3],r:92,flash:0,gait:tnow*3,gnash:0,provoked:0,kids:[],_net:1};
+   if(F.sp[2]<spider.hp-0.5)spider.flash=0.12;
+   spider._tx=F.sp[0];spider._ty=F.sp[1];spider._age=0;spider.hp=F.sp[2];spider.maxHp=F.sp[3];
+   const kk9=F.sp[4]||[]; /* kids matched by INDEX (they only leave by death-splice): targets, not teleports */
+   while(spider.kids.length>kk9.length)spider.kids.pop();
+   for(let ki9=0;ki9<kk9.length;ki9++){let kd9=spider.kids[ki9];
+    if(!kd9){kd9={x:kk9[ki9][0],y:kk9[ki9][1],vx:0,vy:0,hp:160,r:11,wa:0,atk:0};spider.kids.push(kd9);}
+    kd9._tx=kk9[ki9][0];kd9._ty=kk9[ki9][1];}}}
  const seen={};
  for(const w9 of F.sw){
   let m9=NET.mirror[w9.id];
@@ -4236,6 +4250,14 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
  for(const s2 of swarms)if(!s2.dead)calcR(s2);}
 function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in the past, between two KNOWN truths */
  tnow+=dt;
+ if(elder&&elder._net){elder._age=(elder._age||0)+dt;const ax9=Math.min(elder._age,0.22);
+  const px9=(elder._tx!=null?elder._tx:elder.x)+(elder._tvx||0)*ax9,py9=(elder._ty!=null?elder._ty:elder.y)+(elder._tvy||0)*ax9;
+  const k9=Math.min(1,10*dt);elder.x+=(px9-elder.x)*k9;elder.y+=(py9-elder.y)*k9;
+  if(elder.flash>0)elder.flash-=dt;}
+ if(spider&&spider._net){spider._age=(spider._age||0)+dt;const k9=Math.min(1,9*dt);
+  if(spider._tx!=null){spider.x+=(spider._tx-spider.x)*k9;spider.y+=(spider._ty-spider.y)*k9;}
+  spider.gait=tnow*3;if(spider.flash>0)spider.flash-=dt;
+  for(const kd9 of spider.kids)if(kd9._tx!=null){kd9.x+=(kd9._tx-kd9.x)*Math.min(1,12*dt);kd9.y+=(kd9._ty-kd9.y)*Math.min(1,12*dt);}}
  for(const mw9 of fieldMaws)if(mw9.anim>0)mw9.anim-=dt;
  for(const g9 of grottos)if(g9.maws)for(const mw9 of g9.maws)if(mw9.anim>0)mw9.anim-=dt; /* jaws re-open client-side */
  for(let i9=fx.length-1;i9>=0;i9--){const e9=fx[i9];e9.t+=dt*(QGOV.q<0.9?1.6:1);if(e9.t>=e9.life){fx.splice(i9,1);continue;}if(!e9.ring){e9.x+=e9.vx*dt;e9.y+=e9.vy*dt;e9.vx*=.9;e9.vy*=.9;}} /* fx age and die online like solo - and under the governor they burn out 1.6x faster, thinning the particle load when frames struggle */

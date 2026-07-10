@@ -307,7 +307,7 @@ const ITEMS=[
  {id:'duskveil', cat:'crown',  n:'Duskveil',    xp:3400,royal:true,d:'the hour itself, worn'},
  {id:'halo',     cat:'crown',  n:'Halo',        xp:5200,royal:true,d:'do not ask how she earned it'},
  {id:'fangs',    cat:'crown',  n:'Fangs',       xp:700, d:'a smile borrowed from something worse'},
- {id:'skull',    cat:'crown',  n:'Skull Diadem',xp:4100,royal:true,d:'the meadow remembers losers'},
+ {id:'skull',    cat:'crown',  n:'Predator Skull',xp:4100,royal:true,d:'a hunter skull worn WHOLE as a helm - the meadow remembers losers'},
  {id:'elderhorn',cat:'crown',  n:'Elder Crown', xp:-1,  d:'slay the Elder once — wear his horns forever'},
  {id:'broodcrown',cat:'crown', n:'Brood Crown', xp:-1,  d:'slay the Broodmother — six eyes keep watch from your brow'},
  {id:'waspband', cat:'crown',  n:'Waspbane Band',xp:-1, d:'break nine wasps in one life — wear their warning stripes'},
@@ -2972,7 +2972,7 @@ function paintPattern(g2,base,t2,pat,col){
 function paintEye(g2,base,t2,ey){ /* THE GAZE: her eye is a CHOICE now. Anchored to the true head segment so no body type or stage can misplace it */
  if(!ey||ey==='noeye')ey='simple'; /* the Unmarked no-eye option is retired: old saves fall back to the classic gleam - every queen has a gaze */
  if(!QSEGS.length)return;
- const hx=QSEGS[0].x,hy=QSEGS[0].y,hr=QSEGS[0].r;
+ const hr=QSEGS[0].r,hx=QSEGS[0].x-hr*0.28,hy=QSEGS[0].y; /* the gaze sits BACK on the head where it always used to - the head-CENTER anchor had shoved every eye toward the nose, and crowns rooted at the same spot seemed to grow from the eyeball */
  g2.save();g2.translate(0,hy);
  if(ey==='simple'){g2.fillStyle='#fff';g2.beginPath();g2.arc(hx,0,hr*0.22+1.4,0,TAU);g2.fill();}
  else if(ey==='doe'){for(const sd of [-1,1]){g2.fillStyle='#241a20';g2.beginPath();g2.arc(hx+hr*0.42,sd*hr*0.34,hr*0.24,0,TAU);g2.fill();
@@ -3191,45 +3191,53 @@ function paintCrown(g2,base,t2,cr){
   g2.beginPath();for(let k2=0;k2<10;k2++){const aa=k2/10*TAU-1.57,rr=k2%2?base*0.12:base*0.26;
    k2?g2.lineTo(cx3+Math.cos(aa)*rr,cy3+Math.sin(aa)*rr):g2.moveTo(cx3+Math.cos(aa)*rr,cy3+Math.sin(aa)*rr);}
   g2.closePath();g2.fill();}
- else if(cr==='twig'){ /* TWIG, second pass: two branching beams with true tines - a young antler, not two toothpicks */
+ else if(cr==='twig'){ /* TWIG, third pass: beams rooted on the head RIM (not the eyeball), sweeping back - a young antler still */
   g2.strokeStyle='#9a6a4a';g2.lineWidth=2.4;g2.lineCap='round';
-  for(const sd of [-1,1]){const bx=base*0.85,by=sd*base*0.34;
+  for(const sd of [-1,1]){const bx=hx8+Math.cos(sd*0.7)*hr8*0.95,by=Math.sin(sd*0.7)*hr8*0.95;
    g2.beginPath();g2.moveTo(bx,by);
-   g2.quadraticCurveTo(bx+base*0.25,by+sd*base*0.3,bx+base*0.05,by+sd*base*0.62);g2.stroke(); /* the beam sweeps back */
+   g2.quadraticCurveTo(bx+hr8*0.3,by+sd*hr8*0.4,bx-hr8*0.05,by+sd*hr8*0.8);g2.stroke(); /* the beam sweeps back */
    g2.lineWidth=1.6;
-   g2.beginPath();g2.moveTo(bx+base*0.16,by+sd*base*0.34);g2.lineTo(bx+base*0.42,by+sd*base*0.5);g2.stroke(); /* first tine */
-   g2.beginPath();g2.moveTo(bx+base*0.02,by+sd*base*0.5);g2.lineTo(bx+base*0.2,by+sd*base*0.74);g2.stroke(); /* second tine */
+   g2.beginPath();g2.moveTo(bx+hr8*0.18,by+sd*hr8*0.44);g2.lineTo(bx+hr8*0.5,by+sd*hr8*0.62);g2.stroke(); /* first tine */
+   g2.beginPath();g2.moveTo(bx+hr8*0.0,by+sd*hr8*0.62);g2.lineTo(bx+hr8*0.22,by+sd*hr8*0.9);g2.stroke(); /* second tine */
    g2.lineWidth=2.4;}}
  else if(cr==='daisy'){for(let k2=0;k2<4;k2++){const aa=-0.7+k2*0.47;
    g2.fillStyle='#fff';g2.beginPath();g2.arc(base*0.98+Math.cos(aa)*base*0.32,Math.sin(aa)*base*0.5,base*0.09,0,TAU);g2.fill();
    g2.fillStyle='#ffcf5e';g2.beginPath();g2.arc(base*0.98+Math.cos(aa)*base*0.32,Math.sin(aa)*base*0.5,base*0.04,0,TAU);g2.fill();}}
- else if(cr==='moon'){const mg9=0.8+0.2*Math.sin(t2*1.8); /* CRESCENT second pass: a true sickle riding the brow, horns up, with one companion star - the night's sliver, WORN, not dotted */
-  g2.save();g2.translate(base*1.05,-base*0.8);g2.rotate(0.5);
-  g2.fillStyle='rgba(210,220,255,'+(0.28*mg9).toFixed(3)+')';
-  g2.beginPath();g2.arc(0,0,base*0.44,0,TAU);g2.fill(); /* the halo it carries */
+ else if(cr==='moon'){const mg9=0.8+0.2*Math.sin(t2*1.8); /* CRESCENT third pass: a TIARA - a silver band ringing the TRUE head, the sickle mounted at its peak, pearls down the arms. Worn, never floating */
+  g2.strokeStyle='#8a90b8';g2.lineWidth=2.6;
+  g2.beginPath();g2.arc(hx8,0,hr8*1.06,-1.35,1.35);g2.stroke(); /* the band hugs the brow */
+  g2.strokeStyle='rgba(232,236,255,.85)';g2.lineWidth=1.2;
+  g2.beginPath();g2.arc(hx8,0,hr8*1.06,-1.3,1.3);g2.stroke();
+  for(const sd of [-1,1])for(const aa of [0.55,1.0]){ /* pearls down the arms */
+   g2.fillStyle='rgba(240,244,255,'+(0.7+0.25*Math.sin(t2*2.6+aa*3+sd)).toFixed(3)+')';
+   g2.beginPath();g2.arc(hx8+Math.cos(sd*aa)*hr8*1.06,Math.sin(sd*aa)*hr8*1.06,hr8*0.09,0,TAU);g2.fill();}
+  g2.save();g2.translate(hx8+hr8*1.18,0);g2.rotate(-1.57); /* the sickle stands at the peak, horns forward */
+  g2.fillStyle='rgba(210,220,255,'+(0.25*mg9).toFixed(3)+')';
+  g2.beginPath();g2.arc(0,0,hr8*0.62,0,TAU);g2.fill();
   g2.fillStyle='#e8ecff';
-  g2.beginPath();g2.arc(0,0,base*0.34,0.55,TAU-0.55,false);
-  g2.arc(base*0.13,0,base*0.245,TAU-0.75,0.75,true);g2.closePath();g2.fill();
-  g2.strokeStyle='rgba(255,255,255,.7)';g2.lineWidth=1;g2.stroke();
-  g2.restore();
-  g2.fillStyle='rgba(255,252,235,'+(0.6+0.4*Math.sin(t2*3.2)).toFixed(3)+')';
-  g2.beginPath();g2.arc(base*1.42,-base*0.5,base*0.05,0,TAU);g2.fill();}
+  g2.beginPath();g2.arc(0,0,hr8*0.46,0.55,TAU-0.55,false);
+  g2.arc(hr8*0.18,0,hr8*0.33,TAU-0.75,0.75,true);g2.closePath();g2.fill();
+  g2.strokeStyle='rgba(255,255,255,.7)';g2.lineWidth=1;g2.stroke();g2.restore();}
  else if(cr==='rose'){g2.fillStyle='#e8506a';
   g2.beginPath();g2.arc(base*1.1,-base*0.62,base*0.16,0,TAU);g2.fill();
   g2.strokeStyle='#ffb0c0';g2.lineWidth=1;
   g2.beginPath();g2.arc(base*1.1,-base*0.62,base*0.09,0,4);g2.stroke();
   g2.fillStyle='#7fc86a';g2.beginPath();g2.ellipse(base*0.95,-base*0.45,base*0.1,base*0.05,0.6,0,TAU);g2.fill();}
- else if(cr==='comet'){ /* COMET second pass: a burning head and a TAIL that remembers where it fell from - layered, curved, sparking */
-  g2.strokeStyle='rgba(255,200,90,.3)';g2.lineWidth=5;g2.lineCap='round';
-  g2.beginPath();g2.moveTo(base*1.22,-base*0.72);g2.quadraticCurveTo(base*0.7,-base*1.05,base*0.05,-base*1.28);g2.stroke();
-  g2.strokeStyle='rgba(255,223,126,.75)';g2.lineWidth=2.2;
-  g2.beginPath();g2.moveTo(base*1.22,-base*0.72);g2.quadraticCurveTo(base*0.72,-base*1.0,base*0.18,-base*1.18);g2.stroke();
+ else if(cr==='comet'){ /* COMET third pass: a dark circlet ringing the TRUE head, the comet BURNING as its centerpiece, tail streaming back along her crown - a crown, not a passing trinket */
+  g2.strokeStyle='#5a4428';g2.lineWidth=2.4;
+  g2.beginPath();g2.arc(hx8,0,hr8*1.05,-1.3,1.3);g2.stroke(); /* the circlet */
+  g2.strokeStyle='rgba(255,215,120,.5)';g2.lineWidth=1;
+  g2.beginPath();g2.arc(hx8,0,hr8*1.05,-1.25,1.25);g2.stroke();
+  g2.strokeStyle='rgba(255,200,90,.3)';g2.lineWidth=4.4;g2.lineCap='round'; /* the tail streams BACK over her crown */
+  g2.beginPath();g2.moveTo(hx8+hr8*1.1,0);g2.quadraticCurveTo(hx8-hr8*0.2,-hr8*0.72,hx8-hr8*1.7,-hr8*0.5);g2.stroke();
+  g2.strokeStyle='rgba(255,223,126,.75)';g2.lineWidth=1.9;
+  g2.beginPath();g2.moveTo(hx8+hr8*1.1,0);g2.quadraticCurveTo(hx8-hr8*0.15,-hr8*0.62,hx8-hr8*1.5,-hr8*0.44);g2.stroke();
   for(let k2=0;k2<3;k2++){const tt9=0.3+k2*0.25,gl9=0.5+0.5*Math.sin(t2*4+k2*2.2); /* sparks shed along the fall */
    g2.fillStyle='rgba(255,240,180,'+(0.85*gl9).toFixed(3)+')';
-   g2.beginPath();g2.arc(base*(1.22-tt9*1.05),-base*(0.72+tt9*0.48),1.1+gl9*0.8,0,TAU);g2.fill();}
-  g2.fillStyle='rgba(255,190,90,.5)';g2.beginPath();g2.arc(base*1.22,-base*0.72,base*0.26,0,TAU);g2.fill(); /* the burn */
-  g2.fillStyle='#ffdf7e';g2.beginPath();g2.arc(base*1.22,-base*0.72,base*0.17,0,TAU);g2.fill();
-  g2.fillStyle='#fff8e0';g2.beginPath();g2.arc(base*1.25,-base*0.75,base*0.08,0,TAU);g2.fill();} /* white-hot core */
+   g2.beginPath();g2.arc(hx8+hr8*(1.1-tt9*2.4),-hr8*(tt9*0.58),1.1+gl9*0.8,0,TAU);g2.fill();}
+  g2.fillStyle='rgba(255,190,90,.5)';g2.beginPath();g2.arc(hx8+hr8*1.1,0,hr8*0.34,0,TAU);g2.fill(); /* the burn sits at the brow peak */
+  g2.fillStyle='#ffdf7e';g2.beginPath();g2.arc(hx8+hr8*1.1,0,hr8*0.22,0,TAU);g2.fill();
+  g2.fillStyle='#fff8e0';g2.beginPath();g2.arc(hx8+hr8*1.14,-hr8*0.04,hr8*0.1,0,TAU);g2.fill();}
  else if(cr==='duskveil'){for(let k2=0;k2<3;k2++){
    g2.strokeStyle='rgba('+(180-k2*30)+','+(120-k2*20)+',255,'+(0.5-k2*0.12)+')';g2.lineWidth=2;
    g2.beginPath();g2.arc(base*0.9,0,base*(0.5+k2*0.16),-1.2,1.2);g2.stroke();}}
@@ -3254,29 +3262,31 @@ function paintCrown(g2,base,t2,cr){
    g2.quadraticCurveTo(base*0.1,sg*base*0.85,base*0.55,sg*base*0.36);g2.closePath();g2.fill();
    g2.strokeStyle='rgba(255,80,60,.7)';g2.lineWidth=1.2;
    g2.beginPath();g2.moveTo(base*0.66,sg*base*0.3);g2.quadraticCurveTo(base*0.28,sg*base*0.9,-base*0.35,sg*base*1.22);g2.stroke();}}
- else if(cr==='pincers'){ /* STAG PINCERS second pass: great reaching mandibles that almost meet, inner teeth as recurved HOOKS - never triangles */
-  for(const sg of [-1,1]){g2.fillStyle='#4a3428';g2.strokeStyle='#2c1e14';g2.lineWidth=1;
-   g2.beginPath();g2.moveTo(base*0.8,sg*base*0.34);
-   g2.quadraticCurveTo(base*1.5,sg*base*0.58,base*1.88,sg*base*0.18); /* the great outward sweep */
-   g2.quadraticCurveTo(base*1.98,sg*base*0.08,base*1.92,sg*base*0.03); /* the tip hooks IN toward its twin */
-   g2.quadraticCurveTo(base*1.55,sg*base*0.3,base*1.12,sg*base*0.16);
-   g2.quadraticCurveTo(base*0.94,sg*base*0.1,base*0.84,sg*base*0.14);g2.closePath();g2.fill();g2.stroke();
-   g2.fillStyle='#6a4a34'; /* inner teeth: each a tiny recurved claw */
-   for(let k=0;k<3;k++){const px5=base*(1.16+k*0.24),pw5=base*(0.1-k*0.014),py5=sg*base*(0.3-k*0.033);
+ else if(cr==='pincers'){ /* STAG PINCERS third pass: rooted on the temple RIM of the true head (they grew from her eyes before), reaching past the nose, tips almost meeting */
+  for(const sg of [-1,1]){const bx=hx8+Math.cos(sg*0.85)*hr8*0.96,by=Math.sin(sg*0.85)*hr8*0.96;
+   g2.fillStyle='#4a3428';g2.strokeStyle='#2c1e14';g2.lineWidth=1;
+   g2.beginPath();g2.moveTo(bx-hr8*0.14,by+sg*hr8*0.06);
+   g2.quadraticCurveTo(bx+hr8*0.9,by+sg*hr8*0.34,hx8+hr8*1.9,sg*hr8*0.34); /* the great sweep past the nose */
+   g2.quadraticCurveTo(hx8+hr8*2.06,sg*hr8*0.2,hx8+hr8*2.0,sg*hr8*0.1); /* the tip hooks toward its twin */
+   g2.quadraticCurveTo(hx8+hr8*1.5,sg*hr8*0.3,bx+hr8*0.4,by-sg*hr8*0.08);
+   g2.quadraticCurveTo(bx+hr8*0.1,by-sg*hr8*0.12,bx-hr8*0.14,by+sg*hr8*0.06);g2.closePath();g2.fill();g2.stroke();
+   g2.fillStyle='#6a4a34'; /* inner teeth: recurved claws along the bite */
+   for(let k=0;k<3;k++){const px5=hx8+hr8*(1.05+k*0.3),pw5=hr8*(0.13-k*0.02),py5=sg*hr8*(0.42-k*0.06);
     g2.beginPath();g2.moveTo(px5,py5);
-    g2.quadraticCurveTo(px5+pw5*0.9,py5-sg*pw5*1.5,px5+pw5*1.8,py5-sg*pw5*0.5); /* out, then the point curls back */
+    g2.quadraticCurveTo(px5+pw5*0.9,py5-sg*pw5*1.5,px5+pw5*1.8,py5-sg*pw5*0.5);
     g2.quadraticCurveTo(px5+pw5*1.1,py5-sg*pw5*0.2,px5+pw5*0.9,py5);g2.closePath();g2.fill();}
-   g2.strokeStyle='rgba(230,190,150,.4)';g2.lineWidth=0.9; /* the polished inner edge */
-   g2.beginPath();g2.moveTo(base*0.95,sg*base*0.2);g2.quadraticCurveTo(base*1.5,sg*base*0.34,base*1.85,sg*base*0.1);g2.stroke();}}
- else if(cr==='antennae'){
-  for(const sg of [-1,1]){const sw5=Math.sin(t2*2.2+sg)*0.08;
-   g2.strokeStyle='#e8d8c0';g2.lineWidth=1.6;
-   g2.beginPath();g2.moveTo(base*0.85,sg*base*0.14);
-   g2.quadraticCurveTo(base*1.4,sg*base*(0.5+sw5),base*1.6,sg*base*(0.95+sw5));g2.stroke();
+   g2.strokeStyle='rgba(230,190,150,.4)';g2.lineWidth=0.9;
+   g2.beginPath();g2.moveTo(bx+hr8*0.1,by+sg*hr8*0.1);g2.quadraticCurveTo(bx+hr8*0.9,by+sg*hr8*0.22,hx8+hr8*1.95,sg*hr8*0.22);g2.stroke();}}
+ else if(cr==='antennae'){ /* MOTH ANTENNAE second pass: rooted on the head's FRONT RIM (they sprouted from her eye before), combing forward through the air */
+  for(const sg of [-1,1]){const sw5=Math.sin(t2*2.2+sg)*0.1;
+   const bx=hx8+Math.cos(sg*0.5)*hr8*0.95,by=Math.sin(sg*0.5)*hr8*0.95;
+   g2.strokeStyle='#e8d8c0';g2.lineWidth=1.6;g2.lineCap='round';
+   g2.beginPath();g2.moveTo(bx,by);
+   g2.quadraticCurveTo(bx+hr8*0.8,by+sg*hr8*(0.5+sw5),bx+hr8*1.1,by+sg*hr8*(1.05+sw5));g2.stroke();
    g2.lineWidth=1;
-   for(let k=0;k<5;k++){const tt5=0.3+k*0.16;
-    const bx5=base*(0.85+tt5*0.75),by5=sg*base*(0.14+tt5*(0.81+sw5));
-    g2.beginPath();g2.moveTo(bx5,by5);g2.lineTo(bx5-base*0.1,by5+sg*base*0.12);g2.stroke();}}}
+   for(let k=0;k<5;k++){const tt5=0.25+k*0.17;
+    const bx5=bx+hr8*tt5*1.05,by5=by+sg*hr8*tt5*(0.95+sw5);
+    g2.beginPath();g2.moveTo(bx5,by5);g2.lineTo(bx5-hr8*0.16,by5+sg*hr8*0.16);g2.stroke();}}}
  else if(cr==='flowercrown'){
   const FC=['#ff8fb0','#ffdf7e','#9ab8ff','#ff8a70','#c9a6ff'];
   for(let k2=0;k2<5;k2++){const aa=-0.85+k2*0.42;
@@ -3296,30 +3306,30 @@ function paintCrown(g2,base,t2,cr){
   g2.beginPath();g2.ellipse(px9,py9,base*0.4,base*0.11,wo9,0.2,2.94);g2.stroke(); /* the near side crosses in front */
   g2.strokeStyle='rgba(200,170,120,.5)';g2.lineWidth=1;
   g2.beginPath();g2.ellipse(px9,py9,base*0.32,base*0.085,wo9,0.24,2.9);g2.stroke();} /* the inner gap */
- else if(cr==='fangs'){g2.fillStyle='#fff6e8';
-  for(const sg of [-1,1]){g2.beginPath();
-   g2.moveTo(base*0.95,sg*base*0.34);g2.lineTo(base*1.28,sg*base*0.16);g2.lineTo(base*0.99,sg*base*0.1);
-   g2.closePath();g2.fill();}}
- else if(cr==='skull'){ /* SKULL DIADEM second pass: a true relic mounted on a dark circlet - sockets, nasal notch, jaw and teeth. The meadow remembers losers */
-  g2.strokeStyle='#3a2c34';g2.lineWidth=2.6; /* the circlet it rides */
-  g2.beginPath();g2.arc(base*0.95,0,base*0.55,-1.25,1.25);g2.stroke();
-  g2.strokeStyle='rgba(255,215,120,.6)';g2.lineWidth=1;
-  g2.beginPath();g2.arc(base*0.95,0,base*0.55,-1.2,1.2);g2.stroke();
-  const kx9=base*1.16,ky9=-base*0.78;
-  g2.fillStyle='#e8e0d0';g2.strokeStyle='#a89878';g2.lineWidth=1;
-  g2.beginPath();g2.arc(kx9,ky9,base*0.24,2.6,0.54,false); /* the dome */
-  g2.quadraticCurveTo(kx9+base*0.26,ky9+base*0.2,kx9+base*0.1,ky9+base*0.3); /* cheek */
-  g2.lineTo(kx9-base*0.1,ky9+base*0.3); /* the jawline */
-  g2.quadraticCurveTo(kx9-base*0.26,ky9+base*0.2,kx9-base*0.208,ky9+base*0.12);g2.closePath();g2.fill();g2.stroke();
+ else if(cr==='fangs'){ /* FANGS second pass: they hang from the FRONT of the head rim - a smile borrowed from something worse, recurved, never triangles */
+  for(const sg of [-1,1]){const bx=hx8+Math.cos(sg*0.42)*hr8*0.98,by=Math.sin(sg*0.42)*hr8*0.98;
+   g2.fillStyle='#fff6e8';g2.strokeStyle='#c8b498';g2.lineWidth=0.8;
+   g2.beginPath();g2.moveTo(bx-hr8*0.1,by-sg*hr8*0.04);
+   g2.quadraticCurveTo(bx+hr8*0.42,by+sg*hr8*0.06,bx+hr8*0.58,by-sg*hr8*0.18); /* forward, then the point hooks IN */
+   g2.quadraticCurveTo(bx+hr8*0.4,by-sg*hr8*0.04,bx+hr8*0.1,by+sg*hr8*0.08);g2.closePath();g2.fill();g2.stroke();}}
+ else if(cr==='skull'){ /* PREDATOR SKULL, third pass: a hunter's skull worn WHOLE as a helm - the cranium swallows her head, sockets glower where its eyes were, cheek-fangs curve down past her jaw */
+  g2.fillStyle='#e8e0d0';g2.strokeStyle='#a89878';g2.lineWidth=1.4;
+  g2.beginPath();g2.arc(hx8,0,hr8*1.12,-2.45,2.45);g2.closePath();g2.fill();g2.stroke(); /* the cranium COVERS the head */
+  g2.strokeStyle='#c8bca4';g2.lineWidth=1.1; /* the brow ridge */
+  g2.beginPath();g2.arc(hx8,0,hr8*0.88,-0.85,0.85);g2.stroke();
+  g2.strokeStyle='#a89878';g2.lineWidth=1.6; /* the nasal ridge runs down the front */
+  g2.beginPath();g2.moveTo(hx8+hr8*0.5,0);g2.lineTo(hx8+hr8*1.08,0);g2.stroke();
   g2.fillStyle='#241426';
-  for(const sd of [-1,1]){g2.beginPath();g2.ellipse(kx9+sd*base*0.095,ky9-base*0.015,base*0.062,base*0.078,sd*0.35,0,TAU);g2.fill();} /* sockets, angled and hollow */
-  g2.beginPath();g2.moveTo(kx9,ky9+base*0.08);g2.quadraticCurveTo(kx9-base*0.035,ky9+base*0.16,kx9,ky9+base*0.185);
-  g2.quadraticCurveTo(kx9+base*0.035,ky9+base*0.16,kx9,ky9+base*0.08);g2.closePath();g2.fill(); /* the nasal notch */
-  g2.strokeStyle='#a89878';g2.lineWidth=0.9; /* teeth: carved lines, not a letterbox */
-  for(let k2=-1;k2<=1;k2++){g2.beginPath();g2.moveTo(kx9+k2*base*0.055,ky9+base*0.24);g2.lineTo(kx9+k2*base*0.055,ky9+base*0.3);g2.stroke();}
-  g2.fillStyle='rgba(255,215,120,.8)'; /* gold pins where it meets the circlet */
-  g2.beginPath();g2.arc(base*1.34,-base*0.5,base*0.035,0,TAU);g2.fill();
-  g2.beginPath();g2.arc(base*0.98,-base*1.02,base*0.035,0,TAU);g2.fill();}
+  for(const sd of [-1,1]){g2.beginPath();g2.ellipse(hx8+Math.cos(sd*0.55)*hr8*0.68,Math.sin(sd*0.55)*hr8*0.68,hr8*0.24,hr8*0.17,sd*0.5,0,TAU);g2.fill();} /* its sockets, hollow and angled */
+  g2.fillStyle='rgba(255,120,60,'+(0.25+0.2*Math.sin(t2*2.8)).toFixed(3)+')'; /* something still smoulders in them */
+  for(const sd of [-1,1]){g2.beginPath();g2.arc(hx8+Math.cos(sd*0.55)*hr8*0.68,Math.sin(sd*0.55)*hr8*0.68,hr8*0.07,0,TAU);g2.fill();}
+  for(const sd of [-1,1]){const bx=hx8+Math.cos(sd*1.0)*hr8*1.06,by=Math.sin(sd*1.0)*hr8*1.06; /* cheek-fangs curve down past her jaw */
+   g2.fillStyle='#e8e0d0';g2.strokeStyle='#a89878';g2.lineWidth=0.9;
+   g2.beginPath();g2.moveTo(bx-hr8*0.1,by-sd*hr8*0.05);
+   g2.quadraticCurveTo(bx+hr8*0.42,by+sd*hr8*0.3,bx+hr8*0.34,by+sd*hr8*0.6); /* down and forward */
+   g2.quadraticCurveTo(bx+hr8*0.2,by+sd*hr8*0.3,bx+hr8*0.02,by+sd*hr8*0.1);g2.closePath();g2.fill();g2.stroke();}
+  g2.strokeStyle='rgba(120,104,80,.6)';g2.lineWidth=0.8; /* an old crack across the crown */
+  g2.beginPath();g2.moveTo(hx8-hr8*0.3,-hr8*0.5);g2.quadraticCurveTo(hx8-hr8*0.05,-hr8*0.2,hx8-hr8*0.4,hr8*0.15);g2.stroke();}
  else if(cr==='waspband'){ /* WASPBANE BAND second pass: a full warning-striped band across the brow, and one broken stinger hung as a charm - nine wasps paid for this */
   g2.strokeStyle='#241814';g2.lineWidth=base*0.19;g2.lineCap='round';
   g2.beginPath();g2.arc(base*0.95,0,base*0.56,-1.15,1.15);g2.stroke(); /* the dark band */
@@ -3335,47 +3345,50 @@ function paintCrown(g2,base,t2,cr){
    g2.beginPath();g2.moveTo(0,base*0.14);
    g2.quadraticCurveTo(base*0.1,base*0.2,base*0.05,base*0.4); /* the recurved point */
    g2.quadraticCurveTo(-base*0.05,base*0.26,0,base*0.14);g2.closePath();g2.fill();g2.stroke();g2.restore();}}
- else if(cr==='broodcrown'){ /* BROOD CROWN second pass: HER tiara - dark chitin arcing the whole brow, six eyes in two ranks that blink out of step, chelicerae horns at the temples. A relic, not a smudge */
-  g2.fillStyle='#3a2444';g2.strokeStyle='#1e1226';g2.lineWidth=1.4;
-  g2.beginPath();g2.moveTo(base*0.62,-base*0.52);
-  g2.quadraticCurveTo(base*1.18,-base*0.98,base*1.44,-base*0.3); /* the crest sweeps high */
-  g2.quadraticCurveTo(base*1.52,-base*0.06,base*1.44,base*0.3);
-  g2.quadraticCurveTo(base*1.18,base*0.98,base*0.62,base*0.52);
-  g2.quadraticCurveTo(base*0.98,-base*0.0,base*0.62,-base*0.52);g2.closePath();g2.fill();g2.stroke();
-  g2.strokeStyle='rgba(200,160,255,'+(0.3+0.2*Math.sin(t2*2.2)).toFixed(3)+')';g2.lineWidth=1; /* silk gleam along the crest */
-  g2.beginPath();g2.moveTo(base*0.72,-base*0.5);g2.quadraticCurveTo(base*1.2,-base*0.86,base*1.4,-base*0.28);g2.stroke();
-  const EY9=[[1.3,-0.22,0.075],[1.3,0.22,0.075],[1.16,-0.42,0.052],[1.16,0.42,0.052],[1.4,-0.02,0.045],[1.02,0,0.06]]; /* six eyes: two great, four small */
+ else if(cr==='broodcrown'){ /* BROOD CROWN third pass: a full chitin CASQUE that swallows the whole head segment - it grows with her now. Six eyes on the shell, chelicerae at the temples */
+  g2.fillStyle='#3a2444';g2.strokeStyle='#1e1226';g2.lineWidth=1.6;
+  g2.beginPath();g2.arc(hx8,0,hr8*1.08,-2.5,2.5);g2.closePath();g2.fill();g2.stroke(); /* the casque COVERS the head */
+  g2.strokeStyle='rgba(200,160,255,'+(0.3+0.2*Math.sin(t2*2.2)).toFixed(3)+')';g2.lineWidth=1.1; /* silk gleam over the crown */
+  g2.beginPath();g2.arc(hx8,0,hr8*0.8,-2.1,-0.5);g2.stroke();
+  const EY9=[[0.32,-0.4,0.16],[0.32,0.4,0.16],[0.72,-0.62,0.11],[0.72,0.62,0.11],[0.62,-0.16,0.1],[0.62,0.16,0.1]]; /* six eyes ride the shell's front: angles and radii in HEAD units */
   for(let k=0;k<6;k++){const e9=EY9[k],bl9=Math.sin(t2*1.5+k*1.9)>0.85?0.15:1;
+   const ex9=hx8+Math.cos(e9[1])*hr8*(0.55+e9[0]*0.55),ey9=Math.sin(e9[1])*hr8*(0.55+e9[0]*0.55);
    g2.fillStyle='rgba(255,110,80,'+(0.9*bl9).toFixed(3)+')';
-   g2.beginPath();g2.arc(base*e9[0],base*e9[1],base*e9[2],0,TAU);g2.fill();
+   g2.beginPath();g2.arc(ex9,ey9,hr8*e9[2],0,TAU);g2.fill();
    g2.fillStyle='rgba(255,220,190,'+(0.7*bl9).toFixed(3)+')';
-   g2.beginPath();g2.arc(base*(e9[0]+0.015),base*e9[1]-base*0.012,base*e9[2]*0.35,0,TAU);g2.fill();}
-  for(const sd of [-1,1]){g2.fillStyle='#2c1c36';g2.strokeStyle='#1e1226';g2.lineWidth=0.8; /* chelicerae horns at the temples */
-   g2.beginPath();g2.moveTo(base*0.72,sd*base*0.46);
-   g2.quadraticCurveTo(base*0.6,sd*base*0.78,base*0.86,sd*base*0.92); /* curls out and forward */
-   g2.quadraticCurveTo(base*0.78,sd*base*0.66,base*0.88,sd*base*0.5);g2.closePath();g2.fill();g2.stroke();}}
- else if(cr==='elderhorn'){ /* ELDER CROWN second pass: his own recurved tusks in miniature - age-ringed ivory, moss still clinging, his ember carried between them. Worn forever */
-  for(const sg of [-1,1]){g2.fillStyle='#e8d0a8';g2.strokeStyle='#8a6a3c';g2.lineWidth=1.1;
-   g2.beginPath();g2.moveTo(base*0.74,sg*base*0.3);
-   g2.quadraticCurveTo(base*1.36,sg*base*0.66,base*1.62,sg*base*0.22); /* sweeps out and forward */
-   g2.quadraticCurveTo(base*1.7,sg*base*0.08,base*1.6,sg*base*0.05); /* the tip hooks BACK */
-   g2.quadraticCurveTo(base*1.3,sg*base*0.34,base*0.92,sg*base*0.16);
-   g2.quadraticCurveTo(base*0.8,sg*base*0.12,base*0.74,sg*base*0.16);g2.closePath();g2.fill();g2.stroke();
+   g2.beginPath();g2.arc(ex9+hr8*0.03,ey9-hr8*0.03,hr8*e9[2]*0.35,0,TAU);g2.fill();}
+  for(const sd of [-1,1]){const bx=hx8+Math.cos(sd*1.45)*hr8*1.04,by=Math.sin(sd*1.45)*hr8*1.04; /* chelicerae at the temple rim */
+   g2.fillStyle='#2c1c36';g2.strokeStyle='#1e1226';g2.lineWidth=0.8;
+   g2.beginPath();g2.moveTo(bx+hr8*0.08,by-sd*hr8*0.04);
+   g2.quadraticCurveTo(bx-hr8*0.1,by+sd*hr8*0.4,bx+hr8*0.3,by+sd*hr8*0.52); /* curls out then forward */
+   g2.quadraticCurveTo(bx+hr8*0.16,by+sd*hr8*0.24,bx+hr8*0.24,by+sd*hr8*0.02);g2.closePath();g2.fill();g2.stroke();}}
+ else if(cr==='elderhorn'){ /* ELDER CROWN third pass: tusk roots on the temple RIM of the true head (they came out of her eyes before), moss on the crown, his ember riding the brow */
+  for(const sg of [-1,1]){const bx=hx8+Math.cos(sg*0.8)*hr8*0.95,by=Math.sin(sg*0.8)*hr8*0.95;
+   g2.fillStyle='#e8d0a8';g2.strokeStyle='#8a6a3c';g2.lineWidth=1.1;
+   g2.beginPath();g2.moveTo(bx-hr8*0.16,by-sg*hr8*0.02);
+   g2.quadraticCurveTo(bx+hr8*0.7,by+sg*hr8*0.44,hx8+hr8*1.66,sg*hr8*0.5); /* out and forward */
+   g2.quadraticCurveTo(hx8+hr8*1.78,sg*hr8*0.32,hx8+hr8*1.66,sg*hr8*0.26); /* the tip hooks back */
+   g2.quadraticCurveTo(hx8+hr8*1.2,sg*hr8*0.5,bx+hr8*0.28,by-sg*hr8*0.16);
+   g2.quadraticCurveTo(bx+hr8*0.02,by-sg*hr8*0.2,bx-hr8*0.16,by-sg*hr8*0.02);g2.closePath();g2.fill();g2.stroke();
    g2.strokeStyle='rgba(122,90,50,.6)';g2.lineWidth=0.8; /* age rings */
-   g2.beginPath();g2.moveTo(base*0.88,sg*base*0.24);g2.quadraticCurveTo(base*1.2,sg*base*0.44,base*1.46,sg*base*0.22);g2.stroke();
-   g2.beginPath();g2.moveTo(base*0.94,sg*base*0.18);g2.quadraticCurveTo(base*1.18,sg*base*0.3,base*1.36,sg*base*0.18);g2.stroke();}
-  g2.fillStyle='rgba(122,168,96,.7)'; /* moss between the roots */
-  g2.beginPath();g2.ellipse(base*0.8,0,base*0.12,base*0.07,0.2,0,TAU);g2.fill();
+   g2.beginPath();g2.moveTo(bx+hr8*0.1,by+sg*hr8*0.06);g2.quadraticCurveTo(bx+hr8*0.7,by+sg*hr8*0.3,hx8+hr8*1.5,sg*hr8*0.4);g2.stroke();}
+  g2.fillStyle='rgba(122,168,96,.7)'; /* moss on the crown of her head */
+  g2.beginPath();g2.ellipse(hx8-hr8*0.2,0,hr8*0.34,hr8*0.18,0.2,0,TAU);g2.fill();
   g2.fillStyle='rgba(140,255,180,'+(0.25+0.15*Math.sin(t2*2.4)).toFixed(3)+')';
-  g2.beginPath();g2.ellipse(base*0.8,0,base*0.08,base*0.045,0.2,0,TAU);g2.fill();
-  const em9=0.7+0.3*Math.sin(t2*2.8); /* his ember, carried */
-  g2.fillStyle='rgba(255,150,60,'+(0.4*em9).toFixed(3)+')';g2.beginPath();g2.arc(base*1.12,0,base*0.16,0,TAU);g2.fill();
-  g2.fillStyle='rgba(255,190,60,'+(0.95*em9).toFixed(3)+')';g2.beginPath();g2.arc(base*1.12,0,base*0.09,0,TAU);g2.fill();}
- else if(cr==='antler'){g2.strokeStyle='#c8a06a';g2.lineWidth=2;
-  for(const sg of [-1,1]){
-   g2.beginPath();g2.moveTo(base*0.8,sg*base*0.34);
-   g2.quadraticCurveTo(base*1.25,sg*base*0.7,base*1.15,sg*base*1.05);g2.stroke();
-   g2.beginPath();g2.moveTo(base*1.05,sg*base*0.62);g2.lineTo(base*1.32,sg*base*0.62);g2.stroke();}}
+  g2.beginPath();g2.ellipse(hx8-hr8*0.2,0,hr8*0.22,hr8*0.11,0.2,0,TAU);g2.fill();
+  const em9=0.7+0.3*Math.sin(t2*2.8); /* his ember rides the brow */
+  g2.fillStyle='rgba(255,150,60,'+(0.4*em9).toFixed(3)+')';g2.beginPath();g2.arc(hx8+hr8*1.02,0,hr8*0.22,0,TAU);g2.fill();
+  g2.fillStyle='rgba(255,190,60,'+(0.95*em9).toFixed(3)+')';g2.beginPath();g2.arc(hx8+hr8*1.02,0,hr8*0.12,0,TAU);g2.fill();}
+ else if(cr==='antler'){ /* ANTLER second pass: a true rack rooted on the head RIM - beams out and back, three tines each, old-forest gold */
+  g2.strokeStyle='#c8a06a';g2.lineWidth=2.2;g2.lineCap='round';
+  for(const sg of [-1,1]){const bx=hx8+Math.cos(sg*0.75)*hr8*0.95,by=Math.sin(sg*0.75)*hr8*0.95;
+   g2.beginPath();g2.moveTo(bx,by);
+   g2.quadraticCurveTo(bx+hr8*0.5,by+sg*hr8*0.7,bx-hr8*0.15,by+sg*hr8*1.35);g2.stroke(); /* the beam: out, then swept back */
+   g2.lineWidth=1.5;
+   g2.beginPath();g2.moveTo(bx+hr8*0.24,by+sg*hr8*0.4);g2.lineTo(bx+hr8*0.66,by+sg*hr8*0.5);g2.stroke();
+   g2.beginPath();g2.moveTo(bx+hr8*0.18,by+sg*hr8*0.78);g2.lineTo(bx+hr8*0.52,by+sg*hr8*1.0);g2.stroke();
+   g2.beginPath();g2.moveTo(bx-hr8*0.02,by+sg*hr8*1.08);g2.lineTo(bx+hr8*0.24,by+sg*hr8*1.34);g2.stroke();
+   g2.lineWidth=2.2;}}
  }finally{g2.restore();}
 }
 function queenStage(s){const n=teamSize(s.team);return n>=70?3:n>=34?2:n>=15?1:0;}

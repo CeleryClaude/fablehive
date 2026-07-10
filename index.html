@@ -121,7 +121,7 @@ const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
 let W=0,H=0,DPR=1;
 let veilCv=null,veilCtx=null;
 try{veilCv=document.createElement('canvas');veilCtx=veilCv.getContext('2d');}catch(e){}
-function resize(){DPR=Math.min(2,window.devicePixelRatio||1);W=cv.width=innerWidth*DPR;H=cv.height=innerHeight*DPR;cv.style.width=innerWidth+'px';cv.style.height=innerHeight+'px';
+function resize(){DPR=Math.min((('ontouchstart'in window)||((navigator&&navigator.maxTouchPoints)||0)>0)?1.75:2,window.devicePixelRatio||1); /* PHONES cap at 1.75: a 3x panel was pushing 2.25x the pixels for sharpness thumbs never see - that fill-rate goes to FEEL now */W=cv.width=innerWidth*DPR;H=cv.height=innerHeight*DPR;cv.style.width=innerWidth+'px';cv.style.height=innerHeight+'px';
  if(veilCv){veilCv.width=W;veilCv.height=H;}}
 addEventListener('resize',resize);resize();
 addEventListener('beforeunload',()=>{try{metaSave();}catch(e){}});
@@ -2378,7 +2378,8 @@ function showOver(){
  const M4=me();
  document.getElementById('overTxt').innerHTML=
   'Brood peak <b>'+peak+'</b> · honey kept <b>'+Math.floor(M4.honey)+'</b><br>'
-  +'<span style="font-size:13px;opacity:.85">run bonus <b style="color:#ffd75e">+'+(M4._xpBonus||0)+'✨</b> · nest <b>'+Math.floor(META.xp)+'✨</b></span>';
+  +(NET.on?'<span style="font-size:13px;opacity:.85">half is banked through death - RISE and answer</span>'
+  :'<span style="font-size:13px;opacity:.85">run bonus <b style="color:#ffd75e">+'+(M4._xpBonus||0)+'✨</b> · nest <b>'+Math.floor(META.xp)+'✨</b></span>'); /* online: no false xp promises (progression is solo-side for now), just the truth of the run */
  document.getElementById('over').style.display='flex';
  metaSave();
 }
@@ -4040,7 +4041,7 @@ const hudEl=document.getElementById('hud'),lbEl=document.getElementById('lb');
 let barT=0;
 function hud(){
  const M=me();if(!M)return; /* no queen yet, no numbers yet */
- const total=teamSize(0);if(total>peak)peak=total;
+ const total=teamSize(M.team);if(total>peak)peak=total; /* YOUR team, whichever seat you sit - online, seat 1's "peak" used to count a stranger's brood */
  let st;
  if(M.dead)st='<span style="color:#ff8f9a">fallen…</span>';
  else if(M.exposed)st='<span style="color:#ff6a7a">⚡ EXPOSED! return to your brood</span>';
@@ -4075,11 +4076,20 @@ function hud(){
 }
 let last=performance.now();
 let perfS=0,perfD=0,perfN=0,perfT=0;
+function drawJoy(){ /* the thumb deserves an anchor: base ring at touch origin, nub where the thumb is - faint, honest, gone when released */
+ if(!input.joy||!isTouch)return;
+ try{ctx.save();ctx.setTransform(1,0,0,1,0,0);
+  const jx=input.joy.ox*DPR,jy=input.joy.oy*DPR;
+  let dx=input.joy.dx,dy=input.joy.dy;const m9=Math.hypot(dx,dy)||1,c9=Math.min(m9,36);dx=dx/m9*c9;dy=dy/m9*c9;
+  ctx.globalAlpha=0.20;ctx.strokeStyle='#ffe9c9';ctx.lineWidth=2.5*DPR;ctx.beginPath();ctx.arc(jx,jy,42*DPR,0,TAU);ctx.stroke();
+  ctx.globalAlpha=0.30;ctx.fillStyle='#ffe9c9';ctx.beginPath();ctx.arc(jx+dx*DPR,jy+dy*DPR,15*DPR,0,TAU);ctx.fill();
+  ctx.restore();}catch(e){}}
 function loop(){const now=performance.now();let dt=(now-last)/1000;last=now;if(dt>.05)dt=.05;
  const t1=performance.now();
  if(running){try{if(NET.on)netTick(dt);else step(dt);}catch(e){if(!loop._e1){loop._e1=1;console.error('sim wound:',e);}}}
  const t2=performance.now();
  try{draw();}catch(e){if(!loop._e2){loop._e2=1;console.error('draw wound:',e);}}
+ try{drawJoy();}catch(e){}
  try{hud();}catch(e){if(!loop._e3){loop._e3=1;console.error('hud wound:',e);}}
  const t3=performance.now();
  perfS+=t2-t1;perfD+=t3-t2;perfN++;perfT+=dt;
@@ -4153,14 +4163,20 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
  const seen={};
  for(const w9 of F.sw){
   let m9=NET.mirror[w9.id];
-  if(w9.d){if(m9)m9.dead=true;continue;}
+  if(w9.d){if(m9&&!m9.dead){m9.dead=true; /* a QUEEN FALLS and the meadow says so - solo had the fountain, online only whispered */
+    if(!m9.ally){const own9=(m9.team===NET.you);
+     toast(own9?'YOUR QUEEN FALLS':'👑 '+(m9.name||'a queen')+' FALLS','#ffdf7e',own9?4:3);
+     if(own9||(swarms[0]&&d2(m9.x,m9.y,swarms[0].x,swarms[0].y)<1600*1600))sfx('die');}}
+   else if(m9)m9.dead=true;
+   continue;}
   if(!m9){m9=NET.mirror[w9.id]={nid:w9.id,team:w9.i,bot:true,ally:!!w9.a,x:w9.x,y:w9.y,vx:0,vy:0,tx:w9.x,ty:w9.y,
    maxHp:300,units:[],R:36,war:null,exposed:false,prot:0,gulp:0,flash:0,hitT:0,recalling:false,honey:0,hp:300,
    cosEq:null,warLoss:0,sayT:0,stompCd:0,expoT:0,lost:0,lostT:0,slots:{}};}
   m9.dead=false;m9.name=w9.n;m9.col=w9.c;m9.col2=w9.c2||null;m9.cosEq=w9.q||null;m9.prot=w9.p?1:0;
   {const hpd9=(m9.hp!=null&&w9.h<m9.hp-0.5); /* TRUTH OVER FLAGS: a hit is an hp DROP, measured before the mirror updates. The flag-edge version re-armed screen-shake through every brawl - that was the mystery VIBRATION. Shake is gone (solo never shook for ordinary hits); white flash + sparks land exactly where damage landed */
    if((hpd9||w9.f)&&!(m9.flash>0))m9.flash=0.16;
-   if(hpd9&&fx.length<430)addP(w9.x,w9.y,'#ffd7a8',4,120);}
+   if(hpd9&&fx.length<430)addP(w9.x,w9.y,'#ffd7a8',4,120);
+   if(hpd9&&w9.i===NET.you&&!w9.a)sfx('hurt');}
   m9.tx=w9.x;m9.ty=w9.y;m9.hp=w9.h;m9.honey=w9.H;
   if(w9.y2){m9.say=w9.y2;m9.sayT=1.2;}
   if(w9.u!==undefined){ /* a beat WITHOUT units is a diet beat for a strained pipe: keep the bodies we have, interpolation glides on its last targets - infinitely better than the old 64KB cliff where a struggling seat got NOTHING (555 frames withheld in one live session = the spikes + the invisible units) */
@@ -4181,6 +4197,7 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
    nu9.push(u);nb9.set(uid,u);}
   if(old9.size&&!m9.dead){let dp9=0; /* THE FALLEN GET A DEATH: a soul on the wire last frame and gone this frame DIED - ring + sparks at her last position instead of silent deletion ("troops dying for no reason and disappearing") */
    old9.forEach((ou9,ouid9)=>{if(dp9>=6||nb9.has(ouid9))return;dp9++;
+    if(dp9===1&&w9.i===NET.you&&!w9.a)sfx('pop'); /* your fallen sound their last */
     if(fx.length<400){addRing(ou9.x,ou9.y,ou9.col||'#ffd7a8',Math.max(14,(ou9.r||6)*2.4));addP(ou9.x,ou9.y,ou9.col||'#ffd7a8',4,110);}});}
   m9.units=nu9;m9.uById=nb9;}
   seen[w9.id]=1;}
@@ -4303,6 +4320,8 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
   else if(input.mDown){ax=cam.x+(input.mx*DPR-W/2)/cam.z;ay=cam.y+(input.my*DPR-H/2)/cam.z;dr=Math.hypot(ax-M9.x,ay-M9.y)>30;}
   if(ax!==null){NET.cmd({aim:[ax|0,ay|0,dr]});NET.wasDrv=dr;}
   else if(NET.wasDrv){NET.wasDrv=false;NET.cmd({aim:[M9.x|0,M9.y|0,false]});}} /* release the reins and the room reins in */
+ if(M9&&!M9.dead&&M9.war&&M9.war.nid!==NET._warN){NET._warN=M9.war.nid;toast('WAR! '+(M9.war.name||'a rival')+' presses your line - keep your queen BEHIND it','#ff9a6a',4.5);sfx('alarm');} /* solo announces war; now the wire does too */
+ if(M9&&(M9.dead||!M9.war))NET._warN=0;
  if(M9&&M9.dead&&!NET.deadShown){NET.deadShown=true;const ov=document.getElementById('over');if(ov)ov.style.display='flex';}
  if(M9&&!M9.dead&&NET.deadShown){NET.deadShown=false;const ov=document.getElementById('over');if(ov)ov.style.display='none';}}
 function netSnapshot(){ /* THE WIRE: one compact frame of truth (server -> clients) */

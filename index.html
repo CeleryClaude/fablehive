@@ -390,8 +390,9 @@ const ITEMS=[
  {id:'bronzetrim',cat:'plate',  n:'Bronze Trim', xp:520, d:'edges kissed with old metal'},
  {id:'lamellar',  cat:'plate',  n:'Silver Lamellar',xp:1500,d:'moon-scales laced at the seams'},
  {id:'warplate',  cat:'plate',  n:'Gilded Warplate',xp:3200,royal:true,d:'the crown-forge'+String.fromCharCode(39)+'s masterwork'},
- {id:'steelbands',cat:'plate',  n:'Warsteel Bands',xp:900, d:'broad steel, cold and honest'},
- {id:'chitin',    cat:'plate',  n:'Umbral Chitin',xp:1300, d:'grown, not forged - the insect way'},
+ {id:'steelbands',cat:'plate',  n:'Warsteel Cuirass',xp:900, d:'iron-fleet steel; the mid-segment fully clad'},
+ {id:'obsidianplate',cat:'plate',n:'Obsidian Aegis',xp:2600,d:'obsidian-fleet glass; wrapped and studded'},
+ {id:'chitin',    cat:'plate',  n:'Living Chitin',xp:1300, d:'grown, not forged - tinted to YOUR colour like a bug fleet'},
  {id:'spikedcarapace',cat:'plate',n:'Thornplate', xp:1900, d:'recurved hooks that mean it'},
  {id:'boneplate', cat:'plate',  n:'Wyrmbone',    xp:2400, d:'something old lent you its knuckles'},
  {id:'emberforge',cat:'plate',  n:'Emberforged', xp:4200,royal:true,d:'the seams still breathe fire'},
@@ -2446,7 +2447,7 @@ function drawNestQueen(){
  paintTail(c2,base,t2,tryOn.tail||META.eq.tail,col,nestSz); /* she GROWS UP in the glass — true shapes per stage */
  c2.strokeStyle='rgba(255,255,255,.75)';c2.lineWidth=1.5;
  paintPattern(c2,base,t2,tryOn.pattern||META.eq.pattern,col,nestSz);
- paintPlate(c2,base,t2,tryOn.plate||META.eq.plate);
+ paintPlate(c2,base,t2,tryOn.plate||META.eq.plate,col);
  c2.fillStyle='#fff';c2.beginPath();c2.arc(base*0.55,0,3,0,TAU);c2.fill();
  paintCrown(c2,base,t2,tryOn.crown||META.eq.crown);
  c2.restore();
@@ -2854,20 +2855,32 @@ function paintPattern(g2,base,t2,pat,col){
   g2.strokeStyle='rgba(200,160,255,.4)';g2.lineWidth=1;
   for(const sg of S9){g2.beginPath();g2.ellipse(sg.x,sg.y,sg.r*0.55,sg.r*0.45,0,0,TAU);g2.stroke();}}
 }
-function paintPlate(g2,base,t2,pl){ /* QUEEN ARMOUR, by Celery's layering law: plates are EDGE-TRIM, never lids. Bands ride the segment rims, interiors stay BARE (your pattern shows through), and no plate reaches the crown, wing or tail anchors */
+function paintPlate(g2,base,t2,pl,col){ /* QUEEN ARMOUR, amended law: trim by default, and SOME sets fully WRAP chosen segments (the pattern lives on the bare ones). Sets pair with FLEETS - same metals, same tints - so queen and army read as one host */
  if(!pl||pl==='noplate'||!QSEGS.length)return;
  const C9={bronzetrim:{c:'#b08048',e:'#6e4a26',w:2.2},
   lamellar:{c:'#cfd6e0',e:'#8a94a4',w:2.6,riv:1},
-  warplate:{c:'#ffd75e',e:'#a8842e',w:3.2,riv:2},
-  steelbands:{c:'#9aa4b2',e:'#4e5866',w:4.6,chan:'#3e4854'},
+  warplate:{c:'#f0c94a',e:'#8a6410',lite:'#fff2b0',w:3.2,riv:2}, /* pairs with the GOLD fleet */
+  steelbands:{c:'#b9c2cb',e:'#5b6672',lite:'#eef3f7',w:4.4,chan:'#3e4854',wrap:[1]}, /* pairs with the IRON fleet - full cuirass on the mid segment */
+  obsidianplate:{c:'#2e2a36',e:'#0a0810',lite:'#8a84a0',w:3,wrap:[1],mspike:1}, /* pairs with the OBSIDIAN fleet - wrapped mid, recurved dark studs */
   spikedcarapace:{c:'#8a6a48',e:'#463020',w:2.4,thorn:'#c8b088',thornE:'#6e5430'},
-  chitin:{c:'#3a2c44',e:'#1c1424',w:4,scute:'#7a5ea0'},
+  chitin:{bug:1,w:4}, /* pairs with any BUG fleet: grown, not forged - tinted to HER colour exactly as her troops are */
   boneplate:{c:'#e8e0cc',e:'#a89878',w:3,bump:1},
   emberforge:{c:'#4a4048',e:'#241e26',w:3.4,glow:'#ff7a3a'},
   millipede:{c:'#5a4a38',e:'#32281c',w:2,legs:1}}[pl];if(!C9)return;
+ if(C9.bug&&col){C9.c=shade(col,-0.05);C9.e=shade(col,-0.45);C9.scute=shade(col,0.35);}else if(C9.bug){C9.c='#3a2c44';C9.e='#1c1424';C9.scute='#7a5ea0';}
  g2.save();g2.lineCap='round';
  const SP9=[[-2.2,-0.94],[0.94,2.2]]; /* the two rim arcs: dorsal + ventral flanks, face and tail junctions always clear */
  for(let i9=0;i9<QSEGS.length;i9++){const sg=QSEGS[i9],rr=sg.r*0.92;
+  if(C9.wrap&&C9.wrap.indexOf(i9)>=0){ /* FULL CUIRASS on this segment: solid plate, rim, a crescent of light - the pattern lives on her bare segments */
+   g2.fillStyle=C9.c;g2.beginPath();g2.arc(sg.x,sg.y,rr*1.02,0,TAU);g2.fill();
+   g2.strokeStyle=C9.e;g2.lineWidth=2;g2.stroke();
+   if(C9.lite){g2.strokeStyle=C9.lite;g2.lineWidth=1.6;g2.beginPath();g2.arc(sg.x,sg.y,rr*0.78,-2.4,-0.7);g2.stroke();}
+   g2.strokeStyle=C9.e;g2.lineWidth=1.1;g2.beginPath();g2.moveTo(sg.x-rr*0.9,sg.y);g2.lineTo(sg.x+rr*0.9,sg.y);g2.stroke(); /* the forge seam */
+   if(C9.mspike)for(const sd of [-1,1]){const aa=sd*1.5,bx=sg.x+Math.cos(aa)*rr,by=sg.y+Math.sin(aa)*rr,ln=sg.r*0.4; /* obsidian studs: small recurved, never triangles */
+    g2.fillStyle=C9.lite;g2.beginPath();g2.moveTo(bx+2.2,by);
+    g2.quadraticCurveTo(bx+0.8,by+sd*ln*0.8,bx-ln*0.85,by+sd*ln*0.4);
+    g2.quadraticCurveTo(bx-ln*0.2,by+sd*ln*0.24,bx-2.2,by);g2.closePath();g2.fill();}
+   continue;}
   if(C9.scute){ /* CHITIN: overlapping scutes hug the rim, gaps breathe between them */
    for(const sp of [[-2.45,-1.35],[-0.55,0.55],[1.35,2.45]]){
     g2.strokeStyle=C9.c;g2.lineWidth=C9.w;g2.beginPath();g2.arc(sg.x,sg.y,rr*1.02,sp[0],sp[1]);g2.stroke();
@@ -2935,24 +2948,42 @@ function paintCrown(g2,base,t2,cr){
  g2.save();g2.translate(0,hy9); /* the crown rides the HEAD, sway and all */
  try{
  const hx8=QSEGS.length?QSEGS[0].x:base*0.55,hr8=(QSEGS.length?QSEGS[0].r:base*0.5)*1.1; /* helmets fit the TRUE head */
- if(cr==='warhelm'){ /* STEEL SHELL: covers the head, open at the rear - the thorax and her pattern stay hers */
-  g2.fillStyle='#9aa4b2';g2.strokeStyle='#4e5866';g2.lineWidth=2;
-  g2.beginPath();g2.arc(hx8,0,hr8,-2.3,2.3);g2.closePath();g2.fill();g2.stroke();
-  g2.fillStyle='#6e7884';g2.beginPath();g2.moveTo(hx8+hr8*1.02,0);g2.lineTo(hx8-hr8*0.35,-hr8*0.16);g2.lineTo(hx8-hr8*0.35,hr8*0.16);g2.closePath();g2.fill(); /* the nasal ridge */
-  for(const sd of [-1,1]){const bx=hx8+Math.cos(sd*1.95)*hr8,by=Math.sin(sd*1.95)*hr8; /* cheek hooks, recurved */
-   g2.fillStyle='#7e8894';g2.beginPath();g2.moveTo(bx+2.5,by);
-   g2.quadraticCurveTo(bx-hr8*0.15,by+sd*hr8*0.7,bx-hr8*0.75,by+sd*hr8*0.34);
-   g2.quadraticCurveTo(bx-hr8*0.25,by+sd*hr8*0.2,bx-2.5,by);g2.closePath();g2.fill();}}
- else if(cr==='dreadhelm'){ /* DARK CREST, ember slit, horns swept long */
-  g2.fillStyle='#2e2434';g2.strokeStyle='#151019';g2.lineWidth=2.2;
-  g2.beginPath();g2.arc(hx8,0,hr8,-2.45,2.45);g2.closePath();g2.fill();g2.stroke();
-  for(const sd of [-1,1]){const bx=hx8+Math.cos(sd*1.7)*hr8,by=Math.sin(sd*1.7)*hr8;
-   g2.fillStyle='#3e3048';g2.strokeStyle='#6a5484';g2.lineWidth=1;
-   g2.beginPath();g2.moveTo(bx+3,by);
-   g2.quadraticCurveTo(bx-hr8*0.4,by+sd*hr8*1.25,bx-hr8*1.75,by+sd*hr8*0.7); /* long horn, backswept */
-   g2.quadraticCurveTo(bx-hr8*0.55,by+sd*hr8*0.42,bx-3,by);g2.closePath();g2.fill();g2.stroke();}
-  g2.save();g2.globalAlpha=0.55+0.3*Math.sin(t2*3.1);g2.strokeStyle='#ff7a3a';g2.lineWidth=1.6;
-  g2.beginPath();g2.arc(hx8,0,hr8*0.62,-0.75,0.75);g2.stroke();g2.restore();} /* the slit remembers the forge */
+ if(cr==='warhelm'){ /* SALLET, second pass: a sculpted profile - pointed brow, flared cheeks, tapered nape. Iron fleet steel. Never again a bucket */
+  g2.fillStyle='#b9c2cb';g2.strokeStyle='#5b6672';g2.lineWidth=1.8;
+  g2.beginPath();g2.moveTo(hx8+hr8*1.28,0); /* the brow point */
+  g2.quadraticCurveTo(hx8+hr8*0.85,-hr8*0.92,hx8-hr8*0.1,-hr8*0.98); /* crown sweep */
+  g2.quadraticCurveTo(hx8-hr8*0.72,-hr8*0.95,hx8-hr8*0.55,-hr8*0.45); /* nape taper */
+  g2.lineTo(hx8-hr8*0.55,hr8*0.45);
+  g2.quadraticCurveTo(hx8-hr8*0.72,hr8*0.95,hx8-hr8*0.1,hr8*0.98);
+  g2.quadraticCurveTo(hx8+hr8*0.85,hr8*0.92,hx8+hr8*1.28,0);g2.closePath();g2.fill();g2.stroke();
+  g2.strokeStyle='#eef3f7';g2.lineWidth=1.8;g2.beginPath();g2.moveTo(hx8+hr8*1.1,0);g2.lineTo(hx8-hr8*0.45,0);g2.stroke(); /* the crest ridge catches the light */
+  g2.fillStyle='#2a3038';g2.beginPath();g2.ellipse(hx8+hr8*0.72,0,hr8*0.3,hr8*0.10,0,0,TAU);g2.fill(); /* visor shadow - negative space, not paint */
+  for(const sd of [-1,1]){const bx=hx8+Math.cos(sd*1.6)*hr8*0.95,by=Math.sin(sd*1.6)*hr8*0.95; /* flared cheek guards, recurved */
+   g2.fillStyle='#9aa6b2';g2.strokeStyle='#5b6672';g2.lineWidth=1;
+   g2.beginPath();g2.moveTo(bx+2.5,by);
+   g2.quadraticCurveTo(bx-hr8*0.1,by+sd*hr8*0.62,bx-hr8*0.85,by+sd*hr8*0.3);
+   g2.quadraticCurveTo(bx-hr8*0.3,by+sd*hr8*0.16,bx-2.5,by);g2.closePath();g2.fill();g2.stroke();}}
+ else if(cr==='dreadhelm'){ /* DREADHELM, second pass: layered obsidian - brow plate over casque, a crest BLADE sweeping back, twin horns low. The ember slit stays */
+  g2.fillStyle='#2e2a36';g2.strokeStyle='#0a0810';g2.lineWidth=2;
+  g2.beginPath();g2.moveTo(hx8+hr8*1.2,0);
+  g2.quadraticCurveTo(hx8+hr8*0.7,-hr8*0.95,hx8-hr8*0.35,-hr8*0.85);
+  g2.quadraticCurveTo(hx8-hr8*0.7,-hr8*0.5,hx8-hr8*0.6,0);
+  g2.quadraticCurveTo(hx8-hr8*0.7,hr8*0.5,hx8-hr8*0.35,hr8*0.85);
+  g2.quadraticCurveTo(hx8+hr8*0.7,hr8*0.95,hx8+hr8*1.2,0);g2.closePath();g2.fill();g2.stroke(); /* the casque */
+  g2.fillStyle='#3a3444';g2.beginPath();g2.moveTo(hx8+hr8*1.24,0);
+  g2.quadraticCurveTo(hx8+hr8*0.75,-hr8*0.5,hx8+hr8*0.2,-hr8*0.42);
+  g2.lineTo(hx8+hr8*0.2,hr8*0.42);
+  g2.quadraticCurveTo(hx8+hr8*0.75,hr8*0.5,hx8+hr8*1.24,0);g2.closePath();g2.fill(); /* the brow plate overlaps */
+  g2.fillStyle='#8a84a0';g2.beginPath();g2.moveTo(hx8+hr8*0.3,0); /* the crest BLADE: a fin sweeping back past the nape */
+  g2.quadraticCurveTo(hx8-hr8*0.5,-hr8*0.34,hx8-hr8*1.5,-hr8*0.12);
+  g2.quadraticCurveTo(hx8-hr8*0.7,-hr8*0.02,hx8-hr8*0.45,0);g2.closePath();g2.fill();
+  for(const sd of [-1,1]){const bx=hx8+Math.cos(sd*1.85)*hr8*0.9,by=Math.sin(sd*1.85)*hr8*0.9;
+   g2.fillStyle='#221c2c';g2.strokeStyle='#0a0810';g2.lineWidth=1;
+   g2.beginPath();g2.moveTo(bx+2.5,by);
+   g2.quadraticCurveTo(bx-hr8*0.5,by+sd*hr8*1.05,bx-hr8*1.6,by+sd*hr8*0.5); /* horns ride LOW and long */
+   g2.quadraticCurveTo(bx-hr8*0.6,by+sd*hr8*0.3,bx-2.5,by);g2.closePath();g2.fill();g2.stroke();}
+  g2.save();g2.globalAlpha=0.55+0.3*Math.sin(t2*3.1);g2.strokeStyle='#ff7a3a';g2.lineWidth=1.7;
+  g2.beginPath();g2.arc(hx8+hr8*0.28,0,hr8*0.5,-0.6,0.6);g2.stroke();g2.restore();}
  else if(cr==='hornedcasque'){ /* CHITIN CASQUE: insectoid shell, two long recurved horns */
   g2.fillStyle='#3a2c44';g2.strokeStyle='#6a5484';g2.lineWidth=1.8;
   g2.beginPath();g2.arc(hx8,0,hr8*0.98,-2.2,2.2);g2.closePath();g2.fill();g2.stroke();
@@ -2988,21 +3019,34 @@ function paintCrown(g2,base,t2,cr){
    g2.fillStyle='#1c1418';g2.beginPath();g2.arc(ex,ey9,er9,0,TAU);g2.fill();
    g2.strokeStyle='#4a3a44';g2.lineWidth=0.8;g2.stroke();
    g2.fillStyle='rgba(255,255,255,.75)';g2.beginPath();g2.arc(ex+er9*0.3,ey9-er9*0.3,er9*0.3,0,TAU);g2.fill();}}
- else if(cr==='laurel'){g2.fillStyle='#7fc86a';
-  for(let k2=0;k2<5;k2++){const aa=-0.9+k2*0.45;
-   g2.beginPath();g2.ellipse(base*0.95+Math.cos(aa)*base*0.42,Math.sin(aa)*base*0.55,base*0.13,base*0.06,aa,0,TAU);g2.fill();}}
- else if(cr==='thorn'){g2.strokeStyle='#5a3a4a';g2.lineWidth=2;
-  for(let k2=-2;k2<=2;k2++){const aa=k2*0.4;
-   g2.beginPath();g2.moveTo(base*1.0+Math.cos(aa)*base*0.3,Math.sin(aa)*base*0.5);
-   g2.lineTo(base*1.0+Math.cos(aa)*base*0.62,Math.sin(aa)*base*0.78);g2.stroke();}}
+ else if(cr==='laurel'){ /* LAUREL, second pass: a full victor's wreath - two arcs of leaves meeting at the brow, gold-tipped */
+  for(const sd of [-1,1])for(let k2=0;k2<4;k2++){const aa=sd*(0.28+k2*0.34);
+   const lx=base*0.95+Math.cos(aa)*base*0.5,ly=Math.sin(aa)*base*0.6;
+   g2.fillStyle=k2===0?'#ffd75e':'#7fc86a';
+   g2.beginPath();g2.ellipse(lx,ly,base*0.15,base*0.065,aa+sd*0.5,0,TAU);g2.fill();
+   g2.strokeStyle='#4e8a3e';g2.lineWidth=0.7;g2.stroke();}
+  g2.strokeStyle='#5e9a4a';g2.lineWidth=1.4;g2.beginPath();g2.arc(base*0.95,0,base*0.55,-1.35,1.35);g2.stroke();}
+ else if(cr==='thorn'){ /* CROWN OF THORNS, second pass: recurved interlocking hooks, dark rosewood - a crown that draws blood */
+  for(let k2=-2;k2<=2;k2++){const aa=k2*0.5,bx=base*1.0+Math.cos(aa)*base*0.36,by=Math.sin(aa)*base*0.52,sd=k2%2?1:-1,ln=base*0.34;
+   g2.fillStyle='#6e3a4e';g2.strokeStyle='#3a1c28';g2.lineWidth=0.9;
+   g2.beginPath();g2.moveTo(bx+2,by);
+   g2.quadraticCurveTo(bx+ln*0.5,by+sd*ln*0.9,bx-ln*0.8,by+sd*ln*0.5);
+   g2.quadraticCurveTo(bx-ln*0.2,by+sd*ln*0.25,bx-2,by);g2.closePath();g2.fill();g2.stroke();}
+  g2.strokeStyle='#4a2434';g2.lineWidth=2.2;g2.beginPath();g2.arc(base*1.0,0,base*0.5,-1.15,1.15);g2.stroke();} /* the vine that binds them */
  else if(cr==='star'){g2.fillStyle='#ffdf7e';
   const cx3=base*1.18,cy3=-base*0.75;
   g2.beginPath();for(let k2=0;k2<10;k2++){const aa=k2/10*TAU-1.57,rr=k2%2?base*0.12:base*0.26;
    k2?g2.lineTo(cx3+Math.cos(aa)*rr,cy3+Math.sin(aa)*rr):g2.moveTo(cx3+Math.cos(aa)*rr,cy3+Math.sin(aa)*rr);}
   g2.closePath();g2.fill();}
- else if(cr==='twig'){g2.strokeStyle='#9a6a4a';g2.lineWidth=1.8;
-  g2.beginPath();g2.moveTo(base*0.8,-base*0.3);g2.lineTo(base*1.2,-base*0.55);g2.stroke();
-  g2.beginPath();g2.moveTo(base*0.8,base*0.3);g2.lineTo(base*1.2,base*0.55);g2.stroke();}
+ else if(cr==='twig'){ /* TWIG, second pass: two branching beams with true tines - a young antler, not two toothpicks */
+  g2.strokeStyle='#9a6a4a';g2.lineWidth=2.4;g2.lineCap='round';
+  for(const sd of [-1,1]){const bx=base*0.85,by=sd*base*0.34;
+   g2.beginPath();g2.moveTo(bx,by);
+   g2.quadraticCurveTo(bx+base*0.25,by+sd*base*0.3,bx+base*0.05,by+sd*base*0.62);g2.stroke(); /* the beam sweeps back */
+   g2.lineWidth=1.6;
+   g2.beginPath();g2.moveTo(bx+base*0.16,by+sd*base*0.34);g2.lineTo(bx+base*0.42,by+sd*base*0.5);g2.stroke(); /* first tine */
+   g2.beginPath();g2.moveTo(bx+base*0.02,by+sd*base*0.5);g2.lineTo(bx+base*0.2,by+sd*base*0.74);g2.stroke(); /* second tine */
+   g2.lineWidth=2.4;}}
  else if(cr==='daisy'){for(let k2=0;k2<4;k2++){const aa=-0.7+k2*0.47;
    g2.fillStyle='#fff';g2.beginPath();g2.arc(base*0.98+Math.cos(aa)*base*0.32,Math.sin(aa)*base*0.5,base*0.09,0,TAU);g2.fill();
    g2.fillStyle='#ffcf5e';g2.beginPath();g2.arc(base*0.98+Math.cos(aa)*base*0.32,Math.sin(aa)*base*0.5,base*0.04,0,TAU);g2.fill();}}
@@ -3115,7 +3159,7 @@ function drawQueen(s){
  paintTail(ctx,base,tnow,mine?META.eq.tail:(s.cosEq&&s.cosEq.tail),s.col,st);
  ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=1.5;ctx.stroke();
  if(eq2)paintPattern(ctx,base,tnow,eq2.pattern,s.col,st);
- if(eq2)paintPlate(ctx,base,tnow,eq2.plate);
+ if(eq2)paintPlate(ctx,base,tnow,eq2.plate,s.col);
  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(base*0.55,0,2.6+st*0.5,0,TAU);ctx.fill();
  if(eq2)paintCrown(ctx,base,tnow,eq2.crown);
  if(s.gilded2){ctx.strokeStyle='rgba(255,223,126,'+(0.6+0.2*Math.sin(tnow*4))+')';ctx.lineWidth=2;
@@ -4392,12 +4436,20 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
   geodeA+=((geodeIn?1:0)-geodeA)*Math.min(1,6*dt);}
  if(elder&&elder._net){elder._age=(elder._age||0)+dt;const ax9=Math.min(elder._age,0.22);
   const px9=(elder._tx!=null?elder._tx:elder.x)+(elder._tvx||0)*ax9,py9=(elder._ty!=null?elder._ty:elder.y)+(elder._tvy||0)*ax9;
-  const k9=Math.min(1,10*dt);elder.x+=(px9-elder.x)*k9;elder.y+=(py9-elder.y)*k9;
+  const ox9=elder.x,oy9=elder.y,k9=Math.min(1,10*dt);elder.x+=(px9-elder.x)*k9;elder.y+=(py9-elder.y)*k9;
+  {const rvx9=(elder.x-ox9)/Math.max(dt,0.001),rvy9=(elder.y-oy9)/Math.max(dt,0.001),kf9=Math.min(1,8*dt);
+   elder.vx=(elder.vx||0)+(rvx9-(elder.vx||0))*kf9;elder.vy=(elder.vy||0)+(rvy9-(elder.vy||0))*kf9;}
   if(elder.flash>0)elder.flash-=dt;}
  if(spider&&spider._net){spider._age=(spider._age||0)+dt;const k9=Math.min(1,9*dt);
-  if(spider._tx!=null){spider.x+=(spider._tx-spider.x)*k9;spider.y+=(spider._ty-spider.y)*k9;}
-  spider.gait=tnow*3;if(spider.flash>0)spider.flash-=dt;
-  for(const kd9 of spider.kids)if(kd9._tx!=null){kd9.x+=(kd9._tx-kd9.x)*Math.min(1,12*dt);kd9.y+=(kd9._ty-kd9.y)*Math.min(1,12*dt);}}
+  if(spider._tx!=null){const sox9=spider.x,soy9=spider.y;
+   spider.x+=(spider._tx-spider.x)*k9;spider.y+=(spider._ty-spider.y)*k9;
+   const rvx9=(spider.x-sox9)/Math.max(dt,0.001),rvy9=(spider.y-soy9)/Math.max(dt,0.001),kf9=Math.min(1,8*dt);
+   spider.vx=(spider.vx||0)+(rvx9-(spider.vx||0))*kf9;spider.vy=(spider.vy||0)+(rvy9-(spider.vy||0))*kf9;
+   spider.gait+=Math.hypot(spider.vx,spider.vy)*dt*0.05;}
+  if(spider.flash>0)spider.flash-=dt;
+  for(const kd9 of spider.kids)if(kd9._tx!=null){const kox9=kd9.x,koy9=kd9.y;
+   kd9.x+=(kd9._tx-kd9.x)*Math.min(1,12*dt);kd9.y+=(kd9._ty-kd9.y)*Math.min(1,12*dt);
+   kd9.vx=(kd9.x-kox9)/Math.max(dt,0.001);kd9.vy=(kd9.y-koy9)/Math.max(dt,0.001);}}
  for(const mw9 of fieldMaws)if(mw9.anim>0)mw9.anim-=dt;
  for(const g9 of grottos)if(g9.maws)for(const mw9 of g9.maws)if(mw9.anim>0)mw9.anim-=dt; /* jaws re-open client-side */
  for(let i9=fx.length-1;i9>=0;i9--){const e9=fx[i9];e9.t+=dt*(QGOV.q<0.9?1.6:1);if(e9.t>=e9.life){fx.splice(i9,1);continue;}if(!e9.ring){e9.x+=e9.vx*dt;e9.y+=e9.vy*dt;e9.vx*=.9;e9.vy*=.9;}} /* fx age and die online like solo - and under the governor they burn out 1.6x faster, thinning the particle load when frames struggle */

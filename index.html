@@ -133,6 +133,8 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
  <div>music <input id="musS" type="range" min="0" max="100" value="100" style="vertical-align:middle;width:110px"></div>
  <div style="cursor:pointer;opacity:.9;color:#ffd75e" id="nestGo">🏠 RETIRE TO THE NEST · ends the round, banks your ✨</div>
  <div id="perfLine" style="opacity:.6;font-size:11px">sim –ms · draw –ms</div>
+ <div style="font-size:11px;opacity:.9;border-top:1px solid #ffffff22;margin-top:4px;padding-top:6px">hive code: <b id="hiveCode" style="letter-spacing:1px">-</b><br><span style="opacity:.6;font-size:10px">same code on another device = same hive</span></div>
+ <div><input id="hiveIn" maxlength="12" placeholder="enter a hive code" style="width:120px;padding:4px 8px;border-radius:8px;border:1px solid #ffd75e55;background:rgba(30,16,30,.85);color:#fff2dc;font-size:11px;outline:none"> <button class="btn2" id="hiveGo" style="padding:5px 12px;font-size:11px;margin:0">ADOPT</button></div>
 </div>
 <input id="chatIn" maxlength="80" placeholder="say... (Enter sends, Esc closes)" style="position:fixed;left:50%;bottom:84px;transform:translateX(-50%);width:300px;padding:8px 12px;border-radius:16px;border:1.5px solid #ffd75e88;background:rgba(30,16,30,.88);color:#fff2dc;font-size:14px;display:none;z-index:40;outline:none">
 <div id="start" class="panel">
@@ -327,7 +329,24 @@ if(META.owned&&META.owned.broodsigil)delete META.owned.broodsigil; /* Her Sigil 
 if(META.owned&&META.owned.broodfangs)delete META.owned.broodfangs; /* Her Fangs retired too ("very silly at this stage") - the Broodmother kill keeps broodcrown + silkstrand; a fang trophy may return when it can be drawn WORTHY */
 if(META.eq&&META.eq.pattern==='broodsigil')META.eq.pattern='plain';
 if(META.eq&&META.eq.crown==='broodfangs')META.eq.crown=META.owned&&META.owned.broodcrown?'broodcrown':'none';
-function metaSave(){try{if(typeof localStorage!=='undefined')localStorage.setItem('brood_meta',JSON.stringify(META));}catch(e){}}
+function metaSave(){try{if(typeof localStorage!=='undefined')localStorage.setItem('brood_meta',JSON.stringify(META));}catch(e){}soulQueue();}
+/* ============ THE REMEMBERING stage 0 (client): the soul token, the merge, the hive code ============ */
+let SOUL={tok:null,code:null,pushT:0,q:false};
+function soulQueue(){SOUL.q=true;}
+function soulPush(){ /* throttled upstream save: xp + trophies + dress - the server clamps and keeps */
+ try{if(typeof NET==='undefined'||!NET.on||!NET.ws||NET.ws.readyState!==1)return;
+  NET.ws.send(JSON.stringify({k:'meta',xp:META.xp|0,ow:Object.keys(META.owned||{}).slice(0,80),eq:META.eq||null,skin:META.skin|0,name:META.name||''}));SOUL.q=false;}catch(e){}}
+function soulApply(s9){try{ /* the MERGE: the richer memory wins, trophies are the union, nothing is ever lost */
+ if(!s9)return;SOUL.tok=s9.tok||SOUL.tok;SOUL.code=s9.code||SOUL.code;
+ try{if(typeof localStorage!=='undefined'&&SOUL.tok)localStorage.setItem('fh_tok',SOUL.tok);}catch(e){}
+ const sm=s9.meta||{};let localRicher=(META.xp|0)>(sm.xp|0);
+ if((sm.xp|0)>(META.xp|0)){META.xp=sm.xp|0;if(sm.eq)META.eq=Object.assign({},META.eq,sm.eq);if(sm.skin>=0&&SKINS[sm.skin])META.skin=sm.skin|0;if(sm.name&&!META.name)META.name=sm.name;}
+ if(Array.isArray(sm.ow))for(const o9 of sm.ow)if(o9&&!META.owned[o9])META.owned[o9]=true;
+ UNLK=null;UNLKi=0; /* the herald re-reads the ledger after a merge */
+ try{if(typeof localStorage!=='undefined')localStorage.setItem('brood_meta',JSON.stringify(META));}catch(e){}
+ {const hc=document.getElementById('hiveCode');if(hc)hc.textContent=(SOUL.code||'-');}
+ if(localRicher)soulPush(); /* this device knew MORE: teach the server at once */
+}catch(e){}}
 let XP_RATE=0.25; /* slower still, by second decree - the climb was 'far too easy' (single knob, tune me) */
 let RUNXP=0; /* what THIS flight has earned - so you know when a trip to the nest is worth it */
 function gainXP(n2){META.xp+=n2*XP_RATE;RUNXP+=n2*XP_RATE;unlockWatch();}
@@ -2793,6 +2812,12 @@ document.getElementById('backBtn').onclick=()=>{document.getElementById('home').
    else{(de.requestFullscreen||de.webkitRequestFullscreen).call(de);
     if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{}); /* LANDSCAPE by request: fullscreen first, then the turn - platforms that refuse simply stay as they are */
    }}catch(e2){}});}
+{const hg=document.getElementById('hiveGo'),hi=document.getElementById('hiveIn');
+ if(hg&&hi)tapWire(hg,()=>{try{const v=(hi.value||'').trim().toLowerCase();
+  if(!/^[a-f0-9]{10}$/.test(v)){toast('A HIVE CODE IS 10 LETTERS AND NUMBERS','#ff9a6a',2.5);return;}
+  if(typeof NET==='undefined'||!NET.on||!NET.ws||NET.ws.readyState!==1){toast('JOIN THE MEADOW FIRST · adoption needs the wire','#ff9a6a',3);return;}
+  NET.ws.send(JSON.stringify({k:'adopt',code:v}));}catch(e){}});
+ setInterval(()=>{try{if(SOUL.q)soulPush();}catch(e){}},7000);} /* the soul saves itself every few breaths */
 {const gearEl=document.getElementById('gear'),sp=document.getElementById('setPanel');
  if(gearEl&&gearEl.addEventListener){
   gearEl.addEventListener('pointerdown',e=>{e.preventDefault();sp.style.display=sp.style.display==='none'?'block':'none';});
@@ -4915,13 +4940,14 @@ const NET={on:false,ws:null,you:0,mirror:{},aimT:0,deadShown:false,rtt:0,pingT:0
  connect(url,name){try{
   NET._url=url;NET._name=name;
   const W9=new WebSocket(url);NET.ws=W9;
-  W9.onopen=()=>{W9.send(JSON.stringify({k:'join',n:(name||'Queen').slice(0,16),c:((SKINS[META.skin]||{}).c)||0,c2:((SKINS[META.skin]||{}).c2)||0,q:META.eq||0})); /* she arrives DRESSED: colour + wardrobe ride the join, the server wears them into every frame */
+  W9.onopen=()=>{let tk9=null;try{tk9=(typeof localStorage!=='undefined'&&localStorage)?localStorage.getItem('fh_tok'):null;}catch(e){}W9.send(JSON.stringify({k:'join',n:(name||'Queen').slice(0,16),c:((SKINS[META.skin]||{}).c)||0,c2:((SKINS[META.skin]||{}).c2)||0,q:META.eq||0,tok:tk9})); /* the SOUL TOKEN rides the join - the meadow remembers */ /* she arrives DRESSED: colour + wardrobe ride the join, the server wears them into every frame */
    clearInterval(NET._pi);NET._pi=setInterval(()=>{try{if(NET.ws&&NET.ws.readyState===1)NET.ws.send(JSON.stringify({k:'p',t:Date.now(),r:(NET.rtt||0)|0,d:(PSTAT.draw||0)|0,f:(PSTAT.fps||0)|0,q:(QGOV.q*100)|0,s:(PSTAT.sim||0)|0}));}catch(e){}},2000); /* the ping CONFESSES the whole client: draw ms, fps, quality, sim - combat spikes stop being a mystery, the ledger shows whose GPU or WiFi is burning */}; /* the PULSE rides a real timer, not the render loop - it beats even when the phone dims */
   W9.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}
-   if(m.k==='init'){NET.you=m.you;NET.on=true;NET._rt=0;netApplyWorld(m.world);renderBar();toast('CONNECTED - realm '+m.you,'#9fd8ff',3);} /* refresh the bar THE MOMENT we (re)connect so tiers unlock instantly, never a stale 'at X souls' after a laggy reconnect */
+   if(m.k==='init'){NET.you=m.you;NET.on=true;NET._rt=0;netApplyWorld(m.world);renderBar();if(m.soul)soulApply(m.soul);toast('CONNECTED - realm '+m.you,'#9fd8ff',3);} /* refresh the bar THE MOMENT we (re)connect so tiers unlock instantly, never a stale 'at X souls' after a laggy reconnect */
    else if(m.k==='f')netApplyFrame(m);
    else if(m.k==='p')NET.rtt=Date.now()-m.t;
-   else if(m.k==='deny'){toast('THE ORDER WAS REFUSED · '+(m.r||'recruit')+' (honey, caps, or a full meadow)','#ff9a6a',2.4);try{sfx('hurt');}catch(e){}}};
+   else if(m.k==='deny'){toast(m.r==='hive code'?'NO HIVE ANSWERS THAT CODE':'THE ORDER WAS REFUSED · '+(m.r||'recruit')+' (honey, caps, or a full meadow)','#ff9a6a',2.4);try{sfx('hurt');}catch(e){}}
+   else if(m.k==='soul'){soulApply(m);toast('THE HIVE IS YOURS AGAIN · ✨'+(META.xp|0),'#ffd75e',4);try{sfx('gild');}catch(e){}}};
   W9.onclose=()=>{const was=NET.on;NET.on=false;clearInterval(NET._pi);
    if(NET._url){ /* THE WIRE NEVER JUST DIES ANYMORE: a dropped socket (phone sleep, WiFi blink, seat reaped) quietly reweaves itself - and the rejoin brings a FRESH world init, so you can never be left playing a stale ghost meadow where buys eat honey but nothing real happens */
     if(was)toast('THE WIRE SLIPPED - reweaving...','#ffd75e',3);

@@ -2,6 +2,20 @@
    CRASH CONFESSION: any uncaught throw writes its full stack to crash.log before systemd revives us -
    the next 'random boot' will name its own killer. */
 process.on('uncaughtException',e=>{try{require('fs').appendFileSync('/opt/fablehive/crash.log',new Date().toISOString()+' '+((e&&e.stack)||e)+'\n');}catch(_){}process.exit(1);});
+/* ============ THE REMEMBERING, stage 0: the meadow remembers souls ============
+   Zero dependencies by law (autodeploy never npm-installs): a JSON ledger + HMAC tokens.
+   A soul = {xp, ow[], eq, skin, name}. The token is id.sig - unforgeable, minted at first join.
+   The HIVE CODE (first 10 hex of the id) reunites devices until the email claim arrives. */
+const _cr=require('crypto'),_fsS=require('fs');
+const SOULP=(process.env.SOULS||'/opt/fablehive/souls.json'),KEYP=(process.env.SOULKEY||'/opt/fablehive/soul.key');
+let SKEY='';try{SKEY=_fsS.readFileSync(KEYP,'utf8').trim();}catch(e){SKEY=_cr.randomBytes(24).toString('hex');try{_fsS.writeFileSync(KEYP,SKEY);}catch(e2){}}
+let SOULS={};try{SOULS=JSON.parse(_fsS.readFileSync(SOULP,'utf8'))||{};}catch(e){SOULS={};}
+let soulDirty=0;setInterval(()=>{if(!soulDirty)return;soulDirty=0;try{_fsS.writeFileSync(SOULP,JSON.stringify(SOULS));}catch(e){}},4000).unref&&setInterval(()=>{},1e9);
+const soulSig=id=>_cr.createHmac('sha256',SKEY).update(id).digest('hex').slice(0,20);
+const soulMint=()=>{const id=_cr.randomBytes(9).toString('hex');SOULS[id]={xp:0,ow:[],eq:null,skin:0,name:'',mk:Date.now(),seen:Date.now()};soulDirty=1;return id;};
+const soulOf=tok=>{if(typeof tok!=='string'||tok.length>80)return null;const i=tok.indexOf('.');if(i<1)return null;const id=tok.slice(0,i);if(!/^[a-f0-9]{18}$/.test(id))return null;if(soulSig(id)!==tok.slice(i+1))return null;return SOULS[id]?id:null;};
+const soulPack=id=>{const s=SOULS[id];return {tok:id+'.'+soulSig(id),code:id.slice(0,10),meta:{xp:s.xp|0,ow:s.ow||[],eq:s.eq||null,skin:s.skin|0,name:s.name||''}};};
+const soulEqOk=q=>{if(!q||typeof q!=='object'||Array.isArray(q))return null;const o={};for(const k of ['pattern','crown','trail','wings','body','tail','fleet','aura','plate','eye']){const v=q[k];if(typeof v==='string'&&v.length<=24&&/^[a-zA-Z0-9_-]+$/.test(v))o[k]=v;}return Object.keys(o).length?o:null;};
 /*
    Serves the game page over HTTP and the authoritative sim over WebSocket on the SAME port.
    Punch the URL, press RISE, you're online. */
@@ -67,7 +81,7 @@ function start(port,htmlPath){
     stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:(()=>{const v9=DIAG.netLateMax||0;DIAG.netLateMax=0;return v9;})(),rateSkips:DIAG.rateSkips||0,
     buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
     seatNet:Object.keys(seats).map(t9=>{const w9=seats[t9],r9=(w9&&w9._rttMax||0)|0;if(w9)w9._rttMax=0;return Object.assign({t:+t9,rtt:(w9&&w9._rttS||0)|0,rttMax:r9,buf:(w9&&w9.bufferedAmount||0)|0},(w9&&w9._cli)||{});}),
-    ver:'r46-the-seat-zero-purge',
+    ver:'r47-the-remembering',souls:Object.keys(SOULS).length,
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else{res.writeHead(404);res.end('the meadow has no such door');}
  });
@@ -93,7 +107,8 @@ function start(port,htmlPath){
       const c9=okc(m.c);if(c9)s.col=c9;s.col2=okc(m.c2);
       let q9=null;if(m.q&&typeof m.q==='object'&&!Array.isArray(m.q)){q9={};for(const k of ['pattern','crown','trail','wings','body','tail','fleet','aura','plate','eye']){const v=m.q[k];if(typeof v==='string'&&v.length<=24&&/^[a-zA-Z0-9_-]+$/.test(v))q9[k]=v;}if(!Object.keys(q9).length)q9=null;}
       s.cosEq=q9;}} /* FRESH QUEEN on join: never the wild bot's grown body - and she arrives with 150 honey, enough for her FIRST SOLDIER or two foragers, so the opening minute is choices, not poverty (30 was famine) */
-    ws.send(JSON.stringify({k:'init',you:team,world:G.netWorldInit()}));
+    let sid=soulOf(m.tok)||soulMint();ws._soul=sid;SOULS[sid].seen=Date.now();soulDirty=1; /* the meadow remembers you now */
+    ws.send(JSON.stringify({k:'init',you:team,world:G.netWorldInit(),soul:soulPack(sid)}));
    } else if(m.k==='cmd'&&team!==null){try{
     if(m.c&&m.c.buy){ /* THE BUY LEDGER: every recruit order is receipted - "I paid and nothing spawned" becomes a lookup, not a mystery */
      const s9=G.swarms.find(z=>z.team===team&&!z.ally);const b4=s9?s9.units.length:-1,h4=s9?(s9.honey|0):-1;
@@ -102,6 +117,20 @@ function start(port,htmlPath){
      BUYS.push({t:Date.now(),tm:team,r:(''+m.c.buy).slice(0,10),ok:a4>b4?1:0,u:a4,h:h4});if(BUYS.length>24)BUYS.shift();
      if(a4<=b4){try{ws.send(JSON.stringify({k:'deny',r:(''+m.c.buy).slice(0,10)}));}catch(e){}}} /* a refused order is SAID, not swallowed - 'the button did nothing' becomes a message */
     else G.applyInput(team,m.c||{});}catch(e){}}
+   else if(m.k==='meta'&&ws._soul&&SOULS[ws._soul]){const S=SOULS[ws._soul]; /* progression climbs, never teleports: grow-only, capped per push */
+    const nx=+m.xp;if(isFinite(nx)&&nx>S.xp)S.xp=Math.min(nx|0,S.xp+20000,5e6);
+    if(Array.isArray(m.ow)){const seen={};for(const o of S.ow)seen[o]=1;
+     for(const o of m.ow.slice(0,80)){if(typeof o==='string'&&o.length<=24&&/^[a-zA-Z0-9_-]+$/.test(o)&&!seen[o]){S.ow.push(o);seen[o]=1;if(S.ow.length>200)break;}}}
+    const q=soulEqOk(m.eq);if(q)S.eq=q;
+    const sk=+m.skin;if(isFinite(sk)&&sk>=0&&sk<48)S.skin=sk|0;
+    if(typeof m.name==='string')S.name=m.name.slice(0,16);
+    S.seen=Date.now();soulDirty=1;}
+   else if(m.k==='adopt'){ws._adoptN=(ws._adoptN||0)+1; /* 5 guesses per sitting - a hive code is a KEY */
+    if(ws._adoptN<=5&&typeof m.code==='string'&&/^[a-f0-9]{10}$/.test(m.code.trim().toLowerCase())){
+     const c=m.code.trim().toLowerCase();let hit=null;for(const id in SOULS){if(id.slice(0,10)===c){hit=id;break;}}
+     if(hit){ws._soul=hit;SOULS[hit].seen=Date.now();soulDirty=1;try{ws.send(JSON.stringify({k:'soul',...soulPack(hit)}));}catch(e){}}
+     else{try{ws.send(JSON.stringify({k:'deny',r:'hive code'}));}catch(e){}}}
+    else{try{ws.send(JSON.stringify({k:'deny',r:'hive code'}));}catch(e){}}}
    else if(m.k==='p'){const r9=+m.r||0;if(r9>0&&r9<60000){ws._rttS=(ws._rttS==null?r9:ws._rttS*0.7+r9*0.3);if(r9>(ws._rttMax||0))ws._rttMax=r9;}
     ws._cli={d:(+m.d||0)|0,f:(+m.f||0)|0,q:(+m.q||0)|0,s:(+m.s||0)|0}; /* the client CONFESSES everything: ping, draw ms, fps, quality, sim - per-seat truth on the ledger */
     try{ws.send(JSON.stringify({k:'p',t:m.t}));}catch(e){}}

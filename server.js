@@ -106,7 +106,7 @@ function start(port,htmlPath){
     stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:(()=>{const v9=DIAG.netLateMax||0;DIAG.netLateMax=0;return v9;})(),rateSkips:DIAG.rateSkips||0,
     buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
     seatNet:Object.keys(seats).map(t9=>{const w9=seats[t9],r9=(w9&&w9._rttMax||0)|0;if(w9)w9._rttMax=0;return Object.assign({t:+t9,rtt:(w9&&w9._rttS||0)|0,rttMax:r9,buf:(w9&&w9.bufferedAmount||0)|0},(w9&&w9._cli)||{});}),
-    ver:'r59-the-true-mirror',souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
+    ver:'r60-the-one-name',souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else if(req.url.indexOf('/crashz')===0){let c='';try{c=_fsS.readFileSync('/opt/fablehive/crash.log','utf8').slice(-4000);}catch(e){c='(no crashes logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* the CONFESSOR reads aloud */
   else if(req.url.indexOf('/deployz')===0){let c='';try{c=_fsS.readFileSync('/var/log/fablehive-deploy.log','utf8').slice(-4000);}catch(e){c='(no deploys logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* and the deploy ledger too - 'updates without updates' becomes a lookup */
@@ -138,7 +138,7 @@ function start(port,htmlPath){
       const c9=okc(m.c);if(c9)s.col=c9;s.col2=okc(m.c2);
       let q9=null;if(m.q&&typeof m.q==='object'&&!Array.isArray(m.q)){q9={};for(const k of ['pattern','crown','trail','wings','body','tail','fleet','aura','plate','eye']){const v=m.q[k];if(typeof v==='string'&&v.length<=24&&/^[a-zA-Z0-9_-]+$/.test(v))q9[k]=v;}if(!Object.keys(q9).length)q9=null;}
       s.cosEq=q9;}} /* FRESH QUEEN on join: never the wild bot's grown body - and she arrives with 150 honey, enough for her FIRST SOLDIER or two foragers, so the opening minute is choices, not poverty (30 was famine) */
-    let sid=soulOf(m.tok)||soulMint();ws._soul=sid;SOULS[sid].seen=Date.now();soulDirty=1; /* the meadow remembers you now */
+    let sid=soulOf(m.tok)||ws._soul||soulMint();if(!SOULS[sid])sid=soulMint();ws._soul=sid; /* token first (returning device), then a soul claimed at the menu before RISE, then fresh */SOULS[sid].seen=Date.now();soulDirty=1; /* the meadow remembers you now */
     if(m.ref&&typeof m.ref==='string'&&/^[a-f0-9]{10}$/.test(m.ref)&&!SOULS[sid].ref&&!SOULS[sid].refPaid&&(Date.now()-SOULS[sid].mk)<3600000&&m.ref!==sid.slice(0,10)){SOULS[sid].ref=m.ref;soulDirty=1;} /* a YOUNG soul may name who sent it - once, never itself */
     ws.send(JSON.stringify({k:'init',you:team,world:G.netWorldInit(),soul:soulPack(sid)}));
    } else if(m.k==='cmd'&&team!==null){try{
@@ -172,7 +172,7 @@ function start(port,htmlPath){
          for(const t9 in seats){const w0=seats[t9];if(w0&&w0._soul===rid){try{w0.send(JSON.stringify({k:'refpay',n:(S0.name||'a friend')}));}catch(e){}break;}}}}}}
      try{ws.send(JSON.stringify({k:'deeds',pct:deedPct(m.st),tops:DEEDS.tops,tot:DEEDS.tot,top:deedTop()}));}catch(e){}}}
    else if(m.k==='deeds'){try{ws.send(JSON.stringify({k:'deeds',pct:null,tops:DEEDS.tops,tot:DEEDS.tot,top:deedTop()}));}catch(e){}}
-   else if(m.k==='claim'&&ws._soul&&SOULS[ws._soul]){ /* NAME + WORD: claim THIS soul with a username and password - the human-memorable key. No email yet, so the word is UNRECOVERABLE: write it down */
+   else if(m.k==='claim'){ if(!ws._soul||!SOULS[ws._soul]){ws._soul=soulMint();} /* NAME + WORD: claim a soul - minted RIGHT HERE if the menu is fresh, so saving a name never requires entering the game first. The word is UNRECOVERABLE: write it down */
     const u=(''+(m.u||'')).toLowerCase().trim(),pw=''+(m.p||'');
     if(!userOk(u)){try{ws.send(JSON.stringify({k:'deny',r:'name: 3-16 letters, numbers, _'}));}catch(e){}}
     else if(pw.length<6){try{ws.send(JSON.stringify({k:'deny',r:'word: 6+ characters'}));}catch(e){}}

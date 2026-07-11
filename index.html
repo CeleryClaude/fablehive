@@ -153,11 +153,11 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
  <button class="btn" id="go">RISE</button>
  <button class="btn2" id="nestBtn">THE NEST · customise</button>
  <button class="btn2" id="shareBtn" style="padding:7px 20px;font-size:12.5px;opacity:.85;margin-top:6px">🤝 INVITE A FRIEND <span style="opacity:.7;font-size:10.5px">· you get +2000✨ after their first real flight</span></button>
- <div id="signTog" style="cursor:pointer;color:#ffd75e;font-size:12px;margin-top:8px;letter-spacing:1px">🗝 SIGN IN <span id="signArr">▸</span></div>
+ <div id="signTog" style="cursor:pointer;color:#ffd75e;font-size:12px;margin-top:8px;letter-spacing:1px">🔑 PASSWORD · save or sign in this name <span id="signArr">▸</span></div>
  <div id="signRow" style="display:none;font-size:11.5px">
-  <div style="opacity:.6;font-size:10.5px;margin:2px 0 4px">one name + one password · works on any device · a new name saves itself · no recovery yet, write it down</div>
-  <input id="nwUser" maxlength="16" placeholder="name" autocomplete="off" style="width:104px;padding:6px 10px;border-radius:8px;border:1px solid #ffd75e55;background:rgba(30,16,30,.85);color:#fff2dc;font-size:12px;outline:none"> <input id="nwPass" maxlength="32" type="password" placeholder="password" style="width:104px;padding:6px 10px;border-radius:8px;border:1px solid #ffd75e55;background:rgba(30,16,30,.85);color:#fff2dc;font-size:12px;outline:none">
-  <div style="margin-top:6px"><button class="btn2" id="nwIn" style="padding:6px 16px;font-size:11.5px;margin:0">SIGN IN</button></div>
+  <div style="opacity:.6;font-size:10.5px;margin:2px 0 4px">add a password to the name above: a new name is SAVED to it, a known name SIGNS IN (its look + xp land here) · no recovery yet, write it down</div>
+  <input id="nwPass" maxlength="32" type="password" placeholder="password" style="width:104px;padding:6px 10px;border-radius:8px;border:1px solid #ffd75e55;background:rgba(30,16,30,.85);color:#fff2dc;font-size:12px;outline:none">
+  <div style="margin-top:6px"><button class="btn2" id="nwIn" style="padding:6px 16px;font-size:11.5px;margin:0">SAVE / SIGN IN</button></div>
  </div>
  <div id="ledgerCard" style="font-size:11.5px;opacity:.92;margin-top:8px;line-height:1.7;max-width:86vw"></div>
  <p style="font-size:12px;opacity:.5;margin-top:10px">move: WASD / drag &nbsp;·&nbsp; everything else you'll learn as you fly</p>
@@ -2904,9 +2904,9 @@ try{homeRefresh();}catch(e){}
  if(sg)tapWire(sg,()=>{try{const msg=(sm&&sm.value||'').trim();if(!msg){toast('SAY WHAT HAPPENED FIRST','#ff9a6a',2.5);return;}
   if(typeof NET==='undefined'||!NET.on||!NET.ws||NET.ws.readyState!==1){toast('JOIN THE MEADOW FIRST','#ff9a6a',2.5);return;}
   NET.ws.send(JSON.stringify({k:'support',msg:msg,contact:(sc&&sc.value||'')}));}catch(e){}});}
-{const nwU=document.getElementById('nwUser'),nwP=document.getElementById('nwPass'),nwI=document.getElementById('nwIn');
- const nwSend=k9=>{try{const u=(nwU&&nwU.value||'').trim().toLowerCase(),p2=(nwP&&nwP.value||'');
-  if(!/^[a-z0-9_]{3,16}$/.test(u)){toast('NAME: 3-16 letters, numbers or _','#ff9a6a',3);return false;}
+{const nwP=document.getElementById('nwPass'),nwI=document.getElementById('nwIn');
+ const nwSend=k9=>{try{const u=((document.getElementById('nameIn')||{}).value||'').trim().toLowerCase(),p2=(nwP&&nwP.value||''); /* ONE NAME by decree: the box up top IS the account name */
+  if(!/^[a-z0-9_]{3,16}$/.test(u)){toast('NAME (the box above): 3-16 letters, numbers or _','#ff9a6a',3);return false;}
   if(p2.length<6){toast('PASSWORD: 6 or more characters','#ff9a6a',3);return false;}
   if(typeof NET==='undefined'||!NET.on||!NET.ws||NET.ws.readyState!==1){toast('STILL CONNECTING · try again in a breath','#ff9a6a',3);return false;}
   NET.ws.send(JSON.stringify({k:k9,u:u,p:p2}));return true;}catch(e){return false;}};

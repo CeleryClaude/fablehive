@@ -68,6 +68,8 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
 @media (pointer:coarse),(max-width:820px),(max-height:520px){
  .panel{justify-content:flex-start;overflow-y:auto;padding:calc(14px + env(safe-area-inset-top,0px)) 10px calc(96px + env(safe-area-inset-bottom,0px) + var(--vvlift,0px));-webkit-overflow-scrolling:touch}
  .panel>*{flex-shrink:0} /* THE SHRINK LAW: a fixed-height flex column SQUEEZES its children when content overflows - the tabs became a 6px slit, the size row vanished entirely. Children never shrink; the panel scrolls */
+ #start>:first-child,#over>:first-child{margin-top:auto} /* short panels stay CENTRED (auto margins), tall ones scroll from the top - the fallen-queen menu hugged the ceiling */
+ #start>:last-child,#over>:last-child{margin-bottom:auto}
  .panel h1{font-size:30px;letter-spacing:6px;margin-top:4px}
  #home h1{font-size:24px;letter-spacing:4px}
  #start h1{font-size:38px}
@@ -92,7 +94,11 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
  html.mob #tip,#tip{bottom:calc(76px + env(safe-area-inset-bottom,0px) + var(--vvlift,0px))}
  #gear{width:42px!important;height:42px!important;line-height:42px!important;font-size:17px}
  #fsBtn{width:42px!important;height:42px!important;line-height:42px!important;font-size:17px;right:58px!important}
- html.mob #lb,#lb{top:56px;font-size:11px;max-width:44vw}
+ html.mob #lb,#lb{top:calc(54px + env(safe-area-inset-top,0px));font-size:12.5px;line-height:1.45;max-width:46vw}
+ #hud{top:calc(8px + env(safe-area-inset-top,0px));font-size:16px;line-height:1.45}
+ #hud b{font-size:26px}
+ #gear{top:calc(8px + env(safe-area-inset-top,0px))!important}
+ #fsBtn{top:calc(8px + env(safe-area-inset-top,0px))!important}
  .btn{padding:13px 38px;font-size:18px}
  .btn2{padding:11px 24px;font-size:14px}
  .panel{padding-left:calc(10px + env(safe-area-inset-left,0px));padding-right:calc(10px + env(safe-area-inset-right,0px))}
@@ -2756,12 +2762,14 @@ document.getElementById('again').onclick=()=>{document.getElementById('over').st
 document.getElementById('homeBtn').onclick=showHome;
 document.getElementById('nestBtn').onclick=()=>{document.getElementById('start').style.display='none';nestFrom='start';showHome();};
 {const shB=document.getElementById('shareBtn');
- if(shB)tapWire(shB,()=>{ /* THE FRIEND LINK: the share sheet carries the meadow (and the ROOM, once rooms exist) - the first share pays like a boss kill */
+ const shLabel=()=>{try{if(shB&&META.shared)shB.innerHTML='🔗 SHARE THE MEADOW';}catch(e){}};shLabel();
+ if(shB)tapWire(shB,()=>{ /* THE FRIEND LINK, tidied: one payment ever, its own quiet gift (never "this flight" earnings), a calm label after the claim, and a cancelled share sheet pays nothing */
+  if(window._shBusy)return;window._shBusy=1;setTimeout(()=>{window._shBusy=0;},1200);
   const url9=(typeof location!=='undefined'&&location.origin)?(location.origin+location.pathname):'https://fablehive.duckdns.org/';
-  const pay9=()=>{if(META.shared)return;META.shared=1;META.xp+=2000;if(typeof RUNXP!=='undefined')RUNXP+=2000;try{unlockWatch();}catch(e){}metaSave();toast('🔗 THE MEADOW GROWS · +2000✨','#ffd75e',5);try{sfx('gild');}catch(e){}};
+  const pay9=()=>{if(META.shared)return;META.shared=1;META.xp+=2000;try{unlockWatch();}catch(e){}metaSave();shLabel();toast('🔗 +2000✨ · THE MEADOW GROWS','#ffd75e',4.5);try{sfx('gild');}catch(e){}};
   try{
    if(navigator.share)navigator.share({title:'FABLEHIVE',text:'Fly a queen. Grow a brood. War in the honey dusk - play with me:',url:url9}).then(pay9).catch(()=>{});
-   else if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url9).then(()=>{toast('LINK COPIED · send it to a friend','#ffe9a0',3.5);pay9();}).catch(()=>{});
+   else if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url9).then(()=>{toast(META.shared?'LINK COPIED':'LINK COPIED · +2000✨','#ffe9a0',3.5);pay9();}).catch(()=>{});
    else toast(url9,'#ffe9a0',6);
   }catch(e){}});}
 let nestFrom='over';
@@ -4783,7 +4791,7 @@ function draw(){
  {ctx.setTransform(1,0,0,1,0,0); /* screen furniture: wayfinder + watermark, always */
   ctx.font='bold '+(15*DPR)+'px Trebuchet MS';ctx.textAlign='right';
  { /* THE WAYFINDER: realms and landmarks only - NEVER rival positions (the tracker ban holds) */
-  const S=118*DPR,mx=W-S-10*DPR,my=H-S-36*DPR,k9=S/WORLD.w;
+  const S=(MOB?64:isTouch?86:118)*DPR,mx=10*DPR,my=H-S-(MOB?10:isTouch?58:12)*DPR,k9=S/WORLD.w; /* the ONE map: left-anchored, phone-sized, clean */
   const key=(grottos[0]?Math.round(grottos[0].x):0)+'x'+Math.round(S);
   if(draw._mmKey!==key){draw._mmKey=key;
    const c9=document.createElement('canvas');c9.width=c9.height=S;const g9=c9.getContext('2d');
@@ -4799,7 +4807,7 @@ function draw(){
    draw._mm=c9;}
   ctx.globalAlpha=0.82;try{ctx.drawImage(draw._mm,mx,my);}catch(e9){}ctx.globalAlpha=1;
   ctx.strokeStyle='rgba(255,244,224,.25)';ctx.lineWidth=1;ctx.strokeRect(mx,my,S,S);
-  for(const s9 of teamSwarms(0)){ /* YOU and your kin only */
+  for(const s9 of teamSwarms((M&&M.team)||0)){ /* YOU and your kin only - and YOU means your SEAT: teamSwarms(0) marked player 1 for everyone (the wrong-dot bug) */
    ctx.fillStyle=s9.ally?'rgba(255,207,94,.8)':'#ffd75e';
    ctx.beginPath();ctx.arc(mx+s9.x*k9,my+s9.y*k9,s9.ally?2:3.2,0,TAU);ctx.fill();}}
   ctx.fillStyle='rgba(0,0,0,.45)';ctx.fillText('fablehive.io',W-12*DPR+1,H-12*DPR+1);
@@ -4820,28 +4828,8 @@ function draw(){
    ctx.fillRect(hu.x-tw/2-5,hu.y-hu.r-24,tw+10,15);
    ctx.fillStyle='#ffe9c0';ctx.fillText(nm,hu.x,hu.y-hu.r-12.5);}
  }
- /* minimap */
+ /* the BUSY minimap died by decree - the clean biome map below-left is the ONLY map now */
  ctx.setTransform(1,0,0,1,0,0);
- const ms=(MOB?60:isTouch?74:126)*DPR,mx=10*DPR,my=H-ms-(MOB?10:isTouch?58:12)*DPR,sc=ms/WORLD.w;
- ctx.fillStyle='rgba(30,18,34,.74)';ctx.fillRect(mx,my,ms,ms);
- ctx.strokeStyle='rgba(255,207,94,.4)';ctx.lineWidth=1;ctx.strokeRect(mx,my,ms,ms);
- for(const b of boulders){ctx.fillStyle='rgba(160,140,180,.4)';ctx.fillRect(mx+b.x*sc-1,my+b.y*sc-1,2,2);}
- for(const g of groves){
-  if(g.kind==='tumble'||g.kind==='puff')continue;
-  if(g.closed)continue;
-  if(g.kind!=='spray'&&g.amt<18)continue;
-  const gsz=g.gild||g.grand||g.kind==='night'?3:2;
-  ctx.fillStyle=g.gild?'#ffdf7e':g.grand?'#ffb0d0':g.kind==='night'?'#e8ecff':g.kind==='snap'?'#ff6a8f':g.kind==='bell'?'#9ab8ff':g.kind==='spray'?'#ff9ad0':g.mother?'#ffe9a0':'rgba(207,224,138,.7)';
-  ctx.fillRect(mx+g.x*sc-gsz/2,my+g.y*sc-gsz/2,gsz,gsz);}
- if(elder){ctx.strokeStyle='rgba(255,150,90,.5)';ctx.beginPath();ctx.arc(mx+elder.x*sc,my+elder.y*sc,elder.terr*sc,0,TAU);ctx.stroke();}
- if(spider){ctx.strokeStyle='rgba(200,160,255,.5)';ctx.beginPath();ctx.arc(mx+spider.x*sc,my+spider.y*sc,spider.terr*sc,0,TAU);ctx.stroke();}
- for(const w9 of worms){if(w9.bur>0)continue; /* the worms show on the map - only while surfaced */
-  ctx.fillStyle='rgba(232,72,72,.9)';ctx.fillRect(mx+w9.x*sc-1.5,my+w9.y*sc-1.5,3,3);}
- for(const g9 of grottos){ctx.fillStyle='rgba(90,80,105,.8)';ctx.beginPath();ctx.arc(mx+g9.x*sc,my+g9.y*sc,g9.r*sc,0,TAU);ctx.fill();
-  ctx.fillStyle='rgba(106,255,216,'+(0.5+0.4*Math.sin(tnow*2))+')';ctx.beginPath();ctx.arc(mx+g9.x*sc+Math.cos(g9.m)*g9.r*sc,my+g9.y*sc+Math.sin(g9.m)*g9.r*sc,1.4,0,TAU);ctx.fill();}
- for(const s of swarms){if(s.dead)continue;const r=Math.max(1.6,s.R*0.045)*DPR;
-  ctx.beginPath();ctx.arc(mx+s.x*sc,my+s.y*sc,r,0,TAU);ctx.fillStyle=s.col;ctx.globalAlpha=s.ally?0.7:1;ctx.fill();ctx.globalAlpha=1;
-  if(s===M){ctx.strokeStyle='#ffcf5e';ctx.lineWidth=1.5;ctx.stroke();}}
 }
 /* ============ HUD ============ */
 const hudEl=document.getElementById('hud'),lbEl=document.getElementById('lb');

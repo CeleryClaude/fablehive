@@ -2755,7 +2755,8 @@ document.getElementById('backBtn').onclick=()=>{document.getElementById('home').
  nestFrom='over';metaSave();};
 {const fb=document.getElementById('fsBtn');
  if(fb&&fb.addEventListener)fb.addEventListener('pointerdown',e=>{e.preventDefault();
-  try{const de=document.documentElement,fs=document.fullscreenElement||document.webkitFullscreenElement;
+  try{const de=document.documentElement,can9=!!(de.requestFullscreen||de.webkitRequestFullscreen),fs=document.fullscreenElement||document.webkitFullscreenElement;
+   if(!can9){toast('IPHONE FULLSCREEN: tap SHARE, then ADD TO HOME SCREEN · it opens with no browser bars at all','#ffd75e',6);return;} /* Safari on iPhone has NO fullscreen api - teach the one true door instead of hiding it */
    if(fs){(document.exitFullscreen||document.webkitExitFullscreen).call(document);}
    else{(de.requestFullscreen||de.webkitRequestFullscreen).call(de);
     if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{}); /* LANDSCAPE by request: fullscreen first, then the turn - platforms that refuse simply stay as they are */
@@ -2792,7 +2793,7 @@ document.getElementById('go').onclick=()=>{
   metaSave();}
  document.getElementById('start').style.display='none';
  barEl.style.display='flex';document.getElementById('gear').style.display='block';
- {const fb9=document.getElementById('fsBtn'),de9=document.documentElement;if(fb9&&isTouch&&de9&&(de9.requestFullscreen||de9.webkitRequestFullscreen))fb9.style.display='block';} /* the wide-throne toggle, only where the platform can grant it */
+ {const fb9=document.getElementById('fsBtn');if(fb9&&isTouch&&!(navigator&&navigator.standalone))fb9.style.display='block';} /* the wide-throne toggle on every touch device - already-installed Home Screen thrones need no door */
  resumeAudio();RUNXP=0;setup();renderBar();running=true; /* a new flight starts its own ledger */
  if(WS_URL&&!NET.on)NET.connect(WS_URL,nm);
  document.getElementById('hint').innerHTML=isTouch?'drag to fly · tap your queen to recall · buttons below':'WASD / arrows / hold mouse · 1–6 spawn · Q split · E recall · M mute';};

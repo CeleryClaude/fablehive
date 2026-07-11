@@ -98,7 +98,7 @@ function start(port,htmlPath){
     stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:(()=>{const v9=DIAG.netLateMax||0;DIAG.netLateMax=0;return v9;})(),rateSkips:DIAG.rateSkips||0,
     buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
     seatNet:Object.keys(seats).map(t9=>{const w9=seats[t9],r9=(w9&&w9._rttMax||0)|0;if(w9)w9._rttMax=0;return Object.assign({t:+t9,rtt:(w9&&w9._rttS||0)|0,rttMax:r9,buf:(w9&&w9.bufferedAmount||0)|0},(w9&&w9._cli)||{});}),
-    ver:'r48-the-ledger-of-deeds',souls:Object.keys(SOULS).length,
+    ver:'r49-the-glass-court',souls:Object.keys(SOULS).length,
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else{res.writeHead(404);res.end('the meadow has no such door');}
  });
@@ -125,6 +125,7 @@ function start(port,htmlPath){
       let q9=null;if(m.q&&typeof m.q==='object'&&!Array.isArray(m.q)){q9={};for(const k of ['pattern','crown','trail','wings','body','tail','fleet','aura','plate','eye']){const v=m.q[k];if(typeof v==='string'&&v.length<=24&&/^[a-zA-Z0-9_-]+$/.test(v))q9[k]=v;}if(!Object.keys(q9).length)q9=null;}
       s.cosEq=q9;}} /* FRESH QUEEN on join: never the wild bot's grown body - and she arrives with 150 honey, enough for her FIRST SOLDIER or two foragers, so the opening minute is choices, not poverty (30 was famine) */
     let sid=soulOf(m.tok)||soulMint();ws._soul=sid;SOULS[sid].seen=Date.now();soulDirty=1; /* the meadow remembers you now */
+    if(m.ref&&typeof m.ref==='string'&&/^[a-f0-9]{10}$/.test(m.ref)&&!SOULS[sid].ref&&!SOULS[sid].refPaid&&(Date.now()-SOULS[sid].mk)<3600000&&m.ref!==sid.slice(0,10)){SOULS[sid].ref=m.ref;soulDirty=1;} /* a YOUNG soul may name who sent it - once, never itself */
     ws.send(JSON.stringify({k:'init',you:team,world:G.netWorldInit(),soul:soulPack(sid)}));
    } else if(m.k==='cmd'&&team!==null){try{
     if(m.c&&m.c.buy){ /* THE BUY LEDGER: every recruit order is receipted - "I paid and nothing spawned" becomes a lookup, not a mystery */
@@ -144,6 +145,11 @@ function start(port,htmlPath){
     S.seen=Date.now();soulDirty=1;}
    else if(m.k==='flight'&&ws._soul&&m.st&&typeof m.st==='object'){
     if(!ws._flN)ws._flN=0;if(++ws._flN<=30){deedFlight(ws._soul,m.st);
+     {const S0=SOULS[ws._soul]; /* THE REFERRAL PROOF: the friend must actually FLY (3+ minutes) before anyone is paid - capped 5/day per referrer */
+      if(S0&&S0.ref&&!S0.refPaid&&(+m.st.m||0)>=3){let rid=null;for(const id in SOULS){if(id.slice(0,10)===S0.ref){rid=id;break;}}
+       if(rid&&rid!==ws._soul){const R0=SOULS[rid];if(R0.refDay!==deedDay()){R0.refDay=deedDay();R0.refD=0;}
+        if((R0.refD||0)<5){R0.refD=(R0.refD||0)+1;R0.xp=Math.min((R0.xp|0)+2000,5e6);S0.refPaid=1;soulDirty=1;
+         for(const t9 in seats){const w0=seats[t9];if(w0&&w0._soul===rid){try{w0.send(JSON.stringify({k:'refpay',n:(S0.name||'a friend')}));}catch(e){}break;}}}}}}
      try{ws.send(JSON.stringify({k:'deeds',pct:deedPct(m.st),tops:DEEDS.tops,tot:DEEDS.tot}));}catch(e){}}}
    else if(m.k==='deeds'){try{ws.send(JSON.stringify({k:'deeds',pct:null,tops:DEEDS.tops,tot:DEEDS.tot}));}catch(e){}}
    else if(m.k==='adopt'){ws._adoptN=(ws._adoptN||0)+1; /* 5 guesses per sitting - a hive code is a KEY */

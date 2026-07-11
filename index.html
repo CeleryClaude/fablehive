@@ -73,16 +73,15 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
  .panel h1{font-size:30px;letter-spacing:6px;margin-top:4px}
  #home h1{font-size:24px;letter-spacing:4px}
  #start h1{font-size:38px}
- #qprev{width:190px;height:100px}
+ #qprev{width:min(88vw,360px);height:auto;aspect-ratio:230/120;max-width:none}
  #sizeRow{max-width:100vw;overflow-x:auto;flex-wrap:nowrap;padding:0 6px;justify-content:flex-start!important}
  #tabs{max-width:100vw;flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;padding:2px 8px;-webkit-overflow-scrolling:touch}
  .tab{flex:0 0 auto;padding:10px 15px;font-size:13px;line-height:1.3;white-space:nowrap}
  #shopWrap{max-height:none!important;flex:0 0 auto;overflow:visible!important;height:auto} /* ONE scroller: the panel. The inner slit-scroll was the corpse-maker */
  .item{width:31vw;max-width:118px;min-width:96px;padding:10px 6px;font-size:11.5px}
- #home::after{content:'';position:fixed;left:0;right:0;bottom:0;height:calc(76px + env(safe-area-inset-bottom,0px) + var(--vvlift,0px));background:linear-gradient(180deg,rgba(24,12,26,0),rgba(24,12,26,.94) 46%);pointer-events:none;z-index:12} /* the HEM: the sub pill and RETURN sit on a solid dusk band, never on half-eaten treasure */
- #home .btn{position:fixed;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px) + var(--vvlift,0px));margin:0;padding:13px 26px;font-size:16px;z-index:13;box-shadow:0 6px 22px #000a,0 6px 26px #ffb04d55}
- #home{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px) + var(--vvlift,0px))}
- #subRail{max-width:60vw!important;bottom:calc(6px + env(safe-area-inset-bottom,0px) + var(--vvlift,0px))!important;flex-wrap:wrap!important;row-gap:2px}
+ #home .btn{position:static;margin:16px auto 10px;padding:13px 36px;font-size:17px} /* THE FURNITURE SITS DOWN: RETURN and the sub pill are ordinary scroll content now - the floating cluster that rode the toolbar and covered treasure is dead */
+ #home{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px) + var(--vvlift,0px))}
+ #subRail{position:static!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;width:auto!important;max-width:330px!important;margin:12px auto 0!important;flex-wrap:wrap!important;justify-content:center!important;row-gap:2px;gap:8px!important}
  #subRail .subOne{white-space:normal!important;font-size:9.5px!important;line-height:1.25}
  #subRail b{font-size:11px;white-space:nowrap}
  #subRail button{max-width:100%;white-space:nowrap}
@@ -106,12 +105,11 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
  #tabs,#sizeRow,#shopWrap{width:100%;max-width:100%}
  #skins{max-width:100%}
  #xpbar{max-width:min(240px,86vw)}
- #qprev{max-width:60vw}
 }
 @media (max-height:460px) and (pointer:coarse){ /* a TRUE landscape phone: shorter crowns, denser court */
  .panel h1,#home h1{font-size:20px;letter-spacing:3px;margin:0}
  #start h1{font-size:26px}
- #qprev{width:150px;height:80px}
+ #qprev{width:min(62vw,300px);height:auto;aspect-ratio:230/120}
  .panel p{font-size:12px;margin:2px 0}
  #xpbar{margin:4px auto 2px}
  #tabs{margin:4px 0 6px}
@@ -155,6 +153,7 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
  <button class="btn2" id="homeBtn">HOME · customise</button>
 </div>
 <div id="home" class="panel">
+ <div id="nestX" style="position:fixed;top:calc(8px + env(safe-area-inset-top,0px));right:8px;z-index:14;width:38px;height:38px;border-radius:50%;background:rgba(42,24,44,.78);border:1px solid rgba(255,220,150,.3);text-align:center;line-height:38px;font-size:15px;cursor:pointer">✕</div>
  <div id="subRail">
   <div class="subMore" style="font-size:26px">👑</div>
   <b style="color:#ffd75e;letter-spacing:1px">👑 ROYAL SUB</b>
@@ -368,7 +367,7 @@ function soulApply(s9){try{ /* the MERGE: the richer memory wins, trophies are t
 }catch(e){}}
 let XP_RATE=0.25; /* slower still, by second decree - the climb was 'far too easy' (single knob, tune me) */
 let RUNXP=0; /* what THIS flight has earned - so you know when a trip to the nest is worth it */
-function gainXP(n2){META.xp+=n2*XP_RATE;RUNXP+=n2*XP_RATE;unlockWatch();}
+function gainXP(n2){const dim9=RUNXP<1200?1:Math.max(0.3,1-(RUNXP-1200)/8000);const g9=n2*XP_RATE*dim9;META.xp+=g9;RUNXP+=g9;unlockWatch();} /* DIMINISHING RETURNS within a flight, by decree: first joys full-fat, the long grind asymptotes to 30% - a fresh flight refills the well */
 let UNLK=null,UNLKi=0;
 function unlockWatch(){try{ /* THE HERALD: the moment your hoard crosses a treasure's price, the meadow says so - wanting the NEXT one is the engine */
  if(!UNLK){UNLK=[];for(const it9 of ITEMS){if(it9.xp>0&&!earnOnly(it9))UNLK.push({xp:it9.xp,n:it9.n,g:(GLYPH[it9.cat]||'✨')});}
@@ -1147,7 +1146,7 @@ function groveNear(g,x,y,sp){ /* move a grove near (x,y) onto CLEAR ground - a g
 }
 
 /* ============ setup ============ */
-function setup(){
+function setup(){RUNXP=0; /* every meadow is a fresh well */
  swarms=[];tnow=0;shake=0;unlocked={};evoStage=0;evoPending=null;botUnlocks={};herald={};ambient=[];
  makeWorld();
  let px=0,py=0; /* you wake on the SOUTH arc - the gentle honey realm, never beside a tyrant */
@@ -1291,6 +1290,10 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
     u9.tgt=a9;u9.tgtS=s; /* STUCK MEANS FIGHTING: a blade in the tar turns on the tank - freeblades are PRIED off the queen */
     const md9=a9.r+u9.r+4;if(dd9<md9){u9.x=a9.x+dx9/dd9*md9;u9.y=a9.y+dy9/dd9*md9;u9.vx*=0.55;u9.vy*=0.55; /* SOLID body: kill the through-momentum - and now TITANS shove exactly like the wall */
      if((a9.spkT||0)<=0){u9.hp-=(a9.role==='titan'?12:8);u9.flash=.12;spiked9=true;if(u9.hp<=0)killUnit(es9,u9,s);}}}); /* THE SPIKES: less than a blade's bite, but EVERY body pressed against them bleeds at once */
+   if((a9.spkT||0)<=0){const td9=(a9.role==='titan'?12:8);
+    for(const w8 of worms){if(w8.bur>0)continue;if(d2(w8.x,w8.y,a9.x,a9.y)<(a9.r+w8.r+6)**2){w8.hp-=td9;w8.flash=.1;w8.prov=4;w8.lastBy=s;spiked9=true;}}
+    for(const wp8 of wasps){if(d2(wp8.x,wp8.y,a9.x,a9.y)<(a9.r+16)**2){wp8.hp-=td9;wp8.flash=.12;wp8.lastBy=s;spiked9=true;}}
+    for(const ey8 of eyes){if(d2(ey8.x,ey8.y,a9.x,a9.y)<(a9.r+ey8.r+6)**2){ey8.hp-=td9;ey8.flash=.12;spiked9=true;}}} /* the WILD bleeds on the spikes too - tanks no longer ignore worms, wasps and starers pressed against them */
    if(spiked9){a9.spkT=0.66;if(near(s))sfx('hit');}
    if((a9.spkT||0)>0)a9.spkT-=dt;
   }
@@ -1604,6 +1607,8 @@ function wormTick(dt){ /* THE BLOOD WORMS: idle they meander and burrow; provoke
    if(td9<70){ta9=Math.atan2(w9.y-tgt.y,w9.x-tgt.x);sp9=190;}
    else{ta9=Math.atan2(tgt.y-w9.y,tgt.x-w9.x);sp9=252;}}
   else{w9.a+=Math.sin(tnow*0.7+w9.seed)*1.1*dt;ta9=w9.a;
+   {let st8=null,sd8=420*420;for(const s2 of swarms){if(s2.dead)continue;const q8=d2(s2.x,s2.y,w9.x,w9.y);if(q8<sd8){sd8=q8;st8=s2;}}
+    if(st8){ta9=Math.atan2(st8.y-w9.y,st8.x-w9.x);sp9=86;}} /* THE STALK: it turns and drifts toward warm blood long before the lunge - an idle worm is never a prop */
    if(d2(w9.x,w9.y,w9.hx,w9.hy)>380*380)ta9=Math.atan2(w9.hy-w9.y,w9.hx-w9.x);
    w9.burT-=dt;if(w9.burT<=0){w9.bur=rand(3.5,6);w9.burT=rand(16,28);addP(w9.x,w9.y,'#7a4432',8,110);skip9=true;}} /* calmer rhythm: the old 1.6-2.6s dips every ~12s read as broken flicker */
   if(skip9)continue;
@@ -2682,6 +2687,10 @@ function showOver(){
 function drawNestQueen(){
  const pv=document.getElementById('qprev');if(!pv||!pv.getContext)return;
  const c2=pv.getContext('2d');if(!c2||!c2.clearRect)return;
+ try{const rc9=pv.getBoundingClientRect?pv.getBoundingClientRect():null;const cw9=Math.max(200,Math.min(560,(rc9&&rc9.width)||pv.clientWidth||230)); /* THE HD GLASS: the backing store scales with the screen and the pixel ratio - the painter keeps its 230x120 world and the mirror stops being a postage stamp */
+  const K9=Math.min(3,(window.devicePixelRatio||1))*(cw9/230),bw9=Math.round(230*K9),bh9=Math.round(120*K9);
+  if(pv.width!==bw9||pv.height!==bh9){pv.width=bw9;pv.height=bh9;}
+  if(c2.setTransform)c2.setTransform(K9,0,0,K9,0,0);}catch(e){}
  const SK9=SKINS[tryOn.skin!==undefined?tryOn.skin:META.skin];
  const col=SK9.c,base=[12,15,18,23][nestSz]||15; /* the GLASS was fatter than the FIELD ([12,17,23,30] vs the field's 12+st*3+(st3?2:0)) - crowns fitted in the mirror sat differently on the real queen. The mirror now uses the field's own formula */
  c2.clearRect(0,0,230,120);
@@ -2793,6 +2802,8 @@ function showHome(){
   if(hm2&&hm2.appendChild)for(let k=0;k<7;k++){const mo2=document.createElement('div');mo2.className='nestMote';
    mo2.style.cssText+=';width:'+(6+k*3)+'px;height:'+(6+k*3)+'px;left:'+(8+k*13)+'%;top:'+(15+((k*29)%70))+'%;animation-delay:-'+(k*1.4)+'s';
    hm2.appendChild(mo2);}}
+ try{if(MOB){const sr9=document.getElementById('subRail'),bb9=document.getElementById('backBtn'),hm9=document.getElementById('home');
+  if(sr9&&bb9&&hm9&&bb9.parentNode===hm9&&sr9.nextSibling!==bb9)hm9.insertBefore(sr9,bb9);}}catch(e){} /* the sub pill sits just above RETURN, at the END of the treasure */
  document.getElementById('home').style.display='flex';
  drawNestQueen();
  if(!nestI&&typeof requestAnimationFrame!=='undefined'){nestI=true;
@@ -2808,7 +2819,8 @@ document.getElementById('nestBtn').onclick=()=>{document.getElementById('start')
  const shLabel=()=>{try{if(shB&&META.shared)shB.innerHTML='🔗 SHARE THE MEADOW';}catch(e){}};shLabel();
  if(shB)tapWire(shB,()=>{ /* THE FRIEND LINK, tidied: one payment ever, its own quiet gift (never "this flight" earnings), a calm label after the claim, and a cancelled share sheet pays nothing */
   if(window._shBusy)return;window._shBusy=1;setTimeout(()=>{window._shBusy=0;},1200);
-  const url9=(typeof location!=='undefined'&&location.origin)?(location.origin+location.pathname):'https://fablehive.duckdns.org/';
+  let url9=(typeof location!=='undefined'&&location.origin)?(location.origin+location.pathname):'https://fablehive.duckdns.org/';
+  if(SOUL.code)url9+='?ref='+SOUL.code; /* the link KNOWS who sent it */
   const pay9=()=>{if(META.shared)return;META.shared=1;META.xp+=2000;try{unlockWatch();}catch(e){}metaSave();shLabel();toast('🔗 +2000✨ · THE MEADOW GROWS','#ffd75e',4.5);try{sfx('gild');}catch(e){}};
   try{
    if(navigator.share)navigator.share({title:'FABLEHIVE',text:'Fly a queen. Grow a brood. War in the honey dusk - play with me:',url:url9}).then(pay9).catch(()=>{});
@@ -2854,7 +2866,7 @@ document.getElementById('backBtn').onclick=()=>{document.getElementById('home').
  }}
 let WS_URL=null;
 {try{if(typeof location!=='undefined'){const P9=new URLSearchParams(location.search||'');
- let u9=P9.get('ws');
+ let u9=P9.get('ws');try{window._ref=P9.get('ref')||null;}catch(e){}
  if(!u9&&/^https?:$/.test(location.protocol)&&!P9.get('solo')) /* served from a room? then the room IS home */
   u9=(location.protocol==='https:'?'wss://':'ws://')+location.host;
  WS_URL=u9||null; /* connect on RISE with the chosen name, not silently on load */
@@ -3718,7 +3730,10 @@ function paintCrown(g2,base,t2,cr){
    g2.lineWidth=2.2;}}
  }finally{g2.restore();}
 }
-function queenStage(s){const n=teamSize(s.team);return n>=70?3:n>=34?2:n>=15?1:0;}
+function queenStage(s){const n=teamSize(s.team);const raw=n>=70?3:n>=34?2:n>=15?1:0; /* HYSTERESIS: hovering ON a threshold made her flicker hatchling/grown every frame - once won, a stage is only surrendered when the brood falls WELL below the line */
+ if(s._vst===undefined||raw>s._vst)s._vst=raw;
+ else if(raw<s._vst){const dn=[0,12,28,60][s._vst];if(n<dn)s._vst=raw;}
+ return s._vst;}
 function drawQueen(s){
  const a=Math.atan2(s.vy,s.vx)||0,st=s.ally?0:queenStage(s),base=(12+st*3+(st===3?2:0))*(1+Math.max(0,s.gulp||0)*0.45); /* kin stay humble-looking; only the TRUE queen wears her power */
  if(!s.ally){const st9p=s._st9; /* THE EVOLUTION BURST: one ring, a handful of sparks, gone - a stage-up should ring like a bell and cost nothing */
@@ -4583,15 +4598,15 @@ function draw(){
    ctx.beginPath();ctx.arc(sg.x,sg.y,rr9,0,TAU);ctx.fill();
    ctx.strokeStyle='rgba(46,10,16,.85)';ctx.lineWidth=Math.max(1.1,rr9*0.22); /* each segment wears a chitin RING-PLATE */
    ctx.beginPath();ctx.arc(sg.x,sg.y,rr9*0.82,0.35,Math.PI-0.35);ctx.stroke();
-   ctx.strokeStyle='rgba(255,150,140,.28)';ctx.lineWidth=1;
+   ctx.strokeStyle='rgba(255,110,96,.14)';ctx.lineWidth=1;
    ctx.beginPath();ctx.arc(sg.x,sg.y,rr9*0.62,-2.5,-0.9);ctx.stroke(); /* the wet dorsal glint */
    if(rr9>5.5&&s9>0){const pv9=w9.seg[s9-1],na9=Math.atan2(sg.y-pv9.y,sg.x-pv9.x)+Math.PI/2;
-    ctx.strokeStyle='rgba(230,90,80,.55)';ctx.lineWidth=1.3;
+    ctx.strokeStyle='rgba(140,24,24,.78)';ctx.lineWidth=1.4;
     for(const sd9 of[-1,1]){ctx.beginPath();ctx.moveTo(sg.x+Math.cos(na9)*rr9*sd9,sg.y+Math.sin(na9)*rr9*sd9);
      ctx.lineTo(sg.x+Math.cos(na9)*(rr9+3.4)*sd9+Math.cos(na9+2.6*sd9)*1.6,sg.y+Math.sin(na9)*(rr9+3.4)*sd9+Math.sin(na9+2.6*sd9)*1.6);ctx.stroke();}}} /* recurved BARB pairs walking the flanks */
   {const ha9=Math.atan2(w9.y-w9.seg[0].y,w9.x-w9.seg[0].x);
    ctx.save();ctx.translate(w9.x,w9.y);ctx.rotate(ha9);
-   ctx.fillStyle=w9.flash>0?'#ffb0a4':'#b83a48';
+   ctx.fillStyle=w9.flash>0?'#ff8672':'#8e2030';
    ctx.beginPath();ctx.ellipse(2,0,13,10,0,0,TAU);ctx.fill();
    ctx.strokeStyle='rgba(40,10,16,.8)';ctx.lineWidth=1.4;ctx.stroke();
    const jaw9=w9.bite>0?(Math.sin(tnow*26)*0.5+0.5)*0.5:(w9.prov>0?0.16:0.05); /* the jaws part */
@@ -4840,7 +4855,7 @@ function draw(){
  {ctx.setTransform(1,0,0,1,0,0); /* screen furniture: wayfinder + watermark, always */
   ctx.font='bold '+(15*DPR)+'px Trebuchet MS';ctx.textAlign='right';
  { /* THE WAYFINDER: realms and landmarks only - NEVER rival positions (the tracker ban holds) */
-  const S=(MOB?64:isTouch?86:118)*DPR,mx=10*DPR,my=H-S-(MOB?10:isTouch?58:12)*DPR,k9=S/WORLD.w; /* the ONE map: left-anchored, phone-sized, clean */
+  const S=(MOB?92:isTouch?116:150)*DPR,mx=W-S-10*DPR,my=H-S-(MOB?76:isTouch?70:36)*DPR,k9=S/WORLD.w; /* the ONE map: RIGHT and BIGGER by decree, riding above the bar */
   const key=(grottos[0]?Math.round(grottos[0].x):0)+'x'+Math.round(S);
   if(draw._mmKey!==key){draw._mmKey=key;
    const c9=document.createElement('canvas');c9.width=c9.height=S;const g9=c9.getContext('2d');
@@ -4959,7 +4974,7 @@ const NET={on:false,ws:null,you:0,mirror:{},aimT:0,deadShown:false,rtt:0,pingT:0
  connect(url,name){try{
   NET._url=url;NET._name=name;
   const W9=new WebSocket(url);NET.ws=W9;
-  W9.onopen=()=>{let tk9=null;try{tk9=(typeof localStorage!=='undefined'&&localStorage)?localStorage.getItem('fh_tok'):null;}catch(e){}W9.send(JSON.stringify({k:'join',n:(name||'Queen').slice(0,16),c:((SKINS[META.skin]||{}).c)||0,c2:((SKINS[META.skin]||{}).c2)||0,q:META.eq||0,tok:tk9})); /* the SOUL TOKEN rides the join - the meadow remembers */ /* she arrives DRESSED: colour + wardrobe ride the join, the server wears them into every frame */
+  W9.onopen=()=>{let tk9=null;try{tk9=(typeof localStorage!=='undefined'&&localStorage)?localStorage.getItem('fh_tok'):null;}catch(e){}W9.send(JSON.stringify({k:'join',n:(name||'Queen').slice(0,16),c:((SKINS[META.skin]||{}).c)||0,c2:((SKINS[META.skin]||{}).c2)||0,q:META.eq||0,tok:tk9,ref:(window._ref||null)})); /* the SOUL TOKEN rides the join - the meadow remembers */ /* she arrives DRESSED: colour + wardrobe ride the join, the server wears them into every frame */
    clearInterval(NET._pi);NET._pi=setInterval(()=>{try{if(NET.ws&&NET.ws.readyState===1)NET.ws.send(JSON.stringify({k:'p',t:Date.now(),r:(NET.rtt||0)|0,d:(PSTAT.draw||0)|0,f:(PSTAT.fps||0)|0,q:(QGOV.q*100)|0,s:(PSTAT.sim||0)|0}));}catch(e){}},2000); /* the ping CONFESSES the whole client: draw ms, fps, quality, sim - combat spikes stop being a mystery, the ledger shows whose GPU or WiFi is burning */}; /* the PULSE rides a real timer, not the render loop - it beats even when the phone dims */
   W9.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}
    if(m.k==='init'){NET.you=m.you;NET.on=true;NET._rt=0;netApplyWorld(m.world);renderBar();if(m.soul)soulApply(m.soul);try{NET.ws.send(JSON.stringify({k:'deeds'}));}catch(e){}toast('CONNECTED - realm '+m.you,'#9fd8ff',3);} /* refresh the bar THE MOMENT we (re)connect so tiers unlock instantly, never a stale 'at X souls' after a laggy reconnect */
@@ -4967,7 +4982,8 @@ const NET={on:false,ws:null,you:0,mirror:{},aimT:0,deadShown:false,rtt:0,pingT:0
    else if(m.k==='p')NET.rtt=Date.now()-m.t;
    else if(m.k==='deny'){toast(m.r==='hive code'?'NO HIVE ANSWERS THAT CODE':'THE ORDER WAS REFUSED · '+(m.r||'recruit')+' (honey, caps, or a full meadow)','#ff9a6a',2.4);try{sfx('hurt');}catch(e){}}
    else if(m.k==='soul'){soulApply(m);toast('THE HIVE IS YOURS AGAIN · ✨'+(META.xp|0),'#ffd75e',4);try{sfx('gild');}catch(e){}}
-   else if(m.k==='deeds')deedsRender(m);};
+   else if(m.k==='deeds')deedsRender(m);
+   else if(m.k==='refpay'){META.xp+=2000;metaSave();toast('🔗 '+(((m.n||'A FRIEND')+'').toUpperCase())+' TOOK WING · +2000✨','#ffd75e',5);try{sfx('gild');}catch(e){}}};
   W9.onclose=()=>{const was=NET.on;NET.on=false;clearInterval(NET._pi);
    if(NET._url){ /* THE WIRE NEVER JUST DIES ANYMORE: a dropped socket (phone sleep, WiFi blink, seat reaped) quietly reweaves itself - and the rejoin brings a FRESH world init, so you can never be left playing a stale ghost meadow where buys eat honey but nothing real happens */
     if(was)toast('THE WIRE SLIPPED - reweaving...','#ffd75e',3);

@@ -5056,7 +5056,7 @@ function netApplyWorld(D){ /* the STATIC world takes the client's stage - and SC
   pricks:g.pk.map(p=>({x:p[0],y:p[1],rot:0,cd:0,vx:0,vy:0}))}));
  fieldMaws=D.fm.map(m=>({x:m[0],y:m[1],rot:m[2],big:m[3],cd:0,anim:0}));
  OASIS=D.oa;decor=D.dc.map(d=>({x:d[0],y:d[1],ty:['tuft','rubble','swirl'][d[2]],ph:d[3]}));
- thorns=D.th;groves=[];drops=[];shots=[];orbs=[];wasps=[];eyes=[];elder=null;spider=null;
+ thorns=D.th;groves=[];drops=[];shots=[];orbs=[];wasps=[];eyes=[];elder=null;spider=null;worms=[]; /* THE HUSK PURGE: worms were the ONE creature this scrub forgot (the scrub predates r30's worms). The menu-world's local worms squatted in the array, the wire re-dressed them by index every beat, and the glide loop skipped them - no _net stamp - so they stood as LIFELESS HUSKS near the den while the TRUE worm hunted soldiers unseen. Celery's exact sighting, Jul 11 */
  for(const s2 of swarms){s2.dead=true;s2.gone=true;}swarms=[];
  try{boulderGridBuild();}catch(e){} /* THE STONE GRID was only ever built inside step(), which never runs online - collideBoulders searched an EMPTY net, so the predicted queen sailed through rocks and cove rims until the server yanked her back. The invisible walls, and half the drift-shove */}
 function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - stamped by OUR clock, not the server's lumpy one */
@@ -5116,6 +5116,7 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
   while(worms.length>F.wm.length)worms.pop();
   for(let k9=0;k9<F.wm.length;k9++){const a9=F.wm[k9];let w9=worms[k9];
    if(!w9){w9={x:a9[0],y:a9[1],hx:a9[0],hy:a9[1],r:13,a:0,hp:a9[2],maxHp:260,prov:0,flash:0,bur:0,burT:9,bite:0,seed:k9*2.1,_worm:1,_net:1,seg:[]};for(let s9=0;s9<7;s9++)w9.seg.push({x:a9[0],y:a9[1]});worms.push(w9);}
+   w9._net=1; /* stamp EVERY worm the wire touches: any local body the wire adopts must glide too, or it is a husk */
    if(a9[2]<w9.hp-0.5)w9.flash=0.12;
    w9._tx=a9[0];w9._ty=a9[1];w9.hp=a9[2];w9.bur=a9[3]?1:0;w9.prov=a9[4]?1:0;if(a9[5]&&!(w9.bite>0))w9.bite=0.45;
    for(let s9=0;s9<7;s9++){const sg=w9.seg[s9];if(sg){sg._tx=a9[6+s9*2];sg._ty=a9[7+s9*2];}}}}
@@ -5197,8 +5198,7 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
    spider.vx=(spider.vx||0)+(rvx9-(spider.vx||0))*kf9;spider.vy=(spider.vy||0)+(rvy9-(spider.vy||0))*kf9;
    spider.gait+=Math.hypot(spider.vx,spider.vy)*dt*0.05;}
  for(const w9 of worms){if(!w9._net)continue;const kw9=Math.min(1,10*dt);
-  if(w9.bite>0)w9.bite-=dt;if(w9.flash>0)w9.flash-=dt;
-  if(w9.flash>0)w9.flash-=dt;if(w9.bite>0)w9.bite-=dt; /* the client DECAYS what the wire arms - a struck worm stayed PINK forever online */
+  if(w9.flash>0)w9.flash-=dt;if(w9.bite>0)w9.bite-=dt; /* the client DECAYS what the wire arms - a struck worm stayed PINK forever online (and it decays ONCE - this line was doubled, halving every flash and bite) */
   if(w9._tx!==undefined){
    if(Math.hypot(w9._tx-w9.x,w9._ty-w9.y)>120){ /* a resurface or a death-shuffle is a TELEPORT, never a slide: snap the whole body and let the rise-anim carry the moment */
     w9.x=w9._tx;w9.y=w9._ty;for(const sg of w9.seg){if(sg._tx!==undefined){sg.x=sg._tx;sg.y=sg._ty;}}

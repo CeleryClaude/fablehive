@@ -75,8 +75,8 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
  #start h1{font-size:38px}
  #qprev{width:min(88vw,360px);height:auto;aspect-ratio:230/120;max-width:none}
  #sizeRow{max-width:100vw;overflow-x:auto;flex-wrap:nowrap;padding:0 6px;justify-content:flex-start!important}
- #tabs{max-width:100vw;flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;padding:2px 8px;-webkit-overflow-scrolling:touch}
- .tab{flex:0 0 auto;padding:10px 15px;font-size:13px;line-height:1.3;white-space:nowrap}
+ #tabs{max-width:100vw;flex-wrap:wrap;overflow-x:visible;justify-content:center;padding:2px 8px;row-gap:5px} /* THE STACK, part two: category pills wrap into honest rows like the action bar - the single slide hid most of the wardrobe */
+ .tab{flex:0 0 auto;padding:9px 12px;font-size:12.5px;line-height:1.3;white-space:nowrap}
  #shopWrap{max-height:none!important;flex:0 0 auto;overflow:visible!important;height:auto} /* ONE scroller: the panel. The inner slit-scroll was the corpse-maker */
  .item{width:31vw;max-width:118px;min-width:96px;padding:10px 6px;font-size:11.5px}
  #home .btn{position:static;margin:16px auto 10px;padding:13px 36px;font-size:17px} /* THE FURNITURE SITS DOWN: RETURN and the sub pill are ordinary scroll content now - the floating cluster that rode the toolbar and covered treasure is dead */
@@ -155,7 +155,7 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
  <input id="nameIn" maxlength="16" placeholder="your name" autocomplete="off" style="display:block;margin:6px auto 10px;padding:9px 14px;width:200px;max-width:70vw;text-align:center;font-size:15px;border-radius:12px;border:1.5px solid #ffd75e88;background:rgba(30,16,30,.85);color:#fff2dc;outline:none">
  <button class="btn" id="go">RISE</button>
  <button class="btn2" id="nestBtn">THE NEST · customise</button>
- <button class="btn2" id="shareBtn">🔗 SHARE THE MEADOW <span style="opacity:.75;font-size:11px">· first share pays +2000✨</span></button>
+ <button class="btn2" id="shareBtn" style="padding:7px 20px;font-size:12.5px;opacity:.85;margin-top:6px">🤝 REFER A FRIEND <span style="opacity:.7;font-size:10.5px">· they fly 3 min → +2000✨</span></button>
  <div id="ledgerCard" style="font-size:11.5px;opacity:.92;margin-top:8px;line-height:1.7;max-width:86vw"></div>
  <p style="font-size:12px;opacity:.5;margin-top:10px">move: WASD / drag &nbsp;·&nbsp; everything else you'll learn as you fly</p>
 </div>
@@ -1192,6 +1192,7 @@ addEventListener('mousemove',e=>{input.mx=e.clientX;input.my=e.clientY;});
 addEventListener('mousedown',e=>{if(e.button===0)input.mDown=true;resumeAudio();});
 addEventListener('mouseup',e=>{if(e.button===0)input.mDown=false;});
 addEventListener('keydown',e=>{const k=e.key.toLowerCase();
+ {const tg9=e.target;if(tg9&&tg9.tagName&&(tg9.tagName==='INPUT'||tg9.tagName==='TEXTAREA')&&tg9.id!=='chatIn')return;} /* ANY focused input owns the keyboard (chat manages itself below) - the name box was losing w/a/s/d/q/e/m and every digit to the hotkeys */
  {const ci=document.getElementById('chatIn');
   if(ci&&ci.style.display==='block'){ /* the chat line owns the keyboard */
    if(e.key==='Enter'){const t9=(ci.value||'').trim();ci.value='';ci.style.display='none';
@@ -1213,7 +1214,7 @@ addEventListener('keydown',e=>{const k=e.key.toLowerCase();
   if(hm&&hm.style.display==='flex'&&nestFrom==='retired'){hm.style.display='none';document.getElementById('start').style.display='flex';nestFrom='over';metaSave();}}
  else if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(k)){input.k[k]=1;e.preventDefault();}
 });
-addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(input.k[k])delete input.k[k];});
+addEventListener('keyup',e=>{const tg9=e.target;if(tg9&&tg9.tagName&&(tg9.tagName==='INPUT'||tg9.tagName==='TEXTAREA'))return;const k=e.key.toLowerCase();if(input.k[k])delete input.k[k];});
 function keyVec(){let x=0,y=0;
  if(input.k['a']||input.k['arrowleft'])x-=1;if(input.k['d']||input.k['arrowright'])x+=1;
  if(input.k['w']||input.k['arrowup'])y-=1;if(input.k['s']||input.k['arrowdown'])y+=1;
@@ -2757,9 +2758,9 @@ function drawNestQueen(){
   mk('forager',40,1.25);mk('soldier',82,1.05);mk('lancer',126,1.1);mk('spitter',176,1.15);}
 }
 let nestI=null,nestTab='skins',nestSz=1,nestFxA=[];
-const TABS=[['skins','COLOURS'],['body','BODY'],['eye','◉ EYES'],['pattern','PATTERNS'],['crown','CROWNS'],['wings','WINGS'],['trail','TRAILS'],['tail','TAILS'],['plate','🛡 ARMOUR'],['aura','◎ AURAS'],['fleet','⚔ FLEET']];
+const TABS=[['skins','🎨 COLOURS'],['body','🐝 BODY'],['eye','◉ EYES'],['pattern','◐ PATTERNS'],['crown','♛ CROWNS'],['wings','🦋 WINGS'],['trail','✦ TRAILS'],['tail','〰 TAILS'],['plate','🛡 ARMOUR'],['aura','◎ AURAS'],['fleet','⚔ FLEET']]; /* ONE emoji language: every tab wears its category's own glyph */
 let tryOn={};
-const GLYPH={pattern:'◐',crown:'♛',trail:'✦',wings:'🦋',body:'🐝',tail:'〰',fleet:'⚔',aura:'◎'};
+const GLYPH={pattern:'◐',crown:'♛',trail:'✦',wings:'🦋',body:'🐝',tail:'〰',fleet:'⚔',aura:'◎',plate:'🛡',eye:'◉'}; /* plate and eye were falling to the generic star */
 function itemLabel(id){const it=itemById(id);return it?it.n:id;}
 function showHome(){
  document.getElementById('over').style.display='none';
@@ -2829,15 +2830,14 @@ document.getElementById('again').onclick=()=>{document.getElementById('over').st
 document.getElementById('homeBtn').onclick=showHome;
 document.getElementById('nestBtn').onclick=()=>{document.getElementById('start').style.display='none';nestFrom='start';showHome();};
 {const shB=document.getElementById('shareBtn');
- const shLabel=()=>{try{if(shB&&META.shared)shB.innerHTML='🔗 SHARE THE MEADOW';}catch(e){}};shLabel();
- if(shB)tapWire(shB,()=>{ /* THE FRIEND LINK, tidied: one payment ever, its own quiet gift (never "this flight" earnings), a calm label after the claim, and a cancelled share sheet pays nothing */
+ if(shB)tapWire(shB,()=>{ /* REFER A FRIEND, honest at last: the link carries YOUR hive code, and the reward comes ONLY when the friend truly flies (3+ min, server-proven, 5/day) - no instant candy, no confusion */
   if(window._shBusy)return;window._shBusy=1;setTimeout(()=>{window._shBusy=0;},1200);
   let url9=(typeof location!=='undefined'&&location.origin)?(location.origin+location.pathname):'https://fablehive.duckdns.org/';
   if(SOUL.code)url9+='?ref='+SOUL.code; /* the link KNOWS who sent it */
-  const pay9=()=>{if(META.shared)return;META.shared=1;META.xp+=2000;try{unlockWatch();}catch(e){}metaSave();shLabel();toast('🔗 +2000✨ · THE MEADOW GROWS','#ffd75e',4.5);try{sfx('gild');}catch(e){}};
+  const told9=()=>toast('THE LINK CARRIES YOUR MARK · +2000✨ lands when your friend flies 3+ minutes','#ffd75e',4.5);
   try{
-   if(navigator.share)navigator.share({title:'FABLEHIVE',text:'Fly a queen. Grow a brood. War in the honey dusk - play with me:',url:url9}).then(pay9).catch(()=>{});
-   else if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url9).then(()=>{toast(META.shared?'LINK COPIED':'LINK COPIED · +2000✨','#ffe9a0',3.5);pay9();}).catch(()=>{});
+   if(navigator.share)navigator.share({title:'FABLEHIVE',text:'Fly a queen. Grow a brood. War in the honey dusk - play with me:',url:url9}).then(told9).catch(()=>{});
+   else if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url9).then(()=>{toast('LINK COPIED · +2000✨ when your friend flies 3+ minutes','#ffe9a0',4);}).catch(()=>{});
    else toast(url9,'#ffe9a0',6);
   }catch(e){}});}
 let nestFrom='over';
@@ -2858,6 +2858,8 @@ document.getElementById('backBtn').onclick=()=>{document.getElementById('home').
    }}catch(e2){}});}
 {const it9=document.getElementById('idTog'),ip9=document.getElementById('idPanel'),ia9=document.getElementById('idArr');
  if(it9&&ip9)tapWire(it9,()=>{const on9=ip9.style.display==='none';ip9.style.display=on9?'block':'none';if(ia9)ia9.textContent=on9?'▾':'▸';});}
+{const nx9=document.getElementById('nestX');
+ if(nx9)tapWire(nx9,()=>{try{const bb9=document.getElementById('backBtn');if(bb9&&bb9.onclick)bb9.onclick();}catch(e){}});}
 {const sm=document.getElementById('supMsg'),sc=document.getElementById('supCon'),sg=document.getElementById('supGo');
  if(sg)tapWire(sg,()=>{try{const msg=(sm&&sm.value||'').trim();if(!msg){toast('SAY WHAT HAPPENED FIRST','#ff9a6a',2.5);return;}
   if(typeof NET==='undefined'||!NET.on||!NET.ws||NET.ws.readyState!==1){toast('JOIN THE MEADOW FIRST','#ff9a6a',2.5);return;}

@@ -328,7 +328,7 @@ if(META.owned&&META.owned.broodfangs)delete META.owned.broodfangs; /* Her Fangs 
 if(META.eq&&META.eq.pattern==='broodsigil')META.eq.pattern='plain';
 if(META.eq&&META.eq.crown==='broodfangs')META.eq.crown=META.owned&&META.owned.broodcrown?'broodcrown':'none';
 function metaSave(){try{if(typeof localStorage!=='undefined')localStorage.setItem('brood_meta',JSON.stringify(META));}catch(e){}}
-let XP_RATE=0.4; /* slow the climb: quick first joys, a real road to royalty (single knob, tune me) */
+let XP_RATE=0.25; /* slower still, by second decree - the climb was 'far too easy' (single knob, tune me) */
 let RUNXP=0; /* what THIS flight has earned - so you know when a trip to the nest is worth it */
 function gainXP(n2){META.xp+=n2*XP_RATE;RUNXP+=n2*XP_RATE;unlockWatch();}
 let UNLK=null,UNLKi=0;
@@ -1239,17 +1239,22 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
   /* the ARMOURER braces always; soldiers brace in formation. (The old PLATED aura that buffed nearby
      troops - with its bronze ring/halo - is GONE: the armourer is a pure BULWARK for the queen, nothing else.) */
   const anch=[];for(const u of s.units)if(u.role==='armourer')anch.push(u);
+  const tanks9=[];for(const u of s.units)if(u.role==='armourer'||u.role==='titan')tanks9.push(u);
   for(const u of s.units){
    u.braced=(u.role==='armourer')||(u.role==='soldier'&&Math.hypot(u.x-s.x,u.y-s.y)<s.R*1.3);
   }
   /* STICKY BULWARK (57): a foe diving the crown can no longer skate through an armourer's smooth round body.
      To enemies the armourer is now a SOLID obstacle that TARS them at the line, so assassins stick to the shield
      wall instead of gliding past to the queen. Titans bull through; kindred armourers never shove each other. */
-  if(anch.length)for(const a9 of anch){const gR9=a9.r+30;
+  if(tanks9.length)for(const a9 of tanks9){const gR9=a9.r+30;let spiked9=false;
    gridNear(a9.x,a9.y,gR9,u9=>{const es9=u9._sw;if(!es9||es9.team===s.team||u9.role==='titan'||u9.role==='armourer')return;
     const dx9=u9.x-a9.x,dy9=u9.y-a9.y,dd9=Math.hypot(dx9,dy9)||0.01;if(dd9>=gR9)return;
     u9.slow=Math.max(u9.slow||0,0.9); /* TAR at the wall - crawl, don't glide */
-    const md9=a9.r+u9.r+4;if(dd9<md9){u9.x=a9.x+dx9/dd9*md9;u9.y=a9.y+dy9/dd9*md9;u9.vx*=0.55;u9.vy*=0.55;}}); /* SOLID body: kill the through-momentum */
+    u9.tgt=a9;u9.tgtS=s; /* STUCK MEANS FIGHTING: a blade in the tar turns on the tank - freeblades are PRIED off the queen */
+    const md9=a9.r+u9.r+4;if(dd9<md9){u9.x=a9.x+dx9/dd9*md9;u9.y=a9.y+dy9/dd9*md9;u9.vx*=0.55;u9.vy*=0.55; /* SOLID body: kill the through-momentum - and now TITANS shove exactly like the wall */
+     if((a9.spkT||0)<=0){u9.hp-=(a9.role==='titan'?12:8);u9.flash=.12;spiked9=true;if(u9.hp<=0)killUnit(es9,u9,s);}}}); /* THE SPIKES: less than a blade's bite, but EVERY body pressed against them bleeds at once */
+   if(spiked9){a9.spkT=0.66;if(near(s))sfx('hit');}
+   if((a9.spkT||0)>0)a9.spkT-=dt;
   }
   const nearDr9=[];{const rr9=(s.R+580)*(s.R+580); /* THE DROP SHORTLIST: foragers used to scan EVERY drop on the map with a grotto lookup PER PAIR, every tick - O(foragers*drops*grottos). The pop-payout nuggets swelled the drop count and tickAvg crept from 7ms toward the valve. One cheap prefilter per swarm; foragers scan only what they could actually reach */
    for(let i2=0;i2<drops.length;i2++){const dr=drops[i2];const ddx=dr.x-s.x,ddy=dr.y-s.y;
@@ -1294,7 +1299,7 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
          if(s.grottoHoney>=200)trophy('algaeglow','GROTTO GLOW · THE ALGAE REMEMBER YOU');}}}
        if(s===M&&take>0&&Math.random()<dt*1.3){sfx('feed');s.gulp=Math.max(s.gulp||0,0.08);}
        gx=u.node.x+Math.cos(u.seed)*sipR9*0.55+Math.cos(tnow*6*u.zeal+u.seed)*2;gy=u.node.y+Math.sin(u.seed)*sipR9*0.55+Math.sin(tnow*6*u.zeal+u.seed)*2;} /* she sits ON her petal and trembles with the drinking */
-      else{gx=u.node.x+Math.cos(u.seed)*sipR9*0.5;gy=u.node.y+Math.sin(u.seed)*sipR9*0.5;fast=true;}}
+      else{gx=u.node.x+Math.cos(u.seed)*sipR9*0.5;gy=u.node.y+Math.sin(u.seed)*sipR9*0.5;fast=dn>sipR9*2.6;}} /* the LANDING BRAKE: full wing until close, then walk - they skated past the petals whenever the queen flew by */
      else{u.wanA+=u.wanV*dt*0.8;
       gx=s.x-hx*s.R*0.85+Math.cos(u.wanA)*s.R*0.55;gy=s.y-hy*s.R*0.85+Math.sin(u.wanA)*s.R*0.55; /* idle workers keep to the REAR quarter, out of the guard's way */}
      if(war){let ne=null,nd2=60*60;
@@ -1863,7 +1868,7 @@ function step(dt){NPLAY=humanCount();
   elder.x+=elder.vx*dt;elder.y+=elder.vy*dt;
   for(const s9 of swarms){if(s9.dead)continue; /* even the Elder must KILL the wall before passing it */
    if(d2(elder.x,elder.y,s9.x,s9.y)>(s9.R+420)**2)continue;
-   for(const u9 of s9.units){if(u9.role!=='armourer')continue;
+   for(const u9 of s9.units){if(u9.role!=='armourer'&&u9.role!=='titan')continue; /* the TITAN is a wall too, by decree */
     const mn9=elder.r*0.75+u9.r,ex9=elder.x-u9.x,ey9=elder.y-u9.y,d9=Math.hypot(ex9,ey9);
     if(d9<mn9&&d9>0.01){elder.x=u9.x+ex9/d9*mn9;elder.y=u9.y+ey9/d9*mn9;}}}
   for(const wp of wasps){const q=d2(wp.x,wp.y,elder.x,elder.y); /* it suffers no lesser horrors underfoot */
@@ -4915,7 +4920,8 @@ const NET={on:false,ws:null,you:0,mirror:{},aimT:0,deadShown:false,rtt:0,pingT:0
   W9.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}
    if(m.k==='init'){NET.you=m.you;NET.on=true;NET._rt=0;netApplyWorld(m.world);renderBar();toast('CONNECTED - realm '+m.you,'#9fd8ff',3);} /* refresh the bar THE MOMENT we (re)connect so tiers unlock instantly, never a stale 'at X souls' after a laggy reconnect */
    else if(m.k==='f')netApplyFrame(m);
-   else if(m.k==='p')NET.rtt=Date.now()-m.t;};
+   else if(m.k==='p')NET.rtt=Date.now()-m.t;
+   else if(m.k==='deny'){toast('THE ORDER WAS REFUSED · '+(m.r||'recruit')+' (honey, caps, or a full meadow)','#ff9a6a',2.4);try{sfx('hurt');}catch(e){}}};
   W9.onclose=()=>{const was=NET.on;NET.on=false;clearInterval(NET._pi);
    if(NET._url){ /* THE WIRE NEVER JUST DIES ANYMORE: a dropped socket (phone sleep, WiFi blink, seat reaped) quietly reweaves itself - and the rejoin brings a FRESH world init, so you can never be left playing a stale ghost meadow where buys eat honey but nothing real happens */
     if(was)toast('THE WIRE SLIPPED - reweaving...','#ffd75e',3);
@@ -4953,7 +4959,7 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
    NET.buf.push({rt:NET.clock,m:fm});}
   while(NET.buf.length>14)NET.buf.shift();}
  goldT=F.g?3:-1;
- if(F.gv){const og9=groves,M0=swarms&&swarms[0];
+ if(F.gv){const og9=groves,M0=me();
   const ng9=F.gv.map(g=>({x:g[0],y:g[1],_tx:g[0],_ty:g[1],kind:GKIND[g[2]],sp:g[3],amt:g[4],max:g[5],
   rock:!!(g[6]&1),rich:!!(g[6]&2),grand:!!(g[6]&4),gild:!!(g[6]&8),mother:!!(g[6]&16),web:!!(g[6]&32),lumen:!!(g[6]&64),closed:!!(g[6]&128),gilt:!!(g[6]&256),openT:g[7],surge:0,vx:0,vy:0}));
   if(og9&&og9.length){ /* FLOWERS GLIDE: groves DRIFT server-side but were SNAPPED at 10Hz here - a forager tracking the true position hovered beside the lagging image of her own bloom. Match old bodies to new truths; frames set targets, the render loop eases */
@@ -4974,7 +4980,7 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
  if(F.gp)for(let gi9=0;gi9<F.gp.length&&gi9<grottos.length;gi9++){const pr9=grottos[gi9].pricks;if(!pr9)continue;
   for(let pi9=0;pi9<F.gp[gi9].length&&pi9<pr9.length;pi9++){pr9[pi9].x=F.gp[gi9][pi9][0];pr9[pi9].y=F.gp[gi9][pi9][1];}}
  if(F.fa)for(let i9=0;i9<F.fa.length&&i9<fieldMaws.length;i9++){const mw9=fieldMaws[i9];
-  if(F.fa[i9]&&!(mw9.anim>0)){mw9.anim=0.4;const M0=swarms&&swarms[0];if(M0&&!M0.dead&&d2(mw9.x,mw9.y,M0.x,M0.y)<900*900)sfx('pop');}}
+  if(F.fa[i9]&&!(mw9.anim>0)){mw9.anim=0.4;const M0=me();if(M0&&!M0.dead&&d2(mw9.x,mw9.y,M0.x,M0.y)<900*900)sfx('pop');}}
  if(F.gm)for(let gi9=0;gi9<F.gm.length&&gi9<grottos.length;gi9++){const ms9=grottos[gi9].maws;if(!ms9)continue;
   for(let mi9=0;mi9<F.gm[gi9].length&&mi9<ms9.length;mi9++)if(F.gm[gi9][mi9]&&!(ms9[mi9].anim>0))ms9[mi9].anim=0.4;}
  if(F.ey)eyes=F.ey.map(e=>({x:e[0],y:e[1],r:e[2],hp:e[3],maxHp:e[4],blink:e[5],dread:e[6]?1:0,wa:e[7],seed:e[8],cd:0,whip:(e[9]||e[10])?{x:e[9],y:e[10],t:0.18}:null})); /* the lash lands VISIBLY online */
@@ -5007,8 +5013,8 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
   if(!m9&&w9.n===undefined&&!w9.d&&w9.x===undefined)continue; /* only a truly EMPTY header waits - a newcomer with a position is born at once in humble grey (identity dresses her within ~200ms): an invisible queen that still bites and shoves was the GHOST of many sightings */
   if(w9.d){if(m9&&!m9.dead){m9.dead=true; /* a QUEEN FALLS and the meadow says so - solo had the fountain, online only whispered */
     if(!m9.ally){const own9=(m9.team===NET.you);
-     const near9=swarms[0]&&d2(m9.x,m9.y,swarms[0].x,swarms[0].y)<1400*1400;
-     const wtgt9=swarms[0]&&swarms[0].war===m9;
+     const Mq9=me(),near9=Mq9&&d2(m9.x,m9.y,Mq9.x,Mq9.y)<1400*1400;
+     const wtgt9=Mq9&&Mq9.war===m9;
      if(own9)toast('YOUR QUEEN FALLS','#ffdf7e',4);
      else if(wtgt9||near9){toast('👑 '+(m9.name||'a queen')+' FALLS','#ffdf7e',2.5);gainXP(45);} /* only falls that are YOURS to feel - and a fallen rival near you PAYS, online as anywhere */
      if(own9||near9)sfx('die');}}
@@ -5060,7 +5066,7 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
 function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in the past, between two KNOWN truths */
  tnow+=dt;
  for(const g9 of groves)if(g9._tx!=null){const k9=Math.min(1,10*dt);g9.x+=(g9._tx-g9.x)*k9;g9.y+=(g9._ty-g9.y)*k9;} /* drifting blooms glide to their truths */
- {const M0=swarms&&swarms[0]; /* THE SHROUD LIFTS ONLINE: geodeIn/geodeA lived in step() - solo-only, so entering a grotto online kept showing the OUTSIDE. Same law, run here */
+ {const M0=me(); /* THE SHROUD LIFTS ONLINE - for YOUR seat: swarms[0] meant player 2 NEVER got the cave reveal (invisible walls to be stuck on, 'ghost' boulders) */
   if(M0&&!M0.dead&&M0.team===NET.you&&!M0.ally){
    if(geodeIn){if(d2(M0.x,M0.y,geodeIn.x,geodeIn.y)>(geodeIn.r*1.07)**2)geodeIn=null;}
    else{for(const g9 of grottos){if(d2(M0.x,M0.y,g9.x,g9.y)<(g9.r*0.97)**2){geodeIn=g9;break;}}}
@@ -5095,7 +5101,7 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
  for(const mw9 of fieldMaws)if(mw9.anim>0)mw9.anim-=dt;
  for(const g9 of grottos)if(g9.maws)for(const mw9 of g9.maws)if(mw9.anim>0)mw9.anim-=dt; /* jaws re-open client-side */
  for(let i9=fx.length-1;i9>=0;i9--){const e9=fx[i9];e9.t+=dt*(QGOV.q<0.9?1.6:1);if(e9.t>=e9.life){fx.splice(i9,1);continue;}if(!e9.ring){e9.x+=e9.vx*dt;e9.y+=e9.vy*dt;e9.vx*=.9;e9.vy*=.9;}} /* fx age and die online like solo - and under the governor they burn out 1.6x faster, thinning the particle load when frames struggle */
- const MP=(swarms[0]&&swarms[0].team===NET.you&&!swarms[0].ally)?swarms[0]:null; /* IDENTITY IS SACRED: only a swarm that is PROVABLY yours is ever predicted or driven - if yours is missing a beat, you spectate that beat; you never ride a stranger */
+ const MPm=me(),MP=(MPm&&MPm.team===NET.you&&!MPm.ally)?MPm:null; /* IDENTITY IS SACRED - and me() now finds YOUR seat. The old swarms[0] check meant PLAYER 2+ GOT NO PREDICTION AT ALL: laggy queen, mushy hands, every seat but the first */
  /* THE INTERP DELAY: was a flat 125ms for every connection. That's ~2.5x the server's 50ms send interval -
     safe margin against arrival jitter, but needlessly laggy for anyone on a fast/stable link, since this
     delay's job is to smooth JITTER, not to compensate for base RTT (which it structurally can't fix - we

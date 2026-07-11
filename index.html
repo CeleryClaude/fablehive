@@ -103,6 +103,7 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
  #hud b{font-size:26px}
  #gear{top:calc(8px + env(safe-area-inset-top,0px))!important}
  #fsBtn{top:calc(8px + env(safe-area-inset-top,0px))!important}
+ #setPanel{top:calc(58px + env(safe-area-inset-top,0px))!important;max-height:calc(100vh - 76px - env(safe-area-inset-top,0px));overflow-y:auto} /* THE GEAR IS NEVER COVERED: the panel opens BELOW the 42px gear (it used to open ON it - the only way out was death), and scrolls inside itself on short glass */
  .btn{padding:13px 38px;font-size:18px}
  .btn2{padding:11px 24px;font-size:14px}
  .panel{padding-left:calc(10px + env(safe-area-inset-left,0px));padding-right:calc(10px + env(safe-area-inset-right,0px))}
@@ -132,6 +133,7 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
 <div id="gear" style="position:fixed;top:8px;right:8px;z-index:9;width:34px;height:34px;border-radius:50%;background:rgba(42,24,44,.6);border:1px solid rgba(255,220,150,.25);text-align:center;line-height:34px;cursor:pointer;display:none">⚙</div>
 <div id="fsBtn" style="position:fixed;top:8px;right:50px;z-index:9;width:34px;height:34px;border-radius:50%;background:rgba(42,24,44,.6);border:1px solid rgba(255,220,150,.25);text-align:center;line-height:34px;cursor:pointer;display:none">⛶</div>
 <div id="setPanel" style="position:fixed;top:48px;right:8px;z-index:9;background:rgba(30,16,32,.94);border:1px solid rgba(255,220,150,.35);border-radius:12px;padding:12px 14px;display:none;font-size:13px;line-height:2">
+ <div id="setX" style="float:right;cursor:pointer;opacity:.8;font-size:15px;margin:-4px -6px 0 12px;padding:2px 8px;color:#ffd75e">✕</div>
  <div>sound <input id="volS" type="range" min="0" max="100" value="100" style="vertical-align:middle;width:110px"></div>
  <div>music <input id="musS" type="range" min="0" max="100" value="100" style="vertical-align:middle;width:110px"></div>
  <div style="cursor:pointer;opacity:.9;color:#ffd75e" id="nestGo">🏠 RETIRE TO THE NEST · ends the round, banks your ✨</div>
@@ -1448,10 +1450,11 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
       else if(foe.trio!==undefined){foe.hp-=dmg;foe.lastBy=s;const ka9=Math.atan2(foe.y-u.y,foe.x-u.x);
        foe.vx+=Math.cos(ka9)*320;foe.vy+=Math.sin(ka9)*320;} /* wasps are BATTED out of the air */
       else if(foe.blink!==undefined){foe.hp-=dmg;} /* and the EYE is cut */
+      else if(foe.seg!==undefined){foe.hp-=dmg;foe.flash=.1;foe.prov=4;foe.lastBy=s;} /* a WORM is not a soldier: it dies in wormTick, in war coin. Routing it through killUnit was THE CRASH-LOOP - with no war and no tgtS the swarm was null, s.war threw, the whole server died and systemd's revival read as 'updates that are not updates' */
       else{
        if(foe.braced&&u.role!=='titan')dmg*=0.7; /* the shield-line holds - but titans CRUSH walls */
        foe.hp-=dmg;foe.flash=.12;foe.slow=0.4;
-       if(foe.hp<=0){killUnit(u.tgtS||war,foe,s);if(vm>240)addP(u.x,u.y,u.col,5,150);}
+       if(foe.hp<=0){killUnit(foe._sw||u.tgtS||war,foe,s);if(vm>240)addP(u.x,u.y,u.col,5,150);} /* the TRUE owner first: _sw is stamped by the grid every tick - tgtS/war can be null or point at the WRONG court (a silent unkillable) */
       }
       }addSpark(u.x,u.y,2);if(s===M||war===M)sfx('hit');
       const vv=Math.hypot(u.vx,u.vy)||1;u.vx+=u.vx/vv*70;u.vy+=u.vy/vv*70;
@@ -2297,6 +2300,7 @@ function dropAt(x,y,amt,t,war){ /* war=1 marks DEATH ENERGY: kill loot ignores t
  drops.push({x:clamp(x,30,WORLD.w-30),y:clamp(y,30,WORLD.h-30),amt,t:t||22,war:war?1:0});
 }
 function killUnit(s,u,by){
+ if(!s||!s.units){s=u&&u._sw;if(!s||!s.units)return;} /* A NULL SWARM MUST NEVER KILL THE MEADOW: resolve the true owner from the grid stamp or decline the kill - this one line ends the Jul 11 crash-loop family for good */
  if(s.war)s.warLoss=(s.warLoss||0)+1;
  const i=s.units.indexOf(u);if(i<0)return;
  s.units.splice(i,1);u.slain=true;calcR(s);
@@ -2884,6 +2888,8 @@ document.getElementById('backBtn').onclick=()=>{document.getElementById('home').
 {const gearEl=document.getElementById('gear'),sp=document.getElementById('setPanel');
  if(gearEl&&gearEl.addEventListener){
   gearEl.addEventListener('pointerdown',e=>{e.preventDefault();sp.style.display=sp.style.display==='none'?'block':'none';});
+  const sx9=document.getElementById('setX'); /* the ✕ is WIRED in the same breath it is born - the r49 NEST ✕ taught us what an unwired ✕ costs */
+  if(sx9&&sx9.addEventListener)sx9.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();sp.style.display='none';});
   const vs=document.getElementById('volS'),ms=document.getElementById('musS');
   if(vs&&vs.addEventListener)vs.addEventListener('input',()=>{volMul=vs.value/100;});
   if(ms&&ms.addEventListener)ms.addEventListener('input',()=>{musMul=ms.value/100;if(musGain)musGain.gain.value=0.42*musMul;});

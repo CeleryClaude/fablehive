@@ -90,6 +90,11 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
  html.mob .ab span,.ab span{font-size:11.5px}
  html.mob .ab small,.ab small{font-size:8.5px}
  html.mob #bar,#bar{bottom:calc(6px + env(safe-area-inset-bottom,0px) + var(--vvlift,0px))}
+ @media (max-width:560px) and (orientation:portrait){
+  html.mob #bar,#bar{left:4px;right:4px;flex-wrap:wrap;overflow-x:hidden;overflow-y:visible;justify-content:center;row-gap:4px;padding:0 2px}
+  html.mob .ab,.ab{min-width:60px;flex:0 1 auto}
+  html.mob #tip,#tip{bottom:calc(128px + env(safe-area-inset-bottom,0px) + var(--vvlift,0px))}
+ } /* THE STACK: on a narrow upright phone the buttons wrap into two honest rows - sliding hid half the court */
  html.mob #tip,#tip{bottom:calc(76px + env(safe-area-inset-bottom,0px) + var(--vvlift,0px))}
  #gear{width:42px!important;height:42px!important;line-height:42px!important;font-size:17px}
  #fsBtn{width:42px!important;height:42px!important;line-height:42px!important;font-size:17px;right:58px!important}
@@ -131,8 +136,16 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
  <div>music <input id="musS" type="range" min="0" max="100" value="100" style="vertical-align:middle;width:110px"></div>
  <div style="cursor:pointer;opacity:.9;color:#ffd75e" id="nestGo">🏠 RETIRE TO THE NEST · ends the round, banks your ✨</div>
  <div id="perfLine" style="opacity:.6;font-size:11px">sim –ms · draw –ms</div>
- <div style="font-size:11px;opacity:.9;border-top:1px solid #ffffff22;margin-top:4px;padding-top:6px">hive code: <b id="hiveCode" style="letter-spacing:1px">-</b><br><span style="opacity:.6;font-size:10px">same code on another device = same hive</span></div>
+ <div id="idTog" style="cursor:pointer;color:#ffd75e;font-size:11.5px;margin-top:4px;border-top:1px solid #ffffff22;padding-top:6px;letter-spacing:1px">🗝 HIVE &amp; HELP <span id="idArr">▸</span></div>
+ <div id="idPanel" style="display:none">
+ <div style="font-size:11px;opacity:.9;margin-top:2px">hive code: <b id="hiveCode" style="letter-spacing:1px">-</b><br><span style="opacity:.6;font-size:10px">same code on another device = same hive</span></div>
  <div><input id="hiveIn" maxlength="12" placeholder="enter a hive code" style="width:120px;padding:4px 8px;border-radius:8px;border:1px solid #ffd75e55;background:rgba(30,16,30,.85);color:#fff2dc;font-size:11px;outline:none"> <button class="btn2" id="hiveGo" style="padding:5px 12px;font-size:11px;margin:0">ADOPT</button></div>
+ <div style="font-size:11px;opacity:.9;border-top:1px solid #ffffff22;margin-top:4px;padding-top:6px">name + word <span style="opacity:.55;font-size:10px">(sign in anywhere · NO recovery yet, write it down)</span></div>
+ <div><input id="nwUser" maxlength="16" placeholder="name" autocomplete="off" style="width:86px;padding:4px 8px;border-radius:8px;border:1px solid #ffd75e55;background:rgba(30,16,30,.85);color:#fff2dc;font-size:11px;outline:none"> <input id="nwPass" maxlength="32" type="password" placeholder="word" style="width:86px;padding:4px 8px;border-radius:8px;border:1px solid #ffd75e55;background:rgba(30,16,30,.85);color:#fff2dc;font-size:11px;outline:none"></div>
+ <div style="margin-top:4px"><button class="btn2" id="nwClaim" style="padding:5px 10px;font-size:10.5px;margin:0">CLAIM THIS HIVE</button> <button class="btn2" id="nwIn" style="padding:5px 10px;font-size:10.5px;margin:0">SIGN IN</button></div>
+ <div style="font-size:11px;opacity:.9;border-top:1px solid #ffffff22;margin-top:4px;padding-top:6px">trouble? <span style="opacity:.55;font-size:10px">the keeper answers personally</span></div>
+ <div><input id="supMsg" maxlength="200" placeholder="what happened" style="width:120px;padding:4px 8px;border-radius:8px;border:1px solid #ffd75e55;background:rgba(30,16,30,.85);color:#fff2dc;font-size:11px;outline:none"> <input id="supCon" maxlength="40" placeholder="phone / contact" style="width:86px;padding:4px 8px;border-radius:8px;border:1px solid #ffd75e55;background:rgba(30,16,30,.85);color:#fff2dc;font-size:11px;outline:none"> <button class="btn2" id="supGo" style="padding:5px 10px;font-size:10.5px;margin:0">SEND</button></div>
+ </div>
 </div>
 <input id="chatIn" maxlength="80" placeholder="say... (Enter sends, Esc closes)" style="position:fixed;left:50%;bottom:84px;transform:translateX(-50%);width:300px;padding:8px 12px;border-radius:16px;border:1.5px solid #ffd75e88;background:rgba(30,16,30,.88);color:#fff2dc;font-size:14px;display:none;z-index:40;outline:none">
 <div id="start" class="panel">
@@ -2843,6 +2856,18 @@ document.getElementById('backBtn').onclick=()=>{document.getElementById('home').
    else{(de.requestFullscreen||de.webkitRequestFullscreen).call(de);
     if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{}); /* LANDSCAPE by request: fullscreen first, then the turn - platforms that refuse simply stay as they are */
    }}catch(e2){}});}
+{const it9=document.getElementById('idTog'),ip9=document.getElementById('idPanel'),ia9=document.getElementById('idArr');
+ if(it9&&ip9)tapWire(it9,()=>{const on9=ip9.style.display==='none';ip9.style.display=on9?'block':'none';if(ia9)ia9.textContent=on9?'▾':'▸';});}
+{const sm=document.getElementById('supMsg'),sc=document.getElementById('supCon'),sg=document.getElementById('supGo');
+ if(sg)tapWire(sg,()=>{try{const msg=(sm&&sm.value||'').trim();if(!msg){toast('SAY WHAT HAPPENED FIRST','#ff9a6a',2.5);return;}
+  if(typeof NET==='undefined'||!NET.on||!NET.ws||NET.ws.readyState!==1){toast('JOIN THE MEADOW FIRST','#ff9a6a',2.5);return;}
+  NET.ws.send(JSON.stringify({k:'support',msg:msg,contact:(sc&&sc.value||'')}));}catch(e){}});}
+{const nwU=document.getElementById('nwUser'),nwP=document.getElementById('nwPass'),nwC=document.getElementById('nwClaim'),nwI=document.getElementById('nwIn');
+ const nwSend=k9=>{try{const u=(nwU&&nwU.value||'').trim(),p2=(nwP&&nwP.value||'');
+  if(typeof NET==='undefined'||!NET.on||!NET.ws||NET.ws.readyState!==1){toast('JOIN THE MEADOW FIRST · names need the wire','#ff9a6a',3);return;}
+  NET.ws.send(JSON.stringify({k:k9,u:u,p:p2}));}catch(e){}};
+ if(nwC)tapWire(nwC,()=>nwSend('claim'));
+ if(nwI)tapWire(nwI,()=>nwSend('signin'));}
 {const hg=document.getElementById('hiveGo'),hi=document.getElementById('hiveIn');
  if(hg&&hi)tapWire(hg,()=>{try{const v=(hi.value||'').trim().toLowerCase();
   if(!/^[a-f0-9]{10}$/.test(v)){toast('A HIVE CODE IS 10 LETTERS AND NUMBERS','#ff9a6a',2.5);return;}
@@ -4855,7 +4880,7 @@ function draw(){
  {ctx.setTransform(1,0,0,1,0,0); /* screen furniture: wayfinder + watermark, always */
   ctx.font='bold '+(15*DPR)+'px Trebuchet MS';ctx.textAlign='right';
  { /* THE WAYFINDER: realms and landmarks only - NEVER rival positions (the tracker ban holds) */
-  const S=(MOB?92:isTouch?116:150)*DPR,mx=W-S-10*DPR,my=H-S-(MOB?76:isTouch?70:36)*DPR,k9=S/WORLD.w; /* the ONE map: RIGHT and BIGGER by decree, riding above the bar */
+  const S=(MOB?92:isTouch?116:150)*DPR,mx=W-S-10*DPR,my=H-S-(MOB?(H>W?128:76):isTouch?70:36)*DPR,k9=S/WORLD.w; /* the ONE map: RIGHT and BIGGER by decree - and above the STACKED bar on upright phones */
   const key=(grottos[0]?Math.round(grottos[0].x):0)+'x'+Math.round(S);
   if(draw._mmKey!==key){draw._mmKey=key;
    const c9=document.createElement('canvas');c9.width=c9.height=S;const g9=c9.getContext('2d');
@@ -4983,6 +5008,8 @@ const NET={on:false,ws:null,you:0,mirror:{},aimT:0,deadShown:false,rtt:0,pingT:0
    else if(m.k==='deny'){toast(m.r==='hive code'?'NO HIVE ANSWERS THAT CODE':'THE ORDER WAS REFUSED · '+(m.r||'recruit')+' (honey, caps, or a full meadow)','#ff9a6a',2.4);try{sfx('hurt');}catch(e){}}
    else if(m.k==='soul'){soulApply(m);toast('THE HIVE IS YOURS AGAIN · ✨'+(META.xp|0),'#ffd75e',4);try{sfx('gild');}catch(e){}}
    else if(m.k==='deeds')deedsRender(m);
+   else if(m.k==='supported'){toast('THE KEEPER HAS YOUR MESSAGE · you will be contacted','#9fe8c0',4);if(document.getElementById('supMsg'))document.getElementById('supMsg').value='';}
+   else if(m.k==='claimed'){toast('THE NAME IS YOURS · '+((m.u||'')+'').toUpperCase()+' · sign in anywhere with name + word','#ffd75e',5);try{sfx('gild');}catch(e){}}
    else if(m.k==='refpay'){META.xp+=2000;metaSave();toast('🔗 '+(((m.n||'A FRIEND')+'').toUpperCase())+' TOOK WING · +2000✨','#ffd75e',5);try{sfx('gild');}catch(e){}}};
   W9.onclose=()=>{const was=NET.on;NET.on=false;clearInterval(NET._pi);
    if(NET._url){ /* THE WIRE NEVER JUST DIES ANYMORE: a dropped socket (phone sleep, WiFi blink, seat reaped) quietly reweaves itself - and the rejoin brings a FRESH world init, so you can never be left playing a stale ghost meadow where buys eat honey but nothing real happens */

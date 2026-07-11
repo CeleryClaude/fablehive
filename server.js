@@ -32,6 +32,9 @@ const soulSig=id=>_cr.createHmac('sha256',SKEY).update(id).digest('hex').slice(0
 const soulMint=()=>{const id=_cr.randomBytes(9).toString('hex');SOULS[id]={xp:0,ow:[],eq:null,skin:0,name:'',mk:Date.now(),seen:Date.now()};soulDirty=1;return id;};
 const soulOf=tok=>{if(typeof tok!=='string'||tok.length>80)return null;const i=tok.indexOf('.');if(i<1)return null;const id=tok.slice(0,i);if(!/^[a-f0-9]{18}$/.test(id))return null;if(soulSig(id)!==tok.slice(i+1))return null;return SOULS[id]?id:null;};
 const soulPack=id=>{const s=SOULS[id];return {tok:id+'.'+soulSig(id),code:id.slice(0,10),meta:{xp:s.xp|0,ow:s.ow||[],eq:s.eq||null,skin:s.skin|0,name:s.name||''}};};
+const wordHash=(pw,salt)=>_cr.scryptSync(String(pw),salt,32).toString('hex');
+const userOk=u=>typeof u==='string'&&/^[a-z0-9_]{3,16}$/.test(u);
+const userFind=u=>{for(const id in SOULS)if(SOULS[id].user===u)return id;return null;};
 const soulEqOk=q=>{if(!q||typeof q!=='object'||Array.isArray(q))return null;const o={};for(const k of ['pattern','crown','trail','wings','body','tail','fleet','aura','plate','eye']){const v=q[k];if(typeof v==='string'&&v.length<=24&&/^[a-zA-Z0-9_-]+$/.test(v))o[k]=v;}return Object.keys(o).length?o:null;};
 /*
    Serves the game page over HTTP and the authoritative sim over WebSocket on the SAME port.
@@ -98,7 +101,7 @@ function start(port,htmlPath){
     stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:(()=>{const v9=DIAG.netLateMax||0;DIAG.netLateMax=0;return v9;})(),rateSkips:DIAG.rateSkips||0,
     buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
     seatNet:Object.keys(seats).map(t9=>{const w9=seats[t9],r9=(w9&&w9._rttMax||0)|0;if(w9)w9._rttMax=0;return Object.assign({t:+t9,rtt:(w9&&w9._rttS||0)|0,rttMax:r9,buf:(w9&&w9.bufferedAmount||0)|0},(w9&&w9._cli)||{});}),
-    ver:'r49-the-glass-court',souls:Object.keys(SOULS).length,
+    ver:'r50-the-name-and-the-word',souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else{res.writeHead(404);res.end('the meadow has no such door');}
  });
@@ -152,6 +155,27 @@ function start(port,htmlPath){
          for(const t9 in seats){const w0=seats[t9];if(w0&&w0._soul===rid){try{w0.send(JSON.stringify({k:'refpay',n:(S0.name||'a friend')}));}catch(e){}break;}}}}}}
      try{ws.send(JSON.stringify({k:'deeds',pct:deedPct(m.st),tops:DEEDS.tops,tot:DEEDS.tot}));}catch(e){}}}
    else if(m.k==='deeds'){try{ws.send(JSON.stringify({k:'deeds',pct:null,tops:DEEDS.tops,tot:DEEDS.tot}));}catch(e){}}
+   else if(m.k==='claim'&&ws._soul&&SOULS[ws._soul]){ /* NAME + WORD: claim THIS soul with a username and password - the human-memorable key. No email yet, so the word is UNRECOVERABLE: write it down */
+    const u=(''+(m.u||'')).toLowerCase().trim(),pw=''+(m.p||'');
+    if(!userOk(u)){try{ws.send(JSON.stringify({k:'deny',r:'name: 3-16 letters, numbers, _'}));}catch(e){}}
+    else if(pw.length<6){try{ws.send(JSON.stringify({k:'deny',r:'word: 6+ characters'}));}catch(e){}}
+    else{const holder=userFind(u);
+     if(holder&&holder!==ws._soul){try{ws.send(JSON.stringify({k:'deny',r:'name taken'}));}catch(e){}}
+     else{const S=SOULS[ws._soul];S.user=u;S.salt=_cr.randomBytes(12).toString('hex');S.wh=wordHash(pw,S.salt);soulDirty=1;
+      try{ws.send(JSON.stringify({k:'claimed',u:u}));}catch(e){}}}}
+   else if(m.k==='signin'){ws._siN=(ws._siN||0)+1; /* 5 tries a sitting */
+    const u=(''+(m.u||'')).toLowerCase().trim(),pw=''+(m.p||'');
+    if(ws._siN>5||!userOk(u)||pw.length<6){try{ws.send(JSON.stringify({k:'deny',r:'sign in'}));}catch(e){}}
+    else{const id=userFind(u);
+     if(id&&SOULS[id].wh===wordHash(pw,SOULS[id].salt)){ws._soul=id;SOULS[id].seen=Date.now();soulDirty=1;
+      try{ws.send(JSON.stringify({k:'soul',...soulPack(id)}));}catch(e){}}
+     else{try{ws.send(JSON.stringify({k:'deny',r:'sign in'}));}catch(e){}}}}
+   else if(m.k==='support'){ws._supN=(ws._supN||0)+1; /* CONTACT THE KEEPER: a message and a way back - Celery answers personally at this scale */
+    if(ws._supN<=3&&typeof m.msg==='string'&&m.msg.trim()){
+     const line=JSON.stringify({t:new Date().toISOString(),soul:ws._soul||null,code:(ws._soul||'').slice(0,10),name:(SOULS[ws._soul]&&SOULS[ws._soul].name)||'',contact:(''+(m.contact||'')).slice(0,60),msg:(''+m.msg).slice(0,400)});
+     try{_fsS.appendFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),line+'\n');}catch(e){}
+     try{ws.send(JSON.stringify({k:'supported'}));}catch(e){}}
+    else{try{ws.send(JSON.stringify({k:'deny',r:'support'}));}catch(e){}}}
    else if(m.k==='adopt'){ws._adoptN=(ws._adoptN||0)+1; /* 5 guesses per sitting - a hive code is a KEY */
     if(ws._adoptN<=5&&typeof m.code==='string'&&/^[a-f0-9]{10}$/.test(m.code.trim().toLowerCase())){
      const c=m.code.trim().toLowerCase();let hit=null;for(const id in SOULS){if(id.slice(0,10)===c){hit=id;break;}}

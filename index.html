@@ -1315,7 +1315,7 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
    for(let i2=0;i2<drops.length;i2++){const dr=drops[i2];const ddx=dr.x-s.x,ddy=dr.y-s.y;
     if(ddx*ddx+ddy*ddy<rr9)nearDr9.push(dr);}}
   for(const u of s.units){
-   if(u.flash>0)u.flash-=dt;if(u.atk>0)u.atk-=dt;if(u.slow>0)u.slow-=dt;if(u.mend>0)u.mend-=dt;
+   if(u.flash>0)u.flash-=dt;if(u.atk>0)u.atk-=dt;if(u.slow>0)u.slow-=dt;if(u.mend>0)u.mend-=dt;if(u.faceT>0)u.faceT-=dt;
    if(u.fat>0&&u.fatT<=0)u.fat=Math.max(0,u.fat-0.1*dt);
    if(u.fatT>0)u.fatT-=dt;
    let gx=null,gy=null,fast=false,fight=false;
@@ -1387,6 +1387,12 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
      for(const wp of wasps){const q=d2(u.x,u.y,wp.x,wp.y);if(q<bq9){bq9=q;foe=wp;}}
      for(const ey of eyes){const q=d2(u.x,u.y,ey.x,ey.y);if(q<bq9){bq9=q;foe=ey;}}
      for(const w9 of worms){if(w9.bur>0)continue;const q=d2(u.x,u.y,w9.x,w9.y);if(q<bq9){bq9=q;foe=w9;}}} /* SURFACED worms are fair game - the prov gate made armies look pacifist the instant the queen kited away */
+    if(!foe&&u.role==='armourer'){let bq8=1e9; /* THE SHIELD OATH: anchors were never invited against the wild at all ("armourers ignore worms and certain mobs"). They answer now - but as BODYGUARDS: only a threat pressing THE QUEEN, or one already at the anchor's own reach, is answered. Hunters they are not */
+     const nearQ8=(s.R+250)*(s.R+250);
+     const scan8=t8=>{const qq8=d2(t8.x,t8.y,s.x,s.y),qa8=d2(t8.x,t8.y,u.x,u.y);if((qq8<nearQ8||qa8<170*170)&&qa8<bq8){bq8=qa8;foe=t8;}};
+     for(const wp of wasps)scan8(wp);
+     for(const ey of eyes)scan8(ey);
+     for(const w9 of worms){if(w9.bur>0)continue;scan8(w9);}}
     if(!foe&&((u.role==='lancer'&&u._fi%5<3)||(u.role==='spitter'&&u._fi%3===0))){ /* FREEBLADES: lancers hunt freely (~60%), spitters a third - war or no war */
      let bs2=260*260,bswm=null;const myGr9=grottoOf(s.x,s.y);
      gridNear(u.x,u.y,260,eu=>{const es=eu._sw;
@@ -1417,10 +1423,17 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
       if(u.atk<=0&&fd<240){
        u.atk=1.6;
        const aa9=Math.atan2(foe.y-u.y,foe.x-u.x)+rand(-0.05,0.05); /* a hand looses it, not a laser */
+       u.faceA=aa9;u.faceT=0.55; /* she LOOKS where she looses - one eased breath (the painter's smooth turn, never a snap), then the wheel reclaims her gaze */
        if(sim)shots.push({x:u.x,y:u.y,vx:Math.cos(aa9)*290,vy:Math.sin(aa9)*290,t:2.6,team:s.team,by:s,dmg:u.dmg,col:'#8fe0c0'});
        if(fd>150){const sd9=(u._fi%2?1:-1);u.vx+=-Math.sin(aa9)*sd9*200;u.vy+=Math.cos(aa9)*sd9*200;} /* loose, then WHEEL - only with room to dance */
        if(near(s))sfx('spit');
       }
+     }
+     if(u.role==='armourer'&&foe.units===undefined){ /* THE OATH KEPT: even files INTERPOSE - the point on the queen-to-threat line, backs against her crown - odd files are the WARDENS (never more than half) who may step out and stick the attacker so the tar hauls it. A warden past the leash abandons the chase and returns to the line. And an oath-bound anchor still FINISHES what stands at her doorstep: the post holds her only while the threat is out of reach - she strikes what comes into range, she never hunts */
+      const ta8=Math.atan2(foe.y-s.y,foe.x-s.x);
+      if((u._fi||0)%2===0){if(fd2>120*120){const ir8=Math.max(s.R*0.3+10,12+queenStage(s)*3+u.r+8);gx=s.x+Math.cos(ta8)*ir8;gy=s.y+Math.sin(ta8)*ir8;}} /* the post holds her only beyond a step-and-strike (120px, the same close-quarters line the old wall used) - inside it she closes and TRADES, exactly as before the oath */
+      else if(d2(foe.x,foe.y,s.x,s.y)>(s.R+300)*(s.R+300)){const ir8=s.R*0.5+40;gx=s.x+Math.cos(ta8)*ir8;gy=s.y+Math.sin(ta8)*ir8;}
+      u.faceA=Math.atan2(foe.y-u.y,foe.x-u.x);u.faceT=0.5; /* face the closest threat, always */
      }
      if(u.role==='titan'&&u.sig<=0){ /* SEISMIC SLAM */
       let hitN=0;
@@ -3983,7 +3996,7 @@ function drawUnit(s,u,LOD){
   ctx.beginPath();ctx.arc(u.x,u.y,rL,0,TAU);ctx.fill();
   return;}
  const vm=Math.hypot(u.vx,u.vy)||1;
- {const want=vm>38?Math.atan2(u.vy,u.vx):Math.atan2(u.y-s.y,u.x-s.x); /* still = a SENTRY faces outward */
+ {const want=(u.faceT>0&&u.faceA!=null)?u.faceA:vm>38?Math.atan2(u.vy,u.vx):Math.atan2(u.y-s.y,u.x-s.x); /* AIMED beats moving: a unit that just loosed or squared up FACES its mark for a breath - through the same eased turn, never a snap - then the wheel or the sentry post reclaims her */
   let d9=want-(u.fa===undefined?want:u.fa);
   while(d9>Math.PI)d9-=TAU;while(d9<-Math.PI)d9+=TAU;
   u.fa=(u.fa===undefined?want:u.fa+d9*0.12);}
@@ -5159,7 +5172,14 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
     if(fresh9&&typeof addRing==='function')addRing(u.x,u.y,R9.col,20);} /* the recruit POPS the moment truth delivers her - the buy-click ring was the promise, this is the arrival */
    {const cb9=t9[6]||0,hpd8=(u.hp!=null&&t9[3]<u.hp-0.4); /* a hit is an hp DROP (bit as backup) - and an attacker KICKS forward as the blow lands. Nips and lunges, not mush */
     if(u.load!=null&&t9[4]>u.load+0.4)u._sipT=0.6; /* load rising = she is DRINKING: track truth hard for a beat so the sip-dance survives the smoothing */
-    if((cb9&1)&&!(u.atk>0)){u.atk=0.3;const vv8=Math.hypot(u.vx||0,u.vy||0);if(vv8>40){u.x+=(u.vx/vv8)*7;u.y+=(u.vy/vv8)*7;}}
+    if((cb9&1)&&!(u.atk>0)){u.atk=0.3;const vv8=Math.hypot(u.vx||0,u.vy||0);if(vv8>40){u.x+=(u.vx/vv8)*7;u.y+=(u.vy/vv8)*7;}
+     if(u.role==='spitter'||u.role==='armourer'){let bf8=280*280,fx8=null,fy8=null; /* the wire carries no aim - so on the strike-pulse the client looks for the nearest tale to face (worms, wasps, eyes, rival queens), cost paid only on the pulse edge */
+      const look8=(x8,y8)=>{const q8=(x8-u.x)*(x8-u.x)+(y8-u.y)*(y8-u.y);if(q8<bf8){bf8=q8;fx8=x8;fy8=y8;}};
+      for(const w8 of worms){if(!(w8.bur>0))look8(w8.x,w8.y);}
+      for(const wp8 of wasps)look8(wp8.x,wp8.y);
+      for(const ey8 of eyes)look8(ey8.x,ey8.y);
+      for(const id8 in NET.mirror){const m8=NET.mirror[id8];if(m8&&!m8.dead&&m8.team!==s2.team)look8(m8.x,m8.y);}
+      if(fx8!=null){u.faceA=Math.atan2(fy8-u.y,fx8-u.x);u.faceT=0.5;}}}
     if((hpd8||(cb9&2))&&!(u.flash>0)){u.flash=0.14;if(hpd8&&fx.length<400)addP(t9[0],t9[1],'#ffe9c9',2,80);}}
    u.tx=t9[0];u.ty=t9[1];u.hp=t9[3];u.load=t9[4];u.slot=j;u._fi=j;u._gi=j;
    nu9.push(u);nb9.set(uid,u);}
@@ -5292,7 +5312,7 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
     NET._foy=(NET._foy==null||!isFinite(NET._foy)?roy:NET._foy+(roy-NET._foy)*Math.min(1,12*dt));
     OX=NET._fox;OY=NET._foy;NET._sqx=sqx;NET._sqy=sqy;}
    for(let j=0;j<s2.units.length;j++){const u=s2.units[j];
-    if(u.atk>0)u.atk-=dt;if(u.flash>0)u.flash-=dt;if(u.mend>0)u.mend-=dt;if(u.slow>0)u.slow-=dt;if(u._sipT>0)u._sipT-=dt; /* the client decays what the wire arms - no brain needed to ANIMATE combat */
+    if(u.atk>0)u.atk-=dt;if(u.flash>0)u.flash-=dt;if(u.mend>0)u.mend-=dt;if(u.slow>0)u.slow-=dt;if(u._sipT>0)u._sipT-=dt;if(u.faceT>0)u.faceT-=dt; /* the client decays what the wire arms - no brain needed to ANIMATE combat */
     u.braced=(u.role==='armourer')||(u.role==='soldier'&&Math.hypot(u.x-s2.x,u.y-s2.y)<s2.R*1.3); /* the BULWARK stands online: braced was computed only by the solo brain, so armourers LOOKED like naked beetles while invisibly tarring foes - same law as solo, run client-side */
     if(!isFinite(u.x)||!isFinite(u.y)){u.x=isFinite(u.tx)?u.tx:s2.x;u.y=isFinite(u.ty)?u.ty:s2.y;u.vx=0;u.vy=0;} /* NaN never keeps a soul: any poisoned body snaps back to its last true position and lives again */
     const tA=uA&&uA.get(u.uid),tB=uB&&uB.get(u.uid);

@@ -138,12 +138,9 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
  <div>music <input id="musS" type="range" min="0" max="100" value="100" style="vertical-align:middle;width:110px"></div>
  <div style="cursor:pointer;opacity:.9;color:#ffd75e" id="nestGo">🏠 RETIRE TO THE NEST · ends the round, banks your ✨</div>
  <div id="perfLine" style="opacity:.6;font-size:11px">sim –ms · draw –ms</div>
- <div id="idTog" style="cursor:pointer;color:#ffd75e;font-size:11.5px;margin-top:4px;border-top:1px solid #ffffff22;padding-top:6px;letter-spacing:1px">🛟 GET HELP <span style="opacity:.55;font-size:9.5px">· your hive code lives here</span> <span id="idArr">▸</span></div>
+ <div id="idTog" style="cursor:pointer;color:#ffd75e;font-size:11.5px;margin-top:4px;border-top:1px solid #ffffff22;padding-top:6px;letter-spacing:1px">🛟 GET HELP <span id="idArr">▸</span></div>
  <div id="idPanel" style="display:none">
- <div style="font-size:11px;opacity:.9;margin-top:2px">hive code: <b id="hiveCode" style="letter-spacing:1px">-</b><br><span style="opacity:.6;font-size:10px">same code on another device = same hive</span></div>
- <div><input id="hiveIn" maxlength="12" placeholder="enter a hive code" style="width:120px;padding:4px 8px;border-radius:8px;border:1px solid #ffd75e55;background:rgba(30,16,30,.85);color:#fff2dc;font-size:11px;outline:none"> <button class="btn2" id="hiveGo" style="padding:5px 12px;font-size:11px;margin:0">ADOPT</button></div>
- <div style="font-size:10.5px;opacity:.6;border-top:1px solid #ffffff22;margin-top:4px;padding-top:6px">sign in lives on the HOME screen now, by decree</div>
- <div style="font-size:11px;opacity:.9;border-top:1px solid #ffffff22;margin-top:4px;padding-top:6px">trouble? <span style="opacity:.55;font-size:10px">the keeper answers personally</span></div>
+ <div style="font-size:11px;opacity:.9;margin-top:2px">trouble? <span style="opacity:.55;font-size:10px">the keeper answers personally</span></div>
  <div><input id="supMsg" maxlength="200" placeholder="what happened" style="width:120px;padding:4px 8px;border-radius:8px;border:1px solid #ffd75e55;background:rgba(30,16,30,.85);color:#fff2dc;font-size:11px;outline:none"> <input id="supCon" maxlength="40" placeholder="phone / contact" style="width:86px;padding:4px 8px;border-radius:8px;border:1px solid #ffd75e55;background:rgba(30,16,30,.85);color:#fff2dc;font-size:11px;outline:none"> <button class="btn2" id="supGo" style="padding:5px 10px;font-size:10.5px;margin:0">SEND</button></div>
  </div>
 </div>
@@ -156,11 +153,11 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
  <button class="btn" id="go">RISE</button>
  <button class="btn2" id="nestBtn">THE NEST · customise</button>
  <button class="btn2" id="shareBtn" style="padding:7px 20px;font-size:12.5px;opacity:.85;margin-top:6px">🤝 REFER A FRIEND <span style="opacity:.7;font-size:10.5px">· they truly fly 3+ min → +2000✨ · the meadow checks</span></button>
- <div id="signTog" style="cursor:pointer;color:#ffd75e;font-size:12px;margin-top:8px;letter-spacing:1px">🗝 SIGN IN · SAVE YOUR HIVE <span id="signArr">▸</span></div>
+ <div id="signTog" style="cursor:pointer;color:#ffd75e;font-size:12px;margin-top:8px;letter-spacing:1px">🗝 SIGN IN <span id="signArr">▸</span></div>
  <div id="signRow" style="display:none;font-size:11.5px">
-  <div style="opacity:.6;font-size:10.5px;margin:2px 0 4px">one name + one word, works on any device · no recovery yet, write it down</div>
-  <input id="nwUser" maxlength="16" placeholder="name" autocomplete="off" style="width:104px;padding:6px 10px;border-radius:8px;border:1px solid #ffd75e55;background:rgba(30,16,30,.85);color:#fff2dc;font-size:12px;outline:none"> <input id="nwPass" maxlength="32" type="password" placeholder="word" style="width:104px;padding:6px 10px;border-radius:8px;border:1px solid #ffd75e55;background:rgba(30,16,30,.85);color:#fff2dc;font-size:12px;outline:none">
-  <div style="margin-top:6px"><button class="btn2" id="nwClaim" style="padding:6px 12px;font-size:11px;margin:0">CLAIM THIS HIVE</button> <button class="btn2" id="nwIn" style="padding:6px 12px;font-size:11px;margin:0">SIGN IN</button></div>
+  <div style="opacity:.6;font-size:10.5px;margin:2px 0 4px">one name + one password · works on any device · a new name saves itself · no recovery yet, write it down</div>
+  <input id="nwUser" maxlength="16" placeholder="name" autocomplete="off" style="width:104px;padding:6px 10px;border-radius:8px;border:1px solid #ffd75e55;background:rgba(30,16,30,.85);color:#fff2dc;font-size:12px;outline:none"> <input id="nwPass" maxlength="32" type="password" placeholder="password" style="width:104px;padding:6px 10px;border-radius:8px;border:1px solid #ffd75e55;background:rgba(30,16,30,.85);color:#fff2dc;font-size:12px;outline:none">
+  <div style="margin-top:6px"><button class="btn2" id="nwIn" style="padding:6px 16px;font-size:11.5px;margin:0">SIGN IN</button></div>
  </div>
  <div id="ledgerCard" style="font-size:11.5px;opacity:.92;margin-top:8px;line-height:1.7;max-width:86vw"></div>
  <p style="font-size:12px;opacity:.5;margin-top:10px">move: WASD / drag &nbsp;·&nbsp; everything else you'll learn as you fly</p>
@@ -199,10 +196,10 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
 <script>
 "use strict";
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
-let W=0,H=0,DPR=1;const QGOV={q:1,accT:0,accN:0,worst:0},PSTAT={sim:0,draw:0,fps:0}; /* ADAPTIVE QUALITY: when frames run long the game sheds pixels first and pride second - a 1000ms "ping" was often a 1000ms FRAME with the ping stuck behind it */
+let W=0,H=0,DPR=1;const QGOV={q:1,sharp:0,accT:0,accN:0,worst:0},PSTAT={sim:0,draw:0,fps:0}; /* ADAPTIVE QUALITY: when frames run long the game sheds pixels first and pride second - a 1000ms "ping" was often a 1000ms FRAME with the ping stuck behind it */
 let veilCv=null,veilCtx=null;
 try{veilCv=document.createElement('canvas');veilCtx=veilCv.getContext('2d');}catch(e){}
-function resize(){const tt8=('ontouchstart'in window)||((navigator&&navigator.maxTouchPoints)||0)>0;DPR=Math.min(tt8?1.75:2,window.devicePixelRatio||1)*QGOV.q; /* PHONES cap at 1.75, and the QUALITY GOVERNOR scales below that when frames run long */
+function resize(){const tt8=('ontouchstart'in window)||((navigator&&navigator.maxTouchPoints)||0)>0;const dpr8=Math.min(3,window.devicePixelRatio||1),base8=Math.min(tt8?1.75:2,dpr8);DPR=(base8+Math.max(0,dpr8-base8)*(QGOV.sharp||0))*QGOV.q; /* ADAPTIVE SHARPNESS by decree: the old cap (1.75 phone / 2 desk) is only the RESTING state - when frames run COLD the governor climbs toward the glass's TRUE pixel ratio (QGOV.sharp 0..1). Any strain sheds sharpness first and fast. Frames + ms stay king */
  W=cv.width=innerWidth*DPR;H=cv.height=innerHeight*DPR;cv.style.width=innerWidth+'px';cv.style.height=innerHeight+'px'; /* the LAYOUT viewport, full stop - the iron-viewport experiment left a dead strip on standalone glass */
  if(veilCv){veilCv.width=W;veilCv.height=H;}}
 addEventListener('resize',resize);resize();try{setTimeout(resize,350);setTimeout(resize,1300);}catch(e){} /* iOS standalone reports a SHORT innerHeight on first paint - measure again once it settles (the black hem on the Home-Screen throne) */
@@ -362,17 +359,19 @@ function flightSend(){try{if(!FLIGHT||FLIGHT.sent)return;FLIGHT.sent=true;
 function deedsRender(m9){try{window._deeds=m9;
  const L9={h:'🍯 honey banked',p:'🐝 greatest brood',qk:'👑 queens felled',bk:'💀 bosses felled',wk:'🐛 worms slain',sp:'💠 splits',m:'⏳ minutes flown'};
  if(m9.pct)deedsInto(); /* one renderer, called from BOTH sides of the race */
- try{if(typeof homeRefresh==='function')homeRefresh();}catch(e){} /* TODAY'S CROWNS retired from the home stage by decree ("buggy and crappy" - fair). The home card now tells YOUR holdings; the global TOP PLAYERS board is queued for the next server round */
+ if(m9.top)window._top=m9.top; /* the TOP PLAYERS ride the deeds message now */
+ try{if(typeof homeRefresh==='function')homeRefresh();}catch(e){}
 }catch(e){}}
 function soulQueue(){SOUL.q=true;}
 function soulPush(){ /* throttled upstream save: xp + trophies + dress - the server clamps and keeps */
  try{if(typeof NET==='undefined'||!NET.on||!NET.ws||NET.ws.readyState!==1)return;
   NET.ws.send(JSON.stringify({k:'meta',xp:META.xp|0,ow:Object.keys(META.owned||{}).slice(0,80),eq:META.eq||null,skin:META.skin|0,name:META.name||''}));SOUL.q=false;}catch(e){}}
-function soulApply(s9){try{ /* the MERGE: the richer memory wins, trophies are the union, nothing is ever lost */
+function soulApply(s9,take9){try{ /* the MERGE: the richer memory wins, trophies are the union, nothing is ever lost - unless take9 (an EXPLICIT sign-in): then the ACCOUNT wins outright - its dress, its skin, its name land on THIS device now; xp still only ever grows */
  if(!s9)return;SOUL.tok=s9.tok||SOUL.tok;SOUL.code=s9.code||SOUL.code;
  try{if(typeof localStorage!=='undefined'&&SOUL.tok)localStorage.setItem('fh_tok',SOUL.tok);}catch(e){}
  const sm=s9.meta||{};let localRicher=(META.xp|0)>(sm.xp|0);
- if((sm.xp|0)>(META.xp|0)){META.xp=sm.xp|0;if(sm.eq)META.eq=Object.assign({},META.eq,sm.eq);if(sm.skin>=0&&SKINS[sm.skin])META.skin=sm.skin|0;if(sm.name&&!META.name)META.name=sm.name;}
+ if(take9){META.xp=Math.max(META.xp|0,sm.xp|0);if(sm.eq)META.eq=Object.assign({},sm.eq);if(sm.skin>=0&&SKINS[sm.skin])META.skin=sm.skin|0;if(sm.name)META.name=sm.name;localRicher=(META.xp|0)>(sm.xp|0);}
+ else if((sm.xp|0)>(META.xp|0)){META.xp=sm.xp|0;if(sm.eq)META.eq=Object.assign({},META.eq,sm.eq);if(sm.skin>=0&&SKINS[sm.skin])META.skin=sm.skin|0;if(sm.name&&!META.name)META.name=sm.name;}
  if(Array.isArray(sm.ow))for(const o9 of sm.ow)if(o9&&!META.owned[o9])META.owned[o9]=true;
  UNLK=null;UNLKi=0; /* the herald re-reads the ledger after a merge */
  try{if(typeof localStorage!=='undefined')localStorage.setItem('brood_meta',JSON.stringify(META));}catch(e){}
@@ -2878,6 +2877,8 @@ function homeRefresh(){try{ /* the home card tells YOUR holdings - TODAY'S CROWN
  const lc9=document.getElementById('ledgerCard');if(!lc9)return;
  let h9='';if(window._bankH!=null)h9+='🍯 carried into your next flight: <b>'+(window._bankH|0)+'</b> honey<br>';
  h9+='✨ total xp on this hive: <b>'+(META.xp|0)+'</b>';
+ if(Array.isArray(window._top)&&window._top.length){h9+='<br><b style="color:#ffd75e;letter-spacing:1px">🏆 TOP PLAYERS</b><br>'; /* by decree: home only, ranks 1-10, name + total honey + total swarm kills - the community on the doorstep */
+  for(let i9=0;i9<window._top.length&&i9<10;i9++){const r9=window._top[i9];h9+=(i9+1)+'. <b>'+String(r9[0]||'a queen').replace(/[<>&]/g,'')+'</b> · 🍯 '+(r9[1]|0)+' · 👑 '+(r9[2]|0)+'<br>';}}
  lc9.innerHTML=h9;
  const ni9=document.getElementById('nameIn');if(ni9&&META.name&&!ni9.value)ni9.value=META.name;
 }catch(e){}}
@@ -2901,12 +2902,15 @@ try{homeRefresh();}catch(e){}
  if(sg)tapWire(sg,()=>{try{const msg=(sm&&sm.value||'').trim();if(!msg){toast('SAY WHAT HAPPENED FIRST','#ff9a6a',2.5);return;}
   if(typeof NET==='undefined'||!NET.on||!NET.ws||NET.ws.readyState!==1){toast('JOIN THE MEADOW FIRST','#ff9a6a',2.5);return;}
   NET.ws.send(JSON.stringify({k:'support',msg:msg,contact:(sc&&sc.value||'')}));}catch(e){}});}
-{const nwU=document.getElementById('nwUser'),nwP=document.getElementById('nwPass'),nwC=document.getElementById('nwClaim'),nwI=document.getElementById('nwIn');
- const nwSend=k9=>{try{const u=(nwU&&nwU.value||'').trim(),p2=(nwP&&nwP.value||'');
-  if(typeof NET==='undefined'||!NET.on||!NET.ws||NET.ws.readyState!==1){toast('JOIN THE MEADOW FIRST · names need the wire','#ff9a6a',3);return;}
-  NET.ws.send(JSON.stringify({k:k9,u:u,p:p2}));}catch(e){}};
- if(nwC)tapWire(nwC,()=>nwSend('claim'));
- if(nwI)tapWire(nwI,()=>nwSend('signin'));}
+{const nwU=document.getElementById('nwUser'),nwP=document.getElementById('nwPass'),nwI=document.getElementById('nwIn');
+ const nwSend=k9=>{try{const u=(nwU&&nwU.value||'').trim().toLowerCase(),p2=(nwP&&nwP.value||'');
+  if(!/^[a-z0-9_]{3,16}$/.test(u)){toast('NAME: 3-16 letters, numbers or _','#ff9a6a',3);return false;}
+  if(p2.length<6){toast('PASSWORD: 6 or more characters','#ff9a6a',3);return false;}
+  if(typeof NET==='undefined'||!NET.on||!NET.ws||NET.ws.readyState!==1){toast('STILL CONNECTING · try again in a breath','#ff9a6a',3);return false;}
+  NET.ws.send(JSON.stringify({k:k9,u:u,p:p2}));return true;}catch(e){return false;}};
+ window._nwTry=null;
+ if(nwI)tapWire(nwI,()=>{if(nwSend('signin')){window._nwTry={t:Date.now(),stage:1};toast('SIGNING IN...','#ffe9a0',1.6);}}); /* ONE button by decree: a known name signs in - a NEW name saves this hive under it in the same press (the two-button claim/sign-in confused every fresh soul) */
+ window._nwRetry=()=>{try{if(window._nwTry&&window._nwTry.stage===1){window._nwTry.stage=2;nwSend('claim');}else window._nwTry=null;}catch(e){}};}
 {const hg=document.getElementById('hiveGo'),hi=document.getElementById('hiveIn');
  if(hg&&hi)tapWire(hg,()=>{try{const v=(hi.value||'').trim().toLowerCase();
   if(!/^[a-f0-9]{10}$/.test(v)){toast('A HIVE CODE IS 10 LETTERS AND NUMBERS','#ff9a6a',2.5);return;}
@@ -5025,9 +5029,12 @@ function drawJoy(){ /* the thumb deserves an anchor: base ring at touch origin, 
 function loop(){const now=performance.now();let dt=(now-last)/1000;last=now;
  QGOV.accT+=dt;QGOV.accN++;if(dt>QGOV.worst)QGOV.worst=dt;
  if(QGOV.accT>2){const avg9=QGOV.accT/Math.max(1,QGOV.accN),q0=QGOV.q; /* the GOVERNOR judges SPIKES, never steady cadence: a browser capped at 30fps is CALM (33ms, flat) and deserves full crispness - only true struggle (sub-25fps average or >220ms hitches) sheds pixels */
+  const s0=QGOV.sharp||0;
   if((avg9>0.041||QGOV.worst>0.22)&&QGOV.q>0.5)QGOV.q=Math.max(0.5,QGOV.q-0.25);
   else if(avg9<0.036&&QGOV.worst<0.1&&QGOV.q<1)QGOV.q=Math.min(1,QGOV.q+0.125);
-  if(q0!==QGOV.q){try{resize();}catch(e){}}
+  if(avg9>0.038||QGOV.worst>0.15||QGOV.q<1)QGOV.sharp=Math.max(0,s0-0.34); /* strain sheds sharpness FIRST - three steps down for every step up */
+  else if(avg9<0.030&&QGOV.worst<0.08&&QGOV.q>=1)QGOV.sharp=Math.min(1,s0+0.1); /* only a truly cold engine earns extra pixels */
+  if(q0!==QGOV.q||s0!==(QGOV.sharp||0)){try{resize();}catch(e){}}
   QGOV.accT=0;QGOV.accN=0;QGOV.worst=0;}
  if(dt>.05)dt=.05;
  const t1=performance.now();
@@ -5057,11 +5064,17 @@ const NET={on:false,ws:null,you:0,mirror:{},aimT:0,deadShown:false,rtt:0,pingT:0
    if(m.k==='init'){NET.you=m.you;NET.on=true;NET._rt=0;netApplyWorld(m.world);renderBar();if(m.soul)soulApply(m.soul);try{NET.ws.send(JSON.stringify({k:'deeds'}));}catch(e){}toast('CONNECTED - realm '+m.you,'#9fd8ff',3);} /* refresh the bar THE MOMENT we (re)connect so tiers unlock instantly, never a stale 'at X souls' after a laggy reconnect */
    else if(m.k==='f')netApplyFrame(m);
    else if(m.k==='p')NET.rtt=Date.now()-m.t;
-   else if(m.k==='deny'){toast(m.r==='hive code'?'NO HIVE ANSWERS THAT CODE':'THE ORDER WAS REFUSED · '+(m.r||'recruit')+' (honey, caps, or a full meadow)','#ff9a6a',2.4);try{sfx('hurt');}catch(e){}}
-   else if(m.k==='soul'){soulApply(m);toast('THE HIVE IS YOURS AGAIN · ✨'+(META.xp|0),'#ffd75e',4);try{sfx('gild');}catch(e){}}
+   else if(m.k==='deny'){
+    if(m.r==='sign in'&&window._nwTry&&window._nwTry.stage===1){window._nwRetry&&window._nwRetry();} /* unknown name: the same press SAVES it as a new hive - if it is truly taken, the next deny says so */
+    else if(m.r==='name taken'){window._nwTry=null;toast('THAT NAME IS TAKEN · wrong password, or it belongs to another hive','#ff9a6a',4.5);try{sfx('hurt');}catch(e){}}
+    else if(m.r==='sign in'){window._nwTry=null;toast('SIGN IN REFUSED · check name and password','#ff9a6a',3.5);try{sfx('hurt');}catch(e){}}
+    else if(typeof m.r==='string'&&(m.r.indexOf('name:')===0||m.r.indexOf('word:')===0)){window._nwTry=null;toast(m.r.replace('word:','password:').toUpperCase(),'#ff9a6a',3.5);}
+    else{toast(m.r==='hive code'?'NO HIVE ANSWERS THAT CODE':'THE ORDER WAS REFUSED · '+(m.r||'recruit')+' (honey, caps, or a full meadow)','#ff9a6a',2.4);try{sfx('hurt');}catch(e){}}}
+   else if(m.k==='soul'){soulApply(m,true);window._nwTry=null;toast('SIGNED IN · your dress, your name, your ✨'+(META.xp|0)+' - all here now','#ffd75e',4.5);try{sfx('gild');}catch(e){}
+    try{const ni=document.getElementById('nameIn');if(ni&&META.name)ni.value=META.name;}catch(e){}try{if(typeof homeRefresh==='function')homeRefresh();}catch(e){}} /* an EXPLICIT sign-in takes the account outright, visibly, at once */
    else if(m.k==='deeds')deedsRender(m);
    else if(m.k==='supported'){toast('THE KEEPER HAS YOUR MESSAGE · you will be contacted','#9fe8c0',4);if(document.getElementById('supMsg'))document.getElementById('supMsg').value='';}
-   else if(m.k==='claimed'){toast('THE NAME IS YOURS · '+((m.u||'')+'').toUpperCase()+' · sign in anywhere with name + word','#ffd75e',5);try{sfx('gild');}catch(e){}}
+   else if(m.k==='claimed'){window._nwTry=null;toast('NEW HIVE SAVED · '+((m.u||'')+'').toUpperCase()+' · this name + password now signs in on ANY device','#ffd75e',5);try{sfx('gild');}catch(e){}try{if(typeof homeRefresh==='function')homeRefresh();}catch(e){}}
    else if(m.k==='refpay'){META.xp+=2000;metaSave();toast('🔗 '+(((m.n||'A FRIEND')+'').toUpperCase())+' TOOK WING · +2000✨','#ffd75e',5);try{sfx('gild');}catch(e){}}};
   W9.onclose=()=>{const was=NET.on;NET.on=false;clearInterval(NET._pi);
    if(NET._url){ /* THE WIRE NEVER JUST DIES ANYMORE: a dropped socket (phone sleep, WiFi blink, seat reaped) quietly reweaves itself - and the rejoin brings a FRESH world init, so you can never be left playing a stale ghost meadow where buys eat honey but nothing real happens */
@@ -5189,13 +5202,13 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
    {const cb9=t9[6]||0,hpd8=(u.hp!=null&&t9[3]<u.hp-0.4); /* a hit is an hp DROP (bit as backup) - and an attacker KICKS forward as the blow lands. Nips and lunges, not mush */
     if(u.load!=null&&t9[4]>u.load+0.4)u._sipT=0.6; /* load rising = she is DRINKING: track truth hard for a beat so the sip-dance survives the smoothing */
     if((cb9&1)&&!(u.atk>0)){u.atk=0.3;const vv8=Math.hypot(u.vx||0,u.vy||0);if(vv8>40){u.x+=(u.vx/vv8)*7;u.y+=(u.vy/vv8)*7;}
-     if(u.role==='spitter'||u.role==='armourer'){let bf8=280*280,fx8=null,fy8=null; /* the wire carries no aim - so on the strike-pulse the client looks for the nearest tale to face (worms, wasps, eyes, rival queens), cost paid only on the pulse edge */
+     try{if(u.role==='spitter'||u.role==='armourer'){let bf8=280*280,fx8=null,fy8=null; /* the wire carries no aim - so on the strike-pulse the client looks for the nearest tale to face. CONFESSION r57: this block once read ANOTHER loop's variable (s2) - the ReferenceError killed frame-apply mid-beat, so every friendly unit was reborn each beat: invisible bodies under a storm of arrival-rings (Celery's exact sighting). The scan now lives in a try: a glance may fail, the FRAME may not */
       const look8=(x8,y8)=>{const q8=(x8-u.x)*(x8-u.x)+(y8-u.y)*(y8-u.y);if(q8<bf8){bf8=q8;fx8=x8;fy8=y8;}};
       for(const w8 of worms){if(!(w8.bur>0))look8(w8.x,w8.y);}
       for(const wp8 of wasps)look8(wp8.x,wp8.y);
       for(const ey8 of eyes)look8(ey8.x,ey8.y);
-      for(const id8 in NET.mirror){const m8=NET.mirror[id8];if(m8&&!m8.dead&&m8.team!==s2.team)look8(m8.x,m8.y);}
-      if(fx8!=null){u.faceA=Math.atan2(fy8-u.y,fx8-u.x);u.faceT=0.5;}}}
+      for(const id8 in NET.mirror){const m8=NET.mirror[id8];if(m8&&!m8.dead&&m8.team!==w9.i)look8(m8.x,m8.y);}
+      if(fx8!=null){u.faceA=Math.atan2(fy8-u.y,fx8-u.x);u.faceT=0.5;}}}catch(e8){}}
     if((hpd8||(cb9&2))&&!(u.flash>0)){u.flash=0.14;if(hpd8&&fx.length<400)addP(t9[0],t9[1],'#ffe9c9',2,80);}}
    u.tx=t9[0];u.ty=t9[1];u.hp=t9[3];u.load=t9[4];u.slot=j;u._fi=j;u._gi=j;
    nu9.push(u);nb9.set(uid,u);}

@@ -21,12 +21,15 @@ function deedFlight(sid,st){ /* THE LEDGER OF DEEDS: every flight buckets into t
  for(const k in DEDGE){const v=Math.max(0,Math.min(1e7,+st[k]||0));
   let i=0;const E=DEDGE[k];while(i<E.length-1&&v>=E[i+1])i++;DEEDS.hist[k][i]++;
   const tp=DEEDS.tops[k];if(!tp||v>tp.v)DEEDS.tops[k]={v:v,n:nm};}
- if(S){S.life=S.life||{n:0,best:{}};S.life.n++;
-  for(const k in DEDGE){const v=Math.max(0,Math.min(1e7,+st[k]||0));S.life.best[k]=Math.max(S.life.best[k]||0,v);}}
+ if(S){S.life=S.life||{n:0,best:{}};S.life.n++;S.tot=S.tot||{};
+  for(const k in DEDGE){const v=Math.max(0,Math.min(1e7,+st[k]||0));S.life.best[k]=Math.max(S.life.best[k]||0,v);S.tot[k]=Math.min(1e9,(S.tot[k]||0)+v);}}
  soulDirty=1;}
 function deedPct(st){const out={};for(const k in DEDGE){const v=Math.max(0,+st[k]||0);const E=DEDGE[k],H=DEEDS.hist[k];
  let i=0;while(i<E.length-1&&v>=E[i+1])i++;let below=0,tot=0;for(let j=0;j<H.length;j++){tot+=H[j];if(j<i)below+=H[j];}
  out[k]=tot>1?Math.round(100*below/tot):50;}return out;}
+function deedTop(){const a=[];for(const id in SOULS){const s=SOULS[id],t=s.tot; /* TOP PLAYERS by decree: ranks 1-10, name, TOTAL honey banked, TOTAL queens felled - lifetime, per soul */
+ if(!t||!((t.h|0)||(t.qk|0)))continue;a.push([String(s.name||s.user||'a queen').slice(0,16),(t.h||0)|0,(t.qk||0)|0]);}
+ a.sort((x,y)=>y[1]-x[1]);return a.slice(0,10);}
 let soulDirty=0;setInterval(()=>{if(!soulDirty)return;soulDirty=0;try{_fsS.writeFileSync(SOULP,JSON.stringify({souls:SOULS,deeds:DEEDS}));}catch(e){}},4000).unref&&setInterval(()=>{},1e9);
 const soulSig=id=>_cr.createHmac('sha256',SKEY).update(id).digest('hex').slice(0,20);
 const soulMint=()=>{const id=_cr.randomBytes(9).toString('hex');SOULS[id]={xp:0,ow:[],eq:null,skin:0,name:'',mk:Date.now(),seen:Date.now()};soulDirty=1;return id;};
@@ -101,7 +104,7 @@ function start(port,htmlPath){
     stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:(()=>{const v9=DIAG.netLateMax||0;DIAG.netLateMax=0;return v9;})(),rateSkips:DIAG.rateSkips||0,
     buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
     seatNet:Object.keys(seats).map(t9=>{const w9=seats[t9],r9=(w9&&w9._rttMax||0)|0;if(w9)w9._rttMax=0;return Object.assign({t:+t9,rtt:(w9&&w9._rttS||0)|0,rttMax:r9,buf:(w9&&w9.bufferedAmount||0)|0},(w9&&w9._cli)||{});}),
-    ver:'r51-the-honest-button',souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
+    ver:'r57-the-top-players',souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else if(req.url.indexOf('/crashz')===0){let c='';try{c=_fsS.readFileSync('/opt/fablehive/crash.log','utf8').slice(-4000);}catch(e){c='(no crashes logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* the CONFESSOR reads aloud */
   else if(req.url.indexOf('/deployz')===0){let c='';try{c=_fsS.readFileSync('/var/log/fablehive-deploy.log','utf8').slice(-4000);}catch(e){c='(no deploys logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* and the deploy ledger too - 'updates without updates' becomes a lookup */
@@ -155,8 +158,8 @@ function start(port,htmlPath){
        if(rid&&rid!==ws._soul){const R0=SOULS[rid];if(R0.refDay!==deedDay()){R0.refDay=deedDay();R0.refD=0;}
         if((R0.refD||0)<5){R0.refD=(R0.refD||0)+1;R0.xp=Math.min((R0.xp|0)+2000,5e6);S0.refPaid=1;soulDirty=1;
          for(const t9 in seats){const w0=seats[t9];if(w0&&w0._soul===rid){try{w0.send(JSON.stringify({k:'refpay',n:(S0.name||'a friend')}));}catch(e){}break;}}}}}}
-     try{ws.send(JSON.stringify({k:'deeds',pct:deedPct(m.st),tops:DEEDS.tops,tot:DEEDS.tot}));}catch(e){}}}
-   else if(m.k==='deeds'){try{ws.send(JSON.stringify({k:'deeds',pct:null,tops:DEEDS.tops,tot:DEEDS.tot}));}catch(e){}}
+     try{ws.send(JSON.stringify({k:'deeds',pct:deedPct(m.st),tops:DEEDS.tops,tot:DEEDS.tot,top:deedTop()}));}catch(e){}}}
+   else if(m.k==='deeds'){try{ws.send(JSON.stringify({k:'deeds',pct:null,tops:DEEDS.tops,tot:DEEDS.tot,top:deedTop()}));}catch(e){}}
    else if(m.k==='claim'&&ws._soul&&SOULS[ws._soul]){ /* NAME + WORD: claim THIS soul with a username and password - the human-memorable key. No email yet, so the word is UNRECOVERABLE: write it down */
     const u=(''+(m.u||'')).toLowerCase().trim(),pw=''+(m.p||'');
     if(!userOk(u)){try{ws.send(JSON.stringify({k:'deny',r:'name: 3-16 letters, numbers, _'}));}catch(e){}}

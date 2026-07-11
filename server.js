@@ -14,8 +14,9 @@ let SUPK='';try{SUPK=_fsS.readFileSync(SUPKEYP,'utf8').trim();}catch(e){SUPK=_cr
 let SOULS={},DEEDS=null;
 try{const _raw=JSON.parse(_fsS.readFileSync(SOULP,'utf8'))||{};
  if(_raw&&_raw.souls){SOULS=_raw.souls||{};DEEDS=_raw.deeds||null;}else SOULS=_raw;}catch(e){SOULS={};}
-const DEDGE={h:[0,50,120,250,500,1000,2000,4000,8000,16000],p:[0,3,6,10,16,24,40,60,90,120],qk:[0,1,2,3,5,8,12],bk:[0,1,2,3,5],wk:[0,1,2,4,8,16],sp:[0,1,2,4,8],m:[0,1,2,5,10,20,40]};
+const DEDGE={h:[0,50,120,250,500,1000,2000,4000,8000,16000],p:[0,3,6,10,16,24,40,60,90,120],qk:[0,1,2,3,5,8,12],bk:[0,1,2,3,5],wk:[0,1,2,4,8,16],wl:[0,2,5,10,20,40],tf:[0,5,12,25,50,100],sp:[0,1,2,4,8],m:[0,1,2,5,10,20,40]};
 if(!DEEDS||!DEEDS.hist){DEEDS={tot:0,hist:{},tops:{},day:''};for(const k in DEDGE)DEEDS.hist[k]=DEDGE[k].map(()=>0);}
+for(const k in DEDGE)if(!DEEDS.hist[k])DEEDS.hist[k]=DEDGE[k].map(()=>0); /* r61: NEW deed keys (wl,tf) join a LIVING ledger - the old guard only rebuilt when hist was missing entirely */
 const deedDay=()=>new Date().toISOString().slice(0,10);
 function deedFlight(sid,st){ /* THE LEDGER OF DEEDS: every flight buckets into the world's histogram - percentiles, not a lone arcade number */
  if(DEEDS.day!==deedDay()){DEEDS.day=deedDay();DEEDS.tops={};}
@@ -106,7 +107,7 @@ function start(port,htmlPath){
     stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:(()=>{const v9=DIAG.netLateMax||0;DIAG.netLateMax=0;return v9;})(),rateSkips:DIAG.rateSkips||0,
     buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
     seatNet:Object.keys(seats).map(t9=>{const w9=seats[t9],r9=(w9&&w9._rttMax||0)|0;if(w9)w9._rttMax=0;return Object.assign({t:+t9,rtt:(w9&&w9._rttS||0)|0,rttMax:r9,buf:(w9&&w9.bufferedAmount||0)|0},(w9&&w9._cli)||{});}),
-    ver:'r60-the-one-name',souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
+    ver:'r61-the-kin-answer',souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else if(req.url.indexOf('/crashz')===0){let c='';try{c=_fsS.readFileSync('/opt/fablehive/crash.log','utf8').slice(-4000);}catch(e){c='(no crashes logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* the CONFESSOR reads aloud */
   else if(req.url.indexOf('/deployz')===0){let c='';try{c=_fsS.readFileSync('/var/log/fablehive-deploy.log','utf8').slice(-4000);}catch(e){c='(no deploys logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* and the deploy ledger too - 'updates without updates' becomes a lookup */

@@ -350,16 +350,16 @@ function metaSave(){try{if(typeof localStorage!=='undefined')localStorage.setIte
 /* ============ THE REMEMBERING stage 0 (client): the soul token, the merge, the hive code ============ */
 let SOUL={tok:null,code:null,pushT:0,q:false};
 let FLIGHT=null; /* THE LEDGER OF DEEDS: one flight's story in seven numbers */
-function flightStart(){FLIGHT={t0:tnow,h:0,p:0,qk:0,bk:0,wk:0,sp:0,sent:false};}
+function flightStart(){FLIGHT={t0:tnow,h:0,p:0,qk:0,bk:0,wk:0,sp:0,wl:0,tf:0,sent:false};}
 function flightStat(k9,v9){if(FLIGHT&&!FLIGHT.sent)FLIGHT[k9]=(FLIGHT[k9]||0)+(v9==null?1:v9);}
 function flightSend(){try{if(!FLIGHT||FLIGHT.sent)return;FLIGHT.sent=true;
  if(typeof NET==='undefined'||!NET.on||!NET.ws||NET.ws.readyState!==1)return;
  FLIGHT.p=Math.max(FLIGHT.p|0,(typeof peak!=='undefined'?peak:0)|0);
- NET.ws.send(JSON.stringify({k:'flight',st:{h:FLIGHT.h|0,p:FLIGHT.p|0,qk:FLIGHT.qk|0,bk:FLIGHT.bk|0,wk:FLIGHT.wk|0,sp:FLIGHT.sp|0,m:Math.max(0,Math.round((tnow-FLIGHT.t0)/6)/10)}}));}catch(e){}}
+ NET.ws.send(JSON.stringify({k:'flight',st:{h:FLIGHT.h|0,p:FLIGHT.p|0,qk:FLIGHT.qk|0,bk:FLIGHT.bk|0,wk:FLIGHT.wk|0,wl:FLIGHT.wl|0,tf:FLIGHT.tf|0,sp:FLIGHT.sp|0,m:Math.max(0,Math.round((tnow-FLIGHT.t0)/6)/10)}}));}catch(e){}}
 function dressSend(){try{if(typeof NET==='undefined'||!NET.on||!NET.ws||NET.ws.readyState!==1)return; /* MID-FLIGHT WARDROBE: colour + wardrobe used to ride the join alone - the NEST's choices reach the live queen now */
  NET.ws.send(JSON.stringify({k:'dress',c:((SKINS[META.skin]||{}).c)||0,c2:((SKINS[META.skin]||{}).c2)||0,q:META.eq||0}));}catch(e){}}
 function deedsRender(m9){try{window._deeds=m9;
- const L9={h:'🍯 honey banked',p:'🐝 greatest brood',qk:'👑 queens felled',bk:'💀 bosses felled',wk:'🐛 worms slain',sp:'💠 splits',m:'⏳ minutes flown'};
+ const L9={h:'🍯 honey banked',p:'🐝 greatest brood',qk:'👑 queens felled',bk:'💀 bosses felled',wk:'🐛 worms slain',wl:'🌿 wildlife slain',tf:'⚔ troops felled',sp:'💠 splits',m:'⏳ minutes flown'};
  if(m9.pct)deedsInto(); /* one renderer, called from BOTH sides of the race */
  if(m9.top)window._top=m9.top; /* the TOP PLAYERS ride the deeds message now */
  try{if(typeof homeRefresh==='function')homeRefresh();}catch(e){}
@@ -450,7 +450,7 @@ const ITEMS=[
  {id:'elderhorn',cat:'crown',  n:'Elder Crown', xp:-1,  d:'slay the Elder once and wear his horns forever'},
  {id:'broodcrown',cat:'crown', n:'Brood Crown', xp:-1,  d:'slay the Broodmother: six eyes keep watch from your brow'},
  {id:'waspband', cat:'crown',  n:'Waspbane Band',xp:-1, d:'break nine wasps in one life to earn their warning stripes'},
- {id:'noctis',   cat:'pattern',n:'Noctis',      xp:2400, d:'the night itself, worn - deep indigo dusted with cold stars'},
+ {id:'noctis',   cat:'pattern',n:'Noctis',      xp:2300, d:'the night itself, worn - deep indigo dusted with cold stars'},
  {id:'silkstrand',cat:'trail', n:'Silkstrand',  xp:-1,  d:'slay the Broodmother: silk follows you like memory'},
  {id:'notrail',  cat:'trail',  n:'Still Air',   xp:0,   d:'you pass unseen'},
  {id:'breeze',   cat:'trail',  n:'Breeze',      xp:130, d:'the faintest stir'},
@@ -495,7 +495,7 @@ const ITEMS=[
  {id:'horsetail',cat:'tail',   n:'Mare'+String.fromCharCode(39)+'s Tail',xp:640,d:'silk that streams as you gallop'},
  /* ANGEL · DEMON */
  {id:'angelw',   cat:'wings',  n:'Seraph',      xp:2900,royal:true,d:'feathers of soft light'},
- {id:'demonw',   cat:'wings',  n:'Bat Membrane',xp:2300,royal:true,d:'webbed, veined, unapologetic'},
+ {id:'demonw',   cat:'wings',  n:'Bat Membrane',xp:2400,royal:true,d:'webbed, veined, unapologetic'},
  {id:'imptail',  cat:'tail',   n:'Imp Spade',   xp:520, d:'it flicks when she schemes'},
  /* GLOW */
  {id:'biolume',  cat:'pattern',n:'Biolume',     xp:1500,d:'she glows in the dark, softly breathing'},
@@ -1226,16 +1226,17 @@ cv.addEventListener('touchstart',e=>{e.preventDefault();
  const t=e.changedTouches[0];
  /* tap directly on the queen = recall */
  const wx=cam.x+(t.clientX*DPR-W/2)/cam.z,wy=cam.y+(t.clientY*DPR-H/2)/cam.z;
- if(d2(wx,wy,me().x,me().y)<40*40){recallAll(0);return;}
+ if(d2(wx,wy,me().x,me().y)<40*40){act({recall:1});if(NET.on)sfx('recall');return;} /* r61: the tap rode a LOCAL recallAll(0) - hardcoded seat zero AND never wired online. Every seat's tap speaks through act() now, like the E key always did */
  input.joy={ox:t.clientX,oy:t.clientY,dx:0,dy:0,id:t.identifier};resumeAudio();},{passive:false});
 cv.addEventListener('touchmove',e=>{e.preventDefault();
  if(!input.joy)return;for(const t of e.changedTouches)if(t.identifier===input.joy.id){input.joy.dx=t.clientX-input.joy.ox;input.joy.dy=t.clientY-input.joy.oy;if(Math.hypot(input.joy.dx,input.joy.dy)>14)input.joy.moved=true;}},{passive:false});
 function tEnd(e){if(!input.joy)return;for(const t of e.changedTouches)if(t.identifier===input.joy.id){window._dragTap=!!input.joy.moved;input.joy=null;}}
 cv.addEventListener('touchend',tEnd);cv.addEventListener('touchcancel',tEnd);
 cv.addEventListener('click',e=>{const wx=cam.x+(e.clientX*DPR-W/2)/cam.z,wy=cam.y+(e.clientY*DPR-H/2)/cam.z;
- if(d2(wx,wy,me().x,me().y)<40*40)recallAll(0);});
+ if(d2(wx,wy,me().x,me().y)<40*40){act({recall:1});if(NET.on)sfx('recall');}});
 function splitToward(wx,wy){
  const M8=me();if(M8.dead)return;
+ if(NET.on){NET.cmd({split:[wx|0,wy|0]});if(M8.units.length>=4){sfx('split');addRing(wx,wy,'#ff9ad0',34);}return;} /* r61: this used to split the local MIRROR - a phantom kin the server never knew (the counter lied, the screen disagreed, the kin wiped next beat). The wire owns the split now, target and all */
  const kin=splitSwarm(M8);
  if(kin){kin.mission={x:clamp(wx,80,WORLD.w-80),y:clamp(wy,80,WORLD.h-80),t:9};
   addRing(wx,wy,'#ff9ad0',34);}
@@ -1616,7 +1617,7 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
 function wormTick(dt){ /* THE BLOOD WORMS: idle they meander and burrow; provoked they LUNGE and BITE. Corner-locked forever. Cost: 3 heads + 18 follow-constraints; prey scans are swarm-level first */
  for(let wi=worms.length-1;wi>=0;wi--){const w9=worms[wi];
   if(w9.flash>0)w9.flash-=dt;if(w9.bite>0)w9.bite-=dt;if(w9.prov>0)w9.prov-=dt;
-  if(w9.hp<=0){if(w9.lastBy&&w9.lastBy.team===0&&!w9.lastBy.ally)flightStat('wk'); /* the worm dies in WAR COIN */
+  if(w9.hp<=0){if(w9.lastBy&&w9.lastBy.team===0&&!w9.lastBy.ally){flightStat('wk');flightStat('wl');} /* the worm dies in WAR COIN - and counts among the wildlife (r61) */
    for(let k=0;k<8;k++)dropAt(w9.x+rand(-26,26),w9.y+rand(-26,26),rand(6,11),12,1);
    addP(w9.x,w9.y,'#e84848',14,190);addRing(w9.x,w9.y,'#e84848',64);if(near(w9))sfx('die');
    worms.splice(wi,1);continue;}
@@ -2178,8 +2179,9 @@ function step(dt){NPLAY=humanCount();
      if(u2.hp<=0)killUnit(s2,u2,null);break;}}
     if(lash){ey.cd=1.25;if(near(ey))sfx('hit');}}
    for(const u2 of s2.units){if(u2.dmg>0&&u2.atk<=0&&d2(u2.x,u2.y,ey.x,ey.y)<(u2.r+ey.r+8)**2){
-    u2.atk=0.9;ey.hp-=u2.dmg;addSpark(ey.x,ey.y,2);break;}}}
-  if(ey.hp<=0){for(let k=0;k<7;k++)dropAt(ey.x+rand(-16,16),ey.y+rand(-16,16),rand(5,9),12,1);
+    u2.atk=0.9;ey.hp-=u2.dmg;ey.lastBy=s2;addSpark(ey.x,ey.y,2);break;}}}
+  if(ey.hp<=0){if(ey.lastBy&&ey.lastBy.team===0&&!ey.lastBy.ally)flightStat('wl'); /* r61: the Watcher joins the wildlife ledger */
+   for(let k=0;k<7;k++)dropAt(ey.x+rand(-16,16),ey.y+rand(-16,16),rand(5,9),12,1);
    if(near(ey)){sfx('die');addRing(ey.x,ey.y,'#b89ae8',120);}addP(ey.x,ey.y,'#b89ae8',12,160);
    {const M5=me();if(M5&&!M5.dead&&d2(M5.x,M5.y,ey.x,ey.y)<900*900)gainXP(9);}
    eyes.splice(i,1);}}
@@ -2245,7 +2247,7 @@ function step(dt){NPLAY=humanCount();
    for(const u2 of s2.units){if(u2.dmg>0&&u2.atk<=0&&d2(u2.x,u2.y,wp.x,wp.y)<(u2.r+7)*(u2.r+7)){
     u2.atk=0.8;wp.hp-=u2.dmg;wp.lastBy=s2;addSpark(wp.x,wp.y,2);break;}}}
   if(wp.hp<=0){
-   if(wp.lastBy&&wp.lastBy.team===0){const M5=me();M5.waspKills=(M5.waspKills||0)+1;
+   if(wp.lastBy&&wp.lastBy.team===0){if(!wp.lastBy.ally)flightStat('wl');const M5=me();M5.waspKills=(M5.waspKills||0)+1;
     if(M5.waspKills>=9)trophy('waspband','WASPBANE · NINE BROKEN, STRIPES EARNED');}for(let k=0;k<4;k++)dropAt(wp.x+rand(-12,12),wp.y+rand(-12,12),rand(4,7),10,1);
    addP(wp.x,wp.y,'#ffd75e',8,130);if(near(wp))sfx('pop');wasps.splice(i,1);}}
  if(wasps.length===0&&swarms.some(s2=>s2.bot&&!s2.ally&&!s2.dead)){waspT-=dt; /* the wild returns only where the wild lives */
@@ -2324,7 +2326,7 @@ function killUnit(s,u,by){
   const nn9=Math.max(2,Math.min(6,Math.round(spill/28)));
   for(let k9=0;k9<nn9;k9++)dropAt(u.x+rand(-14,14),u.y+rand(-14,14),spill/nn9,24,1);}
  addSpark(u.x,u.y,3);addP(u.x,u.y,u.col,3,90);
- if(by&&by.team===0)gainXP(1);
+ if(by&&by.team===0){gainXP(1);if(!by.ally&&s.team!==0)flightStat('tf');} /* r61: enemy troops felled - solo attribution, same creed as qk */
  /* morale */
  s.lost++;s.lostT=16;
  /* ROUT/panic REMOVED: ranks never break - troops keep protecting, walling and hunting */
@@ -2718,7 +2720,7 @@ function showOver(){
  metaSave();
 }
 function deedsInto(){try{const m9=window._deeds;if(!m9||!m9.pct)return;
- const L9={h:'🍯 honey banked',p:'🐝 greatest brood',qk:'👑 queens felled',bk:'💀 bosses felled',wk:'🐛 worms slain',sp:'💠 splits',m:'⏳ minutes flown'};
+ const L9={h:'🍯 honey banked',p:'🐝 greatest brood',qk:'👑 queens felled',bk:'💀 bosses felled',wk:'🐛 worms slain',wl:'🌿 wildlife slain',tf:'⚔ troops felled',sp:'💠 splits',m:'⏳ minutes flown'};
  let h9='<br><b style="color:#ffd75e;letter-spacing:1px">THE LEDGER OF DEEDS</b>'+((m9.tot|0)<20?' <span style="opacity:.5;font-size:10.5px">(early days: '+(m9.tot|0)+' flights measured)</span>':'')+'<br><span style="font-size:12.5px;line-height:1.75">';
  for(const k9 in m9.pct){if(!(k9 in L9))continue;h9+=L9[k9]+' · beat <b style="color:#ffe9a0">'+m9.pct[k9]+'%</b> of flights<br>';}
  h9+='</span>';const ov9=document.getElementById('overTxt');
@@ -3981,7 +3983,7 @@ function drawUnitLocal(g,s,u,a,vm,col,fleetId){ /* the unit's LOCAL-frame art (s
  } else { /* TITAN: a walking monument - dark mass, molten core, horns and tusks */
   g.fillStyle=u.flash>0?'#fff':shade(col,-0.45); /* dark hide */
   g.beginPath();for(let k=0;k<6;k++){const aa=k/6*TAU+Math.PI/6;k?g.lineTo(Math.cos(aa)*u.r,Math.sin(aa)*u.r):g.moveTo(Math.cos(aa)*u.r,Math.sin(aa)*u.r);}g.closePath();g.fill();
-  g.lineWidth=2.6;g.strokeStyle='#8a5a3a';g.stroke();
+  g.lineWidth=2;g.strokeStyle='rgba(26,13,5,0.95)';g.stroke(); /* r61 de-haze: the rim was mid-brown mush (#8a5a3a @2.6) - a crisp near-black edge grounds the monument at phone scale */
   g.fillStyle=col; /* horn spikes on every shoulder */
   for(let k=0;k<6;k++){const aa=k/6*TAU+Math.PI/6;
    const bx=Math.cos(aa)*u.r,by=Math.sin(aa)*u.r;
@@ -3992,8 +3994,8 @@ function drawUnitLocal(g,s,u,a,vm,col,fleetId){ /* the unit's LOCAL-frame art (s
   g.beginPath();g.moveTo(u.r*0.7,-u.r*0.4);g.quadraticCurveTo(u.r*1.5,-u.r*0.5,u.r*1.6,-u.r*0.1);g.lineTo(u.r*0.75,-u.r*0.15);g.closePath();g.fill();
   g.beginPath();g.moveTo(u.r*0.7,u.r*0.4);g.quadraticCurveTo(u.r*1.5,u.r*0.5,u.r*1.6,u.r*0.1);g.lineTo(u.r*0.75,u.r*0.15);g.closePath();g.fill();
   const chg=1-clamp(u.sig/5,0,1); /* the molten core brightens toward the SLAM */
-  g.fillStyle='rgba(255,'+Math.round(140+80*chg)+','+Math.round(50+40*chg)+','+(0.5+0.45*chg)+')';
-  g.beginPath();g.arc(0,0,u.r*(0.34+0.1*chg)+Math.sin(tnow*5)*1.2,0,TAU);g.fill();
+  g.fillStyle='rgba(255,'+Math.round(140+80*chg)+','+Math.round(50+40*chg)+','+(0.3+0.27*chg)+')';
+  g.beginPath();g.arc(0,0,u.r*(0.22+0.07*chg)+Math.sin(tnow*5)*0.8,0,TAU);g.fill(); /* r61 de-haze: the molten disc WAS the haze (r 0.34+0.1chg, a 0.5+0.45chg) - now a tight ember, radius -35%, alpha -40%; the SLAM charge still brightens it */
   g.fillStyle='rgba(255,240,200,'+(0.25+0.5*chg)+')';
   g.beginPath();g.arc(0,0,u.r*0.16,0,TAU);g.fill();
   g.fillStyle='#ffcf3a'; /* eyes */
@@ -5014,7 +5016,7 @@ function hud(){
  else if((M.spdNow||0)>170)st='<span style="color:#ffe9a0">flying</span>';
  else st='<span style="opacity:.55">gathering</span>';
  if(NET&&NET.on&&NET.rtt){const pc9=NET.rtt<70?'#9fe8a0':NET.rtt<160?'#ffd75e':'#ff8f7a';st+=' <span style="opacity:.75;color:'+pc9+'">· '+NET.rtt+'ms</span>';} /* ping wears its colour: green good, amber busy, red = the server hiccupped (not the game) */
- const allies=teamSwarms(0).filter(s=>s.ally).length;
+ const allies=teamSwarms(M.team).filter(s=>s.ally).length; /* r61: seat-zero relic - every seat past the first read a STRANGER's kin count */
  hud._dispH=hud._dispH===undefined?M.honey:hud._dispH+(M.honey-hud._dispH)*0.22; /* the odometer rolls */
  const shown=Math.floor(hud._dispH);
  const hb=Math.floor(M.honey)-(hud._lastH||0)>=15?' class="bnc"':'';hud._lastH=Math.floor(M.honey);
@@ -5233,7 +5235,10 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
    u.tx=t9[0];u.ty=t9[1];u.hp=t9[3];u.load=t9[4];u.slot=j;u._fi=j;u._gi=j;
    nu9.push(u);nb9.set(uid,u);}
   if(old9.size&&!m9.dead){let dp9=0; /* THE FALLEN GET A DEATH: a soul on the wire last frame and gone this frame DIED - ring + sparks at her last position instead of silent deletion ("troops dying for no reason and disappearing") */
-   old9.forEach((ou9,ouid9)=>{if(dp9>=6||nb9.has(ouid9))return;dp9++;
+   const Mq8=me();
+   old9.forEach((ou9,ouid9)=>{if(nb9.has(ouid9))return;
+    if(Mq8&&!Mq8.dead&&Mq8.war===m9&&m9.team!==NET.you)flightStat('tf'); /* r61: troops felled online - observed as YOUR war-target's falls (the qk pattern at unit scale) */
+    if(dp9>=6)return;dp9++;
     if(dp9===1&&w9.i===NET.you&&!w9.a)sfx('pop'); /* your fallen sound their last */
     if(fx.length<400){addRing(ou9.x,ou9.y,ou9.col||'#ffd7a8',Math.max(14,(ou9.r||6)*2.4));addP(ou9.x,ou9.y,ou9.col||'#ffd7a8',4,110);}});}
   m9.units=nu9;m9.uById=nb9;}
@@ -5461,7 +5466,7 @@ function applyInput(team,cmd){ /* THE HAND: remote players ride the same reins t
  s.bot=false;
  if(cmd.aim)s.forceAim={x:+cmd.aim[0]||0,y:+cmd.aim[1]||0,drive:cmd.aim[2]!==false};
  if(cmd.buy&&ROLES[cmd.buy])buy(s,cmd.buy);
- if(cmd.split)splitSwarm(s);
+ if(cmd.split){const k9=splitSwarm(s);if(k9&&Array.isArray(cmd.split))k9.mission={x:clamp(+cmd.split[0]||0,80,WORLD.w-80),y:clamp(+cmd.split[1]||0,80,WORLD.h-80),t:9};} /* r61: a split may carry its TARGET - double-tap kin fly where the finger pointed, online too */
  if(cmd.recall)recallAll(team);
  if(cmd.say)s.say=(''+cmd.say).slice(0,80),s.sayT=8;
  return true;}

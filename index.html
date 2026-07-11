@@ -138,13 +138,11 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
  <div>music <input id="musS" type="range" min="0" max="100" value="100" style="vertical-align:middle;width:110px"></div>
  <div style="cursor:pointer;opacity:.9;color:#ffd75e" id="nestGo">🏠 RETIRE TO THE NEST · ends the round, banks your ✨</div>
  <div id="perfLine" style="opacity:.6;font-size:11px">sim –ms · draw –ms</div>
- <div id="idTog" style="cursor:pointer;color:#ffd75e;font-size:11.5px;margin-top:4px;border-top:1px solid #ffffff22;padding-top:6px;letter-spacing:1px">🗝 HIVE &amp; HELP <span id="idArr">▸</span></div>
+ <div id="idTog" style="cursor:pointer;color:#ffd75e;font-size:11.5px;margin-top:4px;border-top:1px solid #ffffff22;padding-top:6px;letter-spacing:1px">🛟 GET HELP <span style="opacity:.55;font-size:9.5px">· your hive code lives here</span> <span id="idArr">▸</span></div>
  <div id="idPanel" style="display:none">
  <div style="font-size:11px;opacity:.9;margin-top:2px">hive code: <b id="hiveCode" style="letter-spacing:1px">-</b><br><span style="opacity:.6;font-size:10px">same code on another device = same hive</span></div>
  <div><input id="hiveIn" maxlength="12" placeholder="enter a hive code" style="width:120px;padding:4px 8px;border-radius:8px;border:1px solid #ffd75e55;background:rgba(30,16,30,.85);color:#fff2dc;font-size:11px;outline:none"> <button class="btn2" id="hiveGo" style="padding:5px 12px;font-size:11px;margin:0">ADOPT</button></div>
- <div style="font-size:11px;opacity:.9;border-top:1px solid #ffffff22;margin-top:4px;padding-top:6px">name + word <span style="opacity:.55;font-size:10px">(sign in anywhere · NO recovery yet, write it down)</span></div>
- <div><input id="nwUser" maxlength="16" placeholder="name" autocomplete="off" style="width:86px;padding:4px 8px;border-radius:8px;border:1px solid #ffd75e55;background:rgba(30,16,30,.85);color:#fff2dc;font-size:11px;outline:none"> <input id="nwPass" maxlength="32" type="password" placeholder="word" style="width:86px;padding:4px 8px;border-radius:8px;border:1px solid #ffd75e55;background:rgba(30,16,30,.85);color:#fff2dc;font-size:11px;outline:none"></div>
- <div style="margin-top:4px"><button class="btn2" id="nwClaim" style="padding:5px 10px;font-size:10.5px;margin:0">CLAIM THIS HIVE</button> <button class="btn2" id="nwIn" style="padding:5px 10px;font-size:10.5px;margin:0">SIGN IN</button></div>
+ <div style="font-size:10.5px;opacity:.6;border-top:1px solid #ffffff22;margin-top:4px;padding-top:6px">sign in lives on the HOME screen now, by decree</div>
  <div style="font-size:11px;opacity:.9;border-top:1px solid #ffffff22;margin-top:4px;padding-top:6px">trouble? <span style="opacity:.55;font-size:10px">the keeper answers personally</span></div>
  <div><input id="supMsg" maxlength="200" placeholder="what happened" style="width:120px;padding:4px 8px;border-radius:8px;border:1px solid #ffd75e55;background:rgba(30,16,30,.85);color:#fff2dc;font-size:11px;outline:none"> <input id="supCon" maxlength="40" placeholder="phone / contact" style="width:86px;padding:4px 8px;border-radius:8px;border:1px solid #ffd75e55;background:rgba(30,16,30,.85);color:#fff2dc;font-size:11px;outline:none"> <button class="btn2" id="supGo" style="padding:5px 10px;font-size:10.5px;margin:0">SEND</button></div>
  </div>
@@ -157,7 +155,13 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
  <input id="nameIn" maxlength="16" placeholder="your name" autocomplete="off" style="display:block;margin:6px auto 10px;padding:9px 14px;width:200px;max-width:70vw;text-align:center;font-size:15px;border-radius:12px;border:1.5px solid #ffd75e88;background:rgba(30,16,30,.85);color:#fff2dc;outline:none">
  <button class="btn" id="go">RISE</button>
  <button class="btn2" id="nestBtn">THE NEST · customise</button>
- <button class="btn2" id="shareBtn" style="padding:7px 20px;font-size:12.5px;opacity:.85;margin-top:6px">🤝 REFER A FRIEND <span style="opacity:.7;font-size:10.5px">· they fly 3 min → +2000✨</span></button>
+ <button class="btn2" id="shareBtn" style="padding:7px 20px;font-size:12.5px;opacity:.85;margin-top:6px">🤝 REFER A FRIEND <span style="opacity:.7;font-size:10.5px">· they truly fly 3+ min → +2000✨ · the meadow checks</span></button>
+ <div id="signTog" style="cursor:pointer;color:#ffd75e;font-size:12px;margin-top:8px;letter-spacing:1px">🗝 SIGN IN · SAVE YOUR HIVE <span id="signArr">▸</span></div>
+ <div id="signRow" style="display:none;font-size:11.5px">
+  <div style="opacity:.6;font-size:10.5px;margin:2px 0 4px">one name + one word, works on any device · no recovery yet, write it down</div>
+  <input id="nwUser" maxlength="16" placeholder="name" autocomplete="off" style="width:104px;padding:6px 10px;border-radius:8px;border:1px solid #ffd75e55;background:rgba(30,16,30,.85);color:#fff2dc;font-size:12px;outline:none"> <input id="nwPass" maxlength="32" type="password" placeholder="word" style="width:104px;padding:6px 10px;border-radius:8px;border:1px solid #ffd75e55;background:rgba(30,16,30,.85);color:#fff2dc;font-size:12px;outline:none">
+  <div style="margin-top:6px"><button class="btn2" id="nwClaim" style="padding:6px 12px;font-size:11px;margin:0">CLAIM THIS HIVE</button> <button class="btn2" id="nwIn" style="padding:6px 12px;font-size:11px;margin:0">SIGN IN</button></div>
+ </div>
  <div id="ledgerCard" style="font-size:11.5px;opacity:.92;margin-top:8px;line-height:1.7;max-width:86vw"></div>
  <p style="font-size:12px;opacity:.5;margin-top:10px">move: WASD / drag &nbsp;·&nbsp; everything else you'll learn as you fly</p>
 </div>
@@ -190,6 +194,7 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
  <div id="tabs"></div>
  <div id="shopWrap"><div id="skins"></div></div>
  <button class="btn" id="backBtn">RETURN ➜</button>
+ <button class="btn2" id="homeExit" style="margin-top:4px">⌂ HOME</button>
 </div>
 <script>
 "use strict";
@@ -357,11 +362,7 @@ function flightSend(){try{if(!FLIGHT||FLIGHT.sent)return;FLIGHT.sent=true;
 function deedsRender(m9){try{window._deeds=m9;
  const L9={h:'🍯 honey banked',p:'🐝 greatest brood',qk:'👑 queens felled',bk:'💀 bosses felled',wk:'🐛 worms slain',sp:'💠 splits',m:'⏳ minutes flown'};
  if(m9.pct)deedsInto(); /* one renderer, called from BOTH sides of the race */
- const lc9=document.getElementById('ledgerCard');
- if(lc9&&m9.tops){let h2='<b style="color:#ffd75e;letter-spacing:1px">TODAY\'S CROWNS</b> <span style="opacity:.5;font-size:10px">'+(m9.tot||0)+' flights</span><br>';
-  const T9={h:'🍯',p:'🐝',qk:'👑',bk:'💀',wk:'🐛'};let n2=0;
-  for(const k9 in T9){const tp9=m9.tops[k9];if(!tp9||!tp9.v)continue;h2+=T9[k9]+' <b>'+tp9.v+'</b> '+(tp9.n||'a queen')+' &nbsp; ';n2++;}
-  lc9.innerHTML=n2?h2:'';}
+ try{if(typeof homeRefresh==='function')homeRefresh();}catch(e){} /* TODAY'S CROWNS retired from the home stage by decree ("buggy and crappy" - fair). The home card now tells YOUR holdings; the global TOP PLAYERS board is queued for the next server round */
 }catch(e){}}
 function soulQueue(){SOUL.q=true;}
 function soulPush(){ /* throttled upstream save: xp + trophies + dress - the server clamps and keeps */
@@ -2345,7 +2346,7 @@ function killQueen(s,by){if(by&&!by.ally&&by.team===0&&s.team!==0)flightStat('qk
  s.respawn=s.bot?rand(5,8):9999;
  /* rival falls speak through the jackpot fountain, not a billboard */
  if(s===M){
-  s.honey=Math.floor(s.honey/2); /* half is banked through death */
+  s.honey=Math.floor(s.honey/2);window._bankH=s.honey|0; /* half is banked through death - and the home card REMEMBERS it */
   const bonus=Math.floor(peak*1.5);if(bonus>0){gainXP(bonus);s._xpBonus=bonus;} /* the great runs pay in ✨ - no cap, ever */
   showOver();
  }
@@ -2706,6 +2707,7 @@ function doAct(a){
 function showOver(){
  running=false;flightSend(); /* the tale goes to the ledger BEFORE the stone is carved */
  const M4=me();
+ try{if(M4)window._bankH=M4.honey|0;}catch(e){} /* the fall banks what death spared - online the header already carries the halved truth */
  document.getElementById('overTxt').innerHTML=
   'Brood peak <b>'+peak+'</b> · honey kept <b>'+Math.floor(M4.honey)+'</b><br>'
   +(NET.on?'<span style="font-size:13px;opacity:.85">half is banked through death - RISE and answer</span>'
@@ -2869,7 +2871,20 @@ let nestFrom='over';
 document.getElementById('backBtn').onclick=()=>{document.getElementById('home').style.display='none';
  if(nestFrom==='retired'){document.getElementById('start').style.display='flex';} /* a retired queen RISES anew */
  else document.getElementById(nestFrom==='start'?'start':'over').style.display='flex';
- nestFrom='over';metaSave();};
+ nestFrom='over';metaSave();try{homeRefresh();}catch(e){}};
+{const hx2=document.getElementById('homeExit'); /* THE WAY HOME, by decree: customisation could only return whence you came - now HOME is one honest tap, from anywhere */
+ if(hx2)hx2.onclick=()=>{document.getElementById('home').style.display='none';document.getElementById('over').style.display='none';document.getElementById('start').style.display='flex';nestFrom='over';metaSave();try{homeRefresh();}catch(e){}};}
+function homeRefresh(){try{ /* the home card tells YOUR holdings - TODAY'S CROWNS is retired from this stage by decree; the TOP PLAYERS board (1-10, name, total honey, total swarm kills) awaits the next SERVER round (souls need lifetime totals first) */
+ const lc9=document.getElementById('ledgerCard');if(!lc9)return;
+ let h9='';if(window._bankH!=null)h9+='🍯 carried into your next flight: <b>'+(window._bankH|0)+'</b> honey<br>';
+ h9+='✨ total xp on this hive: <b>'+(META.xp|0)+'</b>';
+ lc9.innerHTML=h9;
+ const ni9=document.getElementById('nameIn');if(ni9&&META.name&&!ni9.value)ni9.value=META.name;
+}catch(e){}}
+try{homeRefresh();}catch(e){}
+{const st2=document.getElementById('signTog'),sr2=document.getElementById('signRow');
+ if(st2&&sr2)st2.addEventListener('pointerdown',e=>{e.preventDefault();const v2=sr2.style.display==='none';sr2.style.display=v2?'block':'none';const ar2=document.getElementById('signArr');if(ar2)ar2.textContent=v2?'▾':'▸';});}
+{const g2=document.getElementById('gear');if(g2)g2.style.display='block';} /* the GEAR stands on the menu too, by decree - sound, help and the hive code never again require dying first */
 {const fb=document.getElementById('fsBtn');
  if(fb&&fb.addEventListener)fb.addEventListener('pointerdown',e=>{e.preventDefault();
   try{const de=document.documentElement,can9=!!(de.requestFullscreen||de.webkitRequestFullscreen),fs=document.fullscreenElement||document.webkitFullscreenElement;
@@ -2900,7 +2915,7 @@ document.getElementById('backBtn').onclick=()=>{document.getElementById('home').
  setInterval(()=>{try{if(SOUL.q)soulPush();}catch(e){}},7000);} /* the soul saves itself every few breaths */
 {const gearEl=document.getElementById('gear'),sp=document.getElementById('setPanel');
  if(gearEl&&gearEl.addEventListener){
-  gearEl.addEventListener('pointerdown',e=>{e.preventDefault();sp.style.display=sp.style.display==='none'?'block':'none';});
+  gearEl.addEventListener('pointerdown',e=>{e.preventDefault();const ng9=document.getElementById('nestGo');if(ng9)ng9.style.display=(typeof running!=='undefined'&&running)?'block':'none';sp.style.display=sp.style.display==='none'?'block':'none';}); /* RETIRE only offers itself mid-flight - on the menu the gear is sound + help */
   const sx9=document.getElementById('setX'); /* the ✕ is WIRED in the same breath it is born - the r49 NEST ✕ taught us what an unwired ✕ costs */
   if(sx9&&sx9.addEventListener)sx9.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();sp.style.display='none';});
   const vs=document.getElementById('volS'),ms=document.getElementById('musS');
@@ -2912,6 +2927,7 @@ document.getElementById('backBtn').onclick=()=>{document.getElementById('home').
    /* RETIRING to the Nest ends the round - the peak pays its bonus, the bar keeps every ✨ */
    const M6=me();
    if(running&&M6&&!M6.dead){const bonus=Math.floor(peak*1.5);if(bonus>0)gainXP(bonus);}
+   try{if(M6)window._bankH=M6.honey|0;}catch(e){} /* retirement banks the purse too */
    flightSend();running=false;metaSave();
    nestFrom='retired';showHome();});
  }}

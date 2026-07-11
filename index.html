@@ -356,6 +356,8 @@ function flightSend(){try{if(!FLIGHT||FLIGHT.sent)return;FLIGHT.sent=true;
  if(typeof NET==='undefined'||!NET.on||!NET.ws||NET.ws.readyState!==1)return;
  FLIGHT.p=Math.max(FLIGHT.p|0,(typeof peak!=='undefined'?peak:0)|0);
  NET.ws.send(JSON.stringify({k:'flight',st:{h:FLIGHT.h|0,p:FLIGHT.p|0,qk:FLIGHT.qk|0,bk:FLIGHT.bk|0,wk:FLIGHT.wk|0,sp:FLIGHT.sp|0,m:Math.max(0,Math.round((tnow-FLIGHT.t0)/6)/10)}}));}catch(e){}}
+function dressSend(){try{if(typeof NET==='undefined'||!NET.on||!NET.ws||NET.ws.readyState!==1)return; /* MID-FLIGHT WARDROBE: colour + wardrobe used to ride the join alone - the NEST's choices reach the live queen now */
+ NET.ws.send(JSON.stringify({k:'dress',c:((SKINS[META.skin]||{}).c)||0,c2:((SKINS[META.skin]||{}).c2)||0,q:META.eq||0}));}catch(e){}}
 function deedsRender(m9){try{window._deeds=m9;
  const L9={h:'🍯 honey banked',p:'🐝 greatest brood',qk:'👑 queens felled',bk:'💀 bosses felled',wk:'🐛 worms slain',sp:'💠 splits',m:'⏳ minutes flown'};
  if(m9.pct)deedsInto(); /* one renderer, called from BOTH sides of the race */
@@ -2870,9 +2872,9 @@ let nestFrom='over';
 document.getElementById('backBtn').onclick=()=>{document.getElementById('home').style.display='none';
  if(nestFrom==='retired'){document.getElementById('start').style.display='flex';} /* a retired queen RISES anew */
  else document.getElementById(nestFrom==='start'?'start':'over').style.display='flex';
- nestFrom='over';metaSave();try{homeRefresh();}catch(e){}};
+ nestFrom='over';metaSave();dressSend();try{homeRefresh();}catch(e){}};
 {const hx2=document.getElementById('homeExit'); /* THE WAY HOME, by decree: customisation could only return whence you came - now HOME is one honest tap, from anywhere */
- if(hx2)hx2.onclick=()=>{document.getElementById('home').style.display='none';document.getElementById('over').style.display='none';document.getElementById('start').style.display='flex';nestFrom='over';metaSave();try{homeRefresh();}catch(e){}};}
+ if(hx2)hx2.onclick=()=>{document.getElementById('home').style.display='none';document.getElementById('over').style.display='none';document.getElementById('start').style.display='flex';nestFrom='over';metaSave();dressSend();try{homeRefresh();}catch(e){}};}
 function homeRefresh(){try{ /* the home card tells YOUR holdings - TODAY'S CROWNS is retired from this stage by decree; the TOP PLAYERS board (1-10, name, total honey, total swarm kills) awaits the next SERVER round (souls need lifetime totals first) */
  const lc9=document.getElementById('ledgerCard');if(!lc9)return;
  let h9='';if(window._bankH!=null)h9+='🍯 carried into your next flight: <b>'+(window._bankH|0)+'</b> honey<br>';
@@ -2937,7 +2939,7 @@ try{homeRefresh();}catch(e){}
  }}
 let WS_URL=null;
 {try{if(typeof location!=='undefined'){const P9=new URLSearchParams(location.search||'');
- let u9=P9.get('ws');try{window._ref=P9.get('ref')||null;window._wormcam=!!P9.get('wormcam');}catch(e){}
+ let u9=P9.get('ws');try{window._ref=P9.get('ref')||null;window._wormcam=!!P9.get('wormcam');window._netcam=!!P9.get('netcam');}catch(e){}
  if(!u9&&/^https?:$/.test(location.protocol)&&!P9.get('solo')) /* served from a room? then the room IS home */
   u9=(location.protocol==='https:'?'wss://':'ws://')+location.host;
  WS_URL=u9||null; /* connect on RISE with the chosen name, not silently on load */
@@ -4766,6 +4768,24 @@ function draw(){
    ctx.fillStyle='rgba(24,12,24,.82)';ctx.fillRect(s.x-tw9/2-8,s.y-s.R*0.6-62,tw9+16,22);
    ctx.fillStyle='#fff2dc';ctx.fillText(s.say,s.x,s.y-s.R*0.6-46);ctx.globalAlpha=1;
    ctx.font='bold 12.5px Trebuchet MS';}}
+ if(window._netcam&&NET.on){try{ /* THE NETCAM (?netcam=1): wire-vs-screen truth for EVERY mirror - the instrument that ends adjective wars. line = drawn pos to wire target; ring green<12px, amber<40, red beyond; queens confess the px number. Your OWN queen shows prediction error - that is the point */
+  ctx.lineWidth=1;ctx.font='10px monospace';ctx.textAlign='center';
+  for(const s9 of swarms){if(s9.dead)continue;
+   if(s9.x<vx0-600||s9.x>vx1+600||s9.y<vy0-600||s9.y>vy1+600)continue;
+   for(const u9 of s9.units){if(u9.tx===undefined)continue;const g9=Math.hypot(u9.tx-u9.x,u9.ty-u9.y);
+    ctx.strokeStyle=g9<12?'rgba(80,255,140,.8)':g9<40?'rgba(255,190,60,.85)':'rgba(255,64,64,.9)';
+    ctx.beginPath();ctx.moveTo(u9.x,u9.y);ctx.lineTo(u9.tx,u9.ty);ctx.stroke();
+    ctx.beginPath();ctx.arc(u9.tx,u9.ty,5,0,TAU);ctx.stroke();}
+   if(s9.tx!==undefined){const gq9=Math.hypot(s9.tx-s9.x,s9.ty-s9.y);
+    ctx.strokeStyle=gq9<12?'rgba(80,255,140,.9)':gq9<40?'rgba(255,190,60,.9)':'rgba(255,64,64,.95)';
+    ctx.beginPath();ctx.moveTo(s9.x,s9.y);ctx.lineTo(s9.tx,s9.ty);ctx.stroke();
+    ctx.beginPath();ctx.arc(s9.tx,s9.ty,10,0,TAU);ctx.stroke();
+    ctx.fillStyle=ctx.strokeStyle;ctx.fillText((gq9|0)+'px',s9.x,s9.y-s9.R*0.6-40);}}
+  for(const w9 of worms){if(w9._tx===undefined)continue;const gw9=Math.hypot(w9._tx-w9.x,w9._ty-w9.y);
+   ctx.strokeStyle=gw9<12?'rgba(80,255,140,.8)':gw9<40?'rgba(255,190,60,.85)':'rgba(255,64,64,.9)';
+   ctx.beginPath();ctx.moveTo(w9.x,w9.y);ctx.lineTo(w9._tx,w9._ty);ctx.stroke();
+   ctx.beginPath();ctx.arc(w9._tx,w9._ty,8,0,TAU);ctx.stroke();}
+ }catch(e){}}
  for(const mw of fieldMaws){if(mw.x>=vx0-60&&mw.x<=vx1+60&&mw.y>=vy0-60&&mw.y<=vy1+60)drawMaw(mw);}
  for(const ey of eyes){if(ey.x<vx0-46||ey.x>vx1+46||ey.y<vy0-46||ey.y>vy1+46)continue;
   const M8=me();const ldx=(M8?M8.x:0)-ey.x,ldy=(M8?M8.y:0)-ey.y,ld=Math.hypot(ldx,ldy)||1;
@@ -5160,7 +5180,7 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
    if(!w9){w9={x:a9[0],y:a9[1],hx:a9[0],hy:a9[1],r:13,a:0,hp:a9[2],maxHp:260,prov:0,flash:0,bur:0,burT:9,bite:0,seed:k9*2.1,_worm:1,_net:1,seg:[]};for(let s9=0;s9<7;s9++)w9.seg.push({x:a9[0],y:a9[1]});worms.push(w9);}
    w9._net=1; /* stamp EVERY worm the wire touches: any local body the wire adopts must glide too, or it is a husk */
    if(a9[2]<w9.hp-0.5)w9.flash=0.12;
-   w9._tx=a9[0];w9._ty=a9[1];w9.hp=a9[2];w9.bur=a9[3]?1:0;w9.prov=a9[4]?1:0;if(a9[5]&&!(w9.bite>0))w9.bite=0.45;
+   w9._tx=a9[0];w9._ty=a9[1];w9.hp=a9[2];w9.bur=+a9[3]||0;w9.prov=a9[4]?1:0; /* the WIRE is the worm's only clock: the real countdown rides now, the client never invents a dive or an eruption */if(a9[5]&&!(w9.bite>0))w9.bite=0.45;
    for(let s9=0;s9<7;s9++){const sg=w9.seg[s9];if(sg){sg._tx=a9[6+s9*2];sg._ty=a9[7+s9*2];}}}}
  const seen={};
  for(const w9 of F.sw){
@@ -5386,7 +5406,7 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
   const nw9=(typeof performance!=='undefined'?performance.now():Date.now());
   if(!NET._warT||nw9-NET._warT>10000){NET._warT=nw9;sfx('alarm');}}
  if(M9&&(M9.dead||!M9.war))NET._warN=0;
- if(M9&&M9.dead&&!NET.deadShown){NET.deadShown=true;const ov=document.getElementById('over');if(ov)ov.style.display='flex';}
+ if(M9&&M9.dead&&!NET.deadShown){NET.deadShown=true;try{const r0=running;showOver();running=r0;}catch(e){const ov=document.getElementById('over');if(ov)ov.style.display='flex';} /* ONLINE DEATH now walks through showOver: fresh stone, fresh deeds - the bare display:flex kept the FIRST death's text forever and the ledger-guard then refused every later carve. running is restored: the meadow keeps living behind the stone */}
  if(M9&&!M9.dead&&NET.deadShown){NET.deadShown=false;const ov=document.getElementById('over');if(ov)ov.style.display='none';}}
 function netSnapshot(slim9){ /* THE WIRE: one compact frame of truth (server -> clients). slim9: identity (name/colour/wardrobe) rides only the FULL beats - those fields never change frame to frame, yet were a fat slice of every lite frame, 30 times a second, per seat */
  const S9={t:+tnow.toFixed(2),g:goldT>=0?1:0,sw:[]};
@@ -5431,7 +5451,7 @@ function netDyn(){ /* the LIVING world, streamed */
   gp:grottos.map(g=>(g.pricks||[]).map(p=>[p.x|0,p.y|0])), /* THE CAVE FIX: see netDynLite */
   fa:fieldMaws.map(m=>m.anim>0?1:0),gm:grottos.map(g=>(g.maws||[]).map(m=>m.anim>0?1:0)), /* THE MAW FIX: see netDynLite */
   ey:eyes.map(e=>[e.x|0,e.y|0,e.r|0,e.hp|0,e.maxHp||300,+(e.blink||0).toFixed(2),(e.dread||0)>0?1:0,+e.wa.toFixed(2),+(e.seed||0).toFixed(2),(e.whip&&e.whip.t>0)?(e.whip.x|0):0,(e.whip&&e.whip.t>0)?(e.whip.y|0):0]), /* the LASH rides the wire: eye tentacle strikes were server-only theatre - damage landed, nothing showed */
-  wm:worms.map(w9=>[w9.x|0,w9.y|0,w9.hp|0,(w9.bur>0?1:0),(w9.prov>0?1:0),(w9.bite>0?1:0)].concat(w9.seg.map(sg=>[sg.x|0,sg.y|0]).flat())), /* the worms ride the wire whole: ~20 numbers each, every 3rd beat */
+  wm:worms.map(w9=>[w9.x|0,w9.y|0,w9.hp|0,+((w9.bur||0).toFixed(2)),(w9.prov>0?1:0),(w9.bite>0?1:0)].concat(w9.seg.map(sg=>[sg.x|0,sg.y|0]).flat())), /* the worms ride the wire whole: ~20 numbers each, every 3rd beat */
   el:elder?[elder.x|0,elder.y|0,elder.hp|0,elder.maxHp,(elder.vx||0)|0,(elder.vy||0)|0,(elder.provoked>0?1:0),(elder.atk>0?1:0)]:0,
   sp:spider?[spider.x|0,spider.y|0,spider.hp|0,spider.maxHp,(spider.kids||[]).map(k=>[k.x|0,k.y|0]),(spider.provoked>0?1:0),(spider.gnash>0?1:0)]:0,
   sw:netSnapshot().sw};}

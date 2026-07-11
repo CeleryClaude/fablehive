@@ -9,6 +9,8 @@ process.on('uncaughtException',e=>{try{require('fs').appendFileSync('/opt/fableh
 const _cr=require('crypto'),_fsS=require('fs');
 const SOULP=(process.env.SOULS||'/opt/fablehive/souls.json'),KEYP=(process.env.SOULKEY||'/opt/fablehive/soul.key');
 let SKEY='';try{SKEY=_fsS.readFileSync(KEYP,'utf8').trim();}catch(e){SKEY=_cr.randomBytes(24).toString('hex');try{_fsS.writeFileSync(KEYP,SKEY);}catch(e2){}}
+const SUPKEYP=(process.env.SUPKEY||'/opt/fablehive/sup.key'); /* THE KEEPER'S KEY: cat /opt/fablehive/sup.key on the droplet once, then read /supportz?k=KEY in a browser */
+let SUPK='';try{SUPK=_fsS.readFileSync(SUPKEYP,'utf8').trim();}catch(e){SUPK=_cr.randomBytes(6).toString('hex');try{_fsS.writeFileSync(SUPKEYP,SUPK);}catch(e2){}}
 let SOULS={},DEEDS=null;
 try{const _raw=JSON.parse(_fsS.readFileSync(SOULP,'utf8'))||{};
  if(_raw&&_raw.souls){SOULS=_raw.souls||{};DEEDS=_raw.deeds||null;}else SOULS=_raw;}catch(e){SOULS={};}
@@ -104,10 +106,14 @@ function start(port,htmlPath){
     stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:(()=>{const v9=DIAG.netLateMax||0;DIAG.netLateMax=0;return v9;})(),rateSkips:DIAG.rateSkips||0,
     buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
     seatNet:Object.keys(seats).map(t9=>{const w9=seats[t9],r9=(w9&&w9._rttMax||0)|0;if(w9)w9._rttMax=0;return Object.assign({t:+t9,rtt:(w9&&w9._rttS||0)|0,rttMax:r9,buf:(w9&&w9.bufferedAmount||0)|0},(w9&&w9._cli)||{});}),
-    ver:'r57-the-top-players',souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
+    ver:'r59-the-true-mirror',souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else if(req.url.indexOf('/crashz')===0){let c='';try{c=_fsS.readFileSync('/opt/fablehive/crash.log','utf8').slice(-4000);}catch(e){c='(no crashes logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* the CONFESSOR reads aloud */
   else if(req.url.indexOf('/deployz')===0){let c='';try{c=_fsS.readFileSync('/var/log/fablehive-deploy.log','utf8').slice(-4000);}catch(e){c='(no deploys logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* and the deploy ledger too - 'updates without updates' becomes a lookup */
+  else if(req.url.indexOf('/supportz')===0){ /* THE KEEPER'S POST: the support notes, key-gated */
+   let k9='';try{k9=((req.url.split('k=')[1]||'').split('&')[0]||'').trim();}catch(e){}
+   if(SUPK&&k9===SUPK){let c='';try{c=_fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').slice(-8000);}catch(e){c='(no support notes yet)';}res.writeHead(200,{'Content-Type':'text/plain; charset=utf-8'});res.end(c);}
+   else{res.writeHead(403);res.end('the keeper alone reads these');}}
   else{res.writeHead(404);res.end('the meadow has no such door');}
  });
  const wss=new WebSocketServer({server:httpSrv,maxPayload:1<<20,
@@ -143,6 +149,12 @@ function start(port,htmlPath){
      BUYS.push({t:Date.now(),tm:team,r:(''+m.c.buy).slice(0,10),ok:a4>b4?1:0,u:a4,h:h4});if(BUYS.length>24)BUYS.shift();
      if(a4<=b4){try{ws.send(JSON.stringify({k:'deny',r:(''+m.c.buy).slice(0,10)}));}catch(e){}}} /* a refused order is SAID, not swallowed - 'the button did nothing' becomes a message */
     else G.applyInput(team,m.c||{});}catch(e){}}
+   else if(m.k==='dress'&&team!==null){try{ /* MID-FLIGHT WARDROBE: sanitized exactly like the join - the NEST's changes land on the live queen and ride the next full beat */
+    const s=G.swarms.find(z=>z.team===team&&!z.ally);
+    if(s){const okc=v=>(typeof v==='string'&&/^#[0-9a-fA-F]{6}$/.test(v))?v:null;
+     const c9=okc(m.c);if(c9)s.col=c9;s.col2=okc(m.c2);
+     let q9=null;if(m.q&&typeof m.q==='object'&&!Array.isArray(m.q)){q9={};for(const k of ['pattern','crown','trail','wings','body','tail','fleet','aura','plate','eye']){const v=m.q[k];if(typeof v==='string'&&v.length<=24&&/^[a-zA-Z0-9_-]+$/.test(v))q9[k]=v;}if(!Object.keys(q9).length)q9=null;}
+     s.cosEq=q9;}}catch(e){}}
    else if(m.k==='meta'&&ws._soul&&SOULS[ws._soul]){const S=SOULS[ws._soul]; /* progression climbs, never teleports: grow-only, capped per push */
     const nx=+m.xp;if(isFinite(nx)&&nx>S.xp)S.xp=Math.min(nx|0,S.xp+20000,5e6);
     if(Array.isArray(m.ow)){const seen={};for(const o of S.ow)seen[o]=1;

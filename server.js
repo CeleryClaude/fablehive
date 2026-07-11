@@ -1,4 +1,8 @@
 /* FABLEHIVE ROOM SERVER - one process, the whole game.
+   CRASH CONFESSION: any uncaught throw writes its full stack to crash.log before systemd revives us -
+   the next 'random boot' will name its own killer. */
+process.on('uncaughtException',e=>{try{require('fs').appendFileSync('/opt/fablehive/crash.log',new Date().toISOString()+' '+((e&&e.stack)||e)+'\n');}catch(_){}process.exit(1);});
+/*
    Serves the game page over HTTP and the authoritative sim over WebSocket on the SAME port.
    Punch the URL, press RISE, you're online. */
 const fs=require('fs'),vm=require('vm'),path=require('path'),http=require('http');
@@ -63,7 +67,7 @@ function start(port,htmlPath){
     stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:(()=>{const v9=DIAG.netLateMax||0;DIAG.netLateMax=0;return v9;})(),rateSkips:DIAG.rateSkips||0,
     buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
     seatNet:Object.keys(seats).map(t9=>{const w9=seats[t9],r9=(w9&&w9._rttMax||0)|0;if(w9)w9._rttMax=0;return Object.assign({t:+t9,rtt:(w9&&w9._rttS||0)|0,rttMax:r9,buf:(w9&&w9.bufferedAmount||0)|0},(w9&&w9._cli)||{});}),
-    ver:'r40-the-open-door',
+    ver:'r41-the-quiet-tick',
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else{res.writeHead(404);res.end('the meadow has no such door');}
  });

@@ -72,7 +72,7 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
  #sizeRow{max-width:100vw;overflow-x:auto;flex-wrap:nowrap;padding:0 6px;justify-content:flex-start!important}
  #tabs{max-width:100vw;flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;padding:2px 8px;-webkit-overflow-scrolling:touch}
  .tab{flex:0 0 auto;padding:10px 15px;font-size:13px;line-height:1.3;white-space:nowrap}
- #shopWrap{max-height:none;flex:0 1 auto;max-width:100vw}
+ #shopWrap{max-height:none!important;flex:0 0 auto;overflow:visible!important;height:auto} /* ONE scroller: the panel. The inner slit-scroll was the corpse-maker */
  .item{width:31vw;max-width:118px;min-width:96px;padding:10px 6px;font-size:11.5px}
  #home .btn{position:fixed;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px) + var(--vvlift,0px));margin:0;padding:13px 26px;font-size:16px;z-index:13;box-shadow:0 6px 22px #000a,0 6px 26px #ffb04d55}
  #home{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px) + var(--vvlift,0px))}
@@ -170,16 +170,14 @@ let W=0,H=0,DPR=1;const QGOV={q:1,accT:0,accN:0,worst:0},PSTAT={sim:0,draw:0,fps
 let veilCv=null,veilCtx=null;
 try{veilCv=document.createElement('canvas');veilCtx=veilCv.getContext('2d');}catch(e){}
 function resize(){const tt8=('ontouchstart'in window)||((navigator&&navigator.maxTouchPoints)||0)>0;DPR=Math.min(tt8?1.75:2,window.devicePixelRatio||1)*QGOV.q; /* PHONES cap at 1.75, and the QUALITY GOVERNOR scales below that when frames run long */
- const vv8=(tt8&&typeof window!=='undefined'&&window.visualViewport)?window.visualViewport:null; /* THE IRON VIEWPORT: on touch the canvas fits the VISIBLE glass exactly - Safari's toolbar may cover its own strip, never the meadow */
- const iw8=vv8?Math.max(1,Math.round(vv8.width)):innerWidth,ih8=vv8?Math.max(1,Math.round(vv8.height)):innerHeight;
- W=cv.width=iw8*DPR;H=cv.height=ih8*DPR;cv.style.width=iw8+'px';cv.style.height=ih8+'px';
+ W=cv.width=innerWidth*DPR;H=cv.height=innerHeight*DPR;cv.style.width=innerWidth+'px';cv.style.height=innerHeight+'px'; /* the LAYOUT viewport, full stop - the iron-viewport experiment left a dead strip on standalone glass */
  if(veilCv){veilCv.width=W;veilCv.height=H;}}
 addEventListener('resize',resize);resize();
 addEventListener('beforeunload',()=>{try{metaSave();}catch(e){}});
 if(typeof document!=='undefined'&&document.addEventListener)document.addEventListener('visibilitychange',()=>{try{metaSave();}catch(e){}});
 const isTouch=('ontouchstart'in window)||navigator.maxTouchPoints>0;
 if(typeof window!=='undefined'&&window.visualViewport&&isTouch){const vv9=window.visualViewport; /* SAFARI'S ENVELOPE: when the toolbar rides up over the meadow, the court rises above it */
- const lift9=()=>{try{const o9=Math.max(0,(window.innerHeight||0)-vv9.height-(vv9.offsetTop||0));document.documentElement.style.setProperty('--vvlift',(o9>2?Math.round(o9):0)+'px');}catch(e){}};
+ const lift9=()=>{try{const o9=(navigator&&navigator.standalone)?0:Math.max(0,(window.innerHeight||0)-vv9.height-(vv9.offsetTop||0));document.documentElement.style.setProperty('--vvlift',(o9>2?Math.round(o9):0)+'px');}catch(e){}}; /* a HOME SCREEN throne has no toolbar - never lift there */
  vv9.addEventListener('resize',()=>{lift9();try{resize();}catch(e){}});vv9.addEventListener('scroll',lift9);lift9();}
 try{document.addEventListener('touchmove',e8=>{if(e8.touches&&e8.touches.length>1)e8.preventDefault();},{passive:false}); /* iOS ignores user-scalable=no: without this, a pinch ZOOMS THE PAGE and the whole court slides off the glass */
  document.addEventListener('gesturestart',e8=>{if(e8.preventDefault)e8.preventDefault();});
@@ -534,6 +532,7 @@ function equipItem(id){const it=itemById(id);if(!it||!ownsItem(id))return false;
 /* ============ state ============ */
 let NID=1,UIDN=1,swarms=[],groves=[],boulders=[],coves=[],ways=[],drops=[],fx=[],flies=[],grass=[],elder=null,shots=[],spider=null,webshots=[];
 let tnow=0,running=false,shake=0,warnT=0,goldT=-1,goldNext=170;
+let POPB=0; /* pops per tick are BUDGETED - a meadow of bots draining blooms must not become a GC storm */
 let nudged={split:false,war:false,evo:false};
 let ambient=[],herald={},decor=[],thorns=[],worms=[];
 function realmOf(x,y){
@@ -768,8 +767,8 @@ function popFlower(g){ /* the poker-machine payout: burst, nuggets, gone */
  const i=groves.indexOf(g);if(i>=0)groves.splice(i,1);
  addP(g.x,g.y,'#ffd7e8',g.grand?26:15,g.grand?240:170);addP(g.x,g.y,'#fff3e0',g.grand?12:7,g.grand?150:110); /* a real POOF, not a fizzle */
  addRing(g.x,g.y,g.gild?'#ffdf7e':g.grand?'#ffdf7e':'#ffd7e8',g.grand?86:46);
- const n2=g.grand?8:g.kind==='night'?7:g.kind==='fairy'?2:g.kind==='sprout'?2:4;
- for(let k=0;k<n2;k++)dropAt(g.x+rand(-20,20),g.y+rand(-20,20),rand(2.5,5)+(g.grand||g.kind==='night'?3:0),11);
+ const lean9=!(g.grand||g.kind==='night'||g.kind==='fairy'||g.kind==='sprout'||g.rich||g.gild),n2=g.grand?8:g.kind==='night'?7:g.kind==='fairy'?2:g.kind==='sprout'?2:lean9?2:4;
+ for(let k=0;k<n2;k++)dropAt(g.x+rand(-20,20),g.y+rand(-20,20),rand(2.5,5)*(lean9?1.9:1)+(g.grand||g.kind==='night'?3:0),11); /* plain blooms: fewer, FATTER nuggets - same payout, half the entities on the wire */
  if(near({x:g.x,y:g.y}))sfx(g.grand||g.kind==='night'?'gild':'pop');
  /* a fairy falls: the ring keeps count */
  if(g.kind==='night'){const M5=me();
@@ -1314,7 +1313,7 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
     if(!foe&&!war&&(u.role==='lancer'||u.role==='soldier'||u.role==='titan'||u.role==='spitter')){let bq9=270*270; /* stingers and STARERS are answered - titans too, and now the HORSE-ARCHERS: spitters were never invited to this fight, which read as 'spitters don't attack' */
      for(const wp of wasps){const q=d2(u.x,u.y,wp.x,wp.y);if(q<bq9){bq9=q;foe=wp;}}
      for(const ey of eyes){const q=d2(u.x,u.y,ey.x,ey.y);if(q<bq9){bq9=q;foe=ey;}}
-     for(const w9 of worms){if(w9.bur>0||w9.prov<=0)continue;const q=d2(u.x,u.y,w9.x,w9.y);if(q<bq9){bq9=q;foe=w9;}}} /* provoked worms are ANSWERED - idle ones cost the army nothing */
+     for(const w9 of worms){if(w9.bur>0)continue;const q=d2(u.x,u.y,w9.x,w9.y);if(q<bq9){bq9=q;foe=w9;}}} /* SURFACED worms are fair game - the prov gate made armies look pacifist the instant the queen kited away */
     if(!foe&&((u.role==='lancer'&&u._fi%5<3)||(u.role==='spitter'&&u._fi%3===0))){ /* FREEBLADES: lancers hunt freely (~60%), spitters a third - war or no war */
      let bs2=260*260,bswm=null;const myGr9=grottoOf(s.x,s.y);
      gridNear(u.x,u.y,260,eu=>{const es=eu._sw;
@@ -1544,8 +1543,10 @@ function wormTick(dt){ /* THE BLOOD WORMS: idle they meander and burrow; provoke
     if(qq<bd){bd=qq;tgt=s2;w9.prov=4;}
     if(qq<kd&&w9.prov>0){kd=qq;keep=s2;}}
    if(!tgt)tgt=keep;} /* the NEAREST holds its eye - it no longer flickers between two queens */
-  let ta9,sp9=44,skip9=false;
-  if(w9.prov>0&&tgt){ta9=Math.atan2(tgt.y-w9.y,tgt.x-w9.x);sp9=252;} /* a REAL predator's lunge: faster than a laden queen, escapable by a small fast brood */
+  let ta9,sp9=62,skip9=false;
+  if(w9.prov>0&&tgt){const td9=Math.sqrt(d2(w9.x,w9.y,tgt.x,tgt.y)); /* STRIKE AND COIL: point-blank it REARS BACK, then whips through - sitting on it no longer reads as a dead prop */
+   if(td9<70){ta9=Math.atan2(w9.y-tgt.y,w9.x-tgt.x);sp9=190;}
+   else{ta9=Math.atan2(tgt.y-w9.y,tgt.x-w9.x);sp9=252;}}
   else{w9.a+=Math.sin(tnow*0.7+w9.seed)*1.1*dt;ta9=w9.a;
    if(d2(w9.x,w9.y,w9.hx,w9.hy)>380*380)ta9=Math.atan2(w9.hy-w9.y,w9.hx-w9.x);
    w9.burT-=dt;if(w9.burT<=0){w9.bur=rand(3.5,6);w9.burT=rand(16,28);addP(w9.x,w9.y,'#7a4432',8,110);skip9=true;}} /* calmer rhythm: the old 1.6-2.6s dips every ~12s read as broken flicker */
@@ -1554,10 +1555,10 @@ function wormTick(dt){ /* THE BLOOD WORMS: idle they meander and burrow; provoke
   w9.a+=clamp(da9,-2.6*dt,2.6*dt);
   w9.x+=Math.cos(w9.a)*sp9*dt;w9.y+=Math.sin(w9.a)*sp9*dt;
   w9.x=clamp(w9.x,WORLD.w*0.64,WORLD.w-140);w9.y=clamp(w9.y,140,WORLD.h*0.36); /* the corner is their WHOLE world, by the gate */
-  {let px9=w9.x,py9=w9.y;
-   for(const sg of w9.seg){const dx9=sg.x-px9,dy9=sg.y-py9,dd9=Math.hypot(dx9,dy9)||0.01;
-    if(dd9>16){sg.x=px9+dx9/dd9*16;sg.y=py9+dy9/dd9*16;}
-    px9=sg.x;py9=sg.y;}}
+  {let px9=w9.x,py9=w9.y,si9=0;
+   for(const sg of w9.seg){const ln9=Math.max(7,14-si9*1.1),dx9=sg.x-px9,dy9=sg.y-py9,dd9=Math.hypot(dx9,dy9)||0.01;
+    if(dd9>ln9){sg.x=px9+dx9/dd9*ln9;sg.y=py9+dy9/dd9*ln9;}
+    px9=sg.x;py9=sg.y;si9++;}} /* the chain TAPERS with the rings - even spacing left the tail as floating beads */
   if(w9.prov>0&&tgt){w9._st=(w9._st||0)+dt; /* WEDGE-WATCH: a hunter pinned by hedge or wall does not spin - it DIVES, and the soil erupts beside you */
    if(w9._st>1.2){
     if(d2(w9.x,w9.y,(w9._sx==null?w9.x:w9._sx),(w9._sy==null?w9.y:w9._sy))<34*34&&d2(w9.x,w9.y,tgt.x,tgt.y)>64*64){
@@ -1610,7 +1611,7 @@ function trailTick(s,dt){ /* THE TRAIL, shared: solo step calls it for the playe
      else if(tr==='embertr')fx.push({x:bx2,y:by2,vx:rand(-12,12),vy:rand(-18,-6),t:0,life:0.7,col:'#ff8c3c',r:rand(2,3),kind:'ember',rot:rand(0,TAU),rv:rand(-6,6)});
     }}}
 function step(dt){NPLAY=humanCount();
- tnow+=dt;const M=me();
+ tnow+=dt;POPB=0;const M=me();
  const sepPar=(step._sepPar=1-(step._sepPar||0)); /* THE STAGGER CLOCK: flips exactly ONCE per tick, unlike step._par
   (which flips once per swarm and so goes static whenever the alive swarm count is even) - the big-swarm
   self-separation stagger below needs a guarantee that BOTH halves get serviced within any 2 consecutive
@@ -1656,7 +1657,7 @@ function step(dt){NPLAY=humanCount();
    if(s.forceAim){dx=s.forceAim.x-s.x;dy=s.forceAim.y-s.y;drive=s.forceAim.drive!==false;}
    else{const kv=keyVec();
     if(kv.on){dx=kv.x*600;dy=kv.y*600;drive=true;}
-    else if(input.joy){const m2=Math.hypot(input.joy.dx,input.joy.dy);if(m2>10){dx=input.joy.dx;dy=input.joy.dy;drive=true;}}
+    else if(input.joy){const m2=Math.hypot(input.joy.dx,input.joy.dy);if(m2>10){const g2=Math.min(1,(m2-10)/38)*600/m2;dx=input.joy.dx*g2;dy=input.joy.dy*g2;drive=true;}} /* THE SHORT STICK: full speed at a 48px drag - a thumb, not an arm */
     else if(input.mDown){const wx=cam.x+(input.mx*DPR-W/2)/cam.z,wy=cam.y+(input.my*DPR-H/2)/cam.z;
      dx=wx-s.x;dy=wy-s.y;drive=Math.hypot(dx,dy)>30;}}
   } else {botBrain(s,dt);
@@ -1758,7 +1759,7 @@ function step(dt){NPLAY=humanCount();
   const iso=n===0||nb>150*150;
   s.expoT=iso?s.expoT+dt:0;
   const was=s.exposed;s.exposed=n===0||s.expoT>0.8;
-  if(s.exposed&&!was&&s===M){warn('EXPOSED! Return to your brood');sfx('alarm');}
+  if(s.exposed&&!was&&s===M){sfx('alarm');} /* the shouting banner is DEAD by decree - the alarm and the doubled pain already teach it */
   if(!s.gilded)for(const g of groves){if(g.gild&&d2(g.x,g.y,s.x,s.y)<260*260){s.gilded=true;
    if(s===M){sfx('gild');addRing(g.x,g.y,'#ffdf7e',90);}break;}}
   /* MAGNET: honey within reach streams to the queen with a chime */
@@ -1987,8 +1988,8 @@ function step(dt){NPLAY=humanCount();
     if(near(g))sfx('pop');
     groves.splice(gi,1);continue;}
    continue;} /* tumble skips drift/regrow below */
-  if(!(g.kind==='algae'||g.web||g.mother)&&g.amt<g.max*0.14){popFlower(g);continue;} /* FAUCETS ARE DEAD - ALL of them, second decree: ANY drained bloom pops with its payout, including the plain flowers that sat as husks near the Elder forever. Only cave algae and the Broodmother's web-larder still refill */
-  if(g.amt<g.max&&!g.closed&&(g.kind==='algae'||g.web||g.mother))g.amt+=(g.kind==='algae'?14:g.web?2.4:1.6)*dt;
+  if(!(g.kind==='algae'||g.web)&&g.amt<g.max*0.14&&POPB<2){POPB++;popFlower(g);continue;} /* FAUCETS ARE DEAD - ALL of them; but at most TWO pops a tick (the rest simply pop next tick): the first night of total pop-law spiked tickP95 to 39ms */
+  if(g.amt<g.max&&!g.closed&&(g.kind==='algae'||g.web))g.amt+=(g.kind==='algae'?14:2.4)*dt; /* the ELDER'S ring (mother flag - a misnamed relic) refills NO MORE, third decree: his hoard pops like everything else and returns with his respawn */
   g.vx=0;g.vy=0; /* FLOWERS STAND STILL, by Celery's decree: drift made every forager look adjacent to her own bloom (the client eased a moving target), and a wandering pantry served nobody. The tumblebloom keeps its legs - it is CHASE by design */
  }
  for(let i=drops.length-1;i>=0;i--){const dr=drops[i];dr.t-=dt;
@@ -2191,6 +2192,8 @@ function step(dt){NPLAY=humanCount();
    if(spider.hp<=0)killSpider(mainOf(sh.team)||null);}
   if(!hit)for(const w9 of worms){if(w9.bur>0)continue;
    if(d2(sh.x,sh.y,w9.x,w9.y)<(w9.r+6)*(w9.r+6)){w9.hp-=sh.dmg;w9.flash=.1;w9.prov=4;hit=true;break;}}
+  if(!hit)for(const ey of eyes){if(d2(sh.x,sh.y,ey.x,ey.y)<(ey.r+8)*(ey.r+8)){ey.hp-=sh.dmg;ey.flash=.12;hit=true;break;}} /* the STARERS were quarrel-proof by pure omission */
+  if(!hit)for(const wp of wasps){if(d2(sh.x,sh.y,wp.x,wp.y)<13*13){wp.hp-=sh.dmg;wp.flash=.12;hit=true;break;}}
   if(hit){addP(sh.x,sh.y,'#8fe0c0',4,90);shots.splice(i,1);continue;}
   if(sh.t<=0){addP(sh.x,sh.y,'#8fe0c0',2,50);shots.splice(i,1);}
  }
@@ -2409,7 +2412,7 @@ function botBuy(s,role){
  if(s.honey>=c){s.honey-=c;addUnit(s,role);calcR(s);}
 }
 
-function near(s2){const M2=me();return s2===M2||d2(s2.x,s2.y,M2.x,M2.y)<1200*1200;}
+function near(s2){const M2=me();return !!M2&&(s2===M2||d2(s2.x,s2.y,M2.x,M2.y)<1200*1200);} /* NULL-SAFE: a pop landing in the seat-swap instant was killing the whole ROOM - the 'random boots' were this */
 function addTrail(u,col){if(fx.length>(MOB?260:460)||(MOB&&QGOV.q<1))return; /* phones shed vanity smoke first */
  for(let i2=0;i2<5;i2++)fx.push({x:u.x-u.vx*0.01*i2,y:u.y-u.vy*0.01*i2,vx:0,vy:0,t:0,life:0.22+i2*0.03,col,r:2.6-i2*0.35});}
 /* ============ fx ============ */
@@ -4481,7 +4484,7 @@ function draw(){
   ctx.beginPath();ctx.arc(dr.x-rr2*0.3,dr.y-rr2*0.3,rr2*0.32,0,TAU);ctx.fill();
   if(worth===2&&Math.random()<0.02)addSpark(dr.x,dr.y,1);}
  for(const w9 of worms){ /* THE BLOOD WORMS drawn: tapered crimson chain, ring-plated. Burrowed, they are a mound and a promise */
-  if(w9.x<vx0-260||w9.x>vx1+260||w9.y<vy0-260||w9.y>vy1+260)continue;
+  if(w9.x<vx0-400||w9.x>vx1+400||w9.y<vy0-400||w9.y>vy1+400)continue;
   {if((w9.bur>0)!==(w9._burWas===true)){w9._burT0=tnow;w9._burWas=w9.bur>0;} /* the SINK and the RISE are animated client-side - the old cut was lacklustre by verdict */
    const bp9=Math.min(1,((tnow-(w9._burT0||0))*2.4)),sink9=w9.bur>0?bp9:1-bp9;
    if(sink9>0.02){ /* churned earth while anything is below */
@@ -4826,7 +4829,7 @@ function hud(){
  const total=teamSize(M.team);if(total>peak)peak=total; /* YOUR team, whichever seat you sit - online, seat 1's "peak" used to count a stranger's brood */
  let st;
  if(M.dead)st='<span style="color:#ff8f9a">fallen…</span>';
- else if(M.exposed)st='<span style="color:#ff6a7a">⚡ EXPOSED! return to your brood</span>';
+ else if(M.exposed)st='';
  else if(M.war){const W9=M.war;
   let mh=0,mm=0,eh=0,em=0;for(const u of M.units){mh+=u.hp;mm+=u.maxHp;}for(const u of W9.units){eh+=u.hp;em+=u.maxHp;}
   const mp=mm?mh/mm:0,ep=em?eh/em:0;
@@ -5070,7 +5073,9 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
    if(Math.hypot(w9._tx-w9.x,w9._ty-w9.y)>120){ /* a resurface or a death-shuffle is a TELEPORT, never a slide: snap the whole body and let the rise-anim carry the moment */
     w9.x=w9._tx;w9.y=w9._ty;for(const sg of w9.seg){if(sg._tx!==undefined){sg.x=sg._tx;sg.y=sg._ty;}}
    }else{w9.x+=(w9._tx-w9.x)*kw9;w9.y+=(w9._ty-w9.y)*kw9;
-    for(const sg of w9.seg){if(sg._tx!==undefined){sg.x+=(sg._tx-sg.x)*kw9;sg.y+=(sg._ty-sg.y)*kw9;}}}}}
+    for(const sg of w9.seg){if(sg._tx!==undefined){sg.x+=(sg._tx-sg.x)*kw9;sg.y+=(sg._ty-sg.y)*kw9;}}}
+   {let px8=w9.x,py8=w9.y,si8=0;for(const sg of w9.seg){const ln8=Math.max(7,14-si8*1.1),dx8=sg.x-px8,dy8=sg.y-py8,dd8=Math.hypot(dx8,dy8)||0.01;if(dd8>ln8){sg.x=px8+dx8/dd8*ln8;sg.y=py8+dy8/dd8*ln8;}px8=sg.x;py8=sg.y;si8++;}} /* the SHELL is chained to the head whatever the wire says - and the chain tapers so the tail reads as flesh, not beads */
+  }}
   if(spider.flash>0)spider.flash-=dt;
   for(const kd9 of spider.kids)if(kd9._tx!=null){const kox9=kd9.x,koy9=kd9.y;
    kd9.x+=(kd9._tx-kd9.x)*Math.min(1,12*dt);kd9.y+=(kd9._ty-kd9.y)*Math.min(1,12*dt);

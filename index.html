@@ -354,9 +354,7 @@ function flightSend(){try{if(!FLIGHT||FLIGHT.sent)return;FLIGHT.sent=true;
  NET.ws.send(JSON.stringify({k:'flight',st:{h:FLIGHT.h|0,p:FLIGHT.p|0,qk:FLIGHT.qk|0,bk:FLIGHT.bk|0,wk:FLIGHT.wk|0,sp:FLIGHT.sp|0,m:Math.max(0,Math.round((tnow-FLIGHT.t0)/6)/10)}}));}catch(e){}}
 function deedsRender(m9){try{window._deeds=m9;
  const L9={h:'🍯 honey banked',p:'🐝 greatest brood',qk:'👑 queens felled',bk:'💀 bosses felled',wk:'🐛 worms slain',sp:'💠 splits',m:'⏳ minutes flown'};
- if(m9.pct){let h9='<br><b style="color:#ffd75e;letter-spacing:1px">THE LEDGER OF DEEDS</b><br><span style="font-size:12.5px;line-height:1.75">';
-  for(const k9 in m9.pct){if(!(k9 in L9))continue;h9+=L9[k9]+' · beat <b style="color:#ffe9a0">'+m9.pct[k9]+'%</b> of flights<br>';}
-  h9+='</span>';const ov9=document.getElementById('overTxt');if(ov9&&(''+ov9.innerHTML).indexOf('LEDGER OF DEEDS')<0)ov9.innerHTML+=h9;}
+ if(m9.pct)deedsInto(); /* one renderer, called from BOTH sides of the race */
  const lc9=document.getElementById('ledgerCard');
  if(lc9&&m9.tops){let h2='<b style="color:#ffd75e;letter-spacing:1px">TODAY\'S CROWNS</b> <span style="opacity:.5;font-size:10px">'+(m9.tot||0)+' flights</span><br>';
   const T9={h:'🍯',p:'🐝',qk:'👑',bk:'💀',wk:'🐛'};let n2=0;
@@ -2689,15 +2687,22 @@ function doAct(a){
  resumeAudio();return r3;
 }
 function showOver(){
- running=false;
+ running=false;flightSend(); /* the tale goes to the ledger BEFORE the stone is carved */
  const M4=me();
  document.getElementById('overTxt').innerHTML=
   'Brood peak <b>'+peak+'</b> · honey kept <b>'+Math.floor(M4.honey)+'</b><br>'
   +(NET.on?'<span style="font-size:13px;opacity:.85">half is banked through death - RISE and answer</span>'
   :'<span style="font-size:13px;opacity:.85">run bonus <b style="color:#ffd75e">+'+(M4._xpBonus||0)+'✨</b> · nest <b>'+Math.floor(META.xp)+'✨</b></span>'); /* online: no false xp promises (progression is solo-side for now), just the truth of the run */
+ try{if(window._deeds&&window._deeds.pct)deedsInto();}catch(e){} /* deeds that already arrived are carved AFTER the base text - the old order WIPED them almost every death ("super not really working") */
  document.getElementById('over').style.display='flex';
  metaSave();
 }
+function deedsInto(){try{const m9=window._deeds;if(!m9||!m9.pct)return;
+ const L9={h:'🍯 honey banked',p:'🐝 greatest brood',qk:'👑 queens felled',bk:'💀 bosses felled',wk:'🐛 worms slain',sp:'💠 splits',m:'⏳ minutes flown'};
+ let h9='<br><b style="color:#ffd75e;letter-spacing:1px">THE LEDGER OF DEEDS</b>'+((m9.tot|0)<20?' <span style="opacity:.5;font-size:10.5px">(early days: '+(m9.tot|0)+' flights measured)</span>':'')+'<br><span style="font-size:12.5px;line-height:1.75">';
+ for(const k9 in m9.pct){if(!(k9 in L9))continue;h9+=L9[k9]+' · beat <b style="color:#ffe9a0">'+m9.pct[k9]+'%</b> of flights<br>';}
+ h9+='</span>';const ov9=document.getElementById('overTxt');
+ if(ov9&&(''+ov9.innerHTML).indexOf('LEDGER OF DEEDS')<0)ov9.innerHTML+=h9;}catch(e){}}
 function drawNestQueen(){
  const pv=document.getElementById('qprev');if(!pv||!pv.getContext)return;
  const c2=pv.getContext('2d');if(!c2||!c2.clearRect)return;
@@ -2893,7 +2898,7 @@ document.getElementById('backBtn').onclick=()=>{document.getElementById('home').
  }}
 let WS_URL=null;
 {try{if(typeof location!=='undefined'){const P9=new URLSearchParams(location.search||'');
- let u9=P9.get('ws');try{window._ref=P9.get('ref')||null;}catch(e){}
+ let u9=P9.get('ws');try{window._ref=P9.get('ref')||null;window._wormcam=!!P9.get('wormcam');}catch(e){}
  if(!u9&&/^https?:$/.test(location.protocol)&&!P9.get('solo')) /* served from a room? then the room IS home */
   u9=(location.protocol==='https:'?'wss://':'ws://')+location.host;
  WS_URL=u9||null; /* connect on RISE with the chosen name, not silently on load */
@@ -4631,6 +4636,16 @@ function draw(){
     ctx.strokeStyle='rgba(140,24,24,.78)';ctx.lineWidth=1.4;
     for(const sd9 of[-1,1]){ctx.beginPath();ctx.moveTo(sg.x+Math.cos(na9)*rr9*sd9,sg.y+Math.sin(na9)*rr9*sd9);
      ctx.lineTo(sg.x+Math.cos(na9)*(rr9+3.4)*sd9+Math.cos(na9+2.6*sd9)*1.6,sg.y+Math.sin(na9)*(rr9+3.4)*sd9+Math.sin(na9+2.6*sd9)*1.6);ctx.stroke();}}} /* recurved BARB pairs walking the flanks */
+  if(window._wormcam){try{ /* THE WORM CONFESSES: state, hunt-line, and the wire-vs-screen gap - one screenshot now holds the whole diagnosis */
+   let nq9=null,nd9=1e18;for(const s2 of swarms){if(s2.dead)continue;const q2=d2(s2.x,s2.y,w9.x,w9.y);if(q2<nd9){nd9=q2;nq9=s2;}}
+   ctx.font='11px monospace';ctx.fillStyle='#fff';
+   ctx.fillText((w9.bur>0?'UNDER':w9.prov>0?'HUNT':'idle')+' hp'+(w9.hp|0)+' d'+(Math.sqrt(nd9)|0),w9.x,w9.y-26);
+   if(w9.prov>0&&nq9){ctx.strokeStyle='rgba(255,80,80,.8)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(w9.x,w9.y);ctx.lineTo(nq9.x,nq9.y);ctx.stroke();}
+   if(w9._tx!==undefined){const gap9=Math.hypot(w9._tx-w9.x,w9._ty-w9.y);
+    ctx.strokeStyle=gap9>40?'#ff4040':'#40ff90';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(w9._tx,w9._ty,8,0,TAU);ctx.stroke();
+    ctx.fillStyle=gap9>40?'#ff8080':'#a0ffc0';ctx.fillText('wire '+(gap9|0)+'px',w9.x,w9.y-14);}
+  }catch(e){}}
   {const ha9=Math.atan2(w9.y-w9.seg[0].y,w9.x-w9.seg[0].x);
    ctx.save();ctx.translate(w9.x,w9.y);ctx.rotate(ha9);
    ctx.fillStyle=w9.flash>0?'#ff8672':'#8e2030';

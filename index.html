@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><head>
 <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-<title>FABLEHIVE — a fable of the honey dusk</title>
+<title>FABLEHIVE · a fable of the honey dusk</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
 html,body{width:100%;height:100%;overflow:hidden;background:#241426;font-family:'Trebuchet MS',system-ui,sans-serif;color:#fff2dc;touch-action:none}
@@ -59,6 +59,42 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
 .btn:active{transform:translateY(2px)}
 .btn2{margin-top:10px;padding:10px 30px;font-size:15px;font-weight:bold;color:#ffe9c0;background:rgba(70,40,70,.7);border:1px solid #8a5a7a;border-radius:30px;cursor:pointer}
 #over,#home{display:none}
+/* ============ R36 THE SMALL SCREEN: the phone is a first-class throne ============ */
+#lb{top:50px} /* the gear no longer sits ON the leaderboard crown */
+@media (pointer:coarse),(max-width:820px),(max-height:520px){
+ .panel{justify-content:flex-start;overflow-y:auto;padding:14px 10px calc(96px + env(safe-area-inset-bottom,0px));-webkit-overflow-scrolling:touch}
+ .panel h1{font-size:30px;letter-spacing:6px;margin-top:4px}
+ #home h1{font-size:24px;letter-spacing:4px}
+ #start h1{font-size:38px}
+ #qprev{width:190px;height:100px}
+ #sizeRow{max-width:100vw;overflow-x:auto;flex-wrap:nowrap;padding:0 6px}
+ #tabs{max-width:100vw;flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;padding:2px 8px;-webkit-overflow-scrolling:touch}
+ .tab{flex:0 0 auto;padding:10px 15px;font-size:13px;line-height:1.3}
+ #shopWrap{max-height:none;flex:0 1 auto;max-width:100vw}
+ .item{width:31vw;max-width:118px;min-width:96px;padding:10px 6px;font-size:11.5px}
+ #home .btn{position:fixed;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));margin:0;padding:13px 26px;font-size:16px;z-index:13;box-shadow:0 6px 22px #000a,0 6px 26px #ffb04d55}
+ #home{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+ #subRail{max-width:44vw!important;bottom:calc(6px + env(safe-area-inset-bottom,0px))!important}
+ html.mob .ab,.ab{min-width:54px;min-height:52px;padding:7px 5px}
+ html.mob .ab .ic,.ab .ic{font-size:17px}
+ html.mob .ab span,.ab span{font-size:11.5px}
+ html.mob .ab small,.ab small{font-size:8.5px}
+ html.mob #bar,#bar{bottom:calc(6px + env(safe-area-inset-bottom,0px))}
+ html.mob #tip,#tip{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+ #gear{width:42px!important;height:42px!important;line-height:42px!important;font-size:17px}
+ #fsBtn{width:42px!important;height:42px!important;line-height:42px!important;font-size:17px;right:58px!important}
+ html.mob #lb,#lb{top:56px;font-size:11px;max-width:44vw}
+ .btn{padding:13px 38px;font-size:18px}
+ .btn2{padding:11px 24px;font-size:14px}
+}
+@media (max-height:460px) and (pointer:coarse){ /* a TRUE landscape phone: shorter crowns, denser court */
+ .panel h1,#home h1{font-size:20px;letter-spacing:3px;margin:0}
+ #start h1{font-size:26px}
+ #qprev{width:150px;height:80px}
+ .panel p{font-size:12px;margin:2px 0}
+ #xpbar{margin:4px auto 2px}
+ #tabs{margin:4px 0 6px}
+}
 #skins{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;justify-content:center}
 .skin{width:74px;padding:9px;border-radius:12px;background:rgba(42,24,44,.7);border:2px solid #5a3a5a;cursor:pointer;text-align:center;font-size:11px}
 .skin.sel{border-color:#ffd75e}
@@ -70,17 +106,18 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
 <div id="hud"></div><div id="lb"></div><div id="hint"></div><div id="toast"></div><div id="warn"></div>
 <div id="bar"></div><div id="tip"></div>
 <div id="gear" style="position:fixed;top:8px;right:8px;z-index:9;width:34px;height:34px;border-radius:50%;background:rgba(42,24,44,.6);border:1px solid rgba(255,220,150,.25);text-align:center;line-height:34px;cursor:pointer;display:none">⚙</div>
+<div id="fsBtn" style="position:fixed;top:8px;right:50px;z-index:9;width:34px;height:34px;border-radius:50%;background:rgba(42,24,44,.6);border:1px solid rgba(255,220,150,.25);text-align:center;line-height:34px;cursor:pointer;display:none">⛶</div>
 <div id="setPanel" style="position:fixed;top:48px;right:8px;z-index:9;background:rgba(30,16,32,.94);border:1px solid rgba(255,220,150,.35);border-radius:12px;padding:12px 14px;display:none;font-size:13px;line-height:2">
  <div>sound <input id="volS" type="range" min="0" max="100" value="100" style="vertical-align:middle;width:110px"></div>
  <div>music <input id="musS" type="range" min="0" max="100" value="100" style="vertical-align:middle;width:110px"></div>
- <div style="cursor:pointer;opacity:.9;color:#ffd75e" id="nestGo">🏠 RETIRE TO THE NEST — ends the round, banks your ✨</div>
+ <div style="cursor:pointer;opacity:.9;color:#ffd75e" id="nestGo">🏠 RETIRE TO THE NEST · ends the round, banks your ✨</div>
  <div id="perfLine" style="opacity:.6;font-size:11px">sim –ms · draw –ms</div>
 </div>
 <input id="chatIn" maxlength="80" placeholder="say... (Enter sends, Esc closes)" style="position:fixed;left:50%;bottom:84px;transform:translateX(-50%);width:300px;padding:8px 12px;border-radius:16px;border:1.5px solid #ffd75e88;background:rgba(30,16,30,.88);color:#fff2dc;font-size:14px;display:none;z-index:40;outline:none">
 <div id="start" class="panel">
  <h1>FABLEHIVE</h1>
  <p style="margin-top:-6px;opacity:.55;font-size:13px;letter-spacing:3px">a fable of the honey dusk</p>
- <p style="font-size:16px;max-width:420px">Fly your queen. Your brood does the rest.<br><b style="color:#ffd75e">Grow huge — then SPLIT to fly fast again.</b></p>
+ <p style="font-size:16px;max-width:420px">Fly your queen. Your brood does the rest.<br><b style="color:#ffd75e">Grow huge, then SPLIT to fly fast again.</b></p>
  <input id="nameIn" maxlength="16" placeholder="your name" autocomplete="off" style="display:block;margin:6px auto 10px;padding:9px 14px;width:200px;max-width:70vw;text-align:center;font-size:15px;border-radius:12px;border:1.5px solid #ffd75e88;background:rgba(30,16,30,.85);color:#fff2dc;outline:none">
  <button class="btn" id="go">RISE</button>
  <button class="btn2" id="nestBtn">THE NEST · customise</button>
@@ -127,6 +164,10 @@ addEventListener('resize',resize);resize();
 addEventListener('beforeunload',()=>{try{metaSave();}catch(e){}});
 if(typeof document!=='undefined'&&document.addEventListener)document.addEventListener('visibilitychange',()=>{try{metaSave();}catch(e){}});
 const isTouch=('ontouchstart'in window)||navigator.maxTouchPoints>0;
+let UZOOM=isTouch?0.8:1,PINCH=null; /* THE POCKET EYE: phones start wider (you must SEE the flower before the fang bites) - pinch tunes it, the choice is remembered */
+try{const z9=parseFloat((typeof localStorage!=='undefined'&&localStorage)?localStorage.getItem('fh_zoom'):'');if(isFinite(z9)&&z9>=0.55&&z9<=1.25)UZOOM=z9;}catch(e){}
+function pinchDist(e){const a=e.touches[0],b=e.touches[1];return Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY)||1;}
+function saveZoom(){try{if(typeof localStorage!=='undefined'&&localStorage)localStorage.setItem('fh_zoom',String(Math.round(UZOOM*100)/100));}catch(e){}}
 let MOB=false;
 function setMobClass(){try{MOB=((window.matchMedia&&matchMedia('(pointer:coarse)').matches)||Math.min((window.innerWidth||9999),((window.screen&&window.screen.width)||9999))<820);document.documentElement.classList.toggle('mob',MOB);}catch(e){}} /* a landscape phone is STILL a phone: coarse pointer counts, not just width */
 setMobClass();if(typeof addEventListener!=='undefined')addEventListener('resize',setMobClass);
@@ -148,12 +189,12 @@ function env(f0,f1,d,v,w,lp,t0){const c=ac();if(!c||muted)return;try{
  g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(v*volMul,t+0.015);g.gain.exponentialRampToValueAtTime(0.0001,t+d);
  o.start(t);o.stop(t+d+0.05);}catch(e){}}
 const sfxLast={};let pent=0;
-const PENT=[523,587,659,784,880,1046]; /* C D E G A C' — everything sung in the music's key */
+const PENT=[523,587,659,784,880,1046]; /* C D E G A C' - everything sung in the music's key */
 function sfx(t){if(muted)return;const c=ac();if(!c)return;
  const now=Date.now(),min={feed:150,hit:170,buy:120,hurt:340,full:600,pop:280,stomp:750,alarm:1100,evolve:450,split:350,recall:350,die:450,dash:260,leap:300,slam:600,gild:800}[t]||60;
  if(sfxLast[t]&&now-sfxLast[t]<min)return;sfxLast[t]=now;
  const T=c.currentTime;
- /* SOFT & MUSICAL: kalimba, felt and harp — never a klaxon */
+ /* SOFT & MUSICAL: kalimba, felt and harp - never a klaxon */
  if(t==='feed'){const SC9=WALK||PENT;const f=SC9[pent%SC9.length];pent++;const soft9=(pent>>4)&1;
   env(f,f*0.995,soft9?.2:.14,.011,'sine',soft9?1500:2400);if(f<600&&!soft9)env(f*2,f*1.99,.08,.003,'sine',3400);} /* kalimba that slowly changes its felt */
  else if(t==='buy'){env(392,392,.1,.03,'sine',2000);env(523,523,.12,.03,'sine',2200,T+.07);} /* warm marimba pair */
@@ -161,7 +202,7 @@ function sfx(t){if(muted)return;const c=ac();if(!c)return;
  else if(t==='hurt'){env(238,168,.16,.045,'sine',800);env(119,84,.16,.03,'sine',400,T);} /* a low warm ache */
  else if(t==='pop'){const SC9=WALK||PENT;const f=SC9[pent%SC9.length];pent++;env(f,f*0.66,.2,.024,'sine',1400);if((pent>>3)&1)env(f*2,f*2.01,.1,.006,'sine',3800,T+.04);else env(f*1.5,f*1.5,.08,.005,'sine',2600,T+.05);} /* a bubble that WALKS the scale */
  else if(t==='die'){env(392,392,.3,.06,'sine',1500);env(311,311,.34,.055,'sine',1300,T+.22);env(262,262,.6,.05,'sine',1100,T+.44);} /* three falling bells */
- else if(t==='split'){for(let i=0;i<4;i++)env(PENT[i],PENT[i],.18,.028,'sine',2600,T+i*.05);} /* harp gliss UP — the family grows */
+ else if(t==='split'){for(let i=0;i<4;i++)env(PENT[i],PENT[i],.18,.028,'sine',2600,T+i*.05);} /* harp gliss UP - the family grows */
  else if(t==='recall'){for(let i=3;i>=0;i--)env(PENT[i],PENT[i],.18,.028,'sine',2600,T+(3-i)*.05);} /* …and comes home */
  else if(t==='evolve'){env(523,523,.2,.035,'sine',2400);env(659,659,.2,.035,'sine',2600,T+.1);env(784,784,.34,.04,'sine',2800,T+.2);env(1046,1046,.4,.02,'sine',4200,T+.3);} /* a gentle bell arpeggio */
  else if(t==='stomp'){env(90,52,.24,.08,'sine',300);} /* deep soft boom */
@@ -227,7 +268,7 @@ const ROLES={
  spitter:{hp:55,r:8.5,dmg:16,spd:322,cost:200,mass:0.7,shape:'spout', col:'#8fe0c0',
   tip:'Horse-archer. Slow glowing quarrels you can dodge - and so can they.<br><b>Strong vs:</b> armourers, titans (+60%) &nbsp;<b>Weak vs:</b> lancers, any melee<br><b>Weight 0.7</b> (light in the saddle)'},
  armourer:{hp:620,r:15,dmg:10,spd:265,cost:320,mass:2.2,shape:'slab', col:'#e8b96a',
-  tip:'The BULWARK. An immovable wall for the queen — assassins stick to it instead of slipping past. Cannot be shoved.<br><b>Strong:</b> guards the crown &nbsp;<b>Weak vs:</b> spitters, titans<br><b>Weight 2.2</b>'},
+  tip:'The BULWARK. An immovable wall for the queen: assassins stick to it instead of slipping past. Cannot be shoved.<br><b>Strong:</b> guards the crown &nbsp;<b>Weak vs:</b> spitters, titans<br><b>Weight 2.2</b>'},
  nurse:{hp:45,r:8,   dmg:0, spd:305,cost:230,mass:0.8,shape:'heart', col:'#a8f0b8',
   tip:'Heals every nearby unit, always.<br><b>Strong:</b> keeps veterans alive, pairs with armourers &nbsp;<b>Weak:</b> defenceless alone<br><b>Weight 0.8</b>'},
  titan:{hp:1100,r:26, dmg:60,spd:240,cost:850,mass:4.5,shape:'hex',  col:'#ffb04d',
@@ -240,10 +281,10 @@ const EVOS=[
  {at:40,kind:'unlock',opts:['armourer'],label:'ARMOURERS'},
  {at:60,kind:'unlock',opts:['titan'],label:'TITANS'}
 ];
-const TUNE={qspd:224,qmass:0.12,qacc:8,zoom:1,zease:0.05,look:0.3,camease:0.09,honey:1}; /* FEEL CONSTANTS — the old tuning-bench panel is gone; these are its final numbers, inlined and law */
+const TUNE={qspd:224,qmass:0.12,qacc:8,zoom:1,zease:0.05,look:0.3,camease:0.09,honey:1}; /* FEEL CONSTANTS - the old tuning-bench panel is gone; these are its final numbers, inlined and law */
 let SPLIT_MAX=3;
 let SOUL_CAP=100;let NPLAY=1;let ROOM=false;let ELDRT=420,SPDRT=420,WMRT=240; /* boss + worm respawn clocks, ROOM only */ /* flipped true only by the room server: multiplayer-only ecology keys off THIS, so solo stays exactly solo *//* live human players in the room; 1 offline. Drives caps+costs. */ /* THE MUSTER LIMIT (58): brought DOWN from 150 - still comfortably past every unlock (titans 60, stage-3 70) so nothing is ever locked out, but a leaner ceiling means more dogfights and fewer laggy deathmatches. Split to grow past it as more queens, not one bloated swarm a 60Hz tick can't hold. */
-/* meta (cosmetics only, ever — and EVERYTHING earnable with ✨: Royal Nectar only skips the grind) */
+/* meta (cosmetics only, ever - and EVERYTHING earnable with ✨: Royal Nectar only skips the grind) */
 let META={xp:0,skin:0,nectar:0,royal:false,sub:false,seasonXp:0,claimedF:[],claimedR:[],owned:{},eq:{pattern:'plain',crown:'none',trail:'none',wings:'standard',body:'sleek',tail:'notail',fleet:'plainfleet',aura:'noaura',plate:'noplate',eye:'simple'}};
 try{const m=(typeof localStorage!=='undefined')&&localStorage.getItem('brood_meta');if(m){const p=JSON.parse(m);META=Object.assign(META,p);META.owned=p.owned||{};META.eq=Object.assign({pattern:'plain',crown:'none',trail:'none',wings:'standard',body:'sleek',tail:'notail',fleet:'plainfleet',aura:'noaura',plate:'noplate',eye:'simple'},p.eq||{});META.claimedF=p.claimedF||[];META.claimedR=p.claimedR||[];}}catch(e){}
 if(META.owned&&META.owned.broodsigil)delete META.owned.broodsigil; /* Her Sigil retired by decree */
@@ -266,7 +307,7 @@ function trophy(id,msg){ /* achievements should FEEL like achievements */
 function comboMult(){return 1+Math.min(0.5,comboN*0.02);}
 function feedCombo(){comboN++;comboT=2.2;if(comboN>comboBest)comboBest=comboN;}
 const SKINS=[
- /* the crayon box — free from the first flight */
+ /* the crayon box - free from the first flight */
  {n:'Honey',c:'#ffcf5e',xp:0},{n:'Rose',c:'#ff8fb0',xp:0},{n:'Sky',c:'#7fc8ff',xp:0},
  {n:'Mint',c:'#7fe8b0',xp:110},{n:'Meadow',c:'#9fd06a',xp:170},{n:'Lilac',c:'#c9a6ff',xp:240},
  /* the coveted */
@@ -274,10 +315,10 @@ const SKINS=[
  {n:'Violet',c:'#b08fff',xp:1400},{n:'Ivory',c:'#f4ede0',xp:1800},
  {n:'Vivid Crimson',c:'#e82848',xp:2400},{n:'Emerald Glimmer',c:'#28c86a',xp:2800},
  {n:'Obsidian',c:'#4a3a58',xp:3400},{n:'Aurum',c:'#ffd700',xp:4200},
- /* the OMBRÉ — colour that flows (royal-tier) */
+ /* the OMBRÉ - colour that flows (royal-tier) */
  {n:'Sunset Fade',c:'#ff8fb0',c2:'#ffb04d',xp:5200},{n:'Dusk Ombre',c:'#b08fff',c2:'#3a3a8a',xp:5800},
  {n:'Honeyfade',c:'#ffd700',c2:'#fff6dc',xp:4800},{n:'Oilslick',c:'#28c8b0',c2:'#8a2ab0',xp:6600}];
-/* THE CATALOGUE — every item wears an ✨ price; Nectar (💧) merely skips the grind */
+/* THE CATALOGUE - every item wears an ✨ price; Nectar (💧) merely skips the grind */
 const ITEMS=[
  {id:'plain',    cat:'pattern',n:'Plain',       xp:0,   d:'the queen as she was born'},
  {id:'blush',    cat:'pattern',n:'Blush',       xp:60,  d:'a soft warmth on her sides'},
@@ -308,11 +349,11 @@ const ITEMS=[
  {id:'halo',     cat:'crown',  n:'Halo',        xp:5200,royal:true,d:'do not ask how she earned it'},
  {id:'fangs',    cat:'crown',  n:'Fangs',       xp:700, d:'a smile borrowed from something worse'},
  {id:'skull',    cat:'crown',  n:'Predator Skull',xp:4100,royal:true,d:'a hunter skull worn WHOLE as a helm - the meadow remembers losers'},
- {id:'elderhorn',cat:'crown',  n:'Elder Crown', xp:-1,  d:'slay the Elder once — wear his horns forever'},
- {id:'broodcrown',cat:'crown', n:'Brood Crown', xp:-1,  d:'slay the Broodmother — six eyes keep watch from your brow'},
- {id:'waspband', cat:'crown',  n:'Waspbane Band',xp:-1, d:'break nine wasps in one life — wear their warning stripes'},
+ {id:'elderhorn',cat:'crown',  n:'Elder Crown', xp:-1,  d:'slay the Elder once and wear his horns forever'},
+ {id:'broodcrown',cat:'crown', n:'Brood Crown', xp:-1,  d:'slay the Broodmother: six eyes keep watch from your brow'},
+ {id:'waspband', cat:'crown',  n:'Waspbane Band',xp:-1, d:'break nine wasps in one life to earn their warning stripes'},
  {id:'noctis',   cat:'pattern',n:'Noctis',      xp:2400, d:'the night itself, worn - deep indigo dusted with cold stars'},
- {id:'silkstrand',cat:'trail', n:'Silkstrand',  xp:-1,  d:'slay the Broodmother — silk follows you like memory'},
+ {id:'silkstrand',cat:'trail', n:'Silkstrand',  xp:-1,  d:'slay the Broodmother: silk follows you like memory'},
  {id:'notrail',  cat:'trail',  n:'Still Air',   xp:0,   d:'you pass unseen'},
  {id:'breeze',   cat:'trail',  n:'Breeze',      xp:130, d:'the faintest stir'},
  {id:'petal',    cat:'trail',  n:'Petalfall',   xp:450, d:'blossoms follow you'},
@@ -372,7 +413,7 @@ const ITEMS=[
  /* ELDRITCH */
  {id:'eldritcheyes',cat:'pattern',n:'The Watchers',xp:3800,royal:true,d:'eyes open across her back. they blink.'},
  {id:'tentacles',cat:'tail',   n:'Tendrils',    xp:3200,royal:true,d:'something beneath her never stopped reaching'},
- {id:'watchertr',cat:'trail',  n:'Following Eyes',xp:4400,royal:true,d:'little eyes open in your wake — and they watch YOU'},
+ {id:'watchertr',cat:'trail',  n:'Following Eyes',xp:4400,royal:true,d:'little eyes open in your wake... and they watch YOU'},
  /* BODIES */
  {id:'sleek',    cat:'body',   n:'Sleek',       xp:0,   d:'the born silhouette'},
  {id:'plump',    cat:'body',   n:'Bumblesome',  xp:400, d:'round, soft, unbothered'},
@@ -384,7 +425,7 @@ const ITEMS=[
  {id:'foxtail',  cat:'tail',   n:'Foxbrush',    xp:850, d:'a great soft brush, swaying'},
  {id:'ribbontail',cat:'tail',  n:'Ribbons',     xp:1300,d:'two silks that write in the air'},
  {id:'stingertail',cat:'tail', n:'Stinger',     xp:1600,d:'the point of the whole argument'},
- /* FLEETS — dress the ARMY itself */
+ /* FLEETS - dress the ARMY itself */
  {id:'noaura',   cat:'aura',   n:'Bare Air',    xp:0,   d:'the space around her, unclaimed'},
  {id:'goldhalo', cat:'aura',   n:'Gold Halo',   xp:1200,d:'a soft ring of honeyed light'},
  {id:'petalorbit',cat:'aura',  n:'Petal Orbit', xp:1800,d:'three petals circle her forever'},
@@ -426,8 +467,8 @@ const ITEMS=[
  {id:'combplate', cat:'plate',  n:'Comb Plate',   xp:1500, d:'wax-gold cells - one still holds the light'},
  {id:'leafplate', cat:'plate',  n:'Leafguard',    xp:1100, d:'the meadow armours its own'},
  {id:'warchitin', cat:'plate',  n:'War Chitin',   xp:3800,royal:true,d:'grown armour that COVERS - only her head stays bare'},
- {id:'moltaura', cat:'aura',   n:'Apex Shimmer',xp:-1,  d:'reach 120 souls once — wear the shimmer of the great'},
- {id:'algaeglow',cat:'aura',   n:'Grotto Glow', xp:-1,  d:'gather 200 honey inside the dark — the algae remember you'},
+ {id:'moltaura', cat:'aura',   n:'Apex Shimmer',xp:-1,  d:'reach 120 souls once to wear the shimmer of the great'},
+ {id:'algaeglow',cat:'aura',   n:'Grotto Glow', xp:-1,  d:'gather 200 honey inside the dark: the algae remember you'},
  {id:'plainfleet',cat:'fleet', n:'No Kit',      xp:0,   d:'your brood as it was born - no armour, just wings'},
  {id:'waxfleet',   cat:'fleet', n:'Wingcase',    xp:1200,d:'raised wing-cases, grown in YOUR colour - a fiercer you'},
  {id:'chitinfleet',cat:'fleet', n:'Carapace',    xp:2000,d:'layered chitin plates, grown in your own colour'},
@@ -443,8 +484,8 @@ const ITEMS=[
 for(const it of ITEMS){if(it.royal)it.xp=Math.round(it.xp*2.2);else if(it.xp>0)it.xp=Math.round(it.xp*1.6);} /* the long road got longer; the ROYAL SUB is the carriage */
 function itemById(id){return ITEMS.find(i2=>i2.id===id)||null;}
 function ownsItem(id){const it=itemById(id);if(!it)return false;
- if(earnOnly(it))return !!META.owned[id]; /* trophies are never included — they are bled for */
- return it.xp===0||META.xp>=it.xp||!!META.owned[id]||!!META.sub;} /* the bar unlocks — no purse, no spending */
+ if(earnOnly(it))return !!META.owned[id]; /* trophies are never included - they are bled for */
+ return it.xp===0||META.xp>=it.xp||!!META.owned[id]||!!META.sub;} /* the bar unlocks - no purse, no spending */
 function earnOnly(it){return it.xp<0;}
 function buyItem(id){ /* kept for tests & the sub: equips if the bar has reached it */
  return ownsItem(id)?equipItem(id):false;
@@ -508,7 +549,7 @@ function soulCap(){return Math.max(45,SOUL_CAP-(NPLAY-1)*9);}/* leaner rooms the
 function calcR(s){s.R=26+9.2*Math.sqrt(s.units.length+1);}
 const CSEQ5=[0,1,-1,2,-2],CSEQ4=[-0.5,0.5,-1.5,1.5],CSEQ3=[0,1,-1]; /* CENTER-OUT: partial ranks stay balanced */
 const CMEAN5=[0,0.5,0,0.5,0],CMEAN4=[-0.5,0,-0.5,0],CMEAN3=[0,0.5,0]; /* prefix means: subtract, and every part-row sits MIRRORED on the line of march */
-function ringPos(i,base,spacing,n){i=i|0;n=(n==null?i+1:n)|0;let ring=0,rem=i,start=0;for(let k=0;k<40;k++){const rad=base+ring*spacing;const cap=Math.max(1,Math.round(TAU*rad/spacing));if(rem<cap){const inThis=Math.min(cap,Math.max(1,n-start));return[rad,(rem/inThis)*TAU+ring*0.5];}rem-=cap;start+=cap;ring++;}return[base,0];} /* fill inside-out; the LAST (partial) ring spreads its ACTUAL units evenly around the circle — never clumped on one arc, symmetric at every size */
+function ringPos(i,base,spacing,n){i=i|0;n=(n==null?i+1:n)|0;let ring=0,rem=i,start=0;for(let k=0;k<40;k++){const rad=base+ring*spacing;const cap=Math.max(1,Math.round(TAU*rad/spacing));if(rem<cap){const inThis=Math.min(cap,Math.max(1,n-start));return[rad,(rem/inThis)*TAU+ring*0.5];}rem-=cap;start+=cap;ring++;}return[base,0];} /* fill inside-out; the LAST (partial) ring spreads its ACTUAL units evenly around the circle - never clumped on one arc, symmetric at every size */
 /* THE LAW OF SIZE: small broods fly fast; great broods crawl. Splitting is speed. */
 let UGRID=new Map();
 function gridBuild(){UGRID.clear(); /* THE GRID: one pass, every soul indexed - the n-squared scans die here */
@@ -532,7 +573,7 @@ function swarmMass(s){const us=s.units;if(!us||!us.length)return 0;
  if(!us[0]||!us[0].role)return us.length;
  let m=0;for(const u of us)m+=(ROLES[u.role]?ROLES[u.role].mass:1);return m;}
 function queenSpd(s){return TUNE.qspd*Math.pow(11/(11+swarmMass(s)*TUNE.qmass),0.5)*(s.prot>0?1.15:1);}
-/* THE LAW OF WEIGHT (58): a lean brood still FLIES and a great one is heavier — but the crawl is GONE.
+/* THE LAW OF WEIGHT (58): a lean brood still FLIES and a great one is heavier - but the crawl is GONE.
    Opening speed is unchanged (~218); a maxed brood now moves ~150 instead of ~80, so late-game isn't a slog.
    The real brake on bloat is the WALLET (recruitCost) and the lower cap, NOT a boring slowdown. */
 function count(s,role){let n=0;for(const u of s.units)if(u.role===role)n++;return n;}
@@ -563,14 +604,14 @@ function buy(s,role){
  return true;
 }
 
-/* ============ THE SPLIT — the flagship ============ */
+/* ============ THE SPLIT - the flagship ============ */
 function splitSwarm(s){
  const allies=teamSwarms(s.team).filter(x=>x.ally);
  if(s.dead||s.units.length<4||allies.length>=SPLIT_MAX)return null;
  const fr0=[0.25,1/3,0.5][allies.length]||0.5;
  const a=newSwarm(s.team,s.x+rand(-40,40),s.y+rand(-40,40),{ally:true,bot:true,arch:'farmer',name:s.name+"'s kin",col:s.col,honey:Math.floor(s.honey*fr0)});
  s.honey=Math.ceil(s.honey*(1-fr0));
- /* THE EQUALIZING SPLIT: first kin takes a quarter, second a third, third a half —
+ /* THE EQUALIZING SPLIT: first kin takes a quarter, second a third, third a half -
     so a quick triple-split leaves FOUR broods of equal blood */
  const frac=[0.25,1/3,0.5][allies.length]||0.5;
  const groups={};for(const u of s.units)(groups[u.role]=groups[u.role]||[]).push(u);
@@ -650,7 +691,7 @@ function spawnFlower(kind,quiet){
    groves.push({x:p.x+Math.cos(aa)*88,y:p.y+Math.sin(aa)*88,amt:rand(26,36),max:36,vx:0,vy:0,sp:5,kind:'fairy',ring:id});}
   if(!quiet)addRing(p.x,p.y,'#ffd7e8',96);
   return null;}
- else if(kind==='rock'){ /* blooming from the stone itself — ONE bloom per stone */
+ else if(kind==='rock'){ /* blooming from the stone itself - ONE bloom per stone */
   let b=null;
   for(let t9=0;t9<10&&!b;t9++){let c9=boulders[(Math.random()*boulders.length)|0];
    if(c9&&!(c9.x>WORLD.w*0.5&&c9.y<WORLD.h*0.5)&&Math.random()<0.6)c9=boulders[(Math.random()*boulders.length)|0]; /* the badlands bloom hardest */
@@ -689,7 +730,7 @@ function popFlower(g){ /* the poker-machine payout: burst, nuggets, gone */
  if(near({x:g.x,y:g.y}))sfx(g.grand||g.kind==='night'?'gild':'pop');
  /* a fairy falls: the ring keeps count */
  if(g.kind==='night'){const M5=me();
-  if(M5&&!M5.dead&&d2(g.x,g.y,M5.x,M5.y)<520*520)trophy('noctis','NOCTIS — THE NIGHT ITSELF, WORN');}
+  if(M5&&!M5.dead&&d2(g.x,g.y,M5.x,M5.y)<520*520)trophy('noctis','NOCTIS · THE NIGHT ITSELF, WORN');}
  if(g.kind==='fairy'&&g.ring&&FAIRY.rings[g.ring]){const R4=FAIRY.rings[g.ring];
   if(R4.t===-1)R4.t=20; /* the window opens with the first pop */
   R4.left--;
@@ -725,7 +766,7 @@ function flowerTick(dt){
 }
 function makeWorld(){
  groves=[];boulders=[];coves=[];ways=[];drops=[];fx=[];shots=[];moths=[];moss=[];spider=null;webshots=[];
- /* THE WIND FIRST — so the stones may respect the river */
+ /* THE WIND FIRST - so the stones may respect the river */
  {const cxx=WORLD.w/2,cyy=WORLD.h/2,RR=1850,NW=8;
   for(let i=0;i<NW;i++){
    const a1=i/NW*TAU,a2=(i+1)/NW*TAU;
@@ -742,7 +783,7 @@ function makeWorld(){
     px=nx;py=ny;}
   }}
 
- /* generous LARGE boulders — parted politely around the rivers of air */
+ /* generous LARGE boulders - parted politely around the rivers of air */
  for(let i=0;i<28;i++){
   let x=rand(360,WORLD.w-360),y=rand(360,WORLD.h-360);
   if(Math.random()<0.5){x=rand(WORLD.w*0.52,WORLD.w-360);y=rand(360,WORLD.h*0.46);} /* the BADLANDS pile up north-east */
@@ -754,7 +795,7 @@ function makeWorld(){
    if(d2(x,y,px,py)<(150+80)*(150+80)){nearWay=true;break;}}
   if(nearWay)continue;
   const rr9=rand(60,150);
-  let crowd=false; /* stones keep POLITE distance — no accidental sealed pockets */
+  let crowd=false; /* stones keep POLITE distance - no accidental sealed pockets */
   for(const b of boulders){if(d2(x,y,b.x,b.y)<(b.r+rr9+95)**2){crowd=true;break;}}
   if(crowd)continue;
   boulders.push({x,y,r:rr9,kind:(Math.random()*3)|0});
@@ -767,7 +808,7 @@ function makeWorld(){
    if(d2(b.x,b.y,WORLD.w/2,WORLD.h/2)<700*700)continue;
    const aa=rand(0,TAU);
    fieldMaws.push({x:b.x+Math.cos(aa)*(b.r+14),y:b.y+Math.sin(aa)*(b.r+14),cd:0,anim:0,rot:aa+Math.PI/2,big:1.4+rand(0,0.6)});}}
- /* four coves: three wide-mouthed — and THE NARROWS, where only small queens fit */
+ /* four coves: three wide-mouthed - and THE NARROWS, where only small queens fit */
  const covePts=[];
  for(let c=0;c<4;c++){
   let cx,cy,ct9=0;
@@ -786,7 +827,7 @@ function makeWorld(){
    groves.push({x:cx+Math.cos(ga9)*gr9,y:cy+Math.sin(ga9)*gr9,amt:rand(110,155),max:155,vx:0,vy:0,rich:true,sp:5,kind:'rich'});}
  }
  /* open-field groves (drift slightly) */
- /* THE LIVING MEADOW: flowers POP when drained and are reborn elsewhere — the hunt never stales */
+ /* THE LIVING MEADOW: flowers POP when drained and are reborn elsewhere - the hunt never stales */
  for(let g=0;g<60;g++)spawnFlower('sprout',true);
  for(let g=0;g<46;g++)spawnFlower('bloom',true);
  for(let g=0;g<18;g++)spawnFlower('comb',true);
@@ -798,7 +839,7 @@ function makeWorld(){
  /* puff/tumble no longer seeded server-side - client-side ambiance instead */
  /* nightblooms removed - the 5-10s unfurl wait was more chore than charm */
  FAIRY={next:1,rings:{}};
- /* two GILDED BLOOMS: rare, radiant, worth a pilgrimage — and a fight */
+ /* two GILDED BLOOMS: rare, radiant, worth a pilgrimage - and a fight */
  for(let g=0;g<2;g++){
   let gx2,gy2,tr2=0;
   do{gx2=rand(600,WORLD.w-600);gy2=rand(600,WORLD.h-600);tr2++;}
@@ -831,7 +872,7 @@ function spawnElder(){
 }
 function spawnSpider(){
  const ex=elder?elder.hx:1e9,ey=elder?elder.hy:1e9; /* she dens far from HIM, wherever he haunts */
- /* THE BROODMOTHER: the meadow's other nightmare — patient, webbed, surrounded by her young */
+ /* THE BROODMOTHER: the meadow's other nightmare - patient, webbed, surrounded by her young */
  {let sx2,sy2,tr3=0,bsx9=1425,bsy9=1425,bsd9=-1;
   do{sx2=rand(900,1950);sy2=rand(900,1950);tr3++; /* DEEPER in the DARK REALM, clear of the wind road */
    const q3=d2(sx2,sy2,ex,ey);if(q3>bsd9&&d2(sx2,sy2,WORLD.w/2,WORLD.h/2)>=1500*1500){bsd9=q3;bsx9=sx2;bsy9=sy2;}}
@@ -878,7 +919,7 @@ function setupWorldTail(){ /* the rest of world-gen: caves, maws, oasis, decor -
   for(let k=0;k<8;k++){const aa=rand(0,TAU),rr9=rand(40,GR-110);
    moss.push({x:gx9+Math.cos(aa)*rr9,y:gy9+Math.sin(aa)*rr9,r:rand(12,22),ph:rand(0,TAU),glow:0});}
  }
- /* CREVICES & GATES: ten small-slits and eight medium-gates — the meadow is full of doors */
+ /* CREVICES & GATES: ten small-slits and eight medium-gates - the meadow is full of doors */
  const gateSpots=[];
  for(let cv=0;cv<9;cv++){ /* halved: coves and realms carry the chokepoint duty now */
   const x=rand(700,WORLD.w-700),y=rand(700,WORLD.h-700);
@@ -895,7 +936,7 @@ function setupWorldTail(){ /* the rest of world-gen: caves, maws, oasis, decor -
   boulders.push({x:x-Math.cos(aa)*off,y:y-Math.sin(aa)*off,r:r2,kind:(Math.random()*3)|0});
   if(!medium)groves.push({x,y,amt:rand(120,170),max:170,vx:0,vy:0,rich:true,sp:5,kind:'rich',rock:true});
  }
- /* no flower under a rock — LAST word of world-gen (rockblooms excepted: stone IS their home) */
+ /* no flower under a rock - LAST word of world-gen (rockblooms excepted: stone IS their home) */
  for(const g of groves){
   if(g.rock)continue;
   for(let pass=0;pass<3;pass++){let hit=false;
@@ -960,7 +1001,7 @@ function setupWorldTail(){ /* the rest of world-gen: caves, maws, oasis, decor -
  wasps=[];for(let t9=0;t9<3;t9++){const p9={x:rand(WORLD.w*0.55,WORLD.w-420),y:rand(420,WORLD.h*0.44)}; /* stingers of the BADLANDS */
   for(let k=0;k<3;k++)wasps.push({x:p9.x+rand(-40,40),y:p9.y+rand(-40,40),vx:0,vy:0,wa:rand(0,TAU),hp:60,atk:0,trio:t9,ax:p9.x,ay:p9.y});}
  grass=[];for(let i=0;i<300;i++)grass.push({x:rand(0,WORLD.w),y:rand(0,WORLD.h),a:rand(0,TAU),l:rand(8,18),s:rand(0.14,0.36)});
- dews=[];for(let i=0;i<380;i++){const p9=flowerSpot(false);dews.push({x:p9.x,y:p9.y,ph:rand(0,TAU),big:Math.random()<0.1});} /* an abundance — the meadow is strewn with light. KEPT server-side (unlike orbs/moths) - dews are the only thing that feeds the combo/"dopamine ladder" system (feedCombo()), a real design pillar, not just ambient clutter */
+ dews=[];for(let i=0;i<380;i++){const p9=flowerSpot(false);dews.push({x:p9.x,y:p9.y,ph:rand(0,TAU),big:Math.random()<0.1});} /* an abundance - the meadow is strewn with light. KEPT server-side (unlike orbs/moths) - dews are the only thing that feeds the combo/"dopamine ladder" system (feedCombo()), a real design pillar, not just ambient clutter */
  pollen=[];for(let i=0;i<80;i++)pollen.push({x:rand(0,WORLD.w),y:rand(0,WORLD.h),vx:rand(-7,7),vy:rand(-5,9),ph:rand(0,TAU),r:rand(0.8,1.8)});
  flies=[];for(let i=0;i<60;i++)flies.push({x:rand(0,WORLD.w),y:rand(0,WORLD.h),ph:rand(0,TAU),r:rand(1,2.2)});
 }
@@ -988,7 +1029,7 @@ function collideBoulders(o,rad){
  o.x+=nx*bd;o.y+=ny*bd;
  const vn=o.vx*nx+o.vy*ny;
  if(vn<0){o.vx-=nx*vn;o.vy-=ny*vn;} /* slide, never stick */
- /* CONCAVE CORNERS: still inside a second rock? two opposing walls eat all velocity —
+ /* CONCAVE CORNERS: still inside a second rock? two opposing walls eat all velocity -
     eject along the seam's bisector so no soul is ever entombed */
  let done=false;
  boulderNear(o.x,o.y,BR,b=>{if(done||b===bb)return;
@@ -1006,7 +1047,7 @@ function collideBoulders(o,rad){
  });
 }
 function grovePos(){let best=null,bd=-1;return best;}
-function groveNear(g,x,y,sp){ /* move a grove near (x,y) onto CLEAR ground — a granted flower never sleeps under a rock */
+function groveNear(g,x,y,sp){ /* move a grove near (x,y) onto CLEAR ground - a granted flower never sleeps under a rock */
  for(let t=0;t<24;t++){
   const gx2=clamp(x+rand(-(sp||260),sp||260),300,WORLD.w-300),gy2=clamp(y+rand(-(sp||260),sp||260),300,WORLD.h-300);
   if(!boulders.some(b=>Math.hypot(gx2-b.x,gy2-b.y)<b.r+32)){g.x=gx2;g.y=gy2;return;}}
@@ -1023,7 +1064,7 @@ function setup(){
   if(spider&&d2(px,py,spider.hx,spider.hy)<1600*1600)continue;
   break;}
  const m=newSwarm(0,px,py,{bot:false,ally:false,name:(META.name||'You'),col:SKINS[META.skin].c,honey:300});
- for(let i=0;i<2;i++)addUnit(m,'forager'); /* a reservoir, not an army — the opening is YOURS */
+ for(let i=0;i<2;i++)addUnit(m,'forager'); /* a reservoir, not an army - the opening is YOURS */
  calcR(m);swarms.push(m);
  /* spawn safety: near a grove */
  let ng=null,nd=1e18;for(const g of groves){if(g.rock||g.gild||g.mother)continue;const q=d2(g.x,g.y,px,py);if(q<nd){nd=q;ng=g;}}
@@ -1072,13 +1113,18 @@ function keyVec(){let x=0,y=0;
  if(input.k['a']||input.k['arrowleft'])x-=1;if(input.k['d']||input.k['arrowright'])x+=1;
  if(input.k['w']||input.k['arrowup'])y-=1;if(input.k['s']||input.k['arrowdown'])y+=1;
  const m=Math.hypot(x,y);return m>0?{x:x/m,y:y/m,on:true}:{x:0,y:0,on:false};}
-cv.addEventListener('touchstart',e=>{e.preventDefault();const t=e.changedTouches[0];
+cv.addEventListener('touchstart',e=>{e.preventDefault();
+ if(e.touches&&e.touches.length>=2){input.joy=null;PINCH={d:pinchDist(e),z0:UZOOM};return;} /* two fingers = the pocket eye, never a steer */
+ const t=e.changedTouches[0];
  /* tap directly on the queen = recall */
  const wx=cam.x+(t.clientX*DPR-W/2)/cam.z,wy=cam.y+(t.clientY*DPR-H/2)/cam.z;
  if(d2(wx,wy,me().x,me().y)<40*40){recallAll(0);return;}
  input.joy={ox:t.clientX,oy:t.clientY,dx:0,dy:0,id:t.identifier};resumeAudio();},{passive:false});
-cv.addEventListener('touchmove',e=>{e.preventDefault();if(!input.joy)return;for(const t of e.changedTouches)if(t.identifier===input.joy.id){input.joy.dx=t.clientX-input.joy.ox;input.joy.dy=t.clientY-input.joy.oy;if(Math.hypot(input.joy.dx,input.joy.dy)>14)input.joy.moved=true;}},{passive:false});
-function tEnd(e){if(!input.joy)return;for(const t of e.changedTouches)if(t.identifier===input.joy.id){window._dragTap=!!input.joy.moved;input.joy=null;}}
+cv.addEventListener('touchmove',e=>{e.preventDefault();
+ if(PINCH&&e.touches&&e.touches.length>=2){UZOOM=clamp(PINCH.z0*(pinchDist(e)/PINCH.d),0.55,1.25);return;}
+ if(!input.joy)return;for(const t of e.changedTouches)if(t.identifier===input.joy.id){input.joy.dx=t.clientX-input.joy.ox;input.joy.dy=t.clientY-input.joy.oy;if(Math.hypot(input.joy.dx,input.joy.dy)>14)input.joy.moved=true;}},{passive:false});
+function tEnd(e){if(PINCH&&(!e.touches||e.touches.length<2)){PINCH=null;saveZoom();}
+ if(!input.joy)return;for(const t of e.changedTouches)if(t.identifier===input.joy.id){window._dragTap=!!input.joy.moved;input.joy=null;}}
 cv.addEventListener('touchend',tEnd);cv.addEventListener('touchcancel',tEnd);
 cv.addEventListener('click',e=>{const wx=cam.x+(e.clientX*DPR-W/2)/cam.z,wy=cam.y+(e.clientY*DPR-H/2)/cam.z;
  if(d2(wx,wy,me().x,me().y)<40*40)recallAll(0);});
@@ -1093,6 +1139,7 @@ cv.addEventListener('contextmenu',e=>{e.preventDefault();
  splitToward(wx,wy);});
 let lastTap=0,lastTX=0,lastTY=0;
 cv.addEventListener('touchstart',e=>{const t=e.changedTouches[0];if(!t)return;
+ if((e.touches&&e.touches.length>1)||PINCH)return; /* a pinch is not a wish to split */
  const n8=Date.now();
  if(n8-lastTap<300&&!window._dragTap&&Math.abs(t.clientX-lastTX)<40&&Math.abs(t.clientY-lastTY)<40){ /* a STEER is not a wish to split: any drag in the last tap cancels the double-tap split, so thumbs can fly without shedding kin */
   const wx=cam.x+(t.clientX*DPR-W/2)/cam.z,wy=cam.y+(t.clientY*DPR-H/2)/cam.z;
@@ -1101,7 +1148,7 @@ cv.addEventListener('touchstart',e=>{const t=e.changedTouches[0];if(!t)return;
 function resumeAudio(){const c=ac();if(c&&c.state==='suspended')c.resume();music();}
 
 /* ============ step ============ */
-function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, lifted verbatim from step() so it can also run LOCALLY online — this is your soul, and online will now run it instead of lerping dead dots */
+function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, lifted verbatim from step() so it can also run LOCALLY online - this is your soul, and online will now run it instead of lerping dead dots */
   /* ---- UNITS: formation is law ---- */
   const moving=s.spdNow>60;
   /* anticipated heading: lean into where you're steering (26d) */
@@ -1125,7 +1172,7 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
     u._wl=col*30;u._wd=s.R*0.42+18+row*30+Math.abs(col)*8;u._gi=gi++;}
    else{rc[u.role]=rc[u.role]||0;u._fi=rc[u.role]++;}
   }}
-  /* NURSES mend every soul near them, always — attrition is a doctrine you can SEE */
+  /* NURSES mend every soul near them, always - attrition is a doctrine you can SEE */
   {const nrs=[];for(const u of s.units)if(u.role==='nurse')nrs.push(u);
    if(nrs.length)for(const u of s.units){if(u.hp>=u.maxHp)continue;
     for(const n2 of nrs){if(d2(u.x,u.y,n2.x,n2.y)<80*80){
@@ -1133,7 +1180,7 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
      if(Math.random()<dt*1.4&&fx.length<430)fx.push({x:u.x+rand(-6,6),y:u.y-u.r-4,vx:0,vy:-26,t:0,life:0.8,col:'#a8f0b8',txt:'+'});
      break;}}}}
   /* the ARMOURER braces always; soldiers brace in formation. (The old PLATED aura that buffed nearby
-     troops — with its bronze ring/halo — is GONE: the armourer is a pure BULWARK for the queen, nothing else.) */
+     troops - with its bronze ring/halo - is GONE: the armourer is a pure BULWARK for the queen, nothing else.) */
   const anch=[];for(const u of s.units)if(u.role==='armourer')anch.push(u);
   for(const u of s.units){
    u.braced=(u.role==='armourer')||(u.role==='soldier'&&Math.hypot(u.x-s.x,u.y-s.y)<s.R*1.3);
@@ -1144,7 +1191,7 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
   if(anch.length)for(const a9 of anch){const gR9=a9.r+30;
    gridNear(a9.x,a9.y,gR9,u9=>{const es9=u9._sw;if(!es9||es9.team===s.team||u9.role==='titan'||u9.role==='armourer')return;
     const dx9=u9.x-a9.x,dy9=u9.y-a9.y,dd9=Math.hypot(dx9,dy9)||0.01;if(dd9>=gR9)return;
-    u9.slow=Math.max(u9.slow||0,0.9); /* TAR at the wall — crawl, don't glide */
+    u9.slow=Math.max(u9.slow||0,0.9); /* TAR at the wall - crawl, don't glide */
     const md9=a9.r+u9.r+4;if(dd9<md9){u9.x=a9.x+dx9/dd9*md9;u9.y=a9.y+dy9/dd9*md9;u9.vx*=0.55;u9.vy*=0.55;}}); /* SOLID body: kill the through-momentum */
   }
   const nearDr9=[];{const rr9=(s.R+580)*(s.R+580); /* THE DROP SHORTLIST: foragers used to scan EVERY drop on the map with a grotto lookup PER PAIR, every tick - O(foragers*drops*grottos). The pop-payout nuggets swelled the drop count and tickAvg crept from 7ms toward the valve. One cheap prefilter per swarm; foragers scan only what they could actually reach */
@@ -1155,7 +1202,7 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
    if(u.fat>0&&u.fatT<=0)u.fat=Math.max(0,u.fat-0.1*dt);
    if(u.fatT>0)u.fatT-=dt;
    let gx=null,gy=null,fast=false,fight=false;
-   const leash=u.role==='forager'?520:(s.war?520:430); /* in war, the rope is war-range — the hunt can finish */
+   const leash=u.role==='forager'?520:(s.war?520:430); /* in war, the rope is war-range - the hunt can finish */
    const dq=Math.hypot(u.x-s.x,u.y-s.y);
    /* hysteresis: once you turn for home, commit until you're truly home (no boundary jitter) */
    if(dq>leash+26)u.home=true;else if(dq<leash*0.72)u.home=false;
@@ -1182,12 +1229,12 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
       u.node=bn;}
      if(u.node){const dn=Math.hypot(u.x-u.node.x,u.y-u.node.y);
       u.gT=(u.gT||0)+dt;
-      if(u.gT>6){u.badN=u.node;u.node=null;u.gT=0;gx=s.x;gy=s.y;fast=true;} /* six seconds without a sip: the flower is walled off — release the obsession, come home */
+      if(u.gT>6){u.badN=u.node;u.node=null;u.gT=0;gx=s.x;gy=s.y;fast=true;} /* six seconds without a sip: the flower is walled off - release the obsession, come home */
       else if(dn<16){u.gT=0;u.badN=null;const take=Math.min(u.node.amt,Math.max(0,honeyCap(s)-s.honey),(teamSize(s.team)<8?16:12)*dt);
        if(sim){u.node.amt-=take;s.honey+=take; /* the hive-mind purse */
        if(s.team===0&&take>0){gainXP(take*0.1);
         if(grottoOf(u.x,u.y)){s.grottoHoney=(s.grottoHoney||0)+take;
-         if(s.grottoHoney>=200)trophy('algaeglow','GROTTO GLOW — THE ALGAE REMEMBER YOU');}}}
+         if(s.grottoHoney>=200)trophy('algaeglow','GROTTO GLOW · THE ALGAE REMEMBER YOU');}}}
        if(s===M&&take>0&&Math.random()<dt*1.3){sfx('feed');s.gulp=Math.max(s.gulp||0,0.08);}
        gx=u.node.x+Math.cos(tnow*6*u.zeal+u.seed)*3;gy=u.node.y+Math.sin(tnow*6*u.zeal+u.seed)*3;}
       else{gx=u.node.x;gy=u.node.y;fast=true;}}
@@ -1287,7 +1334,7 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
        foe.vx+=Math.cos(ka9)*320;foe.vy+=Math.sin(ka9)*320;} /* wasps are BATTED out of the air */
       else if(foe.blink!==undefined){foe.hp-=dmg;} /* and the EYE is cut */
       else{
-       if(foe.braced&&u.role!=='titan')dmg*=0.7; /* the shield-line holds — but titans CRUSH walls */
+       if(foe.braced&&u.role!=='titan')dmg*=0.7; /* the shield-line holds - but titans CRUSH walls */
        foe.hp-=dmg;foe.flash=.12;foe.slow=0.4;
        if(foe.hp<=0){killUnit(u.tgtS||war,foe,s);if(vm>240)addP(u.x,u.y,u.col,5,150);}
       }
@@ -1371,15 +1418,15 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
    const gdx=gx-u.x,gdy=gy-u.y,gl=Math.hypot(gdx,gdy)||1;
    const dock=fight?1:Math.min(1,gl/44); /* ARRIVE: glide into your slot, never orbit it */
 
-   const us=dock*u.spd*0.92*(0.72+0.28*clamp(u.hp/(u.maxHp||1),0,1))*u.zeal*(fast?1.15:0.55)* /* the hurt LIMP - dull and slow, no bars needed */((u.home&&(s._wb>1||(dq>700&&u.role!=='forager')))?1.5:1)*(1-0.45*clamp(u.slow,0,1))*(1-0.2*u.fat)*(u.load>12?0.82:1)*1; /* stragglers catch the wind; separated FIGHTERS sprint in desperation — no soul is ever stranded */
+   const us=dock*u.spd*0.92*(0.72+0.28*clamp(u.hp/(u.maxHp||1),0,1))*u.zeal*(fast?1.15:0.55)* /* the hurt LIMP - dull and slow, no bars needed */((u.home&&(s._wb>1||(dq>700&&u.role!=='forager')))?1.5:1)*(1-0.45*clamp(u.slow,0,1))*(1-0.2*u.fat)*(u.load>12?0.82:1)*1; /* stragglers catch the wind; separated FIGHTERS sprint in desperation - no soul is ever stranded */
    const ds=Math.min(us,gl*7);
    const uk=Math.min(1,7*dt);
    u.vx+=(gdx/gl*ds-u.vx)*uk;u.vy+=(gdy/gl*ds-u.vy)*uk;
-   /* a whisper of wobble = life (25c) — but the RANKS hold still */
+   /* a whisper of wobble = life (25c) - but the RANKS hold still */
    if((u.per||!fight)&&(u.role==='forager'||!moving)){const wob=Math.sin(tnow*6*u.zeal+u.seed)*(fight?6:10);
     u.vx+=-gdy/gl*wob*dt*6;u.vy+=gdx/gl*wob*dt*6;}
    u.x+=u.vx*dt;u.y+=u.vy*dt;
-   /* the HIGH AIR: a homing soul pinned by stone for a heartbeat simply flies OVER the rocks —
+   /* the HIGH AIR: a homing soul pinned by stone for a heartbeat simply flies OVER the rocks -
       bees do not argue with geometry */
    const gl2=Math.hypot(gx-u.x,gy-u.y);
    if(u.home||gl2>70){u._ft=(u._ft||0)+dt;
@@ -1517,12 +1564,12 @@ function step(dt){NPLAY=humanCount();
  for(const s of swarms){if(s.dead&&!s.ally&&!s.gone){s.respawn-=dt;if(s.respawn<=0)reviveSwarm(s);}}
  swarms=swarms.filter(s=>!s.gone);
  checkEvo();
- {const tot0=teamSize(0);if(tot0>peak)peak=tot0;} /* peak lives in the SIM — the molt pays even headless */
+ {const tot0=teamSize(0);if(tot0>peak)peak=tot0;} /* peak lives in the SIM - the molt pays even headless */
  /* three gentle nudges, once each, when they matter */
  {const M3=me();
   if(M3&&!M3.dead){
-   if(!nudged.split&&M3.units.length>=5){nudged.split=true;toast('Q — SPLIT: half your brood becomes a loyal kin-queen. Small = FAST.','#ff9ad0',5);}
-   if(!nudged.cap&&M3.units.length>=soulCap()){nudged.cap=true;toast('YOUR BROOD IS AT ITS MUSTER LIMIT — SPLIT (Q) to keep growing as more queens, not one overloaded swarm.','#ffd75e',6);}
+   if(!nudged.split&&M3.units.length>=5){nudged.split=true;toast('Q = SPLIT: half your brood becomes a loyal kin-queen. Small = FAST.','#ff9ad0',5);}
+   if(!nudged.cap&&M3.units.length>=soulCap()){nudged.cap=true;toast('YOUR BROOD IS AT ITS MUSTER LIMIT · SPLIT (Q) to keep growing as more queens, not one overloaded swarm.','#ffd75e',6);}
    if(!nudged.war&&M3.war){nudged.war=true;toast('WAR! Your fighters hold a front line. Keep your queen BEHIND it.','#ff9a6a',5);}
    if(!nudged.eldr&&elder&&d2(M3.x,M3.y,elder.x,elder.y)<1000*1000){nudged.eldr=true;toast('THE ELDER - the horned tyrant of the far meadow. FELL IT and its crown is yours forever.','#ffb04d',6);}
    {const rl=realmOf(M3.x,M3.y); /* the realm HERALDS itself, once, softly */
@@ -1559,9 +1606,9 @@ function step(dt){NPLAY=humanCount();
     else if(input.mDown){const wx=cam.x+(input.mx*DPR-W/2)/cam.z,wy=cam.y+(input.my*DPR-H/2)/cam.z;
      dx=wx-s.x;dy=wy-s.y;drive=Math.hypot(dx,dy)>30;}}
   } else {botBrain(s,dt);
-   if(s.prey&&!s.prey.dead&&!s.recalling&&!(s.unstkT>0)){s.gx=s.prey.x;s.gy=s.prey.y;} /* the hunt tracks LIVE — but yields to a sidestep in progress */
+   if(s.prey&&!s.prey.dead&&!s.recalling&&!(s.unstkT>0)){s.gx=s.prey.x;s.gy=s.prey.y;} /* the hunt tracks LIVE - but yields to a sidestep in progress */
    let bgx=s.gx,bgy=s.gy;
-   /* cove DOORS: a goal through a wall is reached via the mouth — WALK THE RIM to it, never ram stone */
+   /* cove DOORS: a goal through a wall is reached via the mouth - WALK THE RIM to it, never ram stone */
    for(const c of coves){
     const inMe=d2(s.x,s.y,c.x,c.y)<(c.r-20)**2,inGoal=d2(bgx,bgy,c.x,c.y)<(c.r-40)**2;
     if(inMe===inGoal)continue;
@@ -1627,7 +1674,7 @@ function step(dt){NPLAY=humanCount();
   /* the TRAIL you paid your patience for */
   if(s.team===0)trailTick(s,dt);
 
-  /* WALL-GLIDE: pressing into stone redirects you along it — rock is a banister, not a snare */
+  /* WALL-GLIDE: pressing into stone redirects you along it - rock is a banister, not a snare */
   if(drive&&s.spdNow<spd*0.35){
    let nb=null,nq=1e18;
    for(const b of boulders){const q=d2(s.x,s.y,b.x,b.y);if(q<nq){nq=q;nb=b;}}
@@ -1650,7 +1697,7 @@ function step(dt){NPLAY=humanCount();
     gainXP(bounty);
     addFloat(s.x,s.y-s.R-24,'+'+bounty+'✨ GROWTH','#ffe9a0');
     if(s===me())sfx('evolve');
-    if(s.growM>=120)trophy('moltaura','APEX — THE SHIMMER OF THE GREAT IS YOURS');
+    if(s.growM>=120)trophy('moltaura','APEX · THE SHIMMER OF THE GREAT IS YOURS');
     s.growM+=15;}}
   /* exposure (gentle, x2) */
   let nb=1e18;for(const u of s.units){const q=d2(u.x,u.y,s.x,s.y);if(q<nb)nb=q;}
@@ -1669,7 +1716,7 @@ function step(dt){NPLAY=humanCount();
     if(s.team===0){const a9=dr.amt*comboMult()*TUNE.honey;if(dr.war)s.honey+=a9;else gainHoney(s,a9);feedCombo();}else{if(dr.war)s.honey+=dr.amt;else gainHoney(s,dr.amt);}
     if(s===M){sfx('feed');gainXP(dr.amt*0.2);s.gulp=0.16;addFloat(s.x,s.y-s.R-8,'+'+Math.round(dr.amt),'#ffd75e');addP(s.x,s.y,'#ffd75e',3,80);}
     drops.splice(i,1);}}
-  /* auto defensive stomp — no button, it just happens */
+  /* auto defensive stomp - no button, it just happens */
   if(s.stompCd<=0&&s.prot<=0){
    let did=false;
    for(const e of swarms){if(e.dead||e.team===s.team)continue;
@@ -1692,7 +1739,7 @@ function step(dt){NPLAY=humanCount();
    const main=mainOf(s.team);
    if(main){s.gx=main.x;s.gy=main.y;s.drive=true;
     if(d2(s.x,s.y,main.x,main.y)<(main.R+30)**2)mergeInto(main,s);}
-   else s.recalling=false; /* the main is gone — the kin is free to live */
+   else s.recalling=false; /* the main is gone - the kin is free to live */
   }
   if(s.gone||s.dead)continue;
   moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,true);
@@ -1770,7 +1817,7 @@ function step(dt){NPLAY=humanCount();
  if(spider){const sp5=spider;
   if(sp5.flash>0)sp5.flash-=dt;if(sp5.gnash>0)sp5.gnash-=dt;
   const dh=Math.hypot(sp5.x-sp5.hx,sp5.y-sp5.hy);
-  /* STICKY prey: she commits to a hunt for whole seconds — no jitter, no mind-changing */
+  /* STICKY prey: she commits to a hunt for whole seconds - no jitter, no mind-changing */
   sp5.tgtT-=dt;
   if(sp5.tgtRef&&(sp5.tgtRef.dead||sp5.tgtT<=0))sp5.tgtRef=null;
   if(sp5.provoked>0){sp5.provoked-=dt;
@@ -1782,7 +1829,7 @@ function step(dt){NPLAY=humanCount();
     if(d2(s2.x,s2.y,sp5.x,sp5.y)<sp5.sense*sp5.sense&&d2(s2.x,s2.y,sp5.hx,sp5.hy)<sp5.terr*sp5.terr){sp5.provoked=7;sp5.tgtRef=s2;sp5.tgtT=2.4;break;}}
   }
   let tgt=sp5.tgtRef;
-  if(dh>sp5.terr+120)tgt=null; /* SHE TOO never leaves her ground — that law is universal */
+  if(dh>sp5.terr+120)tgt=null; /* SHE TOO never leaves her ground - that law is universal */
   let tvx5=0,tvy5=0;
   if(tgt){ /* a HUNTRESS: she simply comes for you, faster than the Elder, weaving as she charges */
    const dx5=tgt.x-sp5.x,dy5=tgt.y-sp5.y,d5=Math.hypot(dx5,dy5)||1;
@@ -1848,7 +1895,7 @@ function step(dt){NPLAY=humanCount();
       if(u2.hp<=0)killUnit(s2,u2,null);
       g.biteT=1.6;g.snapA=0.3;if(near(g))sfx('hit');break;}}
     if(g.biteT>0)break;}}
-  /* SPRAYBLOOM: a lush fountain-flower — pass close and it SHOWERS you */
+  /* SPRAYBLOOM: a lush fountain-flower - pass close and it SHOWERS you */
   if(g.kind==='spray'){if(g.sprayCd>0)g.sprayCd-=dt;
    if(g.sprayCd<=0)for(const s2 of swarms){if(s2.dead)continue;
     if(d2(g.x,g.y,s2.x,s2.y)<64*64){
@@ -1869,7 +1916,7 @@ function step(dt){NPLAY=humanCount();
     addP(g.x,g.y,'#fffdf4',14,150);addRing(g.x,g.y,'#fffdf4',52);
     if(near(g))sfx('pop');
     groves.splice(gi,1);continue;}}
-  /* TUMBLEBLOOM: it runs — run it down */
+  /* TUMBLEBLOOM: it runs - run it down */
   if(g.kind==='tumble'){
    g.roll+=dt*4;
    g.x+=g.vx*dt;g.y+=g.vy*dt;
@@ -1910,7 +1957,7 @@ function step(dt){NPLAY=humanCount();
  for(let i=dews.length-1;i>=0;i--){if(i%3!==step._dw3)continue;const dw=dews[i];
   let taken=false;
   for(const s2 of swarms){if(s2.dead)continue;
-   const swipe=16+s2.R*0.4; /* the great SWIPE wider — growth feeds growth */
+   const swipe=16+s2.R*0.4; /* the great SWIPE wider - growth feeds growth */
    if(d2(dw.x,dw.y,s2.x,s2.y)<swipe*swipe)taken=true;
    else if(d2(dw.x,dw.y,s2.x,s2.y)<(s2.R+540)**2){ /* the brood sweeps as it marches */
     for(const u2 of s2.units){if(d2(dw.x,dw.y,u2.x,u2.y)<(u2.r+9)**2){taken=true;break;}}}
@@ -1918,10 +1965,10 @@ function step(dt){NPLAY=humanCount();
     const amt=rand(0.7,1.3)*(dw.big?3.2:1);
     if(s2.team===0){gainHoney(s2,amt*comboMult());feedCombo();gainXP(amt*0.15);
      if(grottoOf(s2.x,s2.y)){s2.grottoHoney=(s2.grottoHoney||0)+amt;
-      if(s2.grottoHoney>=200)trophy('algaeglow','GROTTO GLOW — THE ALGAE REMEMBER YOU');}
+      if(s2.grottoHoney>=200)trophy('algaeglow','GROTTO GLOW · THE ALGAE REMEMBER YOU');}
      if(s2===me()){s2.gulp=Math.max(s2.gulp||0,dw.big?0.2:0.12);
       if(!muted){const c9=ac();if(c9){const st9=Math.min(comboN,11);
-       const f9=Math.min(1046,PENT[st9%6]*(st9>=6?2:1)); /* NEVER above soprano C — ears are sacred */
+       const f9=Math.min(1046,PENT[st9%6]*(st9>=6?2:1)); /* NEVER above soprano C - ears are sacred */
        env(f9,f9*0.99,.09,(dw.big?.03:.018)*(f9>700?0.7:1),'sine',2400);}}}}
     else gainHoney(s2,amt);
     addSpark(dw.x,dw.y,dw.big?4:2);dews.splice(i,1);break;}}}
@@ -2053,7 +2100,7 @@ function step(dt){NPLAY=humanCount();
     u2.atk=0.8;wp.hp-=u2.dmg;wp.lastBy=s2;addSpark(wp.x,wp.y,2);break;}}}
   if(wp.hp<=0){
    if(wp.lastBy&&wp.lastBy.team===0){const M5=me();M5.waspKills=(M5.waspKills||0)+1;
-    if(M5.waspKills>=9)trophy('waspband','WASPBANE — NINE BROKEN, STRIPES EARNED');}for(let k=0;k<4;k++)dropAt(wp.x+rand(-12,12),wp.y+rand(-12,12),rand(4,7),10,1);
+    if(M5.waspKills>=9)trophy('waspband','WASPBANE · NINE BROKEN, STRIPES EARNED');}for(let k=0;k<4;k++)dropAt(wp.x+rand(-12,12),wp.y+rand(-12,12),rand(4,7),10,1);
    addP(wp.x,wp.y,'#ffd75e',8,130);if(near(wp))sfx('pop');wasps.splice(i,1);}}
  if(wasps.length===0&&swarms.some(s2=>s2.bot&&!s2.ally&&!s2.dead)){waspT-=dt; /* the wild returns only where the wild lives */
   if(waspT<=0){waspT=30;
@@ -2152,7 +2199,7 @@ function killQueen(s,by){
  /* rival falls speak through the jackpot fountain, not a billboard */
  if(s===M){
   s.honey=Math.floor(s.honey/2); /* half is banked through death */
-  const bonus=Math.floor(peak*1.5);if(bonus>0){gainXP(bonus);s._xpBonus=bonus;} /* the great runs pay in ✨ — no cap, ever */
+  const bonus=Math.floor(peak*1.5);if(bonus>0){gainXP(bonus);s._xpBonus=bonus;} /* the great runs pay in ✨ - no cap, ever */
   showOver();
  }
 }
@@ -2160,10 +2207,10 @@ function killSpider(by){
  if(!spider)return;
  for(let i=0;i<55;i++)dropAt(spider.x+rand(-110,110),spider.y+rand(-110,110),rand(9,17),16,1);
  addRing(spider.x,spider.y,'#e8dcf8',360);addP(spider.x,spider.y,'#c8b8d8',48,300);
- toast('THE BROODMOTHER FALLS — HER HOARD SPILLS','#e8dcf8');sfx('die');
+ toast('THE BROODMOTHER FALLS · HER HOARD SPILLS','#e8dcf8');sfx('die');
  shake=Math.min(22,shake+14);
  if(by&&by.team===0){gainXP(120);
-  trophy('broodcrown','HER RELICS ARE YOURS — CROWN, SIGIL, SILK');
+  trophy('broodcrown','HER RELICS ARE YOURS · CROWN, SIGIL, SILK');
   META.owned.silkstrand=true;metaSave();}
  spider=null;webshots.length=0;
 }
@@ -2171,9 +2218,9 @@ function killElder(by){
  if(!elder)return;
  for(let i=0;i<30;i++)dropAt(elder.x+rand(-80,80),elder.y+rand(-80,80),rand(8,16),14,1);
  addRing(elder.x,elder.y,'#ffb04d',300);addP(elder.x,elder.y,'#ffb04d',40,280);
- toast('THE ELDER FALLS — A FORTUNE SPILLS','#ffd75e');sfx('die');
+ toast('THE ELDER FALLS · A FORTUNE SPILLS','#ffd75e');sfx('die');
  if(by&&by.team===0){gainXP(60);
-  trophy('elderhorn','THE ELDER CROWN IS YOURS — FOREVER');
+  trophy('elderhorn','THE ELDER CROWN IS YOURS · FOREVER');
   const M2=me();if(M2&&!M2.dead){M2.gilded2=true;} /* your crown runs gold for the rest of this match */
  }
  elder=null;
@@ -2256,8 +2303,21 @@ function botBrain(s,dt){
   const huntGr=grottoOf(s.x,s.y);
   for(const e of swarms){if(e.dead||e.team===s.team)continue;
    if(grottoOf(e.x,e.y)!==huntGr)continue;
+   if(s.snub&&s.snub[e.nid]>tnow)continue; /* THE SNUB: prey that outran her is beneath her notice for a while */
    if(n>e.units.length*1.3+2||(e.hp<(e.maxHp||300)*0.45&&n>e.units.length*0.55)){const q=d2(s.x,s.y,e.x,e.y);if(q<pd){pd=q;prey=e;}}}
-  if(prey&&pd<(s.arch==='bully'?1400*1400:700*700)){s.prey=prey;s.gx=prey.x;s.gy=prey.y;return;}
+  if(prey&&pd<(s.arch==='bully'?1400*1400:700*700)){
+   /* THE HUNTER'S PATIENCE: a chase is a WAGER, not a vow. Ten minutes of futile pursuit was
+      neither fun nor apex behaviour. She gives up on prey she cannot catch: after ~10s if the prey
+      is as fast as her and the gap is not closing, or after 38s regardless - unless jaws are
+      already touching. The one who outran her is SNUBBED for 45s so the hunt cannot instantly rekindle. */
+   if(!s.hunt||s.hunt.nid!==prey.nid)s.hunt={nid:prey.nid,t0:tnow,d0:Math.sqrt(pd)};
+   else{const age=tnow-s.hunt.t0,dNow=Math.sqrt(pd),closing=dNow<s.hunt.d0-40,touching=dNow<(s.R+(prey.R||60)+150);
+    if(!touching&&((age>10&&queenSpd(prey)>=queenSpd(s)*0.98&&!closing)||age>38)){
+     (s.snub=s.snub||{})[prey.nid]=tnow+45;
+     s.hunt=null;s.prey=null;prey=null;}
+    else if(closing)s.hunt.d0=dNow;} /* gaining ground renews the wager */
+   if(prey){s.prey=prey;s.gx=prey.x;s.gy=prey.y;return;}
+  } else s.hunt=null;
  }
  /* coward loves coves */
  if(s.arch==='coward'&&coves.length){
@@ -2285,7 +2345,7 @@ function canBuyBot(s,role){const U=botUnlocks[s.team]=botUnlocks[s.team]||{};
  if(n2>=60)U.titan=true;
  return !!U[role];}
 function botBuy(s,role){
- if(s.recalling)return; /* a swarm flying home hoards the honey — no new mouths mid-recall */
+ if(s.recalling)return; /* a swarm flying home hoards the honey - no new mouths mid-recall */
  if(ROOM){let tot9=0;for(const s9 of swarms)if(!s9.dead)tot9+=s9.units.length;
   if(tot9>=140)return;} /* ROOM ECOLOGY: a shared meadow stops FEEDING past ~140 souls - every soul must cross the wire and be parsed by a phone 30 times a second. Solo keeps its endless wilds */
  if(s.units.length>=soulCap())return; /* bots hoard past the cap rather than recruit into it - same law as the player */
@@ -2296,12 +2356,12 @@ function botBuy(s,role){
 }
 
 function near(s2){const M2=me();return s2===M2||d2(s2.x,s2.y,M2.x,M2.y)<1200*1200;}
-function addTrail(u,col){if(fx.length>460)return;
+function addTrail(u,col){if(fx.length>(MOB?260:460)||(MOB&&QGOV.q<1))return; /* phones shed vanity smoke first */
  for(let i2=0;i2<5;i2++)fx.push({x:u.x-u.vx*0.01*i2,y:u.y-u.vy*0.01*i2,vx:0,vy:0,t:0,life:0.22+i2*0.03,col,r:2.6-i2*0.35});}
 /* ============ fx ============ */
-function addP(x,y,col,n2,sp){if(fx.length>460)return;for(let i=0;i<n2;i++){const a=rand(0,TAU),sp2=rand(.3,1)*(sp||60);fx.push({x,y,vx:Math.cos(a)*sp2,vy:Math.sin(a)*sp2,t:0,life:rand(.3,.55),col,r:rand(1.8,3.6)});}}
-function addSpark(x,y,n2){if(fx.length>460)return;for(let i=0;i<n2;i++){const a=rand(0,TAU),sp2=rand(60,220);fx.push({x,y,vx:Math.cos(a)*sp2,vy:Math.sin(a)*sp2,t:0,life:rand(.1,.26),col:Math.random()<.5?'#fff3c4':'#ffcf5e',r:rand(1.1,2)});}}
-/* ONE brush for trail particles — the meadow and the mirror can never disagree */
+function addP(x,y,col,n2,sp){if(fx.length>(MOB?300:460))return;if(MOB&&n2>2)n2=Math.ceil(n2*0.6);for(let i=0;i<n2;i++){const a=rand(0,TAU),sp2=rand(.3,1)*(sp||60);fx.push({x,y,vx:Math.cos(a)*sp2,vy:Math.sin(a)*sp2,t:0,life:rand(.3,.55),col,r:rand(1.8,3.6)});}}
+function addSpark(x,y,n2){if(fx.length>(MOB?300:460))return;if(MOB&&n2>2)n2=Math.ceil(n2*0.6);for(let i=0;i<n2;i++){const a=rand(0,TAU),sp2=rand(60,220);fx.push({x,y,vx:Math.cos(a)*sp2,vy:Math.sin(a)*sp2,t:0,life:rand(.1,.26),col:Math.random()<.5?'#fff3c4':'#ffcf5e',r:rand(1.1,2)});}}
+/* ONE brush for trail particles - the meadow and the mirror can never disagree */
 function drawTrailFx(g2,e,k,t9){
   if(e.kind==='wisp2'){ /* a curl of moving air */
    g2.save();g2.translate(e.x,e.y);g2.rotate(e.rot||0);
@@ -2448,7 +2508,7 @@ if(barEl&&barEl.addEventListener){
  barEl.addEventListener('pointerout',ev=>{if(ev.pointerType==='mouse')hideTip();});
  barEl.addEventListener('pointerdown',ev=>{showTipFor(ev.target);});
 }
-const TIPX={split:'<b>SPLIT · Q</b><br>Halve your brood: the half becomes a loyal kin-queen with her own mind. Small broods FLY FAST — splitting is speed. Up to three kin.',
+const TIPX={split:'<b>SPLIT · Q</b><br>Halve your brood: the half becomes a loyal kin-queen with her own mind. Small broods FLY FAST: splitting is speed. Up to three kin.',
  recall:'<b>RECALL · E</b><br>Every kin flies home and becomes one brood again. Souls, honey and all.'};
 let tipTimer=0;
 function showTipFor(el2){
@@ -2461,7 +2521,7 @@ function showTipFor(el2){
  else{const R3=ROLES[role];if(!R3)return hideTip();
   const bar3=(v,mx,col3)=>{const p=Math.round(100*Math.min(1,v/mx));
    return '<span style="display:inline-block;width:52px;height:5px;background:#ffffff22;border-radius:3px;vertical-align:middle"><span style="display:block;width:'+p+'%;height:100%;background:'+col3+';border-radius:3px"></span></span>';};
-  const why={forager:'more of these = faster honey',soldier:'your frontline — buy when war looms',lancer:'catches runners & raiders',nurse:'keeps a veteran army alive',spitter:'damage without losses — protect them',armourer:'makes everything near it survive',titan:'wins head-on battles, slowly'}[role]||'';
+  const why={forager:'more of these = faster honey',soldier:'your frontline, buy when war looms',lancer:'catches runners & raiders',nurse:'keeps a veteran army alive',spitter:'damage without losses, protect them',armourer:'makes everything near it survive',titan:'wins head-on battles, slowly'}[role]||'';
   html2='<b>'+role.toUpperCase()+'</b> · '+R3.cost+'🍯<br>'
    +'<span style="font-size:11px;opacity:.9">life '+bar3(R3.hp,420,'#9fe8c0')+' &nbsp;sting '+bar3(R3.dmg,26,'#ff8f7a')+' &nbsp;speed '+bar3(R3.spd,330,'#9fd8ff')+'</span><br>'
    +R3.tip+'<br><span style="opacity:.7;font-size:11px">'+why+'</span>';}
@@ -2534,7 +2594,7 @@ function drawNestQueen(){
  paintAura(c2,base,t2,tryOn.aura||META.eq.aura);
  paintWings(c2,base,t2,tryOn.wings||META.eq.wings);
  paintQueenBody(c2,base,nestSz,col,t2,tryOn.body||META.eq.body,false,SK9.c2);
- paintTail(c2,base,t2,tryOn.tail||META.eq.tail,col,nestSz); /* she GROWS UP in the glass — true shapes per stage */
+ paintTail(c2,base,t2,tryOn.tail||META.eq.tail,col,nestSz); /* she GROWS UP in the glass - true shapes per stage */
  c2.strokeStyle='rgba(255,255,255,.75)';c2.lineWidth=1.5;
  paintPattern(c2,base,t2,tryOn.pattern||META.eq.pattern,col,nestSz);
  paintPlate(c2,base,t2,tryOn.plate||META.eq.plate,col);
@@ -2554,7 +2614,7 @@ const GLYPH={pattern:'◐',crown:'♛',trail:'✦',wings:'🦋',body:'🐝',tail
 function itemLabel(id){const it=itemById(id);return it?it.n:id;}
 function showHome(){
  document.getElementById('over').style.display='none';
- document.getElementById('xpTxt').innerHTML='<b style="color:#ffd75e">✨ '+Math.floor(META.xp)+'</b>'+(typeof RUNXP!=='undefined'&&RUNXP>=1?' <b style="color:#ffe9a0;font-size:13px">(+'+Math.floor(RUNXP)+' this flight)</b>':'')+' <span style="opacity:.6;font-size:12px">nest xp — every treasure is earnable · 👑 sub unlocks all</span>'; /* the FLIGHT's earnings shown beside the hoard - you can finally tell when the trip to the nest was worth it */
+ document.getElementById('xpTxt').innerHTML='<b style="color:#ffd75e">✨ '+Math.floor(META.xp)+'</b>'+(typeof RUNXP!=='undefined'&&RUNXP>=1?' <b style="color:#ffe9a0;font-size:13px">(+'+Math.floor(RUNXP)+' this flight)</b>':'')+' <span style="opacity:.6;font-size:12px">nest xp · every treasure is earnable · 👑 sub unlocks all</span>'; /* the FLIGHT's earnings shown beside the hoard - you can finally tell when the trip to the nest was worth it */
  const next=SKINS.find(S=>META.xp<S.xp);
  const fill=document.getElementById('xpfill'),nx=document.getElementById('xpNext');
  const upcoming=ITEMS.filter(it=>it.xp>0&&!earnOnly(it)&&META.xp<it.xp).sort((a,b)=>a.xp-b.xp)[0];
@@ -2620,11 +2680,18 @@ document.getElementById('nestBtn').onclick=()=>{document.getElementById('start')
 let nestFrom='over';
 {const sb2=document.getElementById('subBtn');
  if(sb2&&sb2.addEventListener)sb2.addEventListener('pointerdown',e=>{e.preventDefault();
-  toast(META.sub?'THE CROWN ALREADY SITS UPON YOU':'THE ROYAL SUB ARRIVES WITH PAYMENTS — $5/mo, the whole wardrobe','#ffd75e');});}
+  toast(META.sub?'THE CROWN ALREADY SITS UPON YOU':'THE ROYAL SUB ARRIVES WITH PAYMENTS · $5/mo, the whole wardrobe','#ffd75e');});}
 document.getElementById('backBtn').onclick=()=>{document.getElementById('home').style.display='none';
  if(nestFrom==='retired'){document.getElementById('start').style.display='flex';} /* a retired queen RISES anew */
  else document.getElementById(nestFrom==='start'?'start':'over').style.display='flex';
  nestFrom='over';metaSave();};
+{const fb=document.getElementById('fsBtn');
+ if(fb&&fb.addEventListener)fb.addEventListener('pointerdown',e=>{e.preventDefault();
+  try{const de=document.documentElement,fs=document.fullscreenElement||document.webkitFullscreenElement;
+   if(fs){(document.exitFullscreen||document.webkitExitFullscreen).call(document);}
+   else{(de.requestFullscreen||de.webkitRequestFullscreen).call(de);
+    if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{}); /* LANDSCAPE by request: fullscreen first, then the turn - platforms that refuse simply stay as they are */
+   }}catch(e2){}});}
 {const gearEl=document.getElementById('gear'),sp=document.getElementById('setPanel');
  if(gearEl&&gearEl.addEventListener){
   gearEl.addEventListener('pointerdown',e=>{e.preventDefault();sp.style.display=sp.style.display==='none'?'block':'none';});
@@ -2634,7 +2701,7 @@ document.getElementById('backBtn').onclick=()=>{document.getElementById('home').
   const ng2=document.getElementById('nestGo');
   if(ng2&&ng2.addEventListener)ng2.addEventListener('pointerdown',e=>{e.preventDefault();
    sp.style.display='none';
-   /* RETIRING to the Nest ends the round — the peak pays its bonus, the bar keeps every ✨ */
+   /* RETIRING to the Nest ends the round - the peak pays its bonus, the bar keeps every ✨ */
    const M6=me();
    if(running&&M6&&!M6.dead){const bonus=Math.floor(peak*1.5);if(bonus>0)gainXP(bonus);}
    running=false;metaSave();
@@ -2656,14 +2723,16 @@ document.getElementById('go').onclick=()=>{
    if(it9&&it9.xp>0&&!ownsItem(it9.id))META.eq[k9]=DEF9[k9]||META.eq[k9];}
   metaSave();}
  document.getElementById('start').style.display='none';
- barEl.style.display='flex';document.getElementById('gear').style.display='block';resumeAudio();RUNXP=0;setup();renderBar();running=true; /* a new flight starts its own ledger */
+ barEl.style.display='flex';document.getElementById('gear').style.display='block';
+ {const fb9=document.getElementById('fsBtn'),de9=document.documentElement;if(fb9&&isTouch&&de9&&(de9.requestFullscreen||de9.webkitRequestFullscreen))fb9.style.display='block';} /* the wide-throne toggle, only where the platform can grant it */
+ resumeAudio();RUNXP=0;setup();renderBar();running=true; /* a new flight starts its own ledger */
  if(WS_URL&&!NET.on)NET.connect(WS_URL,nm);
  document.getElementById('hint').innerHTML=isTouch?'drag to fly · tap your queen to recall · buttons below':'WASD / arrows / hold mouse · 1–6 spawn · Q split · E recall · M mute';};
 
 /* ============ render: honey dusk, cute with teeth ============ */
 let peak=0;
-/* cosmetic painters — one brush for the meadow and the boutique mirror */
-let QSEGS=[]; /* the queen's true segments, in local space — filled by the body, read by every garment */
+/* cosmetic painters - one brush for the meadow and the boutique mirror */
+let QSEGS=[]; /* the queen's true segments, in local space - filled by the body, read by every garment */
 function paintQueenBody(g2,base,st,col,t2,body,flash,col2){
  QSEGS=[];
  if(flash)g2.fillStyle='#fff';
@@ -2687,12 +2756,12 @@ function paintQueenBody(g2,base,st,col,t2,body,flash,col2){
   g2.beginPath();g2.moveTo(base*1.6,0);g2.lineTo(base*0.5,base*0.5);g2.lineTo(base*0.5,-base*0.5);g2.closePath();g2.fill();
 
  }
- if(body==='mothen'){ /* fine fuzz on every segment — soft at every size */
+ if(body==='mothen'){ /* fine fuzz on every segment - soft at every size */
   g2.strokeStyle=shade(col,0.35);g2.lineWidth=1;
   for(const sg9 of QSEGS){for(let f9=0;f9<6;f9++){const aa=f9/6*TAU+sg9.x;
    g2.beginPath();g2.moveTo(sg9.x+Math.cos(aa)*sg9.r*0.85,sg9.y+Math.sin(aa)*sg9.r*0.68);
    g2.lineTo(sg9.x+Math.cos(aa)*sg9.r*1.05,sg9.y+Math.sin(aa)*sg9.r*0.84);g2.stroke();}}}
- /* stage 3 carries NO built-in regalia — the wardrobe alone crowns her */
+ /* stage 3 carries NO built-in regalia - the wardrobe alone crowns her */
 }
 function paintTail(g2,base,t2,tail,col,st){
  if(!tail||tail==='notail')return;
@@ -2916,7 +2985,7 @@ function paintWings(g2,base,t2,style){
  }
 }
 function paintPattern(g2,base,t2,pat,col){
- /* every pattern dresses the TRUE segments — sway, plumpness and stage all obeyed */
+ /* every pattern dresses the TRUE segments - sway, plumpness and stage all obeyed */
  if(!pat||pat==='plain'||!QSEGS.length)return;
  const S9=QSEGS,head=S9[0],mid=S9[Math.min(1,S9.length-1)];
  if(pat==='stripes'){g2.fillStyle='rgba(30,14,14,.8)';
@@ -3032,7 +3101,7 @@ function paintPattern(g2,base,t2,pat,col){
    g2.fillStyle='rgba(210,170,255,'+(0.5+0.4*Math.sin(t2*3+k*2)).toFixed(3)+')';
    g2.beginPath();g2.arc(sg.x,sg.y-sg.r*0.05+Math.sin(t2*2+k*2.6)*sg.r*0.14,1.4,0,TAU);g2.fill();}}
  else if(pat==='eldritcheyes'){
-  S9.forEach((sg,k)=>{const bl=Math.sin(t2*1.4+k*1.7)>0.82?0.15:1; /* one eye per segment — they multiply as she grows */
+  S9.forEach((sg,k)=>{const bl=Math.sin(t2*1.4+k*1.7)>0.82?0.15:1; /* one eye per segment - they multiply as she grows */
    g2.fillStyle='#f4ede0';g2.beginPath();g2.ellipse(sg.x,sg.y,sg.r*0.34,sg.r*0.34*bl,0,0,TAU);g2.fill();
    g2.fillStyle='#5a2a6a';g2.beginPath();g2.arc(sg.x+sg.r*0.06,sg.y,sg.r*0.17*bl,0,TAU);g2.fill();
    g2.fillStyle='#241426';g2.beginPath();g2.arc(sg.x+sg.r*0.06,sg.y,sg.r*0.08*bl,0,TAU);g2.fill();});}
@@ -3519,7 +3588,7 @@ function drawQueen(s){
  if(eq2&&eq2.aura)paintAura(ctx,base,tnow,eq2.aura); /* auras render for EVERYONE now - they ride the join like the rest of the wardrobe */
  /* wings */
  paintWings(ctx,base,tnow+s.x*0.01/38,eq2?eq2.wings:'standard');
- /* body: one shared brush — stage shapes + chosen silhouette */
+ /* body: one shared brush - stage shapes + chosen silhouette */
  paintQueenBody(ctx,base,st,s.col,tnow,mine?META.eq.body:'sleek',s.flash>0,mine?SKINS[META.skin].c2:s.col2);
  paintTail(ctx,base,tnow,mine?META.eq.tail:(s.cosEq&&s.cosEq.tail),s.col,st);
  ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=1.5;ctx.stroke();
@@ -3661,7 +3730,7 @@ function drawUnitLocal(g,s,u,a,vm,col,fleetId){ /* the unit's LOCAL-frame art (s
   {const m9=(tnow*0.9+u.seed)%1; /* one mend-mote rises off her and fades - she TRAILS renewal */
    g.fillStyle='rgba(200,255,215,'+(0.7*(1-m9)).toFixed(3)+')';
    g.beginPath();g.arc(-u.r*(0.3+m9*0.8),-u.r*(0.2+m9*0.6),0.9+(1-m9)*0.9,0,TAU);g.fill();}
- } else if(u.shape==='tri'){ /* LANCER: a wasp-dart — narrow waist, blurred wings, a sting you can read */
+ } else if(u.shape==='tri'){ /* LANCER: a wasp-dart - narrow waist, blurred wings, a sting you can read */
   const wf9=Math.sin(tnow*46*u.zeal+u.seed)*0.5+0.5;
   g.fillStyle='rgba(255,250,235,'+(0.2+0.24*wf9)+')';
   g.beginPath();g.ellipse(-u.r*0.1,-u.r*0.6,u.r*0.55,u.r*0.2,0.5,0,TAU);g.fill();
@@ -3676,7 +3745,7 @@ function drawUnitLocal(g,s,u,a,vm,col,fleetId){ /* the unit's LOCAL-frame art (s
   g.fillStyle='#2a1606';
   g.beginPath();g.arc(u.r*0.56,-u.r*0.12,u.r*0.08,0,TAU);g.fill();
   g.beginPath();g.arc(u.r*0.56,u.r*0.12,u.r*0.08,0,TAU);g.fill();
- } else { /* TITAN: a walking monument — dark mass, molten core, horns and tusks */
+ } else { /* TITAN: a walking monument - dark mass, molten core, horns and tusks */
   g.fillStyle=u.flash>0?'#fff':shade(col,-0.45); /* dark hide */
   g.beginPath();for(let k=0;k<6;k++){const aa=k/6*TAU+Math.PI/6;k?g.lineTo(Math.cos(aa)*u.r,Math.sin(aa)*u.r):g.moveTo(Math.cos(aa)*u.r,Math.sin(aa)*u.r);}g.closePath();g.fill();
   g.lineWidth=2.6;g.strokeStyle='#8a5a3a';g.stroke();
@@ -3804,13 +3873,13 @@ function draw(){
  cam.x=lerp(cam.x,M.x+M.vx/lv*look,TUNE.camease);cam.y=lerp(cam.y,M.y+M.vy/lv*look,TUNE.camease);
  let spr9=0;if(M.units)for(const u9 of M.units){if(u9.role==='forager')continue;const ex9=u9.x-M.x,ey9=u9.y-M.y,dd9=ex9*ex9+ey9*ey9;if(dd9>spr9)spr9=dd9;}
  spr9=Math.sqrt(spr9)+(M.R||36)+90; /* frame the SWARM's real spread, not the soul count: a dense ball stays close, silhouettes stay */
- const tz=clamp((Math.min(W,H)*0.45/DPR/spr9)*(isTouch?0.94:1)/(1+(M.spdNow||0)*0.0002),1.05,1.2)*DPR; /* tighter: barely zooms out - the swarm may run off-screen like slither.io */
+ const tz=clamp((Math.min(W,H)*0.45/DPR/spr9)*(isTouch?0.94:1)/(1+(M.spdNow||0)*0.0002)*UZOOM,isTouch?0.66:1.05,isTouch?1.22:1.2)*DPR; /* THE POCKET EYE: phones fly wider by default and pinch to taste - desktops keep the old frame */
  cam.z=lerp(cam.z,tz*TUNE.zoom,TUNE.zease);
  heat=lerp(heat,(M.war||(elder&&elder.provoked>0&&d2(M.x,M.y,elder.x,elder.y)<800*800))?1:0,0.03);
  ctx.translate(W/2+(Math.random()-.5)*shake*0.6,H/2+(Math.random()-.5)*shake*0.6);ctx.scale(cam.z,cam.z);ctx.translate(-cam.x,-cam.y);
  const vx0=cam.x-W/2/cam.z-90,vx1=cam.x+W/2/cam.z+90,vy0=cam.y-H/2/cam.z-90,vy1=cam.y+H/2/cam.z+90;
  clientDecorTick(); /* pure client ambiance - dews/orbs/moths/puffDecor/tumbleDecor, see the function itself */
- const LOD=cam.z<0.48?2:cam.z<0.66?1:0; /* 0 near · 1 mid · 2 far — the livery persists further out */
+ const LOD=cam.z<0.48?2:cam.z<0.66?1:0; /* 0 near · 1 mid · 2 far - the livery persists further out */
  ctx.strokeStyle='rgba(72,52,64,.85)';ctx.lineWidth=1.5;
  const M9=me();
  let gi9=0;
@@ -3825,19 +3894,19 @@ function draw(){
   ctx.moveTo(g.x,g.y);
   ctx.lineTo(g.x+Math.cos(g.a+(g._ln||0))*g.l+Math.sin(tnow*0.8+g.x*0.01)*2,g.y+Math.sin(g.a+(g._ln||0))*g.l);}
  ctx.stroke();ctx.globalAlpha=1; /* ONE stroke for ALL grass - was a stroke + alpha flip per blade */
- /* the WIND: winding gust ribbons you can join — curling threads and drifting petals */
+ /* the WIND: winding gust ribbons you can join - curling threads and drifting petals */
  ctx.lineCap='round';
  for(const wway of ways){
   const L=Math.hypot(wway.x2-wway.x1,wway.y2-wway.y1);
   if(wway.x1<vx0-600&&wway.x2<vx0-600)continue;if(wway.x1>vx1+600&&wway.x2>vx1+600)continue;
   if(wway.y1<vy0-600&&wway.y2<vy0-600)continue;if(wway.y1>vy1+600&&wway.y2>vy1+600)continue;
-  /* three sinuous threads — sway phase runs along the WHOLE path, so joints flow */
-  const taper=d=>{ /* EVERY gust breathes: born from nothing, gone to nothing — joins kiss at zero */
+  /* three sinuous threads - sway phase runs along the WHOLE path, so joints flow */
+  const taper=d=>{ /* EVERY gust breathes: born from nothing, gone to nothing - joins kiss at zero */
    return clamp(Math.min(d,L-d)/230,0,1);};
   const tapered=true; /* all of them breathe now */
   for(let th=0;th<3;th++){
    const ph=tnow*(0.7+th*0.23)+th*2.1;
-   if(!tapered){ /* one path per thread — cheap */
+   if(!tapered){ /* one path per thread - cheap */
     ctx.strokeStyle='rgba(210,236,255,'+(0.05+th*0.022)+')';
     ctx.lineWidth=2.2-th*0.5;
     ctx.beginPath();
@@ -3864,7 +3933,7 @@ function draw(){
       ctx.lineWidth=2.2-th*0.5;
       ctx.beginPath();ctx.moveTo(px0,py0);ctx.lineTo(px,py);ctx.stroke();}
      px0=rock9?null:px;py0=py;}}}
-  /* petals riding the gust — fading with the tail */
+  /* petals riding the gust - fading with the tail */
   const stp=150,off=(tnow*130)%stp;
   for(let d=off;d<L;d+=stp){
    const tp=taper(d);if(tp<0.1)continue;
@@ -3990,7 +4059,7 @@ function draw(){
   const dl=Math.hypot(g.vx,g.vy)||1;
   ctx.strokeStyle='rgba(207,224,138,.3)';ctx.lineWidth=1.5;
   ctx.beginPath();ctx.moveTo(g.x-g.vx/dl*16,g.y-g.vy/dl*16);ctx.lineTo(g.x-g.vx/dl*28,g.y-g.vy/dl*28);ctx.stroke();}
- /* boulders — big, friendly, solid */
+ /* boulders - big, friendly, solid */
  for(const b of boulders){
   if(b.hide){if(!(geodeIn&&geodeA>0.4&&d2(b.x,b.y,geodeIn.x,geodeIn.y)<(geodeIn.r+120)*(geodeIn.r+120)))continue;} /* the cave's BONES: rim stones hide under the dome art outside, but INSIDE they were invisible walls - now they show faintly when the shroud is lifted */
   if(b.x<vx0-b.r||b.x>vx1+b.r||b.y<vy0-b.r||b.y>vy1+b.r)continue;
@@ -4037,7 +4106,7 @@ function draw(){
    ctx.restore();
    if(Math.random()<0.02*geodeA){addSpark(cr9.x+rand(-6,6),cr9.y-cr9.sz*0.6,1);}}
   for(const mw of g9.maws)drawMaw(mw);
-  for(const pk of g9.pricks){ /* a drifting star of needles — it wants nothing, it forgives nothing */
+  for(const pk of g9.pricks){ /* a drifting star of needles - it wants nothing, it forgives nothing */
    ctx.save();ctx.translate(pk.x,pk.y);ctx.rotate(pk.rot);
    ctx.strokeStyle='rgba(200,160,255,.8)';ctx.lineWidth=2;
    for(let k9=0;k9<8;k9++){const aa=k9/8*TAU;
@@ -4187,7 +4256,7 @@ function draw(){
      ctx.quadraticCurveTo(kd.r*0.86,sd*kd.r*0.16,kd.r*0.92,sd*kd.r*0.02);ctx.stroke();}}
    ctx.restore();}
  }
- /* groves: species in bloom — FULLNESS is petal size, never a dimmer switch */
+ /* groves: species in bloom - FULLNESS is petal size, never a dimmer switch */
  const SPECIES=[['#ff9ab0','#ffd0da'],['#9ab8ff','#d0e0ff'],['#fff3e0','#ffffff'],['#c9a6ff','#e6d8ff'],['#ff8a70','#ffc0a8'],['#ffd7e8','#ffeef6'],['#ffdf7e','#fff3c0']];
  for(const g of groves){if(g.x<vx0-60||g.x>vx1+60||g.y<vy0-60||g.y>vy1+60)continue;
   if((g.kind==='comb'||g.rich||g.kind==='algae')&&g.amt<g.max*0.14){ /* a DRAINED FAUCET is a closed bud, not a husk: these kinds refill by design and must never read as harvestable while empty */
@@ -4272,7 +4341,7 @@ function draw(){
   if(g.gilt){ctx.globalAlpha=0.14+0.07*Math.sin(tnow*2+g.x*0.02);ctx.fillStyle='#ffd75e'; /* the south's golden breath */
    ctx.beginPath();ctx.arc(g.x,g.y,16+5*Math.sin(tnow*1.3+g.y*0.02),0,TAU);ctx.fill();ctx.globalAlpha=1;}
   const k=clamp(g.amt/g.max,0,1);
-  if(LOD===2){ /* far: a coloured coin of the right size — readable, cheap */
+  if(LOD===2){ /* far: a coloured coin of the right size - readable, cheap */
    const big9=g.gild?36:g.grand?27:g.mother?21:g.rich?15:g.rock?11:g.kind==='sprout'?8:12.5;
    const rr9=big9*(0.82+0.18*k);
    const SP9=['#ff9ab0','#9ab8ff','#fff3e0','#c9a6ff','#ff8a70','#ffd7e8','#ffdf7e'];
@@ -4541,7 +4610,7 @@ function draw(){
   ctx.setTransform(1,0,0,1,0,0);ctx.translate(W/2,H/2);ctx.scale(cam.z,cam.z);ctx.translate(-cam.x,-cam.y);}
  {const toScr=(wx9,wy9)=>[(wx9-cam.x)*cam.z+W/2,(wy9-cam.y)*cam.z+H/2];
   ctx.setTransform(1,0,0,1,0,0);
-  /* THE DOMES: from outside, each geode is simply a colossal stone — with one telltale seam */
+  /* THE DOMES: from outside, each geode is simply a colossal stone - with one telltale seam */
   for(const g9 of grottos){
    const domeA=(g9===geodeIn)?(1-geodeA):1;
    if(domeA<=0.02)continue;
@@ -4552,7 +4621,7 @@ function draw(){
    dg9.addColorStop(0,'#584a63');dg9.addColorStop(0.6,'#443648');dg9.addColorStop(0.92,'#332a3c');dg9.addColorStop(1,'#2a2232');
    ctx.fillStyle=dg9;
    ctx.beginPath();ctx.arc(gs9[0],gs9[1],grz,0,TAU);ctx.fill();
-   ctx.save();ctx.beginPath();ctx.arc(gs9[0],gs9[1],grz,0,TAU);ctx.clip(); /* nothing creeps past the edge — EVER */
+   ctx.save();ctx.beginPath();ctx.arc(gs9[0],gs9[1],grz,0,TAU);ctx.clip(); /* nothing creeps past the edge - EVER */
    ctx.strokeStyle='rgba(30,22,38,.4)';ctx.lineWidth=2*cam.z; /* strata: the stone's own memory */
    for(let st9=0;st9<3;st9++){
     ctx.beginPath();ctx.ellipse(gs9[0],gs9[1]+grz*(0.15+st9*0.24),grz*(0.94-st9*0.12),grz*(0.3-st9*0.05),0,3.4,6.0);ctx.stroke();}
@@ -4589,13 +4658,13 @@ function draw(){
    for(const [px3,py3,pr3] of [[grz*0.14,grz*0.07,2.4],[grz*0.17,-grz*0.05,1.8],[grz*0.21,grz*0.015,1.5]])
     {ctx.beginPath();ctx.arc(px3,py3,pr3*cam.z,0,TAU);ctx.fill();}
    ctx.restore(); /* the keeper-stones and the worn path are GONE by verdict ("cosmic streamers") - the mouth is now only the hollow, its lip, the quiet breath and three pebbles: subtle, recognisable, nothing more */
-   /* a single hairline crack wandering up the dome — geology, not signage */
+   /* a single hairline crack wandering up the dome - geology, not signage */
    ctx.strokeStyle='rgba(20,12,26,.5)';ctx.lineWidth=1.2*cam.z;
    ctx.beginPath();ctx.moveTo(mx9-Math.cos(ma9)*grz*0.06,my9-Math.sin(ma9)*grz*0.06);
    ctx.quadraticCurveTo(gs9[0]+Math.cos(ma9+0.35)*grz*0.6,gs9[1]+Math.sin(ma9+0.35)*grz*0.6,
     gs9[0]+Math.cos(ma9+0.7)*grz*0.3,gs9[1]+Math.sin(ma9+0.7)*grz*0.3);ctx.stroke();
    ctx.globalAlpha=1;}
-  /* INSIDE: darkness is composed on the VEIL, holes and all — then laid over the intact world */
+  /* INSIDE: darkness is composed on the VEIL, holes and all - then laid over the intact world */
   if(geodeA>0.02&&geodeIn&&veilCtx&&veilCtx.clearRect){
    const V=veilCtx;
    V.clearRect(0,0,W,H);
@@ -4714,7 +4783,7 @@ function hud(){
   rank.push({name:main2?main2.name:s.name,col:(main2||s).col,n:n9,meF:s.team===myT9});}
  rank.sort((a,b)=>b.n-a.n);
  {const lb9='<b style="opacity:.6;font-size:11px">BROODS · souls</b><br>'+rank.map((r,i)=>
-  '<span class="'+(r.meF?'me':'')+'"><span style="color:'+r.col+'">●</span> '+r.name+' — '+r.n+'</span>').join('<br>');
+  '<span class="'+(r.meF?'me':'')+'"><span style="color:'+r.col+'">●</span> '+r.name+' · '+r.n+'</span>').join('<br>');
   if(lb9!==hud._lb){hud._lb=lb9;lbEl.innerHTML=lb9;}} /* only touch the DOM when the board actually changes */
  if(toastT>0){toastT-=1/60;if(toastT<=0)toastEl.style.opacity='0';}
  {const wo9=warnT>0?'0.9':'0';if(wo9!==hud._wo){hud._wo=wo9;warnEl.style.opacity=wo9;}}
@@ -4959,7 +5028,7 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
  if(!FA&&NET.buf.length){FA=FB=NET.buf[0];}
  let al;const newest9=NET.buf.length?NET.buf[NET.buf.length-1]:null;
  if(FA&&FB&&FB!==FA&&FB.rt>FA.rt){al=Math.min(1,Math.max(0,(rT-FA.rt)/(FB.rt-FA.rt)));} /* two known truths: interpolate BETWEEN them */
- else if(newest9&&NET.buf.length>=2&&rT>=newest9.rt){ /* STARVED — server stalled (shared-CPU steal): glide on the last known velocity instead of freezing into inert dots; capped so a long stall can't fling them away */
+ else if(newest9&&NET.buf.length>=2&&rT>=newest9.rt){ /* STARVED - server stalled (shared-CPU steal): glide on the last known velocity instead of freezing into inert dots; capped so a long stall can't fling them away */
   const P9=NET.buf[NET.buf.length-2];FA=P9;FB=newest9;al=(newest9.rt>P9.rt)?Math.min(1.25,(rT-P9.rt)/(newest9.rt-P9.rt)):1;} /* extrapolate GENTLY (was 1.8): the further past truth we guess, the harder the snap-back when truth lands */
  else al=1;
  for(const s2 of swarms){if(s2.dead)continue;
@@ -5023,7 +5092,7 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
     u.braced=(u.role==='armourer')||(u.role==='soldier'&&Math.hypot(u.x-s2.x,u.y-s2.y)<s2.R*1.3); /* the BULWARK stands online: braced was computed only by the solo brain, so armourers LOOKED like naked beetles while invisibly tarring foes - same law as solo, run client-side */
     if(!isFinite(u.x)||!isFinite(u.y)){u.x=isFinite(u.tx)?u.tx:s2.x;u.y=isFinite(u.ty)?u.ty:s2.y;u.vx=0;u.vy=0;} /* NaN never keeps a soul: any poisoned body snaps back to its last true position and lives again */
     const tA=uA&&uA.get(u.uid),tB=uB&&uB.get(u.uid);
-    if(s2===MP&&!s2.ally){ /* OWN troops interpolate from the wire like everyone else, offset by OX/OY so they sit around your PREDICTED queen — NO per-frame local swarm-brain (that pinned weak phones) */
+    if(s2===MP&&!s2.ally){ /* OWN troops interpolate from the wire like everyone else, offset by OX/OY so they sit around your PREDICTED queen - NO per-frame local swarm-brain (that pinned weak phones) */
      if(tB){const hot8=(u.atk>0||u.flash>0||u._sipT>0); /* a FIGHTER - or a DRINKING forager - renders at the NEWEST truth, not the padded past */
       const wx8=hot8?tB[0]:(tA?tA[0]+(tB[0]-tA[0])*al:tB[0]),wy8=hot8?tB[1]:(tA?tA[1]+(tB[1]-tA[1])*al:tB[1]);
       const dq8=Math.hypot(wx8-(NET._sqx!=null?NET._sqx:s2.x),wy8-(NET._sqy!=null?NET._sqy:s2.y));

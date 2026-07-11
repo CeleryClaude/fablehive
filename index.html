@@ -145,6 +145,7 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
  <button class="btn" id="go">RISE</button>
  <button class="btn2" id="nestBtn">THE NEST · customise</button>
  <button class="btn2" id="shareBtn">🔗 SHARE THE MEADOW <span style="opacity:.75;font-size:11px">· first share pays +2000✨</span></button>
+ <div id="ledgerCard" style="font-size:11.5px;opacity:.92;margin-top:8px;line-height:1.7;max-width:86vw"></div>
  <p style="font-size:12px;opacity:.5;margin-top:10px">move: WASD / drag &nbsp;·&nbsp; everything else you'll learn as you fly</p>
 </div>
 <div id="over" class="panel">
@@ -332,6 +333,24 @@ if(META.eq&&META.eq.crown==='broodfangs')META.eq.crown=META.owned&&META.owned.br
 function metaSave(){try{if(typeof localStorage!=='undefined')localStorage.setItem('brood_meta',JSON.stringify(META));}catch(e){}soulQueue();}
 /* ============ THE REMEMBERING stage 0 (client): the soul token, the merge, the hive code ============ */
 let SOUL={tok:null,code:null,pushT:0,q:false};
+let FLIGHT=null; /* THE LEDGER OF DEEDS: one flight's story in seven numbers */
+function flightStart(){FLIGHT={t0:tnow,h:0,p:0,qk:0,bk:0,wk:0,sp:0,sent:false};}
+function flightStat(k9,v9){if(FLIGHT&&!FLIGHT.sent)FLIGHT[k9]=(FLIGHT[k9]||0)+(v9==null?1:v9);}
+function flightSend(){try{if(!FLIGHT||FLIGHT.sent)return;FLIGHT.sent=true;
+ if(typeof NET==='undefined'||!NET.on||!NET.ws||NET.ws.readyState!==1)return;
+ FLIGHT.p=Math.max(FLIGHT.p|0,(typeof peak!=='undefined'?peak:0)|0);
+ NET.ws.send(JSON.stringify({k:'flight',st:{h:FLIGHT.h|0,p:FLIGHT.p|0,qk:FLIGHT.qk|0,bk:FLIGHT.bk|0,wk:FLIGHT.wk|0,sp:FLIGHT.sp|0,m:Math.max(0,Math.round((tnow-FLIGHT.t0)/6)/10)}}));}catch(e){}}
+function deedsRender(m9){try{window._deeds=m9;
+ const L9={h:'🍯 honey banked',p:'🐝 greatest brood',qk:'👑 queens felled',bk:'💀 bosses felled',wk:'🐛 worms slain',sp:'💠 splits',m:'⏳ minutes flown'};
+ if(m9.pct){let h9='<br><b style="color:#ffd75e;letter-spacing:1px">THE LEDGER OF DEEDS</b><br><span style="font-size:12.5px;line-height:1.75">';
+  for(const k9 in m9.pct){if(!(k9 in L9))continue;h9+=L9[k9]+' · beat <b style="color:#ffe9a0">'+m9.pct[k9]+'%</b> of flights<br>';}
+  h9+='</span>';const ov9=document.getElementById('overTxt');if(ov9&&(''+ov9.innerHTML).indexOf('LEDGER OF DEEDS')<0)ov9.innerHTML+=h9;}
+ const lc9=document.getElementById('ledgerCard');
+ if(lc9&&m9.tops){let h2='<b style="color:#ffd75e;letter-spacing:1px">TODAY\'S CROWNS</b> <span style="opacity:.5;font-size:10px">'+(m9.tot||0)+' flights</span><br>';
+  const T9={h:'🍯',p:'🐝',qk:'👑',bk:'💀',wk:'🐛'};let n2=0;
+  for(const k9 in T9){const tp9=m9.tops[k9];if(!tp9||!tp9.v)continue;h2+=T9[k9]+' <b>'+tp9.v+'</b> '+(tp9.n||'a queen')+' &nbsp; ';n2++;}
+  lc9.innerHTML=n2?h2:'';}
+}catch(e){}}
 function soulQueue(){SOUL.q=true;}
 function soulPush(){ /* throttled upstream save: xp + trophies + dress - the server clamps and keeps */
  try{if(typeof NET==='undefined'||!NET.on||!NET.ws||NET.ws.readyState!==1)return;
@@ -1313,7 +1332,7 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
       if(u.gT>6){u.badN=u.node;u.node=null;u.gT=0;gx=s.x;gy=s.y;fast=true;} /* six seconds without a sip: the flower is walled off - release the obsession, come home */
       else if(dn<sipR9+7){u.gT=0;u.badN=null;const take=Math.min(u.node.amt,Math.max(0,honeyCap(s)-s.honey),(teamSize(s.team)<8?16:12)*dt);
        if(sim){u.node.amt-=take;s.honey+=take; /* the hive-mind purse */
-       if(s.team===0&&take>0){gainXP(take*0.1);
+       if(s.team===0&&take>0){gainXP(take*0.1);flightStat('h',take);
         if(grottoOf(u.x,u.y)){s.grottoHoney=(s.grottoHoney||0)+take;
          if(s.grottoHoney>=200)trophy('algaeglow','GROTTO GLOW · THE ALGAE REMEMBER YOU');}}}
        if(s===M&&take>0&&Math.random()<dt*1.3){sfx('feed');s.gulp=Math.max(s.gulp||0,0.08);}
@@ -1564,7 +1583,7 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
 function wormTick(dt){ /* THE BLOOD WORMS: idle they meander and burrow; provoked they LUNGE and BITE. Corner-locked forever. Cost: 3 heads + 18 follow-constraints; prey scans are swarm-level first */
  for(let wi=worms.length-1;wi>=0;wi--){const w9=worms[wi];
   if(w9.flash>0)w9.flash-=dt;if(w9.bite>0)w9.bite-=dt;if(w9.prov>0)w9.prov-=dt;
-  if(w9.hp<=0){ /* the worm dies in WAR COIN */
+  if(w9.hp<=0){if(w9.lastBy&&w9.lastBy.team===0&&!w9.lastBy.ally)flightStat('wk'); /* the worm dies in WAR COIN */
    for(let k=0;k<8;k++)dropAt(w9.x+rand(-26,26),w9.y+rand(-26,26),rand(6,11),12,1);
    addP(w9.x,w9.y,'#e84848',14,190);addRing(w9.x,w9.y,'#e84848',64);if(near(w9))sfx('die');
    worms.splice(wi,1);continue;}
@@ -2228,7 +2247,7 @@ function step(dt){NPLAY=humanCount();
    spider.hp-=sh.dmg*1.4;spider.flash=.1;spider.provoked=6;hit=true;
    if(spider.hp<=0)killSpider(mainOf(sh.team)||null);}
   if(!hit)for(const w9 of worms){if(w9.bur>0)continue;
-   if(d2(sh.x,sh.y,w9.x,w9.y)<(w9.r+6)*(w9.r+6)){w9.hp-=sh.dmg;w9.flash=.1;w9.prov=4;hit=true;break;}}
+   if(d2(sh.x,sh.y,w9.x,w9.y)<(w9.r+6)*(w9.r+6)){w9.hp-=sh.dmg;w9.flash=.1;w9.prov=4;w9.lastBy=sh.by;hit=true;break;}}
   if(!hit)for(const ey of eyes){if(d2(sh.x,sh.y,ey.x,ey.y)<(ey.r+8)*(ey.r+8)){ey.hp-=sh.dmg;ey.flash=.12;hit=true;break;}} /* the STARERS were quarrel-proof by pure omission */
   if(!hit)for(const wp of wasps){if(d2(sh.x,sh.y,wp.x,wp.y)<13*13){wp.hp-=sh.dmg;wp.flash=.12;hit=true;break;}}
   if(hit){addP(sh.x,sh.y,'#8fe0c0',4,90);shots.splice(i,1);continue;}
@@ -2274,7 +2293,7 @@ function killUnit(s,u,by){
  s.lost++;s.lostT=16;
  /* ROUT/panic REMOVED: ranks never break - troops keep protecting, walling and hunting */
 }
-function killQueen(s,by){
+function killQueen(s,by){if(by&&!by.ally&&by.team===0&&s.team!==0)flightStat('qk');if(s===me()&&!NET.on)flightSend(); /* the ledger sees the regicide - and the fall */
  if(s.dead)return;
  s.dead=true;
  for(const u of s.units){u.slain=true;dropAt(u.x,u.y,(ROLES[u.role]?ROLES[u.role].cost*0.5:20),24,1);}
@@ -2297,7 +2316,7 @@ function killQueen(s,by){
   showOver();
  }
 }
-function killSpider(by){
+function killSpider(by){if(by&&!by.ally&&by.team===0)flightStat('bk');
  if(!spider)return;
  for(let i=0;i<55;i++)dropAt(spider.x+rand(-110,110),spider.y+rand(-110,110),rand(9,17),16,1);
  addRing(spider.x,spider.y,'#e8dcf8',360);addP(spider.x,spider.y,'#c8b8d8',48,300);
@@ -2308,7 +2327,7 @@ function killSpider(by){
   META.owned.silkstrand=true;metaSave();}
  spider=null;webshots.length=0;
 }
-function killElder(by){
+function killElder(by){if(by&&!by.ally&&by.team===0)flightStat('bk');
  if(!elder)return;
  for(let i=0;i<30;i++)dropAt(elder.x+rand(-80,80),elder.y+rand(-80,80),rand(8,16),14,1);
  addRing(elder.x,elder.y,'#ffb04d',300);addP(elder.x,elder.y,'#ffb04d',40,280);
@@ -2641,7 +2660,7 @@ function showTipFor(el2){
 function hideTip(){clearTimeout(tipTimer);const t2=document.getElementById('tip');if(t2)t2.style.display='none';}
 function doAct(a){
  const M9=me();let r3=true;
- if(a==='split'){act({split:1});if(NET.on&&M9&&!M9.dead&&M9.units.length>=4){sfx('split');addRing(M9.x,M9.y,'#ff9ad0',34);}}
+ if(a==='split'){act({split:1});flightStat('sp');if(NET.on&&M9&&!M9.dead&&M9.units.length>=4){sfx('split');addRing(M9.x,M9.y,'#ff9ad0',34);}}
  else if(a==='recall'){act({recall:1});if(NET.on)sfx('recall');}
  else if(a.indexOf('unlock:')===0)chooseEvo(a.slice(7));
  else if(a.indexOf('buy:')===0){const role=a.slice(4);
@@ -2781,7 +2800,7 @@ function showHome(){
    requestAnimationFrame(mirrorLoop);};
   requestAnimationFrame(mirrorLoop);}
 }
-document.getElementById('again').onclick=()=>{document.getElementById('over').style.display='none';
+document.getElementById('again').onclick=()=>{document.getElementById('over').style.display='none';flightStart();
  if(NET.on){NET.cmd({respawn:1});setTimeout(()=>{NET.deadShown=false;},1600);}else{const M=me();M.respawn=0;reviveSwarm(M);}running=true;}; /* online: if the wire dropped the plea, the overlay returns in 1.6s to ask again - never a dead queen staring at a hidden door */
 document.getElementById('homeBtn').onclick=showHome;
 document.getElementById('nestBtn').onclick=()=>{document.getElementById('start').style.display='none';nestFrom='start';showHome();};
@@ -2830,7 +2849,7 @@ document.getElementById('backBtn').onclick=()=>{document.getElementById('home').
    /* RETIRING to the Nest ends the round - the peak pays its bonus, the bar keeps every ✨ */
    const M6=me();
    if(running&&M6&&!M6.dead){const bonus=Math.floor(peak*1.5);if(bonus>0)gainXP(bonus);}
-   running=false;metaSave();
+   flightSend();running=false;metaSave();
    nestFrom='retired';showHome();});
  }}
 let WS_URL=null;
@@ -2848,7 +2867,7 @@ document.getElementById('go').onclick=()=>{
   for(const k9 in META.eq){const it9=itemById(META.eq[k9]);
    if(it9&&it9.xp>0&&!ownsItem(it9.id))META.eq[k9]=DEF9[k9]||META.eq[k9];}
   metaSave();}
- document.getElementById('start').style.display='none';
+ document.getElementById('start').style.display='none';flightStart();
  barEl.style.display='flex';document.getElementById('gear').style.display='block';
  {const fb9=document.getElementById('fsBtn');if(fb9&&isTouch&&!(navigator&&navigator.standalone))fb9.style.display='block';} /* the wide-throne toggle on every touch device - already-installed Home Screen thrones need no door */
  resumeAudio();RUNXP=0;setup();renderBar();running=true; /* a new flight starts its own ledger */
@@ -4943,11 +4962,12 @@ const NET={on:false,ws:null,you:0,mirror:{},aimT:0,deadShown:false,rtt:0,pingT:0
   W9.onopen=()=>{let tk9=null;try{tk9=(typeof localStorage!=='undefined'&&localStorage)?localStorage.getItem('fh_tok'):null;}catch(e){}W9.send(JSON.stringify({k:'join',n:(name||'Queen').slice(0,16),c:((SKINS[META.skin]||{}).c)||0,c2:((SKINS[META.skin]||{}).c2)||0,q:META.eq||0,tok:tk9})); /* the SOUL TOKEN rides the join - the meadow remembers */ /* she arrives DRESSED: colour + wardrobe ride the join, the server wears them into every frame */
    clearInterval(NET._pi);NET._pi=setInterval(()=>{try{if(NET.ws&&NET.ws.readyState===1)NET.ws.send(JSON.stringify({k:'p',t:Date.now(),r:(NET.rtt||0)|0,d:(PSTAT.draw||0)|0,f:(PSTAT.fps||0)|0,q:(QGOV.q*100)|0,s:(PSTAT.sim||0)|0}));}catch(e){}},2000); /* the ping CONFESSES the whole client: draw ms, fps, quality, sim - combat spikes stop being a mystery, the ledger shows whose GPU or WiFi is burning */}; /* the PULSE rides a real timer, not the render loop - it beats even when the phone dims */
   W9.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}
-   if(m.k==='init'){NET.you=m.you;NET.on=true;NET._rt=0;netApplyWorld(m.world);renderBar();if(m.soul)soulApply(m.soul);toast('CONNECTED - realm '+m.you,'#9fd8ff',3);} /* refresh the bar THE MOMENT we (re)connect so tiers unlock instantly, never a stale 'at X souls' after a laggy reconnect */
+   if(m.k==='init'){NET.you=m.you;NET.on=true;NET._rt=0;netApplyWorld(m.world);renderBar();if(m.soul)soulApply(m.soul);try{NET.ws.send(JSON.stringify({k:'deeds'}));}catch(e){}toast('CONNECTED - realm '+m.you,'#9fd8ff',3);} /* refresh the bar THE MOMENT we (re)connect so tiers unlock instantly, never a stale 'at X souls' after a laggy reconnect */
    else if(m.k==='f')netApplyFrame(m);
    else if(m.k==='p')NET.rtt=Date.now()-m.t;
    else if(m.k==='deny'){toast(m.r==='hive code'?'NO HIVE ANSWERS THAT CODE':'THE ORDER WAS REFUSED · '+(m.r||'recruit')+' (honey, caps, or a full meadow)','#ff9a6a',2.4);try{sfx('hurt');}catch(e){}}
-   else if(m.k==='soul'){soulApply(m);toast('THE HIVE IS YOURS AGAIN · ✨'+(META.xp|0),'#ffd75e',4);try{sfx('gild');}catch(e){}}};
+   else if(m.k==='soul'){soulApply(m);toast('THE HIVE IS YOURS AGAIN · ✨'+(META.xp|0),'#ffd75e',4);try{sfx('gild');}catch(e){}}
+   else if(m.k==='deeds')deedsRender(m);};
   W9.onclose=()=>{const was=NET.on;NET.on=false;clearInterval(NET._pi);
    if(NET._url){ /* THE WIRE NEVER JUST DIES ANYMORE: a dropped socket (phone sleep, WiFi blink, seat reaped) quietly reweaves itself - and the rejoin brings a FRESH world init, so you can never be left playing a stale ghost meadow where buys eat honey but nothing real happens */
     if(was)toast('THE WIRE SLIPPED - reweaving...','#ffd75e',3);
@@ -5041,8 +5061,8 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
     if(!m9.ally){const own9=(m9.team===NET.you);
      const Mq9=me(),near9=Mq9&&d2(m9.x,m9.y,Mq9.x,Mq9.y)<1400*1400;
      const wtgt9=Mq9&&Mq9.war===m9;
-     if(own9)toast('YOUR QUEEN FALLS','#ffdf7e',4);
-     else if(wtgt9||near9){toast('👑 '+(m9.name||'a queen')+' FALLS','#ffdf7e',2.5);gainXP(45);} /* only falls that are YOURS to feel - and a fallen rival near you PAYS, online as anywhere */
+     if(own9){toast('YOUR QUEEN FALLS','#ffdf7e',4);flightSend();}
+     else if(wtgt9||near9){toast('👑 '+(m9.name||'a queen')+' FALLS','#ffdf7e',2.5);gainXP(45);if(wtgt9)flightStat('qk');} /* only falls that are YOURS to feel - and a fallen rival near you PAYS, online as anywhere */
      if(own9||near9)sfx('die');}}
    else if(m9)m9.dead=true;
    continue;}
@@ -5052,7 +5072,7 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
    name:(w9.n!==undefined?w9.n:''),col:(w9.c!==undefined?w9.c:'#9a8fa0'),col2:(w9.c2!==undefined?(w9.c2||null):null)};}
   m9.dead=false;m9.prot=w9.p?1:0;if(w9.sc!=null)m9._sc=w9.sc;
   if(w9.n!==undefined){m9.name=w9.n;m9.col=w9.c;m9.col2=w9.c2||null;m9.cosEq=w9.q||null;} /* identity rides the full beats; between them, keep the last known */
-  if(w9.i===NET.you&&!w9.a&&m9.honey!=null&&w9.H>m9.honey&&w9.H-m9.honey<60)gainXP((w9.H-m9.honey)*0.1); /* ONLINE XP: the meadow pays here too - honey banked earns at the solo forager rate, tracked from the wire's own truth (big jumps like respawn banking are ignored) */
+  if(w9.i===NET.you&&!w9.a&&m9.honey!=null&&w9.H>m9.honey&&w9.H-m9.honey<60){gainXP((w9.H-m9.honey)*0.1);flightStat('h',w9.H-m9.honey);} /* ONLINE XP: the meadow pays here too - honey banked earns at the solo forager rate, tracked from the wire's own truth (big jumps like respawn banking are ignored) */
   {const hpd9=(m9.hp!=null&&w9.h<m9.hp-0.5); /* TRUTH OVER FLAGS: a hit is an hp DROP, measured before the mirror updates. The flag-edge version re-armed screen-shake through every brawl - that was the mystery VIBRATION. Shake is gone (solo never shook for ordinary hits); white flash + sparks land exactly where damage landed */
    if((hpd9||w9.f)&&!(m9.flash>0))m9.flash=0.16;
    if(hpd9&&fx.length<430)addP(w9.x,w9.y,'#ffd7a8',4,120);

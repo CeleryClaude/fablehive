@@ -9,8 +9,25 @@ process.on('uncaughtException',e=>{try{require('fs').appendFileSync('/opt/fableh
 const _cr=require('crypto'),_fsS=require('fs');
 const SOULP=(process.env.SOULS||'/opt/fablehive/souls.json'),KEYP=(process.env.SOULKEY||'/opt/fablehive/soul.key');
 let SKEY='';try{SKEY=_fsS.readFileSync(KEYP,'utf8').trim();}catch(e){SKEY=_cr.randomBytes(24).toString('hex');try{_fsS.writeFileSync(KEYP,SKEY);}catch(e2){}}
-let SOULS={};try{SOULS=JSON.parse(_fsS.readFileSync(SOULP,'utf8'))||{};}catch(e){SOULS={};}
-let soulDirty=0;setInterval(()=>{if(!soulDirty)return;soulDirty=0;try{_fsS.writeFileSync(SOULP,JSON.stringify(SOULS));}catch(e){}},4000).unref&&setInterval(()=>{},1e9);
+let SOULS={},DEEDS=null;
+try{const _raw=JSON.parse(_fsS.readFileSync(SOULP,'utf8'))||{};
+ if(_raw&&_raw.souls){SOULS=_raw.souls||{};DEEDS=_raw.deeds||null;}else SOULS=_raw;}catch(e){SOULS={};}
+const DEDGE={h:[0,50,120,250,500,1000,2000,4000,8000,16000],p:[0,3,6,10,16,24,40,60,90,120],qk:[0,1,2,3,5,8,12],bk:[0,1,2,3,5],wk:[0,1,2,4,8,16],sp:[0,1,2,4,8],m:[0,1,2,5,10,20,40]};
+if(!DEEDS||!DEEDS.hist){DEEDS={tot:0,hist:{},tops:{},day:''};for(const k in DEDGE)DEEDS.hist[k]=DEDGE[k].map(()=>0);}
+const deedDay=()=>new Date().toISOString().slice(0,10);
+function deedFlight(sid,st){ /* THE LEDGER OF DEEDS: every flight buckets into the world's histogram - percentiles, not a lone arcade number */
+ if(DEEDS.day!==deedDay()){DEEDS.day=deedDay();DEEDS.tops={};}
+ DEEDS.tot++;const S=SOULS[sid];const nm=(S&&S.name)||'a queen';
+ for(const k in DEDGE){const v=Math.max(0,Math.min(1e7,+st[k]||0));
+  let i=0;const E=DEDGE[k];while(i<E.length-1&&v>=E[i+1])i++;DEEDS.hist[k][i]++;
+  const tp=DEEDS.tops[k];if(!tp||v>tp.v)DEEDS.tops[k]={v:v,n:nm};}
+ if(S){S.life=S.life||{n:0,best:{}};S.life.n++;
+  for(const k in DEDGE){const v=Math.max(0,Math.min(1e7,+st[k]||0));S.life.best[k]=Math.max(S.life.best[k]||0,v);}}
+ soulDirty=1;}
+function deedPct(st){const out={};for(const k in DEDGE){const v=Math.max(0,+st[k]||0);const E=DEDGE[k],H=DEEDS.hist[k];
+ let i=0;while(i<E.length-1&&v>=E[i+1])i++;let below=0,tot=0;for(let j=0;j<H.length;j++){tot+=H[j];if(j<i)below+=H[j];}
+ out[k]=tot>1?Math.round(100*below/tot):50;}return out;}
+let soulDirty=0;setInterval(()=>{if(!soulDirty)return;soulDirty=0;try{_fsS.writeFileSync(SOULP,JSON.stringify({souls:SOULS,deeds:DEEDS}));}catch(e){}},4000).unref&&setInterval(()=>{},1e9);
 const soulSig=id=>_cr.createHmac('sha256',SKEY).update(id).digest('hex').slice(0,20);
 const soulMint=()=>{const id=_cr.randomBytes(9).toString('hex');SOULS[id]={xp:0,ow:[],eq:null,skin:0,name:'',mk:Date.now(),seen:Date.now()};soulDirty=1;return id;};
 const soulOf=tok=>{if(typeof tok!=='string'||tok.length>80)return null;const i=tok.indexOf('.');if(i<1)return null;const id=tok.slice(0,i);if(!/^[a-f0-9]{18}$/.test(id))return null;if(soulSig(id)!==tok.slice(i+1))return null;return SOULS[id]?id:null;};
@@ -81,7 +98,7 @@ function start(port,htmlPath){
     stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:(()=>{const v9=DIAG.netLateMax||0;DIAG.netLateMax=0;return v9;})(),rateSkips:DIAG.rateSkips||0,
     buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
     seatNet:Object.keys(seats).map(t9=>{const w9=seats[t9],r9=(w9&&w9._rttMax||0)|0;if(w9)w9._rttMax=0;return Object.assign({t:+t9,rtt:(w9&&w9._rttS||0)|0,rttMax:r9,buf:(w9&&w9.bufferedAmount||0)|0},(w9&&w9._cli)||{});}),
-    ver:'r47-the-remembering',souls:Object.keys(SOULS).length,
+    ver:'r48-the-ledger-of-deeds',souls:Object.keys(SOULS).length,
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else{res.writeHead(404);res.end('the meadow has no such door');}
  });
@@ -125,6 +142,10 @@ function start(port,htmlPath){
     const sk=+m.skin;if(isFinite(sk)&&sk>=0&&sk<48)S.skin=sk|0;
     if(typeof m.name==='string')S.name=m.name.slice(0,16);
     S.seen=Date.now();soulDirty=1;}
+   else if(m.k==='flight'&&ws._soul&&m.st&&typeof m.st==='object'){
+    if(!ws._flN)ws._flN=0;if(++ws._flN<=30){deedFlight(ws._soul,m.st);
+     try{ws.send(JSON.stringify({k:'deeds',pct:deedPct(m.st),tops:DEEDS.tops,tot:DEEDS.tot}));}catch(e){}}}
+   else if(m.k==='deeds'){try{ws.send(JSON.stringify({k:'deeds',pct:null,tops:DEEDS.tops,tot:DEEDS.tot}));}catch(e){}}
    else if(m.k==='adopt'){ws._adoptN=(ws._adoptN||0)+1; /* 5 guesses per sitting - a hive code is a KEY */
     if(ws._adoptN<=5&&typeof m.code==='string'&&/^[a-f0-9]{10}$/.test(m.code.trim().toLowerCase())){
      const c=m.code.trim().toLowerCase();let hit=null;for(const id in SOULS){if(id.slice(0,10)===c){hit=id;break;}}

@@ -5273,7 +5273,7 @@ const NET={on:false,ws:null,you:0,mirror:{},aimT:0,deadShown:false,rtt:0,pingT:0
  connect(url,name){try{
   NET._url=url;NET._name=name;
   const W9=new WebSocket(url);NET.ws=W9;
-  W9.onopen=()=>{let tk9=null;try{tk9=(typeof localStorage!=='undefined'&&localStorage)?localStorage.getItem('fh_tok'):null;}catch(e){}W9.send(JSON.stringify({k:'join',n:(name||'Queen').slice(0,16),c:((SKINS[META.skin]||{}).c)||0,c2:((SKINS[META.skin]||{}).c2)||0,q:META.eq||0,tok:tk9,ref:(window._ref||null)})); /* the SOUL TOKEN rides the join - the meadow remembers */ /* she arrives DRESSED: colour + wardrobe ride the join, the server wears them into every frame */
+  W9.onopen=()=>{let tk9=null;try{tk9=(typeof localStorage!=='undefined'&&localStorage)?localStorage.getItem('fh_tok'):null;}catch(e){}W9.send(JSON.stringify({k:'join',n:(META.name||name||'Queen').slice(0,16),c:((SKINS[META.skin]||{}).c)||0,c2:((SKINS[META.skin]||{}).c2)||0,q:META.eq||0,tok:tk9,ref:(window._ref||null)})); /* the SOUL TOKEN rides the join - the meadow remembers */ /* she arrives DRESSED: colour + wardrobe ride the join, the server wears them into every frame */
    clearInterval(NET._pi);NET._pi=setInterval(()=>{try{if(NET.ws&&NET.ws.readyState===1)NET.ws.send(JSON.stringify({k:'p',t:Date.now(),r:(NET.rtt||0)|0,d:(PSTAT.draw||0)|0,f:(PSTAT.fps||0)|0,q:(QGOV.q*100)|0,s:(PSTAT.sim||0)|0}));}catch(e){}},2000); /* the ping CONFESSES the whole client: draw ms, fps, quality, sim - combat spikes stop being a mystery, the ledger shows whose GPU or WiFi is burning */}; /* the PULSE rides a real timer, not the render loop - it beats even when the phone dims */
   W9.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}
    if(m.k==='init'){if(m.world&&m.world.wver!=null&&m.world.wver!==WVER){try{location.reload();}catch(e){}return;} /* r67 THE WORLD AGREES: a tab left open across a redeploy meets a server whose world-schema moved on - reload to the fresh client rather than paint stale geometry (page is served no-store, so the reload can't loop on a cached copy) */
@@ -5286,7 +5286,7 @@ const NET={on:false,ws:null,you:0,mirror:{},aimT:0,deadShown:false,rtt:0,pingT:0
     else if(m.r==='sign in'){window._nwTry=null;toast('SIGN IN REFUSED · check name and password','#ff9a6a',3.5);try{sfx('hurt');}catch(e){}}
     else if(typeof m.r==='string'&&(m.r.indexOf('name:')===0||m.r.indexOf('word:')===0)){window._nwTry=null;toast(m.r.replace('word:','password:').toUpperCase(),'#ff9a6a',3.5);}
     else{toast(m.r==='hive code'?'NO HIVE ANSWERS THAT CODE':'THE ORDER WAS REFUSED · '+(m.r||'recruit')+' (honey, caps, or a full meadow)','#ff9a6a',2.4);try{sfx('hurt');}catch(e){}}}
-   else if(m.k==='soul'){soulApply(m,true);window._nwTry=null;toast('SIGNED IN · your dress, your name, your ✨'+(META.xp|0)+' - all here now','#ffd75e',4.5);try{sfx('gild');}catch(e){}
+   else if(m.k==='soul'){soulApply(m,true);NET._name=META.name;window._nwTry=null;toast('SIGNED IN · your dress, your name, your ✨'+(META.xp|0)+' - all here now','#ffd75e',4.5);try{sfx('gild');}catch(e){}
     try{const ni=document.getElementById('nameIn');if(ni&&META.name)ni.value=META.name;}catch(e){}try{if(typeof homeRefresh==='function')homeRefresh();}catch(e){}} /* an EXPLICIT sign-in takes the account outright, visibly, at once */
    else if(m.k==='deeds')deedsRender(m);
    else if(m.k==='supported'){toast('THE KEEPER HAS YOUR MESSAGE · you will be contacted','#9fe8c0',4);if(document.getElementById('supMsg'))document.getElementById('supMsg').value='';}

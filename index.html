@@ -5245,7 +5245,7 @@ function loop(){const now=performance.now();let dt=(now-last)/1000;last=now;
  if(QGOV.accT>2){const avg9=QGOV.accT/Math.max(1,QGOV.accN),q0=QGOV.q; /* the GOVERNOR judges SPIKES, never steady cadence: a browser capped at 30fps is CALM (33ms, flat) and deserves full crispness - only true struggle (sub-25fps average or >220ms hitches) sheds pixels */
   const s0=QGOV.sharp||0;
   if((avg9>0.041||QGOV.worst>0.22)&&QGOV.q>0.5)QGOV.q=Math.max(0.5,QGOV.q-0.25);
-  else if(avg9<0.036&&QGOV.worst<0.1&&QGOV.q<1)QGOV.q=Math.min(1,QGOV.q+0.125);
+  else if(avg9<0.036&&QGOV.worst<0.18&&QGOV.q<1)QGOV.q=Math.min(1,QGOV.q+0.125); /* r65 THE GLASS CLIMBS BACK: climb gate widened 0.1->0.18 so a lone 100-220ms spike no longer freezes recovery and pin quality at 50% for the rest of a session (drop trigger stays 0.22) */
   if(avg9>0.038||QGOV.worst>0.15||QGOV.q<1)QGOV.sharp=Math.max(0,s0-0.34); /* strain sheds sharpness FIRST - three steps down for every step up */
   else if(avg9<0.030&&QGOV.worst<0.08&&QGOV.q>=1)QGOV.sharp=Math.min(1,s0+0.1); /* only a truly cold engine earns extra pixels */
   if(q0!==QGOV.q||s0!==(QGOV.sharp||0)){try{resize();}catch(e){}}

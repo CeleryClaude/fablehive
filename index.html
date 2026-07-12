@@ -582,7 +582,24 @@ const ITEMS=[
  {id:'ironfleet',  cat:'fleet', n:'Ironguard',   xp:3000,d:'forged steel plate, fitted to each rank'},
  {id:'bonefleet',  cat:'fleet', n:'Leafmail',    xp:3400,d:'a mantle of leaves, all your own colour'},
  {id:'goldfleet',  cat:'fleet', n:'Regalia',     xp:3600,royal:true,d:'a golden crown-helm for every soul'},
- {id:'obsidianfleet',cat:'fleet',n:'Dreadplate',  xp:4200,royal:true,d:'black spiked warplate, forged per unit'}
+ {id:'obsidianfleet',cat:'fleet',n:'Dreadplate',  xp:4200,royal:true,d:'black spiked warplate, forged per unit'},
+ /* THE QUEEN'S DUE (r63) - she ruled for weeks under horns and fangs; these are the crowns a QUEEN wears */
+ {id:'coronet',  cat:'crown',  n:'Gilded Coronet',xp:800, d:'a TRUE crown at last - five gold points, five pearls'},
+ {id:'pearltiara',cat:'crown', n:'Pearl Tiara',   xp:1000,d:'silver arcs and a teardrop pearl - grace, worn lightly'},
+ {id:'diadem',   cat:'crown',  n:'Sapphire Diadem',xp:1800,d:'one deep blue stone where her thoughts sit'},
+ {id:'sovereign',cat:'crown',  n:'Sovereign Crown',xp:3200,royal:true,d:'gold, jewelled, indisputable - the state crown itself'},
+ {id:'dawnstar', cat:'crown',  n:'Dawnstar Tiara',xp:4000,royal:true,d:'a diamond that remembers the sunrise'},
+ /* NEW CLOTH (r63) - patterns done with a considered hand */
+ {id:'honeyveil',cat:'pattern',n:'Honeyveil',    xp:300, d:'amber seams and one slow drip - the harvest wears her'},
+ {id:'sundapple',cat:'pattern',n:'Sundapple',    xp:500, d:'light through leaves, always moving'},
+ {id:'velvet',   cat:'pattern',n:'Royal Velvet', xp:800, d:'deep purple, soft as an unspoken threat'},
+ {id:'rosethorn',cat:'pattern',n:'Rosethorn',    xp:1400,d:'a climbing rose - blooms above, hooks beneath'},
+ {id:'embervein',cat:'pattern',n:'Embervein',    xp:2000,d:'char-dark skin; the fire beneath still breathing'},
+ {id:'moonpetal',cat:'pattern',n:'Moonpetal',    xp:2800,royal:true,d:'pale petals that glimmer one by one, as if counted'},
+ /* NEW KITS (r63) - three more ways the army wears the theme */
+ {id:'hornfleet', cat:'fleet', n:'Hornguard',    xp:2500,d:'recurved horns grown in your own colour, rank by rank'},
+ {id:'scalefleet',cat:'fleet', n:'Copperscale',  xp:2900,d:'verdigris scales lapped like river-water'},
+ {id:'cinderfleet',cat:'fleet',n:'Cinderplate',  xp:3800,royal:true,d:'char-black shell; the seams still glow'}
 ];
 for(const it of ITEMS){if(it.royal)it.xp=Math.round(it.xp*2.2);else if(it.xp>0)it.xp=Math.round(it.xp*1.6);} /* the long road got longer; the ROYAL SUB is the carriage */
 for(const it9 of ITEMS){if(it9.xp>2000)it9.xp=Math.round(it9.xp*2.5/100)*100;} /* THE LONG ROAD II, by decree (Celery cleared ~10k in a week): the tail stretches again - quick first joys identical, the summit now demands devotion */
@@ -3052,7 +3069,10 @@ const FLEETS={plainfleet:null, /* ROLE-AWARE ARMOUR: each unit type wears a DIFF
  amberfleet:{bug:true,motif:'petal'},
  bonefleet:{bug:true,motif:'leaf'},
  waxfleet:{bug:true,motif:'wing'},
- bronzefleet:{bug:true,motif:'spike'}};
+ bronzefleet:{bug:true,motif:'spike'},
+ hornfleet:{bug:true,motif:'horn'}, /* r63: the horn arrangement waited in M1 for a fleet to claim it - grown, recurved, in HER colour */
+ scalefleet:{metal:'#7fb89a',dark:'#3e6a52',lite:'#dff4e6',motif:'scale'}, /* r63 COPPERSCALE: verdigris patina - old copper gone green */
+ cinderfleet:{metal:'#4a4048',dark:'#241e26',lite:'#ffb08a',motif:'ember'}}; /* r63 CINDERPLATE: pairs with the EMBERFORGED queen plate - one host, same forge */
 function paintWings(g2,base,t2,style){
  if(style==='nowings')return; /* WINGLESS, by decree */
  const wf=Math.sin(t2*38)*0.5+0.5;
@@ -3353,6 +3373,70 @@ function paintPattern(g2,base,t2,pat,col){
   S9.forEach((sg,k)=>{if(k<2)return;for(let j9=0;j9<2;j9++){const gl9=0.5+0.5*Math.sin(t2*2.4+k*1.7+j9*2.9);
    g2.fillStyle='rgba(226,232,255,'+(0.35+0.55*gl9).toFixed(3)+')';
    g2.beginPath();g2.arc(sg.x+Math.cos(k*2.7+j9*2.2)*sg.r*0.42,sg.y+Math.sin(k*1.9+j9*2.5)*sg.r*0.3,0.9+gl9*0.5,0,TAU);g2.fill();}});}
+ else if(pat==='honeyveil'){ /* HONEYVEIL (r63): amber wash, glistening seams where segment meets segment, one slow drip down her flank - the harvest wears her */
+  for(const sg of S9){g2.fillStyle='rgba(255,180,60,.30)';
+   g2.beginPath();g2.ellipse(sg.x,sg.y,sg.r*0.86,sg.r*0.68,0,0,TAU);g2.fill();}
+  g2.strokeStyle='rgba(255,214,98,.7)';g2.lineCap='round';
+  S9.forEach((sg,k)=>{if(!k)return;g2.lineWidth=Math.max(1.1,sg.r*0.13);
+   g2.beginPath();g2.arc(sg.x,sg.y,sg.r*0.72,-0.85,0.85);g2.stroke();});
+  {const mg=S9[Math.min(1,S9.length-1)],dr=(t2*0.35)%1; /* the drip: born at the flank, falls, fades, born again */
+   g2.fillStyle='rgba(255,196,70,'+(0.7*(1-dr*0.6)).toFixed(3)+')';
+   g2.beginPath();g2.arc(mg.x,mg.y+mg.r*(0.55+dr*0.5),Math.max(0.8,mg.r*(0.11-dr*0.045)),0,TAU);g2.fill();
+   g2.fillStyle='rgba(255,236,160,.75)';g2.beginPath();g2.arc(mg.x+mg.r*0.22,mg.y-mg.r*0.3,mg.r*0.075,0,TAU);g2.fill();}}
+ else if(pat==='sundapple'){ /* SUNDAPPLE (r63): pools of light through a moving canopy - they drift and breathe, never twice the same */
+  S9.forEach((sg,k)=>{for(let j9=0;j9<2;j9++){
+   const al=0.14+0.12*Math.sin(t2*0.7+k*1.7+j9*2.6);
+   g2.fillStyle='rgba(255,240,170,'+al.toFixed(3)+')';
+   g2.beginPath();g2.ellipse(sg.x+Math.cos(k*2.1+j9*2.8+t2*0.22)*sg.r*0.34,sg.y+Math.sin(k*1.6+j9*2.2+t2*0.18)*sg.r*0.26,sg.r*(0.36-j9*0.1),sg.r*(0.27-j9*0.07),j9*0.9,0,TAU);g2.fill();}
+   g2.fillStyle='rgba(255,252,220,'+(0.10+0.10*Math.sin(t2*0.9+k*2.3)).toFixed(3)+')';
+   g2.beginPath();g2.arc(sg.x+Math.cos(k*1.3+t2*0.3)*sg.r*0.2,sg.y+Math.sin(k*2.6+t2*0.26)*sg.r*0.18,sg.r*0.13,0,TAU);g2.fill();});}
+ else if(pat==='velvet'){ /* ROYAL VELVET (r63): deep purple with a soft nap - the sheen sits where the light does, and shifts as she moves */
+  for(const sg of S9){g2.fillStyle='rgba(74,32,110,.62)';
+   g2.beginPath();g2.ellipse(sg.x,sg.y,sg.r*0.88,sg.r*0.7,0,0,TAU);g2.fill();}
+  S9.forEach((sg,k)=>{const sh=Math.sin(t2*1.1+k*0.8)*sg.r*0.05;
+   g2.fillStyle='rgba(178,120,230,.26)';
+   g2.beginPath();g2.ellipse(sg.x-sg.r*0.08,sg.y-sg.r*0.26+sh,sg.r*0.58,sg.r*0.2,0.16,0,TAU);g2.fill();
+   g2.fillStyle='rgba(216,180,255,.16)';
+   g2.beginPath();g2.ellipse(sg.x-sg.r*0.04,sg.y-sg.r*0.3+sh,sg.r*0.34,sg.r*0.1,0.16,0,TAU);g2.fill();});}
+ else if(pat==='rosethorn'){ /* ROSETHORN (r63): one living vine weaving her spine - blooms above, recurved hooks beneath, per the law: never triangles */
+  g2.strokeStyle='rgba(74,120,54,.9)';g2.lineWidth=1.7;g2.lineCap='round';
+  g2.beginPath();S9.forEach((sg,k)=>{const oy=(k%2?1:-1)*sg.r*0.24;
+   k?g2.quadraticCurveTo((S9[k-1].x+sg.x)/2,sg.y+(k%2?-1:1)*sg.r*0.34,sg.x,sg.y+oy):g2.moveTo(sg.x,sg.y+oy);});g2.stroke();
+  S9.forEach((sg,k)=>{const sd=k%2?1:-1,oy=sd*sg.r*0.24;
+   g2.fillStyle='rgba(58,90,44,.9)'; /* the hook: out, curl, back in */
+   g2.beginPath();g2.moveTo(sg.x+sg.r*0.1,sg.y+oy);
+   g2.quadraticCurveTo(sg.x+sg.r*0.24,sg.y+oy+sd*sg.r*0.22,sg.x+sg.r*0.04,sg.y+oy+sd*sg.r*0.32);
+   g2.quadraticCurveTo(sg.x+sg.r*0.06,sg.y+oy+sd*sg.r*0.12,sg.x-sg.r*0.04,sg.y+oy);g2.closePath();g2.fill();
+   if(k%2){const bx=sg.x-sg.r*0.1,by=sg.y+oy-sd*sg.r*0.06; /* a bloom every second segment */
+    g2.fillStyle='rgba(200,40,70,.92)';g2.beginPath();g2.arc(bx,by,sg.r*0.21,0,TAU);g2.fill();
+    g2.strokeStyle='rgba(255,150,170,.75)';g2.lineWidth=0.9;
+    g2.beginPath();g2.arc(bx,by,sg.r*0.13,0.6,4.2);g2.stroke();
+    g2.beginPath();g2.arc(bx,by,sg.r*0.065,3.6,6.8);g2.stroke();}});}
+ else if(pat==='embervein'){ /* EMBERVEIN (r63): char-dark skin split by living fire - each segment takes its turn to breathe, never all at once */
+  for(const sg of S9){g2.fillStyle='rgba(26,16,18,.78)';
+   g2.beginPath();g2.ellipse(sg.x,sg.y,sg.r*0.88,sg.r*0.7,0,0,TAU);g2.fill();}
+  S9.forEach((sg,k)=>{const br=0.3+0.7*Math.max(0,Math.sin(t2*1.9+k*1.9));
+   g2.strokeStyle='rgba(255,122,58,'+(0.75*br).toFixed(3)+')';g2.lineWidth=1.4;g2.lineCap='round';
+   g2.beginPath();g2.moveTo(sg.x+sg.r*0.5,sg.y-sg.r*0.28);
+   g2.quadraticCurveTo(sg.x+sg.r*0.05,sg.y+sg.r*0.05,sg.x-sg.r*0.4,sg.y-sg.r*0.16);g2.stroke();
+   g2.beginPath();g2.moveTo(sg.x+sg.r*0.14,sg.y-sg.r*0.02);
+   g2.quadraticCurveTo(sg.x-sg.r*0.1,sg.y+sg.r*0.3,sg.x-sg.r*0.46,sg.y+sg.r*0.34);g2.stroke();
+   g2.fillStyle='rgba(255,190,120,'+(0.8*br).toFixed(3)+')';
+   g2.beginPath();g2.arc(sg.x+sg.r*0.05,sg.y+sg.r*0.04,1+br*0.9,0,TAU);g2.fill();});}
+ else if(pat==='moonpetal'){ /* MOONPETAL (r63): pale petals laid along her back, silvered - they glimmer one at a time, as if someone is counting them */
+  for(const sg of S9){g2.fillStyle='rgba(226,232,255,.13)';
+   g2.beginPath();g2.ellipse(sg.x,sg.y,sg.r*0.86,sg.r*0.66,0,0,TAU);g2.fill();}
+  let pi9=0;
+  S9.forEach((sg,k)=>{for(const sd of [-1,1]){const idx=pi9++;
+   const gl=Math.sin(t2*1.4-idx*0.9)>0.93?1:0;
+   g2.save();g2.translate(sg.x-sg.r*0.12,sg.y+sd*sg.r*0.34);g2.rotate(sd*0.55);
+   g2.fillStyle=gl?'rgba(255,255,255,.95)':'rgba(230,236,255,.55)';
+   g2.strokeStyle='rgba(150,160,210,.5)';g2.lineWidth=0.8;
+   g2.beginPath();g2.moveTo(0,0);
+   g2.quadraticCurveTo(sg.r*0.3,-sg.r*0.26,sg.r*0.62,-sg.r*0.06);
+   g2.quadraticCurveTo(sg.r*0.72,0,sg.r*0.62,sg.r*0.06);
+   g2.quadraticCurveTo(sg.r*0.3,sg.r*0.26,0,0);g2.closePath();g2.fill();g2.stroke();
+   g2.restore();}});}
 }
 function paintEye(g2,base,t2,ey){ /* THE GAZE: her eye is a CHOICE now. Anchored to the true head segment so no body type or stage can misplace it */
  if(!ey)ey='simple';
@@ -3810,6 +3894,94 @@ function paintCrown(g2,base,t2,cr){
    g2.beginPath();g2.moveTo(bx+hr8*0.18,by+sg*hr8*0.78);g2.lineTo(bx+hr8*0.52,by+sg*hr8*1.0);g2.stroke();
    g2.beginPath();g2.moveTo(bx-hr8*0.02,by+sg*hr8*1.08);g2.lineTo(bx+hr8*0.24,by+sg*hr8*1.34);g2.stroke();
    g2.lineWidth=2.2;}}
+ else if(cr==='coronet'){ /* GILDED CORONET (r63): the first TRUE crown - a gold band ringing the brow, five sabre-points leaning toward the centre, a pearl at every tip. Band on the rim, points OUTWARD - the eye zone is never touched */
+  g2.strokeStyle='#8a6410';g2.lineWidth=3;
+  g2.beginPath();g2.arc(hx8,0,hr8*1.05,-1.28,1.28);g2.stroke();
+  g2.strokeStyle='#f0c94a';g2.lineWidth=2;
+  g2.beginPath();g2.arc(hx8,0,hr8*1.05,-1.24,1.24);g2.stroke();
+  for(let k2=-2;k2<=2;k2++){const aa=k2*0.55,dx=Math.cos(aa),dy=Math.sin(aa),tall=k2===0?0.5:0.36,lean=k2===0?0:(k2>0?-1:1);
+   const bx=hx8+dx*hr8*1.05,by=dy*hr8*1.05,w9=hr8*0.14,lo=lean*hr8*0.1;
+   const tx=bx+dx*hr8*tall-dy*lo,ty=by+dy*hr8*tall+dx*lo; /* the tip, leaning gently toward the centre point */
+   g2.fillStyle='#f0c94a';g2.strokeStyle='#8a6410';g2.lineWidth=0.9;
+   g2.beginPath();g2.moveTo(bx-dy*w9,by+dx*w9);
+   g2.quadraticCurveTo(bx+dx*hr8*tall*0.55-dy*(w9*0.2+lo),by+dy*hr8*tall*0.55+dx*(w9*0.2+lo),tx,ty);
+   g2.quadraticCurveTo(bx+dx*hr8*tall*0.55-dy*(lo-w9*0.2),by+dy*hr8*tall*0.55+dx*(lo-w9*0.2),bx+dy*w9,by-dx*w9);
+   g2.closePath();g2.fill();g2.stroke();
+   g2.fillStyle='#fff6e8';g2.beginPath();g2.arc(tx,ty,hr8*0.065,0,TAU);g2.fill();
+   g2.strokeStyle='#c8a34a';g2.lineWidth=0.6;g2.stroke();}}
+ else if(cr==='pearltiara'){ /* PEARL TIARA (r63): a silver band on the rim, a second arc lifted above it, graduated pearls riding the lift, one teardrop at the peak - grace, worn lightly */
+  g2.strokeStyle='#8a90b8';g2.lineWidth=2.2;
+  g2.beginPath();g2.arc(hx8,0,hr8*1.04,-1.3,1.3);g2.stroke();
+  g2.strokeStyle='rgba(238,243,247,.9)';g2.lineWidth=1;
+  g2.beginPath();g2.arc(hx8,0,hr8*1.04,-1.26,1.26);g2.stroke();
+  g2.strokeStyle='#8a90b8';g2.lineWidth=1.2;
+  g2.beginPath();g2.arc(hx8,0,hr8*1.2,-0.85,0.85);g2.stroke();
+  for(const sd of [-1,1])for(let k2=0;k2<3;k2++){const aa=sd*(0.28+k2*0.3),rr=hr8*(0.095-k2*0.02); /* pearls grow toward the brow */
+   const px=hx8+Math.cos(aa)*hr8*1.2,py=Math.sin(aa)*hr8*1.2,gl=0.72+0.22*Math.sin(t2*2.4+k2*1.3+sd);
+   g2.fillStyle='rgba(244,248,255,'+gl.toFixed(3)+')';
+   g2.beginPath();g2.arc(px,py,rr,0,TAU);g2.fill();
+   g2.fillStyle='rgba(150,158,190,.45)';g2.beginPath();g2.arc(px+rr*0.3,py+rr*0.3,rr*0.35,0,TAU);g2.fill();}
+  {const px=hx8+hr8*1.26; /* the teardrop pearl points forward off the peak */
+   g2.fillStyle='#f4f8ff';g2.strokeStyle='#8a90b8';g2.lineWidth=0.8;
+   g2.beginPath();g2.moveTo(px-hr8*0.08,0);
+   g2.quadraticCurveTo(px,-hr8*0.12,px+hr8*0.16,-hr8*0.03);
+   g2.quadraticCurveTo(px+hr8*0.24,0,px+hr8*0.16,hr8*0.03);
+   g2.quadraticCurveTo(px,hr8*0.12,px-hr8*0.08,0);g2.closePath();g2.fill();g2.stroke();
+   g2.fillStyle='rgba(255,255,255,.9)';g2.beginPath();g2.arc(px+hr8*0.06,-hr8*0.03,hr8*0.035,0,TAU);g2.fill();}}
+ else if(cr==='diadem'){ /* SAPPHIRE DIADEM (r63): a slim gold band ending in filigree curls at the temples, a small stone guarding each curl, the great sapphire in a pronged mount at the brow */
+  g2.strokeStyle='#8a6410';g2.lineWidth=2.6;g2.beginPath();g2.arc(hx8,0,hr8*1.04,-1.2,1.2);g2.stroke();
+  g2.strokeStyle='#e8c060';g2.lineWidth=1.2;g2.beginPath();g2.arc(hx8,0,hr8*1.04,-1.16,1.16);g2.stroke();
+  for(const sd of [-1,1]){const bx=hx8+Math.cos(sd*1.2)*hr8*1.04,by=Math.sin(sd*1.2)*hr8*1.04;
+   g2.strokeStyle='#e8c060';g2.lineWidth=1.2;
+   g2.beginPath();g2.arc(bx-hr8*0.1,by+sd*hr8*0.15,hr8*0.14,sd*1.2-2.7,sd*1.2+1.5);g2.stroke(); /* the band ends in a curl, never a stub */
+   g2.fillStyle='#3a5adf';g2.beginPath();g2.arc(bx,by,hr8*0.075,0,TAU);g2.fill();
+   g2.strokeStyle='#8a6410';g2.lineWidth=0.6;g2.stroke();}
+  {const px=hx8+hr8*1.14,gl=0.6+0.4*Math.sin(t2*2.1);
+   g2.fillStyle='#8a6410';g2.beginPath();g2.arc(px,0,hr8*0.23,0,TAU);g2.fill(); /* the mount */
+   g2.fillStyle='#e8c060';for(let k2=0;k2<4;k2++){const aa=k2*1.57+0.78; /* four prongs hold the stone */
+    g2.beginPath();g2.arc(px+Math.cos(aa)*hr8*0.2,Math.sin(aa)*hr8*0.2,hr8*0.05,0,TAU);g2.fill();}
+   g2.fillStyle='#2440c8';g2.beginPath();g2.arc(px,0,hr8*0.165,0,TAU);g2.fill();
+   g2.fillStyle='rgba(90,130,255,'+(0.5*gl).toFixed(3)+')';g2.beginPath();g2.arc(px,0,hr8*0.115,0,TAU);g2.fill();
+   g2.fillStyle='rgba(240,246,255,'+(0.85*gl).toFixed(3)+')';g2.beginPath();g2.arc(px+hr8*0.05,-hr8*0.05,hr8*0.04,0,TAU);g2.fill();}}
+ else if(cr==='sovereign'){ /* SOVEREIGN CROWN (r63): the answer to 'why are all my crowns horns' - velvet glimpsed inside the band, jewels set along it, seven sabre-points with pearls on the tall ones, one point catching the light at a time. Indisputable */
+  g2.fillStyle='rgba(120,20,40,.35)'; /* the velvet cap, seen from above between brow and band */
+  g2.beginPath();g2.arc(hx8,0,hr8*0.96,-1.2,1.2);g2.closePath();g2.fill();
+  g2.strokeStyle='#8a6410';g2.lineWidth=3.4;g2.beginPath();g2.arc(hx8,0,hr8*1.06,-1.32,1.32);g2.stroke();
+  g2.strokeStyle='#f0c94a';g2.lineWidth=2.4;g2.beginPath();g2.arc(hx8,0,hr8*1.06,-1.28,1.28);g2.stroke();
+  const wink=((t2*0.9)%7)|0; /* the light walks the points, one at a time */
+  for(let k2=-3;k2<=3;k2++){const aa=k2*0.42,dx=Math.cos(aa),dy=Math.sin(aa),tall=(k2%2===0)?0.55:0.34,lean=k2===0?0:(k2>0?-1:1);
+   const bx=hx8+dx*hr8*1.06,by=dy*hr8*1.06,w9=hr8*0.13,lo=lean*hr8*0.09;
+   const tx=bx+dx*hr8*tall-dy*lo,ty=by+dy*hr8*tall+dx*lo;
+   g2.fillStyle=(k2+3)===wink?'#fff2b0':'#f0c94a';g2.strokeStyle='#8a6410';g2.lineWidth=0.9;
+   g2.beginPath();g2.moveTo(bx-dy*w9,by+dx*w9);
+   g2.quadraticCurveTo(bx+dx*hr8*tall*0.55-dy*(w9*0.15+lo),by+dy*hr8*tall*0.55+dx*(w9*0.15+lo),tx,ty);
+   g2.quadraticCurveTo(bx+dx*hr8*tall*0.55-dy*(lo-w9*0.15),by+dy*hr8*tall*0.55+dx*(lo-w9*0.15),bx+dy*w9,by-dx*w9);
+   g2.closePath();g2.fill();g2.stroke();
+   if(k2%2===0){g2.fillStyle='#fff6e8';g2.beginPath();g2.arc(tx,ty,hr8*0.055,0,TAU);g2.fill();}}
+  const GEMS=['#d8324a','#3a5adf','#3aa860','#3a5adf','#d8324a']; /* rubies, sapphires, one emerald - set along the band between the points */
+  for(let k2=-2;k2<=2;k2++){const aa=k2*0.42+0.21;
+   g2.fillStyle=GEMS[k2+2];g2.beginPath();g2.arc(hx8+Math.cos(aa)*hr8*1.06,Math.sin(aa)*hr8*1.06,hr8*0.07,0,TAU);g2.fill();
+   g2.strokeStyle='#8a6410';g2.lineWidth=0.7;g2.stroke();
+   g2.fillStyle='rgba(255,255,255,.75)';g2.beginPath();g2.arc(hx8+Math.cos(aa)*hr8*1.06+hr8*0.02,Math.sin(aa)*hr8*1.06-hr8*0.02,hr8*0.02,0,TAU);g2.fill();}}
+ else if(cr==='dawnstar'){ /* DAWNSTAR TIARA (r63): platinum arcs rising in an ogee to the peak, two diamonds down each arm, and a radiant stone that remembers the sunrise - the light walks its facets slowly */
+  g2.strokeStyle='#9aa6b2';g2.lineWidth=2.4;g2.beginPath();g2.arc(hx8,0,hr8*1.05,-1.3,1.3);g2.stroke();
+  g2.strokeStyle='rgba(244,248,252,.95)';g2.lineWidth=1;g2.beginPath();g2.arc(hx8,0,hr8*1.05,-1.26,1.26);g2.stroke();
+  for(const sd of [-1,1]){g2.strokeStyle='#c8d2dc';g2.lineWidth=1.4;g2.lineCap='round';
+   g2.beginPath();g2.moveTo(hx8+Math.cos(sd*1.1)*hr8*1.05,Math.sin(sd*1.1)*hr8*1.05);
+   g2.quadraticCurveTo(hx8+hr8*1.18,sd*hr8*0.72,hx8+hr8*1.3,sd*hr8*0.12);g2.stroke(); /* the arms rise in a slow ogee */
+   for(const tt of [0.4,0.72]){const ax=hx8+Math.cos(sd*1.1*(1-tt))*hr8*(1.05+tt*0.25),ay=Math.sin(sd*1.1*(1-tt))*hr8*(1.05+tt*0.25);
+    const gl=0.6+0.4*Math.sin(t2*2.8+tt*4+sd);
+    g2.fillStyle='rgba(244,250,255,'+gl.toFixed(3)+')';g2.beginPath();g2.arc(ax,ay,hr8*0.05,0,TAU);g2.fill();}}
+  {const px=hx8+hr8*1.34,ph=(t2*0.8)%TAU; /* the radiant stone at the peak */
+   g2.fillStyle='rgba(200,230,255,'+(0.22+0.12*Math.sin(t2*1.7)).toFixed(3)+')';
+   g2.beginPath();g2.arc(px,0,hr8*0.3,0,TAU);g2.fill(); /* its quiet halo */
+   g2.fillStyle='#f4faff';g2.strokeStyle='#9aa6b2';g2.lineWidth=0.7;
+   g2.beginPath();for(let k2=0;k2<8;k2++){const aa=k2/8*TAU+0.39,rr=k2%2?hr8*0.085:hr8*0.18;
+    const fx=px+Math.cos(aa)*rr,fy=Math.sin(aa)*rr;k2?g2.lineTo(fx,fy):g2.moveTo(fx,fy);}
+   g2.closePath();g2.fill();g2.stroke(); /* the radiant cut, eight facets */
+   g2.fillStyle='hsla('+(((t2*36)%360)|0)+',85%,82%,.55)'; /* the sunrise walks the stone */
+   g2.beginPath();g2.arc(px+Math.cos(ph)*hr8*0.07,Math.sin(ph)*hr8*0.07,hr8*0.045,0,TAU);g2.fill();
+   g2.fillStyle='#fff';g2.beginPath();g2.arc(px,0,hr8*0.035,0,TAU);g2.fill();}}
  }finally{g2.restore();}
 }
 function queenStage(s){const n=teamSize(s.team);const raw=n>=70?3:n>=34?2:n>=15?1:0; /* HYSTERESIS: hovering ON a threshold made her flicker hatchling/grown every frame - once won, a stage is only surrendered when the brood falls WELL below the line */
@@ -3852,6 +4024,17 @@ function drawArmour(g,u,FL,col){ /* FLAT, organic armour in the game's own langu
  const ridge=(x,hh)=>{g.strokeStyle=edge;g.lineWidth=Math.max(1.1,r*0.14);g.beginPath();g.moveTo(x,-hh);g.lineTo(x,hh);g.stroke();};
  const petal=(bx,by,ang,L,W,fill)=>{g.save();g.translate(bx,by);g.rotate(ang);g.beginPath();g.moveTo(0,0);g.quadraticCurveTo(L*0.35,-W,L*0.82,-W*0.28);g.quadraticCurveTo(L*1.06,0,L*0.82,W*0.28);g.quadraticCurveTo(L*0.35,W,0,0);g.closePath();g.fillStyle=fill||hi;g.fill();g.strokeStyle=edge;g.lineWidth=Math.max(0.5,W*0.26);g.stroke();g.restore();};
  const leaf=(bx,by,ang,L,W,fill)=>{g.save();g.translate(bx,by);g.rotate(ang);g.beginPath();g.moveTo(0,0);g.quadraticCurveTo(L*0.4,-W,L,0);g.quadraticCurveTo(L*0.4,W,0,0);g.closePath();g.fillStyle=fill||base;g.fill();g.strokeStyle=edge;g.lineWidth=Math.max(0.5,W*0.32);g.stroke();g.beginPath();g.moveTo(L*0.14,0);g.lineTo(L*0.82,0);g.stroke();g.restore();};
+ const scaleLap=(bx,by,ang,L)=>{g.save();g.translate(bx,by);g.rotate(ang); /* r63: two lapped river-scales, the fore one riding over the rear - patina catches the crest */
+  g.fillStyle=base;g.strokeStyle=edge;g.lineWidth=Math.max(0.6,L*0.16);
+  g.beginPath();g.arc(-L*0.34,0,L*0.5,-1.8,1.8);g.closePath();g.fill();g.stroke();
+  g.beginPath();g.arc(L*0.1,0,L*0.44,-1.8,1.8);g.closePath();g.fill();g.stroke();
+  g.strokeStyle=hi;g.lineWidth=Math.max(0.5,L*0.1);
+  g.beginPath();g.arc(L*0.1,0,L*0.3,-1.2,1.2);g.stroke();g.restore();};
+ const emberStud=(bx,by,rr)=>{g.fillStyle=base;g.strokeStyle=edge;g.lineWidth=Math.max(0.6,rr*0.28); /* r63: a char boss with the forge still alive in it - each stud breathes on its own beat */
+  g.beginPath();g.arc(bx,by,rr,0,TAU);g.fill();g.stroke();
+  const gl9=0.5+0.5*Math.sin(tnow*3+bx*0.7+by*0.9);
+  g.fillStyle='rgba(255,122,58,'+(0.3+0.6*gl9).toFixed(2)+')';
+  g.beginPath();g.arc(bx,by,rr*0.5,0,TAU);g.fill();};
  const hexAt=(cx,cy,s)=>{g.beginPath();for(let i=0;i<6;i++){const a=i/6*TAU;const fn=i?'lineTo':'moveTo';g[fn](cx+Math.cos(a)*s,cy+Math.sin(a)*s);}g.closePath();g.fillStyle=base;g.fill();g.strokeStyle=edge;g.lineWidth=Math.max(0.5,s*0.2);g.stroke();};
  const comb=(cx,cy,s)=>{const dx=s*1.5,dy=s*0.87;hexAt(cx,cy,s);hexAt(cx-dx,cy-dy,s);hexAt(cx-dx,cy+dy,s);hexAt(cx+dx,cy-dy,s*0.9);hexAt(cx+dx,cy+dy,s*0.9);hexAt(cx-dx*2,cy,s*0.85);};
  const helmCap=()=>{g.fillStyle=base;g.beginPath();g.moveTo(r*0.62,-r*0.42);g.quadraticCurveTo(r*0.0,-r*0.62,-r*0.2,-r*0.2);g.lineTo(-r*0.2,r*0.2);g.quadraticCurveTo(r*0.0,r*0.62,r*0.62,r*0.42);g.quadraticCurveTo(r*0.4,0,r*0.62,-r*0.42);g.closePath();g.fill();g.strokeStyle=edge;g.lineWidth=Math.max(0.6,r*0.07);g.stroke();g.strokeStyle=hi;g.lineWidth=Math.max(0.5,r*0.05);g.beginPath();g.moveTo(r*0.5,-r*0.34);g.quadraticCurveTo(r*0.05,-r*0.5,-r*0.14,-r*0.16);g.stroke();};
@@ -3863,7 +4046,9 @@ function drawArmour(g,u,FL,col){ /* FLAT, organic armour in the game's own langu
   else if(M==='wing')shell(x,y,r*0.5*sc,r*0.4*sc,ang,base);
   else if(M==='plate')ridge(x,r*0.44*sc);
   else if(M==='petal')petal(x,y,ang,r*0.7*sc,r*0.34*sc);
-  else if(M==='leaf')leaf(x,y,ang,r*0.95*sc,r*0.24*sc);};
+  else if(M==='leaf')leaf(x,y,ang,r*0.95*sc,r*0.24*sc);
+  else if(M==='scale')scaleLap(x,y,ang,r*0.7*sc);
+  else if(M==='ember')emberStud(x,y,r*0.34*sc);};
  if(M==='honeycomb'){const hs=r*0.26;comb(-r*0.15,0,hs);if(R==='armourer'||R==='titan'){comb(r*0.42,0,hs*0.9);comb(-r*0.62,0,hs*0.85);}return;}
  if(R==='forager'){if(M==='plate'){ridge(-r*0.1,r*0.45);ridge(-r*0.5,r*0.4);}else{M1(-r*0.55,-r*0.2,-2.5,0.7);M1(-r*0.55,r*0.2,2.5,0.7);}}
  else if(R==='soldier'){if(!FL.bug)helmCap();if(M==='plate'){ridge(-r*0.1,r*0.4);ridge(-r*0.5,r*0.34);}else{M1(r*0.05,-r*0.35,-1.9,1.0);if(M!=='mandible')M1(r*0.05,r*0.35,1.9,1.0);}M1(-r*0.4,-r*0.5,-2.6,0.6);M1(-r*0.4,r*0.5,2.6,0.6);}

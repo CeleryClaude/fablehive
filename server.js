@@ -11,6 +11,8 @@ const SOULP=(process.env.SOULS||'/opt/fablehive/souls.json'),KEYP=(process.env.S
 let SKEY='';try{SKEY=_fsS.readFileSync(KEYP,'utf8').trim();}catch(e){SKEY=_cr.randomBytes(24).toString('hex');try{_fsS.writeFileSync(KEYP,SKEY);}catch(e2){}}
 const SUPKEYP=(process.env.SUPKEY||'/opt/fablehive/sup.key'); /* THE KEEPER'S KEY: cat /opt/fablehive/sup.key on the droplet once, then read /supportz?k=KEY in a browser */
 let SUPK='';try{SUPK=_fsS.readFileSync(SUPKEYP,'utf8').trim();}catch(e){SUPK=_cr.randomBytes(6).toString('hex');try{_fsS.writeFileSync(SUPKEYP,SUPK);}catch(e2){}}
+const KEEPERP=(process.env.KEEPERPW||'/opt/fablehive/keeper.pw'); /* r73: the OWNER's own dashboard password - they set it ONCE in the dashboard; unset until then, never a machine-generated key */
+let KSALT='',KWH='';try{const _kk=_fsS.readFileSync(KEEPERP,'utf8').trim().split(':');if(_kk.length===2){KSALT=_kk[0];KWH=_kk[1];}}catch(e){}
 let SOULS={},DEEDS=null;
 try{const _raw=JSON.parse(_fsS.readFileSync(SOULP,'utf8'))||{};
  if(_raw&&_raw.souls){SOULS=_raw.souls||{};DEEDS=_raw.deeds||null;}else SOULS=_raw;}catch(e){SOULS={};}
@@ -40,6 +42,7 @@ const soulMint=()=>{const id=_cr.randomBytes(9).toString('hex');SOULS[id]={xp:0,
 const soulOf=tok=>{if(typeof tok!=='string'||tok.length>80)return null;const i=tok.indexOf('.');if(i<1)return null;const id=tok.slice(0,i);if(!/^[a-f0-9]{18}$/.test(id))return null;if(soulSig(id)!==tok.slice(i+1))return null;return SOULS[id]?id:null;};
 const soulPack=id=>{const s=SOULS[id];return {tok:id+'.'+soulSig(id),code:id.slice(0,10),meta:{xp:s.xp|0,ow:s.ow||[],eq:s.eq||null,skin:s.skin|0,name:s.name||''}};};
 const wordHash=(pw,salt)=>_cr.scryptSync(String(pw),salt,32).toString('hex');
+const keeperOk=cred=>{if(!KWH||!KSALT||!cred)return false;try{return wordHash(cred,KSALT)===KWH;}catch(e){return false;}}; /* r73: does this credential match the owner's own dashboard password? */
 const userOk=u=>typeof u==='string'&&/^[a-z0-9_]{3,16}$/.test(u);
 const userFind=u=>{for(const id in SOULS)if(SOULS[id].user===u)return id;return null;};
 const soulEqOk=q=>{if(!q||typeof q!=='object'||Array.isArray(q))return null;const o={};for(const k of ['pattern','crown','trail','wings','body','tail','fleet','aura','plate','eye']){const v=q[k];if(typeof v==='string'&&v.length<=24&&/^[a-zA-Z0-9_-]+$/.test(v))o[k]=v;}return Object.keys(o).length?o:null;};
@@ -109,13 +112,13 @@ function start(port,htmlPath){
     stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:(()=>{const v9=DIAG.netLateMax||0;DIAG.netLateMax=0;return v9;})(),rateSkips:DIAG.rateSkips||0,
     buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
     seatNet:Object.keys(seats).map(t9=>{const w9=seats[t9],r9=(w9&&w9._rttMax||0)|0;if(w9)w9._rttMax=0;return Object.assign({t:+t9,rtt:(w9&&w9._rttS||0)|0,rttMax:r9,buf:(w9&&w9.bufferedAmount||0)|0},(w9&&w9._cli)||{});}),
-    ver:'r72-the-polish-pass',souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
+    ver:'r73-the-keepers-window',keeperSet:(KWH?1:0),souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else if(req.url.indexOf('/crashz')===0){let c='';try{c=_fsS.readFileSync('/opt/fablehive/crash.log','utf8').slice(-4000);}catch(e){c='(no crashes logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* the CONFESSOR reads aloud */
   else if(req.url.indexOf('/deployz')===0){let c='';try{c=_fsS.readFileSync('/var/log/fablehive-deploy.log','utf8').slice(-4000);}catch(e){c='(no deploys logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* and the deploy ledger too - 'updates without updates' becomes a lookup */
   else if(req.url.indexOf('/supportz')===0){ /* THE KEEPER'S POST: the support notes, key-gated */
-   let k9='';try{k9=((req.url.split('k=')[1]||'').split('&')[0]||'').trim();}catch(e){}
-   if(SUPK&&k9===SUPK){let c='';try{c=_fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').slice(-8000);}catch(e){c='(no support notes yet)';}res.writeHead(200,{'Content-Type':'text/plain; charset=utf-8'});res.end(c);}
+   let k9='';try{k9=(req.headers['x-keeper']||((req.url.split('k=')[1]||'').split('&')[0])||'').trim();}catch(e){}
+   if((SUPK&&k9===SUPK)||keeperOk(k9)){let c='';try{c=_fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').slice(-8000);}catch(e){c='(no support notes yet)';}res.writeHead(200,{'Content-Type':'text/plain; charset=utf-8'});res.end(c);}
    else{res.writeHead(403);res.end('the keeper alone reads these');}}
   else if(u==='/roster'){ /* THE HIVE'S NAMED SOULS: read-only, additive, touches nothing else - Celery's dashboard */
    const list=[];
@@ -132,6 +135,15 @@ function start(port,htmlPath){
   else if(u==='/dash'){ /* r64 THE OPEN WINDOW: one page that watches the whole hive - served from disk, same-origin (no key ever leaves the browser) */
    try{res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});res.end(_fsS.readFileSync(path.join(__dirname,'dash.html')));}
    catch(e){res.writeHead(404);res.end('dashboard not installed');}}
+  else if(req.url.indexOf('/chatz')===0){ /* r73 GLOBAL CHAT: the room's recent speech, keeper-gated */
+   let k9='';try{k9=(req.headers['x-keeper']||((req.url.split('k=')[1]||'').split('&')[0])||'').trim();}catch(e){}
+   if((SUPK&&k9===SUPK)||keeperOk(k9)){let c='';try{c=_fsS.readFileSync((process.env.CHATLOG||'/opt/fablehive/chat.log'),'utf8').slice(-8000);}catch(e){c='';}res.writeHead(200,{'Content-Type':'text/plain; charset=utf-8'});res.end(c);}
+   else{res.writeHead(403);res.end('the keeper alone reads these');}}
+  else if(req.url.indexOf('/keeperset')===0){ /* r73: the owner sets their dashboard password ONCE (claim-on-first-use); never overwritten once set */
+   let pw='';try{pw=(req.headers['x-keeper']||decodeURIComponent(((req.url.split('pw=')[1]||'').split('&')[0])||'')||'').trim();}catch(e){}
+   if(KWH){res.writeHead(200,{'Content-Type':'text/plain'});res.end('set');}
+   else if(pw.length<4){res.writeHead(400);res.end('too short');}
+   else{KSALT=_cr.randomBytes(12).toString('hex');KWH=wordHash(pw,KSALT);try{_fsS.writeFileSync(KEEPERP,KSALT+':'+KWH);}catch(e){}res.writeHead(200,{'Content-Type':'text/plain'});res.end('ok');}}
   else{res.writeHead(404);res.end('the meadow has no such door');}
  });
  const wss=new WebSocketServer({server:httpSrv,maxPayload:1<<20,
@@ -166,7 +178,7 @@ function start(port,htmlPath){
      const a4=s9?s9.units.length:-1;
      BUYS.push({t:Date.now(),tm:team,r:(''+m.c.buy).slice(0,10),ok:a4>b4?1:0,u:a4,h:h4});if(BUYS.length>24)BUYS.shift();
      if(a4<=b4){try{ws.send(JSON.stringify({k:'deny',r:(''+m.c.buy).slice(0,10)}));}catch(e){}}} /* a refused order is SAID, not swallowed - 'the button did nothing' becomes a message */
-    else G.applyInput(team,m.c||{});}catch(e){}}
+    else{if(m.c&&typeof m.c.say==='string'&&m.c.say.trim()){ws._sayN=(ws._sayN||0)+1;if(ws._sayN<=250){try{const _cs=G.swarms.find(z=>z.team===team&&!z.ally);_fsS.appendFileSync((process.env.CHATLOG||'/opt/fablehive/chat.log'),JSON.stringify({t:new Date().toISOString(),name:(_cs&&_cs.name)||'a queen',msg:(''+m.c.say).slice(0,80)})+'\n');}catch(e){}}} /* r73 GLOBAL CHAT: log each spoken line (name + text) so the keeper can read the room; capped 250/connection */G.applyInput(team,m.c||{});}}catch(e){}}
    else if(m.k==='dress'&&team!==null){try{ /* MID-FLIGHT WARDROBE: sanitized exactly like the join - the NEST's changes land on the live queen and ride the next full beat */
     const s=G.swarms.find(z=>z.team===team&&!z.ally);
     if(s){if(typeof m.n==='string'&&m.n.trim())s.name=(''+m.n).slice(0,16).replace(/[<>&"']/g,''); /* r72 RENAME WHILE PLAYING: the name rides dress now, sanitized exactly like the join */

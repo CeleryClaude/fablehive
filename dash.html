@@ -1,10 +1,6 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FABLEHIVE — Your Hive</title>
 <style>
-:root{
- --bg:#0f0d17;--surface:#1a1626;--surface2:#221d33;--border:#2c2542;--border2:#3a3157;
- --text:#ece7f5;--dim:#a99fc4;--mute:#6f6690;--accent:#c9a6ff;
- --good:#4ade80;--warn:#fbbf24;--bad:#f87171;
-}
+:root{--bg:#0f0d17;--surface:#1a1626;--surface2:#221d33;--border:#2c2542;--border2:#3a3157;--text:#ece7f5;--dim:#a99fc4;--mute:#6f6690;--accent:#c9a6ff;--good:#4ade80;--warn:#fbbf24;--bad:#f87171;}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-text-size-adjust:100%}
 .wrap{max-width:760px;margin:0 auto;padding:16px 15px 40px}
@@ -22,58 +18,54 @@ h1{margin:0;font-size:20px;color:var(--accent);letter-spacing:.3px}
 .tile .lbl{color:var(--dim);font-size:12.5px;margin-top:4px}
 .good{color:var(--good)}.warn{color:var(--warn)}.bad{color:var(--bad)}
 .attn{background:var(--surface2);border:1px solid var(--border2);border-radius:14px;padding:12px 16px;margin-bottom:15px;font-size:14.5px}
-.attn.act{border-color:var(--accent)}
-.attn b{color:var(--accent)}
+.attn.act{border-color:var(--accent)}.attn b{color:var(--accent)}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:14px}
 .card h2{margin:0 0 11px;font-size:12px;text-transform:uppercase;letter-spacing:1.2px;color:var(--accent)}
 .msg{border-top:1px solid var(--border);padding:9px 0}.msg:first-of-type{border-top:none}
 .msg .who{font-weight:700;font-size:14px}.msg .contact{color:var(--mute);font-size:11.5px;font-weight:400}
-.msg .txt{color:var(--dim);font-size:13.5px;margin-top:1px}
-.msg .when{color:var(--mute);font-size:11px}
+.msg .txt{color:var(--dim);font-size:13.5px;margin-top:1px}.msg .when{color:var(--mute);font-size:11px}
+.chat{border-top:1px solid var(--border);padding:7px 0;font-size:13.5px}.chat:first-of-type{border-top:none}
+.chat .who{color:var(--accent);font-weight:600}.chat .when{color:var(--mute);font-size:11px;float:right}
 .lead{display:flex;justify-content:space-between;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--border);font-size:14px}
 .lead:last-child{border:none}.lead .nm{font-weight:600}.lead .rank{color:var(--mute);width:20px;display:inline-block}.lead .st{color:var(--dim);font-size:12.5px;text-align:right}
-.upd{display:flex;justify-content:space-between;gap:10px;padding:4px 0;font-size:13.5px;color:var(--dim)}
-.upd .now{color:var(--text);font-weight:600}
+.upd{display:flex;justify-content:space-between;gap:10px;padding:4px 0;font-size:13.5px;color:var(--dim)}.upd .now{color:var(--text);font-weight:600}
 .nowver{font-size:15px;color:var(--text);margin-bottom:8px}.nowver b{color:var(--accent)}
-input{background:var(--bg);border:1px solid var(--border2);color:var(--text);border-radius:9px;padding:8px 11px;font-size:13.5px;width:190px;max-width:60%}
-button{background:var(--accent);color:#1a0f2e;border:0;border-radius:9px;padding:8px 14px;font-size:13.5px;font-weight:700;cursor:pointer}
-.hint{color:var(--mute);font-size:11.5px;margin-top:6px}
+input{background:var(--bg);border:1px solid var(--border2);color:var(--text);border-radius:9px;padding:9px 12px;font-size:14px;width:210px;max-width:62%}
+button{background:var(--accent);color:#1a0f2e;border:0;border-radius:9px;padding:9px 15px;font-size:14px;font-weight:700;cursor:pointer}
+.hint{color:var(--mute);font-size:12px;margin-top:6px}
 .hood{display:grid;grid-template-columns:1fr 1fr;gap:11px}
 .metric{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:11px 13px;cursor:help}
-.metric .mv{font-size:19px;font-weight:700}.metric .ml{font-size:12.5px;color:var(--text);margin-top:1px}
-.metric .mc{color:var(--mute);font-size:11.5px;margin-top:3px;line-height:1.35}
+.metric .mv{font-size:19px;font-weight:700}.metric .ml{font-size:12.5px;color:var(--text);margin-top:1px}.metric .mc{color:var(--mute);font-size:11.5px;margin-top:3px;line-height:1.35}
 .foot{color:var(--mute);font-size:11.5px;text-align:center;margin-top:8px}
-a{color:var(--accent)}
 @media(max-width:560px){.tiles{grid-template-columns:1fr 1fr}.tile:last-child{grid-column:1/-1}}
 </style></head><body>
 <div class="wrap">
 <header><h1>FABLEHIVE · Your Hive</h1><span class="checked" id="checked"></span></header>
-
 <div class="status" id="status"><span class="dot"></span><div><b>Checking your hive…</b><div class="sub">one moment</div></div></div>
-
 <div class="tiles">
  <div class="tile"><div class="big" id="t-now">—</div><div class="lbl">playing right now</div></div>
  <div class="tile"><div class="big" id="t-total">—</div><div class="lbl">players so far</div></div>
  <div class="tile"><div class="big" id="t-run">—</div><div class="lbl">how it's running</div></div>
 </div>
-
 <div class="attn" id="attn">…</div>
 
 <div class="card"><h2>Messages from your players</h2>
- <div id="msg-gate"><input id="k" type="password" placeholder="your keeper key" autocomplete="off"> <button id="unlock">Show messages</button>
-  <div class="hint">The key stays on this phone. It just proves you're the keeper. (Ask your helper for it if you don't have it.)</div></div>
+ <div id="kgate">
+  <div id="kprompt" class="hint" style="margin:0 0 9px;font-size:13px;color:var(--dim)">…</div>
+  <input id="kpw" type="password" placeholder="dashboard password" autocomplete="off"> <button id="kunlock">Unlock</button>
+  <div id="kmsg" class="hint"></div>
+ </div>
  <div id="msgs"></div>
 </div>
 
+<div class="card" id="chatcard" style="display:none"><h2>Global chat — what players are saying</h2><div id="chat"></div></div>
+
 <div class="card"><h2>Who's on top today</h2><div id="roster">…</div></div>
-
 <div class="card"><h2>Recent updates</h2><div id="updates">…</div></div>
-
 <div class="card"><h2>Under the hood — explained</h2>
  <div class="hint" style="margin:-4px 0 11px">The nerdy numbers, in plain words. Hover (or tap) any box for more. Green-ish is good.</div>
  <div class="hood" id="hood">…</div>
 </div>
-
 <div class="foot">Refreshes every 5 seconds · fablehive.duckdns.org/dash</div>
 </div>
 
@@ -83,59 +75,36 @@ function esc(s){return String(s==null?'':s).replace(/[&<>]/g,function(c){return 
 function cb(u){return (u.indexOf('?')<0?'?':'&')+'cb='+Date.now()+'_'+Math.random().toString(36).slice(2)}
 function getJ(u){return fetch(u+cb(u)).then(function(r){return r.json()})}
 function getT(u){return fetch(u+cb(u)).then(function(r){return r.ok?r.text():Promise.reject(r.status)})}
-
 function upPretty(min){min=min|0;if(min<1)return 'a moment';if(min<60)return min+' min';var h=Math.floor(min/60),m=min%60;return h+'h'+(m?' '+m+'m':'')}
 function relTime(ms){var s=Math.max(0,(Date.now()-ms)/1000);if(s<60)return Math.round(s)+'s ago';if(s<3600)return Math.round(s/60)+' min ago';if(s<86400)return Math.round(s/3600)+'h ago';return Math.round(s/86400)+'d ago'}
 function verName(ver){var mm=(''+(ver||'')).match(/^(r\d+)-(.+)$/);if(!mm)return {r:'',name:ver||'the hive'};return {r:mm[1],name:mm[2].split('-').map(function(w){return w.charAt(0).toUpperCase()+w.slice(1)}).join(' ')}}
 function crashesToday(t){if(!t)return 0;var d=new Date().toISOString().slice(0,10),n=0;t.split('\n').forEach(function(l){if(l.slice(0,10)===d&&l.charAt(10)==='T')n++});return n}
 function playerPing(h){var sn=(h.seatNet||[]),r=0,c=0;sn.forEach(function(p){if(p.rtt){r+=p.rtt;c++}});return c?Math.round(r/c):null}
 function playerFps(h){var sn=(h.seatNet||[]),f=null;sn.forEach(function(p){if(p.f!=null)f=(f==null)?p.f:Math.min(f,p.f)});return f}
-
-function smooth(h){
- if((h.seats||0)===0)return {word:'Resting',cls:'good'};
- var fps=playerFps(h),ping=playerPing(h)||0,p95=h.tickP95||0,drop=h.dropped||0;
- if((fps!=null&&fps<30)||ping>350||p95>60||drop>5)return {word:'Laggy',cls:'bad'};
- if((fps!=null&&fps<50)||ping>170||p95>30)return {word:'Okay',cls:'warn'};
- return {word:'Smooth',cls:'good'};
-}
+function smooth(h){if((h.seats||0)===0)return {word:'Resting',cls:'good'};var fps=playerFps(h),ping=playerPing(h)||0,p95=h.tickP95||0,drop=h.dropped||0;if((fps!=null&&fps<30)||ping>350||p95>60||drop>5)return {word:'Laggy',cls:'bad'};if((fps!=null&&fps<50)||ping>170||p95>30)return {word:'Okay',cls:'warn'};return {word:'Smooth',cls:'good'}}
 
 var LAST={h:null,crash:''};
-
 function renderHealth(h){
- LAST.h=h;
- $('checked').textContent='checked '+new Date().toLocaleTimeString();
- var cT=crashesToday(LAST.crash),s=smooth(h),st=$('status');
- var idle=(h.seats||0)===0;
- var cls,head,sub;
+ LAST.h=h;$('checked').textContent='checked '+new Date().toLocaleTimeString();
+ if(!KPW){$('kprompt').textContent=h.keeperSet?'Enter your dashboard password to read your messages & chat.':"First time here — pick any password you'll remember. You're setting it now.";}
+ var cT=crashesToday(LAST.crash),s=smooth(h),st=$('status'),idle=(h.seats||0)===0,cls,head,sub;
  if(cT>0){cls='warn';head='A hiccup worth a look';sub=cT+' crash'+(cT>1?'es':'')+' today · otherwise up '+upPretty(h.upMin);}
  else if(s.cls==='bad'){cls='warn';head='Running, but a bit laggy right now';sub='players may be feeling it · up '+upPretty(h.upMin);}
  else{cls='good';head='All good — your hive is healthy';sub='up '+upPretty(h.upMin)+' · no crashes today · '+(idle?'waiting for players':'running '+s.word.toLowerCase());}
  st.className='status '+(cls==='good'?'':cls);
  st.innerHTML='<span class="dot"></span><div><b>'+esc(head)+'</b><div class="sub">'+esc(sub)+'</div></div>';
-
- $('t-now').textContent=h.seats||0;
- $('t-total').textContent=h.souls||0;
+ $('t-now').textContent=h.seats||0;$('t-total').textContent=h.souls||0;
  var tr=$('t-run');tr.textContent=s.word;tr.className='big '+s.cls;
-
- var items=[];
- if((h.support||0)>0)items.push((h.support)+' message'+(h.support>1?'s':'')+' from players');
- if(cT>0)items.push(cT+' crash'+(cT>1?'es':'')+' to check');
- if((h.rssMB||0)>450)items.push('memory running high ('+h.rssMB+' MB)');
- var a=$('attn');
- if(items.length){a.className='attn act';a.innerHTML='<b>Needs you:</b> '+esc(items.join(' · '));}
- else{a.className='attn';a.innerHTML='<b>All quiet</b> · nothing needs you right now';}
-
- renderHood(h,cT);
+ var items=[];if((h.support||0)>0)items.push((h.support)+' message'+(h.support>1?'s':'')+' from players');if(cT>0)items.push(cT+' crash'+(cT>1?'es':'')+' to check');if((h.rssMB||0)>450)items.push('memory running high ('+h.rssMB+' MB)');
+ var a=$('attn');if(items.length){a.className='attn act';a.innerHTML='<b>Needs you:</b> '+esc(items.join(' · '));}else{a.className='attn';a.innerHTML='<b>All quiet</b> · nothing needs you right now';}
+ renderHood(h);
 }
 function renderDown(){var st=$('status');st.className='status bad';st.innerHTML='<span class="dot"></span><div><b>Can\'t reach your hive</b><div class="sub">the server isn\'t answering — it may be restarting, try again in a moment</div></div>';}
-
 function metric(val,label,caption,tip){return '<div class="metric" title="'+esc(tip)+'"><div class="mv">'+esc(val)+'</div><div class="ml">'+esc(label)+'</div><div class="mc">'+esc(caption)+'</div></div>'}
-function renderHood(h,cT){
- var ping=playerPing(h),fps=playerFps(h);
- var html='';
+function renderHood(h){var ping=playerPing(h),fps=playerFps(h),html='';
  html+=metric(upPretty(h.upMin),'Uptime','how long it\'s run without a restart','Time since the server last (re)started. Every game update restarts it, which is normal and takes ~2 seconds.');
- html+=metric((h.rssMB||0)+' MB','Memory in use','how much the server is holding; resets on each update','RAM the server process is using. It climbs while people play and drops back on the next update — under ~400 MB is calm, not a leak.');
- html+=metric((h.tickAvg||0)+' ms','Heartbeat','how long one beat of the game takes; under 30 is smooth','Average time to compute one simulation tick. The game beats 30 times a second, so anything under ~30 ms keeps up easily.');
+ html+=metric((h.rssMB||0)+' MB','Memory in use','how much the server is holding; resets on each update','RAM the server is using. It climbs while people play and drops back on the next update — under ~400 MB is calm, not a leak.');
+ html+=metric((h.tickAvg||0)+' ms','Heartbeat','how long one beat of the game takes; under 30 is smooth','Average time to compute one simulation tick. The game beats 30 times a second, so under ~30 ms keeps up easily.');
  html+=metric((h.tickP95||0)+' ms','Worst beats','the occasional slow beat; spikes are normal','The slower 5% of ticks. Brief spikes during big fights are expected; steadily high means the server is straining.');
  html+=metric((h.elLagMaxMs||0)+' ms','Clock hiccup','biggest stutter in the server\'s timing; small is good','The largest gap the server\'s internal clock drifted since the last check. Small numbers mean smooth timing.');
  html+=metric(ping==null?'—':ping+' ms','Players\' ping','how fast a phone talks to the server; under 100 feels instant','Round-trip time between a connected player\'s device and the server. Under 100 ms feels instant; over ~250 ms feels laggy.');
@@ -143,46 +112,46 @@ function renderHood(h,cT){
  html+=metric(h.dropped||0,'Dropped frames','updates skipped for an overloaded phone; 0 is perfect','Times the server skipped sending an update because a player\'s connection was backed up. 0 is perfect; a few is fine.');
  $('hood').innerHTML=html;
 }
-
-function renderRoster(d){
- var p=(d&&d.players)||[];
- if(!p.length){$('roster').innerHTML='<div class="hint">No named players yet — they show up here once people claim a name.</div>';return}
- var h='';for(var i=0;i<Math.min(p.length,6);i++){var r=p[i];
-  h+='<div class="lead"><span><span class="rank">'+(i+1)+'.</span> <span class="nm">'+esc(r.name)+'</span></span><span class="st">'+(r.honey||0).toLocaleString()+' honey · '+(r.queensFelled||0)+' queens felled</span></div>';}
- h+='<div class="hint" style="margin-top:7px">'+d.count+' named player'+(d.count===1?'':'s')+' in all</div>';
- $('roster').innerHTML=h;
+function renderRoster(d){var p=(d&&d.players)||[];if(!p.length){$('roster').innerHTML='<div class="hint">No named players yet — they show up here once people claim a name.</div>';return}
+ var h='';for(var i=0;i<Math.min(p.length,6);i++){var r=p[i];h+='<div class="lead"><span><span class="rank">'+(i+1)+'.</span> <span class="nm">'+esc(r.name)+'</span></span><span class="st">'+(r.honey||0).toLocaleString()+' honey · '+(r.queensFelled||0)+' queens felled</span></div>';}
+ h+='<div class="hint" style="margin-top:7px">'+d.count+' named player'+(d.count===1?'':'s')+' in all</div>';$('roster').innerHTML=h;
 }
-
-function renderUpdates(t){
- var lines=t.trim().split('\n').filter(Boolean),v=verName(LAST.h&&LAST.h.ver);
- var last=lines[lines.length-1]||'';var m=last.match(/^(\S+)\s+deployed\s+(\S+)/);
- var when=m?relTime(Date.parse(m[1])):'recently';
+function renderUpdates(t){var lines=t.trim().split('\n').filter(Boolean),v=verName(LAST.h&&LAST.h.ver),last=lines[lines.length-1]||'',m=last.match(/^(\S+)\s+deployed\s+(\S+)/),when=m?relTime(Date.parse(m[1])):'recently';
  var html='<div class="nowver">Now running <b>'+esc(v.name)+'</b>'+(v.r?' <span style="color:var(--mute)">('+v.r+')</span>':'')+' — updated '+when+'</div>';
- var recent=lines.slice(-5).reverse();
- recent.forEach(function(l,idx){var mm=l.match(/^(\S+)\s+deployed\s+(\S+)/);if(!mm)return;
-  html+='<div class="upd"><span'+(idx===0?' class="now"':'')+'>'+(idx===0?'latest':'before that')+'</span><span>'+relTime(Date.parse(mm[1]))+'</span></div>';});
+ lines.slice(-5).reverse().forEach(function(l,idx){var mm=l.match(/^(\S+)\s+deployed\s+(\S+)/);if(!mm)return;html+='<div class="upd"><span'+(idx===0?' class="now"':'')+'>'+(idx===0?'latest':'before that')+'</span><span>'+relTime(Date.parse(mm[1]))+'</span></div>';});
  $('updates').innerHTML=html;
 }
 
-function loadMsgs(){var k=($('k').value||'').trim();if(!k){k=(function(){try{return localStorage.getItem('fh_k')||''}catch(e){return ''}})()}if(!k)return;
- try{localStorage.setItem('fh_k',k)}catch(e){}
- getT('/supportz?k='+encodeURIComponent(k)).then(function(t){
-  var lines=t.trim().split('\n').filter(Boolean),out='';
-  if(!lines.length){out='<div class="hint">No messages yet — this is where notes from your players will appear.</div>';}
-  lines.reverse().forEach(function(l){try{var m=JSON.parse(l);
-   out+='<div class="msg"><div class="who">'+esc(m.name||m.code||'a player')+(m.contact?' <span class="contact">· '+esc(m.contact)+'</span>':'')+'</div><div class="txt">'+esc(m.msg||'')+'</div><div class="when">'+(m.t?relTime(Date.parse(m.t)):'')+'</div></div>';
-  }catch(e){out+='<div class="msg"><div class="txt">'+esc(l)+'</div></div>';}});
-  $('msgs').innerHTML=out;$('msg-gate').style.display='none';
- }).catch(function(s){$('msgs').innerHTML='<div class="hint" style="color:var(--bad)">'+(s===403?'That key didn\'t match — double-check it.':'Couldn\'t load messages just now.')+'</div>';});
+/* ---- keeper login (your own password) + messages + global chat ---- */
+var KPW='';
+function kfetch(u){return fetch(u+cb(u),{headers:{'x-keeper':KPW}}).then(function(r){return r.ok?r.text():Promise.reject(r.status)})}
+function renderSupport(t){var lines=t.trim().split('\n').filter(Boolean),out='';
+ if(!lines.length){out='<div class="hint">No messages yet — this is where notes players send you will appear.</div>';}
+ lines.reverse().forEach(function(l){try{var m=JSON.parse(l);out+='<div class="msg"><div class="who">'+esc(m.name||m.code||'a player')+(m.contact?' <span class="contact">· '+esc(m.contact)+'</span>':'')+'</div><div class="txt">'+esc(m.msg||'')+'</div><div class="when">'+(m.t?relTime(Date.parse(m.t)):'')+'</div></div>';}catch(e){out+='<div class="msg"><div class="txt">'+esc(l)+'</div></div>';}});
+ $('msgs').innerHTML=out;
 }
-$('unlock').onclick=loadMsgs;
-try{if(localStorage.getItem('fh_k'))loadMsgs();}catch(e){}
+function renderChat(t){var lines=t.trim().split('\n').filter(Boolean),out='';
+ if(!lines.length){out='<div class="hint">No chat yet — lines players type in-game will show here.</div>';}
+ lines.reverse().slice(0,40).forEach(function(l){try{var m=JSON.parse(l);out+='<div class="chat"><span class="when">'+(m.t?relTime(Date.parse(m.t)):'')+'</span><span class="who">'+esc(m.name||'a queen')+'</span>: '+esc(m.msg||'')+'</div>';}catch(e){}});
+ $('chat').innerHTML=out;
+}
+function loadKeeperData(){kfetch('/supportz').then(renderSupport).catch(function(){});kfetch('/chatz').then(renderChat).catch(function(){});}
+function doUnlock(pw){$('kmsg').textContent='';
+ fetch('/keeperset'+cb('/keeperset'),{headers:{'x-keeper':pw}}).then(function(){},function(){}).then(function(){
+  KPW=pw;return kfetch('/supportz');
+ }).then(function(t){try{localStorage.setItem('fh_keeper',pw)}catch(e){}$('kgate').style.display='none';$('chatcard').style.display='';renderSupport(t);kfetch('/chatz').then(renderChat).catch(function(){});
+ }).catch(function(s){KPW='';$('kmsg').style.color='var(--bad)';$('kmsg').textContent=(s===403?"That password doesn't match the one that was set. Try again.":"Couldn't reach the server — try again in a moment.");});
+}
+$('kunlock').onclick=function(){var pw=($('kpw').value||'').trim();if(pw.length<4){$('kmsg').style.color='var(--mute)';$('kmsg').textContent='Pick at least 4 characters.';return}doUnlock(pw);};
+$('kpw').addEventListener('keydown',function(e){if(e.key==='Enter')$('kunlock').click();});
+try{var sk=localStorage.getItem('fh_keeper');if(sk)doUnlock(sk);}catch(e){}
 
 function tick(){
  getJ('/healthz').then(renderHealth).catch(renderDown);
  getJ('/roster').then(renderRoster).catch(function(){});
  getT('/deployz').then(renderUpdates).catch(function(){});
  getT('/crashz').then(function(t){LAST.crash=t;if(LAST.h)renderHealth(LAST.h);}).catch(function(){});
+ if(KPW)loadKeeperData();
 }
 tick();setInterval(tick,5000);
 </script></body></html>

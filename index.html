@@ -352,6 +352,11 @@ let SOUL={tok:null,code:null,pushT:0,q:false};
 let FLIGHT=null; /* THE LEDGER OF DEEDS: one flight's story in seven numbers */
 function flightStart(){FLIGHT={t0:tnow,h:0,p:0,qk:0,bk:0,wk:0,sp:0,wl:0,tf:0,sent:false};}
 function flightStat(k9,v9){if(FLIGHT&&!FLIGHT.sent)FLIGHT[k9]=(FLIGHT[k9]||0)+(v9==null?1:v9);}
+var ROOMOUT=[];
+function roomKiller(by){if(!ROOM)return null;if(!by||by.ally||by.bot)return null;var t=by.team;if(t==null)return null;return t;}
+function roomTrophy(by,id,msg){var s=roomKiller(by);if(s!=null)ROOMOUT.push({seat:s,m:{k:'trophy',id:id,msg:msg||''}});}
+function roomStat(by,key){var s=roomKiller(by);if(s!=null)ROOMOUT.push({seat:s,m:{k:'stat',key:key}});}
+function drainRoomOut(){if(!ROOMOUT.length)return null;var o=ROOMOUT;ROOMOUT=[];return o;}
 function flightSend(){try{if(!FLIGHT||FLIGHT.sent)return;FLIGHT.sent=true;
  if(typeof NET==='undefined'||!NET.on||!NET.ws||NET.ws.readyState!==1)return;
  FLIGHT.p=Math.max(FLIGHT.p|0,(typeof peak!=='undefined'?peak:0)|0);
@@ -1617,7 +1622,7 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
 function wormTick(dt){ /* THE BLOOD WORMS: idle they meander and burrow; provoked they LUNGE and BITE. Corner-locked forever. Cost: 3 heads + 18 follow-constraints; prey scans are swarm-level first */
  for(let wi=worms.length-1;wi>=0;wi--){const w9=worms[wi];
   if(w9.flash>0)w9.flash-=dt;if(w9.bite>0)w9.bite-=dt;if(w9.prov>0)w9.prov-=dt;
-  if(w9.hp<=0){if(w9.lastBy&&w9.lastBy.team===0&&!w9.lastBy.ally){flightStat('wk');flightStat('wl');} /* the worm dies in WAR COIN - and counts among the wildlife (r61) */
+  if(w9.hp<=0){if(w9.lastBy&&w9.lastBy.team===0&&!w9.lastBy.ally){flightStat('wk');flightStat('wl');}if(w9.lastBy){roomStat(w9.lastBy,'wk');roomStat(w9.lastBy,'wl');} /* worm to WAR COIN + wildlife (r61); r62 credits the real online slayer */
    for(let k=0;k<8;k++)dropAt(w9.x+rand(-26,26),w9.y+rand(-26,26),rand(6,11),12,1);
    addP(w9.x,w9.y,'#e84848',14,190);addRing(w9.x,w9.y,'#e84848',64);if(near(w9))sfx('die');
    worms.splice(wi,1);continue;}
@@ -2180,7 +2185,7 @@ function step(dt){NPLAY=humanCount();
     if(lash){ey.cd=1.25;if(near(ey))sfx('hit');}}
    for(const u2 of s2.units){if(u2.dmg>0&&u2.atk<=0&&d2(u2.x,u2.y,ey.x,ey.y)<(u2.r+ey.r+8)**2){
     u2.atk=0.9;ey.hp-=u2.dmg;ey.lastBy=s2;addSpark(ey.x,ey.y,2);break;}}}
-  if(ey.hp<=0){if(ey.lastBy&&ey.lastBy.team===0&&!ey.lastBy.ally)flightStat('wl'); /* r61: the Watcher joins the wildlife ledger */
+  if(ey.hp<=0){if(ey.lastBy&&ey.lastBy.team===0&&!ey.lastBy.ally)flightStat('wl');if(ey.lastBy)roomStat(ey.lastBy,'wl'); /* r61 Watcher wildlife; r62 online slayer */
    for(let k=0;k<7;k++)dropAt(ey.x+rand(-16,16),ey.y+rand(-16,16),rand(5,9),12,1);
    if(near(ey)){sfx('die');addRing(ey.x,ey.y,'#b89ae8',120);}addP(ey.x,ey.y,'#b89ae8',12,160);
    {const M5=me();if(M5&&!M5.dead&&d2(M5.x,M5.y,ey.x,ey.y)<900*900)gainXP(9);}
@@ -2247,8 +2252,8 @@ function step(dt){NPLAY=humanCount();
    for(const u2 of s2.units){if(u2.dmg>0&&u2.atk<=0&&d2(u2.x,u2.y,wp.x,wp.y)<(u2.r+7)*(u2.r+7)){
     u2.atk=0.8;wp.hp-=u2.dmg;wp.lastBy=s2;addSpark(wp.x,wp.y,2);break;}}}
   if(wp.hp<=0){
-   if(wp.lastBy&&wp.lastBy.team===0){if(!wp.lastBy.ally)flightStat('wl');const M5=me();M5.waspKills=(M5.waspKills||0)+1;
-    if(M5.waspKills>=9)trophy('waspband','WASPBANE · NINE BROKEN, STRIPES EARNED');}for(let k=0;k<4;k++)dropAt(wp.x+rand(-12,12),wp.y+rand(-12,12),rand(4,7),10,1);
+   if(!ROOM&&wp.lastBy&&wp.lastBy.team===0){if(!wp.lastBy.ally)flightStat('wl');const M5=me();M5.waspKills=(M5.waspKills||0)+1;
+    if(M5.waspKills>=9)trophy('waspband','WASPBANE · NINE BROKEN, STRIPES EARNED');}else if(ROOM&&wp.lastBy&&!wp.lastBy.ally&&!wp.lastBy.bot){roomStat(wp.lastBy,'wl');wp.lastBy.waspKills=(wp.lastBy.waspKills||0)+1;if(wp.lastBy.waspKills>=9)roomTrophy(wp.lastBy,'waspband','WASPBANE · NINE BROKEN, STRIPES EARNED');}for(let k=0;k<4;k++)dropAt(wp.x+rand(-12,12),wp.y+rand(-12,12),rand(4,7),10,1);
    addP(wp.x,wp.y,'#ffd75e',8,130);if(near(wp))sfx('pop');wasps.splice(i,1);}}
  if(wasps.length===0&&swarms.some(s2=>s2.bot&&!s2.ally&&!s2.dead)){waspT-=dt; /* the wild returns only where the wild lives */
   if(waspT<=0){waspT=30;
@@ -2356,6 +2361,7 @@ function killQueen(s,by){if(by&&!by.ally&&by.team===0&&s.team!==0)flightStat('qk
 }
 function killSpider(by){if(by&&!by.ally&&by.team===0)flightStat('bk');
  if(!spider)return;
+ roomStat(by,'bk');roomTrophy(by,'broodcrown','HER RELICS ARE YOURS · CROWN, SIGIL, SILK');roomTrophy(by,'silkstrand','');
  for(let i=0;i<55;i++)dropAt(spider.x+rand(-110,110),spider.y+rand(-110,110),rand(9,17),16,1);
  addRing(spider.x,spider.y,'#e8dcf8',360);addP(spider.x,spider.y,'#c8b8d8',48,300);
  toast('THE BROODMOTHER FALLS · HER HOARD SPILLS','#e8dcf8');sfx('die');
@@ -2367,6 +2373,7 @@ function killSpider(by){if(by&&!by.ally&&by.team===0)flightStat('bk');
 }
 function killElder(by){if(by&&!by.ally&&by.team===0)flightStat('bk');
  if(!elder)return;
+ roomStat(by,'bk');roomTrophy(by,'elderhorn','THE ELDER CROWN IS YOURS · FOREVER');
  for(let i=0;i<30;i++)dropAt(elder.x+rand(-80,80),elder.y+rand(-80,80),rand(8,16),14,1);
  addRing(elder.x,elder.y,'#ffb04d',300);addP(elder.x,elder.y,'#ffb04d',40,280);
  toast('THE ELDER FALLS · A FORTUNE SPILLS','#ffd75e');sfx('die');
@@ -5097,7 +5104,9 @@ const NET={on:false,ws:null,you:0,mirror:{},aimT:0,deadShown:false,rtt:0,pingT:0
    else if(m.k==='deeds')deedsRender(m);
    else if(m.k==='supported'){toast('THE KEEPER HAS YOUR MESSAGE · you will be contacted','#9fe8c0',4);if(document.getElementById('supMsg'))document.getElementById('supMsg').value='';}
    else if(m.k==='claimed'){window._nwTry=null;toast('NEW HIVE SAVED · '+((m.u||'')+'').toUpperCase()+' · this name + password now signs in on ANY device','#ffd75e',5);try{sfx('gild');}catch(e){}try{if(typeof homeRefresh==='function')homeRefresh();}catch(e){}}
-   else if(m.k==='refpay'){META.xp+=2000;metaSave();toast('🔗 '+(((m.n||'A FRIEND')+'').toUpperCase())+' TOOK WING · +2000✨','#ffd75e',5);try{sfx('gild');}catch(e){}}};
+   else if(m.k==='refpay'){META.xp+=2000;metaSave();toast('🔗 '+(((m.n||'A FRIEND')+'').toUpperCase())+' TOOK WING · +2000✨','#ffd75e',5);try{sfx('gild');}catch(e){}}
+   else if(m.k==='trophy'&&m.id){if(!META.owned[m.id]){if(m.msg)trophy(m.id,m.msg);else{META.owned[m.id]=true;metaSave();}}}
+   else if(m.k==='stat'&&m.key){flightStat(m.key);}};
   W9.onclose=()=>{const was=NET.on;NET.on=false;clearInterval(NET._pi);
    if(NET._url){ /* THE WIRE NEVER JUST DIES ANYMORE: a dropped socket (phone sleep, WiFi blink, seat reaped) quietly reweaves itself - and the rejoin brings a FRESH world init, so you can never be left playing a stale ghost meadow where buys eat honey but nothing real happens */
     if(was)toast('THE WIRE SLIPPED - reweaving...','#ffd75e',3);
@@ -5472,7 +5481,7 @@ function applyInput(team,cmd){ /* THE HAND: remote players ride the same reins t
  return true;}
 
 
-window.__G={unlockAll(){for(const k in ROLES)unlocked[k]=true;},TUNE,netSnapshot,netWorldInit,netDyn,netDynLite,applyInput,NET,netApplyWorld,netApplyFrame,netTick,
+window.__G={unlockAll(){for(const k in ROLES)unlocked[k]=true;},TUNE,netSnapshot,netWorldInit,netDyn,netDynLite,applyInput,NET,netApplyWorld,netApplyFrame,netTick,drainRoomOut,roomTrophy,roomStat,roomKiller,
  get swarms(){return swarms;},get groves(){return groves;},get boulders(){return boulders;},get coves(){return coves;},
  get ways(){return ways;},get drops(){return drops;},get elder(){return elder;},get tnow(){return tnow;},get shots(){return shots;},get goldT(){return goldT;},set goldT(v){goldT=v;},get FAIRY(){return FAIRY;},get dews(){return dews;},get comboN(){return comboN;},get spider(){return spider;},get webshots(){return webshots;},killSpider,killElder,get WORLD(){return WORLD;},get grottos(){return grottos;},get wasps(){return wasps;},get fieldMaws(){return fieldMaws;},get eyes(){return eyes;},get worms(){return worms;},get orbs(){return orbs;},get OASIS(){return OASIS;},realmOf,get ambient(){return ambient;},BOTS,get decor(){return decor;},get thorns(){return thorns;},honeyCap,
  get unlocked(){return unlocked;},get evoPending(){return evoPending;},get META(){return META;},

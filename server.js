@@ -115,6 +115,18 @@ function start(port,htmlPath){
    let k9='';try{k9=((req.url.split('k=')[1]||'').split('&')[0]||'').trim();}catch(e){}
    if(SUPK&&k9===SUPK){let c='';try{c=_fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').slice(-8000);}catch(e){c='(no support notes yet)';}res.writeHead(200,{'Content-Type':'text/plain; charset=utf-8'});res.end(c);}
    else{res.writeHead(403);res.end('the keeper alone reads these');}}
+  else if(u==='/roster'){ /* THE HIVE'S NAMED SOULS: read-only, additive, touches nothing else - Celery's dashboard */
+   const list=[];
+   for(const id in SOULS){
+    const s=SOULS[id];
+    if(!s||!s.name)continue; // only players who actually claimed a name
+    const t=s.tot||{};
+    list.push({name:String(s.name).slice(0,16),xp:s.xp|0,wardrobe:(s.ow||[]).length,
+     honey:(t.h||0)|0,queensFelled:(t.qk||0)|0,flights:(s.life&&s.life.n)||0});
+   }
+   list.sort((a,b)=>b.honey-a.honey);
+   res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-cache'});
+   res.end(JSON.stringify({count:list.length,players:list.slice(0,200)}));}
   else{res.writeHead(404);res.end('the meadow has no such door');}
  });
  const wss=new WebSocketServer({server:httpSrv,maxPayload:1<<20,

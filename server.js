@@ -17,6 +17,7 @@ try{const _raw=JSON.parse(_fsS.readFileSync(SOULP,'utf8'))||{};
 const DEDGE={h:[0,50,120,250,500,1000,2000,4000,8000,16000],p:[0,3,6,10,16,24,40,60,90,120],qk:[0,1,2,3,5,8,12],bk:[0,1,2,3,5],wk:[0,1,2,4,8,16],wl:[0,2,5,10,20,40],tf:[0,5,12,25,50,100],sp:[0,1,2,4,8],m:[0,1,2,5,10,20,40]};
 if(!DEEDS||!DEEDS.hist){DEEDS={tot:0,hist:{},tops:{},day:''};for(const k in DEDGE)DEEDS.hist[k]=DEDGE[k].map(()=>0);}
 for(const k in DEDGE)if(!DEEDS.hist[k])DEEDS.hist[k]=DEDGE[k].map(()=>0); /* r61: NEW deed keys (wl,tf) join a LIVING ledger - the old guard only rebuilt when hist was missing entirely */
+const DEEDBASE={};for(const k in DEDGE)DEEDBASE[k]=DEDGE[k].map((_,j)=>Math.max(1,Math.round(8*Math.pow(0.55,j)))); /* r69 THE DEEDS READ FAIR: a small synthetic 'prior' (most players low, few high) so a tiny live cohort still yields a REAL percentile instead of 0%/50% - compute-time only, never persisted into the ledger */
 const deedDay=()=>new Date().toISOString().slice(0,10);
 function deedFlight(sid,st){ /* THE LEDGER OF DEEDS: every flight buckets into the world's histogram - percentiles, not a lone arcade number */
  if(DEEDS.day!==deedDay()){DEEDS.day=deedDay();DEEDS.tops={};}
@@ -27,9 +28,9 @@ function deedFlight(sid,st){ /* THE LEDGER OF DEEDS: every flight buckets into t
  if(S){S.life=S.life||{n:0,best:{}};S.life.n++;S.tot=S.tot||{};
   for(const k in DEDGE){const v=Math.max(0,Math.min(1e7,+st[k]||0));S.life.best[k]=Math.max(S.life.best[k]||0,v);S.tot[k]=Math.min(1e9,(S.tot[k]||0)+v);}}
  soulDirty=1;}
-function deedPct(st){const out={};for(const k in DEDGE){const v=Math.max(0,+st[k]||0);const E=DEDGE[k],H=DEEDS.hist[k];
- let i=0;while(i<E.length-1&&v>=E[i+1])i++;let below=0,tot=0;for(let j=0;j<H.length;j++){tot+=H[j];if(j<i)below+=H[j];}
- out[k]=tot>1?Math.round(100*below/tot):50;}return out;}
+function deedPct(st){const out={};for(const k in DEDGE){const v=Math.max(0,+st[k]||0);const E=DEDGE[k],H=DEEDS.hist[k],B=DEEDBASE[k];
+ let i=0;while(i<E.length-1&&v>=E[i+1])i++;let below=0,tot=0;for(let j=0;j<H.length;j++){const c=H[j]+B[j];tot+=c;if(j<i)below+=c;else if(j===i)below+=c*0.5;} /* r69 THE DEEDS READ FAIR: your OWN bucket counts HALF (within-bucket/tie credit) so tying the floor is never a flat 0%, and the baseline B smooths a tiny cohort - every death screen now finds at least one dimension you beat */
+ out[k]=Math.round(100*below/Math.max(1,tot));}return out;}
 function deedTop(){const a=[];for(const id in SOULS){const s=SOULS[id],t=s.tot; /* TOP PLAYERS by decree: ranks 1-10, name, TOTAL honey banked, TOTAL queens felled - lifetime, per soul */
  if(!t||!((t.h|0)||(t.qk|0)))continue;a.push([String(s.name||s.user||'a queen').slice(0,16),(t.h||0)|0,(t.qk||0)|0]);}
  a.sort((x,y)=>y[1]-x[1]);return a.slice(0,10);}
@@ -108,7 +109,7 @@ function start(port,htmlPath){
     stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:(()=>{const v9=DIAG.netLateMax||0;DIAG.netLateMax=0;return v9;})(),rateSkips:DIAG.rateSkips||0,
     buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
     seatNet:Object.keys(seats).map(t9=>{const w9=seats[t9],r9=(w9&&w9._rttMax||0)|0;if(w9)w9._rttMax=0;return Object.assign({t:+t9,rtt:(w9&&w9._rttS||0)|0,rttMax:r9,buf:(w9&&w9.bufferedAmount||0)|0},(w9&&w9._cli)||{});}),
-    ver:'r68-the-steady-glass',souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
+    ver:'r69-the-deeds-read-fair',souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else if(req.url.indexOf('/crashz')===0){let c='';try{c=_fsS.readFileSync('/opt/fablehive/crash.log','utf8').slice(-4000);}catch(e){c='(no crashes logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* the CONFESSOR reads aloud */
   else if(req.url.indexOf('/deployz')===0){let c='';try{c=_fsS.readFileSync('/var/log/fablehive-deploy.log','utf8').slice(-4000);}catch(e){c='(no deploys logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* and the deploy ledger too - 'updates without updates' becomes a lookup */

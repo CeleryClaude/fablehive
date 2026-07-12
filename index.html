@@ -2882,12 +2882,13 @@ document.getElementById('homeBtn').onclick=showHome;
 document.getElementById('nestBtn').onclick=()=>{document.getElementById('start').style.display='none';nestFrom='start';showHome();};
 {const shB=document.getElementById('shareBtn');
  if(shB)tapWire(shB,()=>{ /* REFER A FRIEND, honest at last: the link carries YOUR hive code, and the reward comes ONLY when the friend truly flies (3+ min, server-proven, 5/day) - no instant candy, no confusion */
+  if(!SOUL.code){toast('PRESS RISE ONCE FIRST · then your invite link carries your hive code','#ffd75e',4);return;} /* r71 THE FRIEND ARRIVES: never share a code-less link - a hive code (soul) must exist first, or the referral binds to nobody */
   if(window._shBusy)return;window._shBusy=1;setTimeout(()=>{window._shBusy=0;},1200);
   let url9=(typeof location!=='undefined'&&location.origin)?(location.origin+location.pathname):'https://fablehive.duckdns.org/';
   if(SOUL.code)url9+='?ref='+SOUL.code; /* the link KNOWS who sent it */
   const told9=()=>toast('LINK SHARED · you get +2000✨ after their first real flight (3+ minutes)','#ffd75e',4.5);
   try{
-   if(navigator.share)navigator.share({title:'FABLEHIVE',text:'Fly a queen. Grow a brood. War in the honey dusk - play with me:',url:url9}).then(told9).catch(()=>{});
+   if(navigator.share)navigator.share({title:'FABLEHIVE',text:'Fly a queen. Grow a brood. War in the honey dusk - come rule a hive:',url:url9}).then(told9).catch(()=>{});
    else if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url9).then(()=>{toast('LINK COPIED · you get +2000✨ after their first real flight (3+ minutes)','#ffe9a0',4);}).catch(()=>{});
    else toast(url9,'#ffe9a0',6);
   }catch(e){}});}
@@ -2965,7 +2966,7 @@ try{homeRefresh();}catch(e){}
  }}
 let WS_URL=null;
 {try{if(typeof location!=='undefined'){const P9=new URLSearchParams(location.search||'');
- let u9=P9.get('ws');try{window._ref=P9.get('ref')||null;window._wormcam=!!P9.get('wormcam');window._netcam=!!P9.get('netcam');}catch(e){}
+ let u9=P9.get('ws');try{window._ref=P9.get('ref')||null;if(window._ref){try{localStorage.setItem('fh_ref',window._ref);}catch(_){}}else{try{window._ref=localStorage.getItem('fh_ref')||null;}catch(_){}} /* r71 THE FRIEND ARRIVES: a captured referral survives a tab-close - restored on the friend's next visit so their first real flight still pays the referrer (server guards bind-once + week window) */window._wormcam=!!P9.get('wormcam');window._netcam=!!P9.get('netcam');}catch(e){}
  if(!u9&&/^https?:$/.test(location.protocol)&&!P9.get('solo')) /* served from a room? then the room IS home */
   u9=(location.protocol==='https:'?'wss://':'ws://')+location.host;
  WS_URL=u9||null; /* connect on RISE with the chosen name, not silently on load */

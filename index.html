@@ -145,6 +145,7 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
  </div>
 </div>
 <input id="chatIn" maxlength="80" placeholder="say... (Enter sends, Esc closes)" style="position:fixed;left:50%;bottom:84px;transform:translateX(-50%);width:300px;padding:8px 12px;border-radius:16px;border:1.5px solid #ffd75e88;background:rgba(30,16,30,.88);color:#fff2dc;font-size:14px;display:none;z-index:40;outline:none">
+<div id="chatBtn" style="position:fixed;top:8px;left:8px;z-index:9;height:40px;min-width:80px;border-radius:20px;background:rgba(24,34,44,.78);border:1px solid rgba(150,220,255,.45);text-align:center;line-height:40px;padding:0 14px;font-size:15px;font-weight:700;letter-spacing:.5px;color:#bfe9ff;cursor:pointer;display:none">💬 SAY</div>
 <div id="start" class="panel">
  <h1>FABLEHIVE</h1>
  <p style="margin-top:-6px;opacity:.55;font-size:13px;letter-spacing:3px">a fable of the honey dusk</p>
@@ -1241,6 +1242,7 @@ addEventListener('keydown',e=>{const k=e.key.toLowerCase();
   if(hm&&hm.style.display==='flex'&&nestFrom==='retired'){hm.style.display='none';document.getElementById('start').style.display='flex';nestFrom='over';metaSave();}}
  else if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(k)){input.k[k]=1;e.preventDefault();}
 });
+/* r75 THE SPOKEN WORD: touch players open + send chat without a hardware Enter key */(function(){var cb=document.getElementById('chatBtn'),ci=document.getElementById('chatIn');if(cb)cb.addEventListener('pointerdown',function(e){e.preventDefault();if(!ci)return;if(ci.style.display==='block'){ci.value='';ci.style.display='none';}else{ci.style.display='block';try{ci.focus();}catch(_){}}});if(ci)ci.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();e.stopPropagation();var t=(ci.value||'').trim();ci.value='';ci.style.display='none';if(t)act({say:t});}else if(e.key==='Escape'){e.stopPropagation();ci.value='';ci.style.display='none';}});})();
 addEventListener('keyup',e=>{const tg9=e.target;if(tg9&&tg9.tagName&&(tg9.tagName==='INPUT'||tg9.tagName==='TEXTAREA'))return;const k=e.key.toLowerCase();if(input.k[k])delete input.k[k];});
 function keyVec(){let x=0,y=0;
  if(input.k['a']||input.k['arrowleft'])x-=1;if(input.k['d']||input.k['arrowright'])x+=1;
@@ -2985,6 +2987,7 @@ document.getElementById('go').onclick=()=>{
  document.getElementById('start').style.display='none';flightStart();
  barEl.style.display='flex';document.getElementById('gear').style.display='block';
  {const fb9=document.getElementById('fsBtn');if(fb9&&isTouch&&!(navigator&&navigator.standalone))fb9.style.display='block';} /* the wide-throne toggle on every touch device - already-installed Home Screen thrones need no door */
+ {const cb9=document.getElementById('chatBtn');if(cb9&&isTouch)cb9.style.display='block';} /* r75 mobile-say button rides in with the wide-throne toggle */
  resumeAudio();RUNXP=0;setup();renderBar();running=true; /* a new flight starts its own ledger */
  if(WS_URL&&!NET.on)NET.connect(WS_URL,nm);
  document.getElementById('hint').innerHTML=isTouch?'drag to fly · tap your queen to recall · buttons below':'WASD / arrows / hold mouse · 1–6 spawn · Q split · E recall · M mute';};

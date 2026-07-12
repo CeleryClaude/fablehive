@@ -5276,7 +5276,8 @@ const NET={on:false,ws:null,you:0,mirror:{},aimT:0,deadShown:false,rtt:0,pingT:0
   W9.onopen=()=>{let tk9=null;try{tk9=(typeof localStorage!=='undefined'&&localStorage)?localStorage.getItem('fh_tok'):null;}catch(e){}W9.send(JSON.stringify({k:'join',n:(name||'Queen').slice(0,16),c:((SKINS[META.skin]||{}).c)||0,c2:((SKINS[META.skin]||{}).c2)||0,q:META.eq||0,tok:tk9,ref:(window._ref||null)})); /* the SOUL TOKEN rides the join - the meadow remembers */ /* she arrives DRESSED: colour + wardrobe ride the join, the server wears them into every frame */
    clearInterval(NET._pi);NET._pi=setInterval(()=>{try{if(NET.ws&&NET.ws.readyState===1)NET.ws.send(JSON.stringify({k:'p',t:Date.now(),r:(NET.rtt||0)|0,d:(PSTAT.draw||0)|0,f:(PSTAT.fps||0)|0,q:(QGOV.q*100)|0,s:(PSTAT.sim||0)|0}));}catch(e){}},2000); /* the ping CONFESSES the whole client: draw ms, fps, quality, sim - combat spikes stop being a mystery, the ledger shows whose GPU or WiFi is burning */}; /* the PULSE rides a real timer, not the render loop - it beats even when the phone dims */
   W9.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}
-   if(m.k==='init'){NET.you=m.you;NET.on=true;NET._rt=0;netApplyWorld(m.world);renderBar();if(m.soul)soulApply(m.soul);try{NET.ws.send(JSON.stringify({k:'deeds'}));}catch(e){}toast('CONNECTED - realm '+m.you,'#9fd8ff',3);} /* refresh the bar THE MOMENT we (re)connect so tiers unlock instantly, never a stale 'at X souls' after a laggy reconnect */
+   if(m.k==='init'){if(m.world&&m.world.wver!=null&&m.world.wver!==WVER){try{location.reload();}catch(e){}return;} /* r67 THE WORLD AGREES: a tab left open across a redeploy meets a server whose world-schema moved on - reload to the fresh client rather than paint stale geometry (page is served no-store, so the reload can't loop on a cached copy) */
+    NET.you=m.you;NET.on=true;NET._rt=0;netApplyWorld(m.world);renderBar();if(m.soul)soulApply(m.soul);try{NET.ws.send(JSON.stringify({k:'deeds'}));}catch(e){}toast('CONNECTED - realm '+m.you,'#9fd8ff',3);} /* refresh the bar THE MOMENT we (re)connect so tiers unlock instantly, never a stale 'at X souls' after a laggy reconnect */
    else if(m.k==='f')netApplyFrame(m);
    else if(m.k==='p')NET.rtt=Date.now()-m.t;
    else if(m.k==='deny'){
@@ -5620,8 +5621,9 @@ function netSnapshot(slim9){ /* THE WIRE: one compact frame of truth (server -> 
    S9.sw.push(o9);}}
  return S9;}
 const GKIND=['bloom','sprout','grand','rock','bell','spray','puff','tumble','night','comb','fairy','rich','algae'];
+const WVER=1; /* r67 THE WORLD AGREES: the world-schema version. BUMP THIS whenever makeWorld / setupWorldTail / netWorldInit change the shape of the world packet - a long-open stale tab then auto-reloads on reconnect (see the k:'init' handler) instead of misparsing the new geometry into invisible/displaced boulders, coves and hazards */
 function netWorldInit(){ /* the STATIC world, sent once at the door */
- return {w:WORLD.w,h:WORLD.h,
+ return {wver:WVER,w:WORLD.w,h:WORLD.h,
   b:boulders.map(b=>[b.x|0,b.y|0,b.r|0,b.kind||0,b.cove?1:0,b.hide?1:0]),
   c:coves.map(c=>[c.x|0,c.y|0,c.r|0,+c.m.toFixed(2),c.tight?1:0]),
   wy:ways.map(w=>[w.x1|0,w.y1|0,w.x2|0,w.y2|0,w.w|0,+(w.d0||0).toFixed(1),+(w.frq||0.012).toFixed(5)]),

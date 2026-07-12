@@ -5242,7 +5242,7 @@ function drawJoy(){ /* the thumb deserves an anchor: base ring at touch origin, 
   ctx.globalAlpha=0.30;ctx.fillStyle='#ffe9c9';ctx.beginPath();ctx.arc(jx+dx*DPR,jy+dy*DPR,15*DPR,0,TAU);ctx.fill();
   ctx.restore();}catch(e){}}
 function loop(){const now=performance.now();let dt=(now-last)/1000;last=now;
- QGOV.accT+=dt;QGOV.accN++;if(dt>QGOV.worst)QGOV.worst=dt;
+ QGOV.accT+=dt;QGOV.accN++;QGOV.worst=Math.max(dt,(QGOV.worst||0)*0.9); /* r68 THE STEADY GLASS: worst is a DECAYING peak, not the single worst frame of the window - a lone GC/network spike raises it then fades in ~4 frames, so it no longer trips the drop and bounce the quality (the zoom-twitch on mobile). Sustained slowness still shows in avg9 and sheds quality properly. */
  if(QGOV.accT>2){const avg9=QGOV.accT/Math.max(1,QGOV.accN),q0=QGOV.q; /* the GOVERNOR judges SPIKES, never steady cadence: a browser capped at 30fps is CALM (33ms, flat) and deserves full crispness - only true struggle (sub-25fps average or >220ms hitches) sheds pixels */
   const s0=QGOV.sharp||0;
   if((avg9>0.041||QGOV.worst>0.22)&&QGOV.q>0.5)QGOV.q=Math.max(0.5,QGOV.q-0.25);
@@ -5250,7 +5250,7 @@ function loop(){const now=performance.now();let dt=(now-last)/1000;last=now;
   if(avg9>0.038||QGOV.worst>0.15||QGOV.q<1)QGOV.sharp=Math.max(0,s0-0.34); /* strain sheds sharpness FIRST - three steps down for every step up */
   else if(avg9<0.030&&QGOV.worst<0.08&&QGOV.q>=1)QGOV.sharp=Math.min(1,s0+0.1); /* only a truly cold engine earns extra pixels */
   if(q0!==QGOV.q||s0!==(QGOV.sharp||0)){try{resize();}catch(e){}}
-  QGOV.accT=0;QGOV.accN=0;QGOV.worst=0;}
+  QGOV.accT=0;QGOV.accN=0;} /* r68: worst is NOT reset here anymore - it decays on its own (above), carrying recent-peak state across windows so quality climbs steadily instead of oscillating */
  if(dt>.05)dt=.05;
  const t1=performance.now();
  if(running){try{if(NET.on)netTick(dt);else step(dt);}catch(e){if(!loop._e1){loop._e1=1;console.error('sim wound:',e);}}}

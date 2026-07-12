@@ -109,7 +109,7 @@ function start(port,htmlPath){
     stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:(()=>{const v9=DIAG.netLateMax||0;DIAG.netLateMax=0;return v9;})(),rateSkips:DIAG.rateSkips||0,
     buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
     seatNet:Object.keys(seats).map(t9=>{const w9=seats[t9],r9=(w9&&w9._rttMax||0)|0;if(w9)w9._rttMax=0;return Object.assign({t:+t9,rtt:(w9&&w9._rttS||0)|0,rttMax:r9,buf:(w9&&w9.bufferedAmount||0)|0},(w9&&w9._cli)||{});}),
-    ver:'r71-the-friend-arrives',souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
+    ver:'r72-the-polish-pass',souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else if(req.url.indexOf('/crashz')===0){let c='';try{c=_fsS.readFileSync('/opt/fablehive/crash.log','utf8').slice(-4000);}catch(e){c='(no crashes logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* the CONFESSOR reads aloud */
   else if(req.url.indexOf('/deployz')===0){let c='';try{c=_fsS.readFileSync('/var/log/fablehive-deploy.log','utf8').slice(-4000);}catch(e){c='(no deploys logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* and the deploy ledger too - 'updates without updates' becomes a lookup */
@@ -169,7 +169,8 @@ function start(port,htmlPath){
     else G.applyInput(team,m.c||{});}catch(e){}}
    else if(m.k==='dress'&&team!==null){try{ /* MID-FLIGHT WARDROBE: sanitized exactly like the join - the NEST's changes land on the live queen and ride the next full beat */
     const s=G.swarms.find(z=>z.team===team&&!z.ally);
-    if(s){const okc=v=>(typeof v==='string'&&/^#[0-9a-fA-F]{6}$/.test(v))?v:null;
+    if(s){if(typeof m.n==='string'&&m.n.trim())s.name=(''+m.n).slice(0,16).replace(/[<>&"']/g,''); /* r72 RENAME WHILE PLAYING: the name rides dress now, sanitized exactly like the join */
+     const okc=v=>(typeof v==='string'&&/^#[0-9a-fA-F]{6}$/.test(v))?v:null;
      const c9=okc(m.c);if(c9)s.col=c9;s.col2=okc(m.c2);
      let q9=null;if(m.q&&typeof m.q==='object'&&!Array.isArray(m.q)){q9={};for(const k of ['pattern','crown','trail','wings','body','tail','fleet','aura','plate','eye']){const v=m.q[k];if(typeof v==='string'&&v.length<=24&&/^[a-zA-Z0-9_-]+$/.test(v))q9[k]=v;}if(!Object.keys(q9).length)q9=null;}
      s.cosEq=q9;}}catch(e){}}
@@ -184,7 +185,8 @@ function start(port,htmlPath){
    else if(m.k==='flight'&&ws._soul&&m.st&&typeof m.st==='object'){
     if(!ws._flN)ws._flN=0;if(++ws._flN<=30){deedFlight(ws._soul,m.st);
      {const S0=SOULS[ws._soul]; /* THE REFERRAL PROOF: the friend must actually FLY (3+ minutes) before anyone is paid - capped 5/day per referrer */
-      if(S0&&S0.ref&&!S0.refPaid&&(+m.st.m||0)>=3){let rid=null;for(const id in SOULS){if(id.slice(0,10)===S0.ref){rid=id;break;}}
+      if(S0&&S0.ref&&!S0.refPaid){S0.refMin=(S0.refMin||0)+Math.max(0,+m.st.m||0);soulDirty=1;} /* r72 SOFTER FRIEND REWARD: minutes accrue ACROSS sittings - the 3-min proof needn't happen in one go */
+      if(S0&&S0.ref&&!S0.refPaid&&(S0.refMin||0)>=3){let rid=null;for(const id in SOULS){if(id.slice(0,10)===S0.ref){rid=id;break;}}
        if(rid&&rid!==ws._soul){const R0=SOULS[rid];if(R0.refDay!==deedDay()){R0.refDay=deedDay();R0.refD=0;}
         if((R0.refD||0)<5){R0.refD=(R0.refD||0)+1;R0.xp=Math.min((R0.xp|0)+2000,5e6);S0.refPaid=1;soulDirty=1;
          for(const t9 in seats){const w0=seats[t9];if(w0&&w0._soul===rid){try{w0.send(JSON.stringify({k:'refpay',n:(S0.name||'a friend')}));}catch(e){}break;}}}}}}

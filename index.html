@@ -352,17 +352,20 @@ let SOUL={tok:null,code:null,pushT:0,q:false};
 let FLIGHT=null; /* THE LEDGER OF DEEDS: one flight's story in seven numbers */
 function flightStart(){FLIGHT={t0:tnow,h:0,p:0,qk:0,bk:0,wk:0,sp:0,wl:0,tf:0,sent:false};}
 function flightStat(k9,v9){if(FLIGHT&&!FLIGHT.sent)FLIGHT[k9]=(FLIGHT[k9]||0)+(v9==null?1:v9);}
+const DEDGE={h:[0,50,120,250,500,1000,2000,4000,8000,16000],p:[0,3,6,10,16,24,40,60,90,120],qk:[0,1,2,3,5,8,12],bk:[0,1,2,3,5],wk:[0,1,2,4,8,16],wl:[0,2,5,10,20,40],tf:[0,5,12,25,50,100],sp:[0,1,2,4,8],m:[0,1,2,5,10,20,40]}; /* r72 SOLO DEEDS: bucket edges (mirror of the server's) so an OFFLINE run can score itself */
+const DEEDBASE={};for(const k in DEDGE)DEEDBASE[k]=DEDGE[k].map((_,j)=>Math.max(1,Math.round(8*Math.pow(0.55,j))));
+function deedPctLocal(st){const out={};for(const k in DEDGE){const v=Math.max(0,+st[k]||0);const E=DEDGE[k],B=DEEDBASE[k];let i=0;while(i<E.length-1&&v>=E[i+1])i++;let below=0,tot=0;for(let j=0;j<B.length;j++){tot+=B[j];if(j<i)below+=B[j];else if(j===i)below+=B[j]*0.5;}out[k]=Math.round(100*below/Math.max(1,tot));}return out;} /* same fair math as online, but vs the synthetic baseline only (no live cohort in solo) */
 var ROOMOUT=[];
 function roomKiller(by){if(!ROOM)return null;if(!by||by.ally||by.bot)return null;var t=by.team;if(t==null)return null;return t;}
 function roomTrophy(by,id,msg){var s=roomKiller(by);if(s!=null)ROOMOUT.push({seat:s,m:{k:'trophy',id:id,msg:msg||''}});}
 function roomStat(by,key){var s=roomKiller(by);if(s!=null)ROOMOUT.push({seat:s,m:{k:'stat',key:key}});}
 function drainRoomOut(){if(!ROOMOUT.length)return null;var o=ROOMOUT;ROOMOUT=[];return o;}
 function flightSend(){try{if(!FLIGHT||FLIGHT.sent)return;FLIGHT.sent=true;
- if(typeof NET==='undefined'||!NET.on||!NET.ws||NET.ws.readyState!==1)return;
+ if(typeof NET==='undefined'||!NET.on||!NET.ws||NET.ws.readyState!==1){try{FLIGHT.p=Math.max(FLIGHT.p|0,(typeof peak!=='undefined'?peak:0)|0);const st9={h:FLIGHT.h|0,p:FLIGHT.p|0,qk:FLIGHT.qk|0,bk:FLIGHT.bk|0,wk:FLIGHT.wk|0,wl:FLIGHT.wl|0,tf:FLIGHT.tf|0,sp:FLIGHT.sp|0,m:Math.max(0,Math.round((tnow-FLIGHT.t0)/6)/10)};deedsRender({pct:deedPctLocal(st9),tops:{},tot:0,top:[]});}catch(e){} /* r72 SOLO DEEDS: offline, build the fair score screen locally instead of showing nothing */ return;}
  FLIGHT.p=Math.max(FLIGHT.p|0,(typeof peak!=='undefined'?peak:0)|0);
  NET.ws.send(JSON.stringify({k:'flight',st:{h:FLIGHT.h|0,p:FLIGHT.p|0,qk:FLIGHT.qk|0,bk:FLIGHT.bk|0,wk:FLIGHT.wk|0,wl:FLIGHT.wl|0,tf:FLIGHT.tf|0,sp:FLIGHT.sp|0,m:Math.max(0,Math.round((tnow-FLIGHT.t0)/6)/10)}}));}catch(e){}}
 function dressSend(){try{if(typeof NET==='undefined'||!NET.on||!NET.ws||NET.ws.readyState!==1)return; /* MID-FLIGHT WARDROBE: colour + wardrobe used to ride the join alone - the NEST's choices reach the live queen now */
- NET.ws.send(JSON.stringify({k:'dress',c:((SKINS[META.skin]||{}).c)||0,c2:((SKINS[META.skin]||{}).c2)||0,q:META.eq||0}));}catch(e){}}
+ NET.ws.send(JSON.stringify({k:'dress',n:(META.name||'Queen').slice(0,16),c:((SKINS[META.skin]||{}).c)||0,c2:((SKINS[META.skin]||{}).c2)||0,q:META.eq||0}));}catch(e){}} /* r72 RENAME WHILE PLAYING: the name rides dress too now */
 function deedsRender(m9){try{window._deeds=m9;
  const L9={h:'🍯 honey banked',p:'🐝 greatest brood',qk:'👑 queens felled',bk:'💀 bosses felled',wk:'🐛 worms slain',wl:'🌿 wildlife slain',tf:'⚔ troops felled',sp:'💠 splits',m:'⏳ minutes flown'};
  if(m9.pct)deedsInto(); /* one renderer, called from BOTH sides of the race */
@@ -2745,7 +2748,7 @@ function showOver(){
 }
 function deedsInto(){try{const m9=window._deeds;if(!m9||!m9.pct)return;
  const L9={h:'🍯 honey banked',p:'🐝 greatest brood',qk:'👑 queens felled',bk:'💀 bosses felled',wk:'🐛 worms slain',wl:'🌿 wildlife slain',tf:'⚔ troops felled',sp:'💠 splits',m:'⏳ minutes flown'};
- let h9='<br><b style="color:#ffd75e;letter-spacing:1px">THE LEDGER OF DEEDS</b>'+((m9.tot|0)<20?' <span style="opacity:.5;font-size:10.5px">(early days: '+(m9.tot|0)+' flights measured)</span>':'')+'<br><span style="font-size:12.5px;line-height:1.75">';
+ let h9='<br><b style="color:#ffd75e;letter-spacing:1px">THE LEDGER OF DEEDS</b>'+(((m9.tot|0)>0&&(m9.tot|0)<20)?' <span style="opacity:.5;font-size:10.5px">(early days: '+(m9.tot|0)+' flights measured)</span>':'')+'<br><span style="font-size:12.5px;line-height:1.75">';
  for(const k9 in m9.pct){if(!(k9 in L9))continue;h9+=L9[k9]+' · beat <b style="color:#ffe9a0">'+m9.pct[k9]+'%</b> of flights<br>';}
  h9+='</span>';const ov9=document.getElementById('overTxt');
  if(ov9&&(''+ov9.innerHTML).indexOf('LEDGER OF DEEDS')<0)ov9.innerHTML+=h9;}catch(e){}}
@@ -5287,7 +5290,7 @@ const NET={on:false,ws:null,you:0,mirror:{},aimT:0,deadShown:false,rtt:0,pingT:0
     else if(m.r==='sign in'){window._nwTry=null;toast('SIGN IN REFUSED · check name and password','#ff9a6a',3.5);try{sfx('hurt');}catch(e){}}
     else if(typeof m.r==='string'&&(m.r.indexOf('name:')===0||m.r.indexOf('word:')===0)){window._nwTry=null;toast(m.r.replace('word:','password:').toUpperCase(),'#ff9a6a',3.5);}
     else{toast(m.r==='hive code'?'NO HIVE ANSWERS THAT CODE':'THE ORDER WAS REFUSED · '+(m.r||'recruit')+' (honey, caps, or a full meadow)','#ff9a6a',2.4);try{sfx('hurt');}catch(e){}}}
-   else if(m.k==='soul'){soulApply(m,true);NET._name=META.name;window._nwTry=null;toast('SIGNED IN · your dress, your name, your ✨'+(META.xp|0)+' - all here now','#ffd75e',4.5);try{sfx('gild');}catch(e){}
+   else if(m.k==='soul'){soulApply(m,true);NET._name=META.name;dressSend();window._nwTry=null;toast('SIGNED IN · your dress, your name, your ✨'+(META.xp|0)+' - all here now','#ffd75e',4.5);try{sfx('gild');}catch(e){}
     try{const ni=document.getElementById('nameIn');if(ni&&META.name)ni.value=META.name;}catch(e){}try{if(typeof homeRefresh==='function')homeRefresh();}catch(e){}} /* an EXPLICIT sign-in takes the account outright, visibly, at once */
    else if(m.k==='deeds')deedsRender(m);
    else if(m.k==='supported'){toast('THE KEEPER HAS YOUR MESSAGE · you will be contacted','#9fe8c0',4);if(document.getElementById('supMsg'))document.getElementById('supMsg').value='';}

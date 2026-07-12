@@ -1,0 +1,70 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FABLEHIVE — Hive Monitor</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0d0b14;color:#e8e0f0;font:14px/1.5 system-ui,Segoe UI,Roboto,Arial,sans-serif}
+header{padding:14px 18px;background:rgba(23,18,32,.85);border-bottom:1px solid #2a2140;position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+h1{margin:0;font-size:18px;color:#f5c542;letter-spacing:.5px}
+.sub{color:#9a8fb5;font-size:12px;margin-top:3px}
+.wrap{max-width:1080px;margin:0 auto;padding:16px;display:grid;gap:16px;grid-template-columns:1fr 1fr}
+.card{background:#151021;border:1px solid #2a2140;border-radius:12px;padding:14px 16px}
+.card h2{margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:1.2px;color:#c7a3ff}
+.kv{display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-bottom:1px solid #221a38}
+.kv:last-child{border:0}
+.kv span:first-child{color:#9a8fb5}
+.kv b{color:#f0e8ff;font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:5px 6px;border-bottom:1px solid #221a38}
+th{color:#9a8fb5;font-weight:600}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+pre{white-space:pre-wrap;word-break:break-word;max-height:280px;overflow:auto;background:#0d0a16;border:1px solid #221a38;border-radius:8px;padding:10px;font:12px/1.45 ui-monospace,Menlo,Consolas,monospace;color:#b8e6c0;margin:0}
+input{background:#0d0a16;border:1px solid #33294f;color:#e8e0f0;border-radius:8px;padding:7px 10px;font-size:13px}
+button{background:#5a3fb5;color:#fff;border:0;border-radius:8px;padding:7px 13px;font-size:13px;cursor:pointer}
+button:hover{background:#6b4dcc}
+.full{grid-column:1/-1}
+.muted{color:#6b6285;font-size:11px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+footer{text-align:center;color:#4a4360;font-size:11px;padding:18px}
+@media(max-width:720px){.wrap{grid-template-columns:1fr}}
+</style></head><body>
+<header><h1>FABLEHIVE — Hive Monitor</h1><div class="sub" id="hdr">connecting to the meadow…</div></header>
+<div class="wrap">
+<div class="card"><h2>Live server</h2><div id="health" class="muted">loading…</div></div>
+<div class="card"><h2>Top players</h2><div id="roster" class="muted">loading…</div></div>
+<div class="card full"><h2>Recent deploys</h2><pre id="deploys">loading…</pre></div>
+<div class="card full"><h2>Player messages</h2>
+<div id="gate"><input id="k" type="password" placeholder="support key" size="20"> <button id="unlock">Unlock</button> <span class="muted">the key stays in this browser; it is only ever sent to this server</span></div>
+<pre id="msgs" style="display:none;margin-top:10px"></pre></div>
+</div>
+<footer>auto-refreshes every 5s · fablehive.duckdns.org/dash</footer>
+<script>
+var $=function(i){return document.getElementById(i)};
+function esc(s){return String(s==null?'':s).replace(/[&<>]/g,function(c){return c==='&'?'&amp;':c==='<'?'&lt;':'&gt;'})}
+function cb(u){return (u.indexOf('?')<0?'?':'&')+'cb='+Date.now()+'_'+Math.random().toString(36).slice(2)}
+function getJ(u){return fetch(u+cb(u)).then(function(r){return r.json()})}
+function getT(u){return fetch(u+cb(u)).then(function(r){return r.ok?r.text():Promise.reject(r.status)})}
+function row(k,v){return '<div class="kv"><span>'+k+'</span><b>'+v+'</b></div>'}
+function health(){getJ('/healthz').then(function(h){
+ $('hdr').innerHTML='<span class="dot" style="background:#5fd97a"></span>version <b>'+esc(h.ver)+'</b> · up '+h.upMin+' min · '+h.souls+' souls remembered · '+(h.support||0)+' messages';
+ var stalls=(h.stalls&&h.stalls.length)||0;
+ $('health').className='';
+ $('health').innerHTML=row('Players online',h.seats||0)+row('Souls remembered',h.souls)+row('Tick avg',(h.tickAvg||0)+' ms')+row('Tick p95',(h.tickP95||0)+' ms')+row('Event-loop lag (max)',(h.elLagMaxMs||0)+' ms')+row('GC pause (max)',(h.gcMaxMs||0)+' ms')+row('Memory RSS',(h.rssMB||0)+' MB')+row('Heap',(h.heapMB||0)+' MB')+row('Send buffer (max)',(h.maxBufKB||0)+' KB')+row('Dropped frames',h.dropped||0)+row('Rate skips',h.rateSkips||0)+row('Stalls (over 300ms)',stalls);
+}).catch(function(){$('hdr').innerHTML='<span class="dot" style="background:#ff6b6b"></span>meadow unreachable';$('health').innerHTML='<span class="muted">could not reach /healthz</span>'})}
+function roster(){getJ('/roster').then(function(d){
+ var p=(d&&d.players)||[];
+ if(!p.length){$('roster').className='muted';$('roster').innerHTML='no named players yet';return}
+ var h='<table><tr><th>#</th><th>Name</th><th class="n">Honey</th><th class="n">Queens</th><th class="n">Flights</th></tr>';
+ for(var i=0;i<Math.min(p.length,15);i++){var r=p[i];h+='<tr><td>'+(i+1)+'</td><td>'+esc(r.name)+'</td><td class="n">'+(r.honey||0)+'</td><td class="n">'+(r.queensFelled||0)+'</td><td class="n">'+(r.flights||0)+'</td></tr>'}
+ h+='</table><div class="muted" style="margin-top:6px">'+d.count+' named soul(s)</div>';
+ $('roster').className='';$('roster').innerHTML=h;
+}).catch(function(){$('roster').className='muted';$('roster').innerHTML='could not reach /roster'})}
+function deploys(){getT('/deployz').then(function(t){$('deploys').textContent=t.trim().split('\n').slice(-18).reverse().join('\n')}).catch(function(){$('deploys').textContent='could not reach /deployz'})}
+function loadMsgs(){var k=$('k').value.trim();if(!k)return;try{localStorage.setItem('fh_k',k)}catch(e){}
+ getT('/supportz?k='+encodeURIComponent(k)).then(function(t){
+  var out=[];t.trim().split('\n').filter(Boolean).forEach(function(l){try{var m=JSON.parse(l);out.push('• '+(m.t||'')+'  ['+(m.name||m.code||'anon')+(m.contact?' / '+m.contact:'')+']\n  '+(m.msg||''))}catch(e){out.push(l)}});
+  $('msgs').textContent=out.length?out.join('\n\n'):'(no messages yet)';$('msgs').style.display='block';
+ }).catch(function(s){$('msgs').textContent=(s===403?'wrong key':'could not load messages');$('msgs').style.display='block'})}
+$('unlock').onclick=loadMsgs;
+try{var sk=localStorage.getItem('fh_k');if(sk){$('k').value=sk;loadMsgs()}}catch(e){}
+function tick(){health();roster();deploys()}
+tick();setInterval(tick,5000);
+</script></body></html>

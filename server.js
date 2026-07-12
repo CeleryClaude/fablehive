@@ -90,6 +90,7 @@ function start(port,htmlPath){
  applyWild();
  const httpSrv=http.createServer((req,res)=>{
   const u=(req.url||'/').split('?')[0];
+  res.setHeader('Access-Control-Allow-Origin','*'); /* r64 THE OPEN WINDOW: read endpoints (healthz/deployz/roster) readable by the Hive Monitor dashboard from any origin */
   if(u==='/'||u==='/index.html'||u==='/BROOD.html'){
    res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});
    if(!HTMLCACHE.buf||HTMLCACHE.t!==fs.statSync(HTML).mtimeMs){HTMLCACHE.buf=fs.readFileSync(HTML);HTMLCACHE.t=fs.statSync(HTML).mtimeMs;} /* the page lives in RAM: a 300KB synchronous disk read per refresh was a mid-session stall */
@@ -107,7 +108,7 @@ function start(port,htmlPath){
     stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:(()=>{const v9=DIAG.netLateMax||0;DIAG.netLateMax=0;return v9;})(),rateSkips:DIAG.rateSkips||0,
     buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
     seatNet:Object.keys(seats).map(t9=>{const w9=seats[t9],r9=(w9&&w9._rttMax||0)|0;if(w9)w9._rttMax=0;return Object.assign({t:+t9,rtt:(w9&&w9._rttS||0)|0,rttMax:r9,buf:(w9&&w9.bufferedAmount||0)|0},(w9&&w9._cli)||{});}),
-    ver:'r63-the-queens-due',souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
+    ver:'r64-the-open-window',souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else if(req.url.indexOf('/crashz')===0){let c='';try{c=_fsS.readFileSync('/opt/fablehive/crash.log','utf8').slice(-4000);}catch(e){c='(no crashes logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* the CONFESSOR reads aloud */
   else if(req.url.indexOf('/deployz')===0){let c='';try{c=_fsS.readFileSync('/var/log/fablehive-deploy.log','utf8').slice(-4000);}catch(e){c='(no deploys logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* and the deploy ledger too - 'updates without updates' becomes a lookup */
@@ -127,6 +128,9 @@ function start(port,htmlPath){
    list.sort((a,b)=>b.honey-a.honey);
    res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-cache'});
    res.end(JSON.stringify({count:list.length,players:list.slice(0,200)}));}
+  else if(u==='/dash'){ /* r64 THE OPEN WINDOW: one page that watches the whole hive - served from disk, same-origin (no key ever leaves the browser) */
+   try{res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});res.end(_fsS.readFileSync(path.join(__dirname,'dash.html')));}
+   catch(e){res.writeHead(404);res.end('dashboard not installed');}}
   else{res.writeHead(404);res.end('the meadow has no such door');}
  });
  const wss=new WebSocketServer({server:httpSrv,maxPayload:1<<20,

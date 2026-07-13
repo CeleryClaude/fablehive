@@ -1088,7 +1088,7 @@ function setupWorldTail(){ /* the rest of world-gen: caves, maws, oasis, decor -
  moths=[]; /* DECOR MOVE: moths/dragonflies are now pure client-side ambiance (wisp dropped entirely, per Section K's own recommendation) */
  gnats=[];for(let i=0;i<6;i++){const p9={x:rand(500,WORLD.w-500),y:rand(WORLD.h*0.58,WORLD.h-400)};gnats.push({x:p9.x,y:p9.y,n:rand(8,13)|0,wa:rand(0,TAU),cd:0});}
  /* no stone may cling to the dome's face */
- if(grottos.length)boulders=boulders.filter(b=>b.hide||!grottos.some(g9=>d2(b.x,b.y,g9.x,g9.y)<(g9.r+b.r+26)*(g9.r+b.r+26)));
+ if(grottos.length)boulders=boulders.filter(b=>b.hide||!grottos.some(g9=>d2(b.x,b.y,g9.x,g9.y)<(g9.r+b.r+26)*(g9.r+b.r+26)));for(const _b of boulders){_b.x|=0;_b.y|=0;_b.r|=0;}
  fieldMaws=fieldMaws.filter(m=>boulders.some(b=>Math.hypot(m.x-b.x,m.y-b.y)<b.r+30)&&!groves.some(g=>Math.hypot(m.x-g.x,m.y-g.y)<160)); /* orphans and harvest-crowders are weeded */
  eyes=[];for(let k=0;k<4;k++)eyes.push({x:rand(380,1050),y:rand(380,1050),r:rand(15,22),hp:300,maxHp:300,wa:rand(0,TAU),cd:0,blink:0,seed:rand(0,TAU)}); /* THE WATCHING: the far corner has grown eyes */
  worms=[];for(let k=0;k<3;k++){const wx=rand(WORLD.w*0.76,WORLD.w-460),wy=rand(430,WORLD.h*0.24); /* THE BLOOD WORMS: the far NE belongs to something segmented. Three, corner-locked, burrowing - the mirror of the Watching. Built to Celery's gate: cheap ticks, tiny wire */
@@ -4220,7 +4220,7 @@ function drawUnit(s,u,LOD){
   ctx.beginPath();ctx.arc(u.x,u.y,rL,0,TAU);ctx.fill();
   return;}
  const vm=Math.hypot(u.vx,u.vy)||1;
- {const want=(u.faceT>0&&u.faceA!=null)?u.faceA:vm>38?Math.atan2(u.vy,u.vx):Math.atan2(u.y-s.y,u.x-s.x); /* AIMED beats moving: a unit that just loosed or squared up FACES its mark for a breath - through the same eased turn, never a snap - then the wheel or the sentry post reclaims her */
+ {const want=(u.faceT>0&&u.faceA!=null)?u.faceA:((u._mv=vm>(u._mv?30:46))?Math.atan2(u.vy,u.vx):Math.atan2(u.y-s.y,u.x-s.x)); /* AIMED beats moving: a unit that just loosed or squared up FACES its mark for a breath - through the same eased turn, never a snap - then the wheel or the sentry post reclaims her */
   let d9=want-(u.fa===undefined?want:u.fa);
   while(d9>Math.PI)d9-=TAU;while(d9<-Math.PI)d9+=TAU;
   u.fa=(u.fa===undefined?want:u.fa+d9*0.12);}

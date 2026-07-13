@@ -54,7 +54,7 @@ const fs=require('fs'),vm=require('vm'),path=require('path'),http=require('http'
 const {PerformanceObserver}=require('perf_hooks');
 const DIAG={gcCount:0,gcTotalMs:0,gcMaxMs:0,elLagMaxMs:0,maxBufBytes:0,dropped:0,netMaxMs:0,joinMaxMs:0,genMaxMs:0,tickMaxMs:0,saveMaxMs:0};
 try{new PerformanceObserver(l=>{for(const e of l.getEntries()){DIAG.gcCount++;DIAG.gcTotalMs+=e.duration;if(e.duration>DIAG.gcMaxMs)DIAG.gcMaxMs=e.duration;}}).observe({entryTypes:['gc']});}catch(e){}
-const STALLS=[],BUYS=[]; /* the SPIKE LEDGER: every event-loop freeze >300ms is logged with its moment, so a live healthz poll during a playtest shows exactly WHEN the world hitched and how hard */
+const STALLS=[],BUYS=[],IDR={}; /* the SPIKE LEDGER: every event-loop freeze >300ms is logged with its moment, so a live healthz poll during a playtest shows exactly WHEN the world hitched and how hard */
 {let _t=Date.now();setInterval(()=>{const n=Date.now(),lag=n-_t-100;if(lag>DIAG.elLagMaxMs)DIAG.elLagMaxMs=lag;
  if(lag>300){STALLS.push({t:n,ms:lag|0,heap:(process.memoryUsage().heapUsed/1048576)|0});if(STALLS.length>10)STALLS.shift();}
  _t=n;},100);}
@@ -112,7 +112,7 @@ function start(port,htmlPath){
     stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:(()=>{const v9=DIAG.netLateMax||0;DIAG.netLateMax=0;return v9;})(),rateSkips:DIAG.rateSkips||0,netMaxMs:+netMx.toFixed(0),joinMaxMs:+joinMx.toFixed(0),genMaxMs:+genMx.toFixed(0),tickMaxMs:+tickMx.toFixed(0),saveMaxMs:+saveMx.toFixed(0),
     buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
     seatNet:Object.keys(seats).map(t9=>{const w9=seats[t9],r9=(w9&&w9._rttMax||0)|0;if(w9)w9._rttMax=0;return Object.assign({t:+t9,rtt:(w9&&w9._rttS||0)|0,rttMax:r9,buf:(w9&&w9.bufferedAmount||0)|0},(w9&&w9._cli)||{});}),
-    ver:'r85-the-named-fold',keeperSet:(KWH?1:0),souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
+    ver:'r86-the-open-gate',keeperSet:(KWH?1:0),souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else if(req.url.indexOf('/crashz')===0){let c='';try{c=_fsS.readFileSync('/opt/fablehive/crash.log','utf8').slice(-4000);}catch(e){c='(no crashes logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* the CONFESSOR reads aloud */
   else if(req.url.indexOf('/deployz')===0){let c='';try{c=_fsS.readFileSync('/var/log/fablehive-deploy.log','utf8').slice(-4000);}catch(e){c='(no deploys logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* and the deploy ledger too - 'updates without updates' becomes a lookup */
@@ -144,6 +144,7 @@ function start(port,htmlPath){
    if(KWH){res.writeHead(200,{'Content-Type':'text/plain'});res.end('set');}
    else if(pw.length<4){res.writeHead(400);res.end('too short');}
    else{KSALT=_cr.randomBytes(12).toString('hex');KWH=wordHash(pw,KSALT);try{_fsS.writeFileSync(KEEPERP,KSALT+':'+KWH);}catch(e){}res.writeHead(200,{'Content-Type':'text/plain'});res.end('ok');}}
+  else if(u==='/idz'&&req.method==='POST'){let body='',bad=false;req.on('data',ch=>{body+=ch;if(body.length>1200){bad=true;try{req.destroy();}catch(e){}}});req.on('end',()=>{if(bad)return;let m;try{m=JSON.parse(body);}catch(e){res.writeHead(400);res.end('{}');return;}const ip=(''+(req.headers['x-forwarded-for']||(req.socket&&req.socket.remoteAddress)||'?')).split(',')[0].trim();const nt=Date.now();IDR[ip]=(IDR[ip]||[]).filter(t=>nt-t<60000);res.writeHead(200,{'Content-Type':'application/json'});if(IDR[ip].length>=12){res.end(JSON.stringify({deny:'too many tries - wait a minute'}));return;}IDR[ip].push(nt);const uu=(''+(m.u||'')).toLowerCase().trim(),pw=''+(m.p||'');if(!userOk(uu)||pw.length<6){res.end(JSON.stringify({deny:'name: 3-16 letters/numbers, word: 6+ characters'}));return;}const existing=userFind(uu);if(existing){if(SOULS[existing].wh===wordHash(pw,SOULS[existing].salt)){SOULS[existing].seen=nt;soulDirty=1;res.end(JSON.stringify(Object.assign({ok:1},soulPack(existing))));}else res.end(JSON.stringify({deny:'wrong word (or that name is taken)'}));}else{let sid=soulOf(m.tok)||soulMint();if(!SOULS[sid])sid=soulMint();const S=SOULS[sid];S.user=uu;S.salt=_cr.randomBytes(12).toString('hex');S.wh=wordHash(pw,S.salt);if(!S.name)S.name=uu;S.seen=nt;soulDirty=1;res.end(JSON.stringify(Object.assign({ok:1,claimed:1},soulPack(sid))));}});try{req.on('error',()=>{});}catch(e){}}
   else{res.writeHead(404);res.end('the meadow has no such door');}
  });
  const wss=new WebSocketServer({server:httpSrv,maxPayload:1<<20,

@@ -2940,7 +2940,7 @@ try{homeRefresh();}catch(e){}
  const nwSend=k9=>{try{const u=((document.getElementById('nameIn')||{}).value||'').trim().toLowerCase(),p2=(nwP&&nwP.value||''); /* ONE NAME by decree: the box up top IS the account name */
   if(!/^[a-z0-9_]{3,16}$/.test(u)){toast('NAME (the box above): 3-16 letters, numbers or _','#ff9a6a',3);return false;}
   if(p2.length<6){toast('PASSWORD: 6 or more characters','#ff9a6a',3);return false;}
-  if(typeof NET==='undefined'||!NET.on||!NET.ws||NET.ws.readyState!==1){toast('STILL CONNECTING · try again in a breath','#ff9a6a',3);return false;}
+  if(typeof NET==='undefined'||!NET.on||!NET.ws||NET.ws.readyState!==1){var tok9=null;try{tok9=localStorage.getItem('fh_tok');}catch(_){}fetch('/idz',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({u:u,p:p2,tok:tok9})}).then(function(r){return r.json();}).then(function(d){if(d&&d.ok){try{soulApply(d,!d.claimed);}catch(_){}toast(d.claimed?'SAVED - this name is yours now':'SIGNED IN as '+u,'#7fe8a0',3.5);try{homeRefresh();}catch(_){}}else{toast((d&&d.deny)||'could not sign in','#ff9a6a',3.5);}}).catch(function(){toast('could not reach the server - try again','#ff9a6a',3);});return true;}
   NET.ws.send(JSON.stringify({k:k9,u:u,p:p2}));return true;}catch(e){return false;}};
  window._nwTry=null;
  if(nwI)tapWire(nwI,()=>{if(nwSend('signin')){window._nwTry={t:Date.now(),stage:1};toast('SIGNING IN...','#ffe9a0',1.6);}}); /* ONE button by decree: a known name signs in - a NEW name saves this hive under it in the same press (the two-button claim/sign-in confused every fresh soul) */

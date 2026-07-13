@@ -5577,8 +5577,10 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
      if(tB){const hot8=(u.atk>0||u.flash>0||u._sipT>0); /* a FIGHTER - or a DRINKING forager - renders at the NEWEST truth, not the padded past */
       const wx8=hot8?tB[0]:(tA?tA[0]+(tB[0]-tA[0])*al:tB[0]),wy8=hot8?tB[1]:(tA?tA[1]+(tB[1]-tA[1])*al:tB[1]);
       const dq8=Math.hypot(wx8-(NET._sqx!=null?NET._sqx:s2.x),wy8-(NET._sqy!=null?NET._sqy:s2.y));
-      const of8=dq8<=170?1:dq8>=430?0:1-(dq8-170)/260; /* the prediction offset belongs to the ESCORT, not the world: a forager ON her flower and a soldier holding a far line anchor to the WORLD - only troops around the queen ride her predicted frame. This was "foragers hovering beside the blooms they harvest" */
-      const bx=wx8+OX*of8,by=wy8+OY*of8;
+      let of8=dq8<=170?1:dq8>=430?0:1-(dq8-170)/260;
+      if(u._sipT>0)of8=0; /* r88: a DRINKING forager belongs to her flower, not the queen slipstream - she stays perched when the queen flies past instead of being dragged off the bloom */
+      u._of8=(u._of8==null?of8:u._of8+(of8-u._of8)*Math.min(1,6*dt)); /* ease the detach so there is no pop when she starts sipping beside a moving queen */ /* the prediction offset belongs to the ESCORT, not the world: a forager ON her flower and a soldier holding a far line anchor to the WORLD - only troops around the queen ride her predicted frame. This was "foragers hovering beside the blooms they harvest" */
+      const bx=wx8+OX*u._of8,by=wy8+OY*u._of8;
       const ox9=u.x,oy9=u.y,jx9=bx-u.x,jy9=by-u.y,jd9=Math.hypot(jx9,jy9),cap9=150+(u.spd||300)*dt;
       if(jd9>cap9){u.x+=jx9/jd9*cap9;u.y+=jy9/jd9*cap9;}
       else{const k8=Math.min(1,(hot8?70:26)*dt);u.x+=jx9*k8;u.y+=jy9*k8;} /* OUTPUT FILTER, combat-adaptive: fighters bite, roamers glide */

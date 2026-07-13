@@ -35,7 +35,7 @@ function deedPct(st){const out={};for(const k in DEDGE){const v=Math.max(0,+st[k
  out[k]=Math.round(100*below/Math.max(1,tot));}return out;}
 function deedTop(){const a=[];for(const id in SOULS){const s=SOULS[id],t=s.tot; /* TOP PLAYERS by decree: ranks 1-10, name, TOTAL honey banked, TOTAL queens felled - lifetime, per soul */
  if(!t||!((t.h|0)||(t.qk|0)))continue;a.push([String(s.name||s.user||'a queen').slice(0,16),(t.h||0)|0,(t.qk||0)|0]);}
- a.sort((x,y)=>y[1]-x[1]);return a.slice(0,10);}
+ a.sort((x,y)=>y[1]-x[1]);const _sn={},_dt=[];for(const _r of a){if(!_sn[_r[0]]){_sn[_r[0]]=1;_dt.push(_r);}}return _dt.slice(0,10);}
 let soulDirty=0;setInterval(()=>{if(!soulDirty)return;soulDirty=0;try{const _s0=process.hrtime.bigint();_fsS.writeFileSync(SOULP,JSON.stringify({souls:SOULS,deeds:DEEDS}));const _sd=Number(process.hrtime.bigint()-_s0)/1e6;if(_sd>(DIAG.saveMaxMs||0))DIAG.saveMaxMs=_sd;}catch(e){}},4000).unref&&setInterval(()=>{},1e9);
 const soulSig=id=>_cr.createHmac('sha256',SKEY).update(id).digest('hex').slice(0,20);
 const soulMint=()=>{const id=_cr.randomBytes(9).toString('hex');SOULS[id]={xp:0,ow:[],eq:null,skin:0,name:'',mk:Date.now(),seen:Date.now()};soulDirty=1;return id;};
@@ -112,7 +112,7 @@ function start(port,htmlPath){
     stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:(()=>{const v9=DIAG.netLateMax||0;DIAG.netLateMax=0;return v9;})(),rateSkips:DIAG.rateSkips||0,netMaxMs:+netMx.toFixed(0),joinMaxMs:+joinMx.toFixed(0),genMaxMs:+genMx.toFixed(0),tickMaxMs:+tickMx.toFixed(0),saveMaxMs:+saveMx.toFixed(0),
     buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
     seatNet:Object.keys(seats).map(t9=>{const w9=seats[t9],r9=(w9&&w9._rttMax||0)|0;if(w9)w9._rttMax=0;return Object.assign({t:+t9,rtt:(w9&&w9._rttS||0)|0,rttMax:r9,buf:(w9&&w9.bufferedAmount||0)|0},(w9&&w9._cli)||{});}),
-    ver:'r83-the-calm-glass',keeperSet:(KWH?1:0),souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
+    ver:'r85-the-named-fold',keeperSet:(KWH?1:0),souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else if(req.url.indexOf('/crashz')===0){let c='';try{c=_fsS.readFileSync('/opt/fablehive/crash.log','utf8').slice(-4000);}catch(e){c='(no crashes logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* the CONFESSOR reads aloud */
   else if(req.url.indexOf('/deployz')===0){let c='';try{c=_fsS.readFileSync('/var/log/fablehive-deploy.log','utf8').slice(-4000);}catch(e){c='(no deploys logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* and the deploy ledger too - 'updates without updates' becomes a lookup */
@@ -129,7 +129,7 @@ function start(port,htmlPath){
     list.push({name:String(s.name).slice(0,16),xp:s.xp|0,wardrobe:(s.ow||[]).length,
      honey:(t.h||0)|0,queensFelled:(t.qk||0)|0,flights:(s.life&&s.life.n)||0});
    }
-   list.sort((a,b)=>b.honey-a.honey);
+   list.sort((a,b)=>b.honey-a.honey);{const _sn={},_dl=[];for(const _p of list){if(!_sn[_p.name]){_sn[_p.name]=1;_dl.push(_p);}}list.length=0;for(const _p of _dl)list.push(_p);}
    res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-cache'});
    res.end(JSON.stringify({count:list.length,players:list.slice(0,200)}));}
   else if(u==='/dash'){ /* r64 THE OPEN WINDOW: one page that watches the whole hive - served from disk, same-origin (no key ever leaves the browser) */

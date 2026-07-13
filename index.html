@@ -1030,7 +1030,7 @@ function setupWorldTail(){ /* the rest of world-gen: caves, maws, oasis, decor -
   const GR=430,ga9=Math.PI/2+rand(-0.3,0.3); /* the one archway faces SOUTH, more or less */
   grottos.push({x:gx9,y:gy9,r:GR,m:ga9});
   /* THE GEODE: invisible ring bones hold the wall; the DOME is what the world sees */
-  {const n9=21,half9=0.44,span9=TAU-half9*2; /* bones OVERLAP: one wall, one door, no secret leaks */
+  {const n9=21,half9=0.60,span9=TAU-half9*2; /* bones OVERLAP: one wall, one door, no secret leaks */
    for(let i=0;i<n9;i++){
     const a9=ga9+half9+(i/(n9-1))*span9;
     boulders.push({x:gx9+Math.cos(a9)*(GR-76),y:gy9+Math.sin(a9)*(GR-76),r:66,cove:true,kind:1,hide:true});}} /* THE INVISIBLE OBJECTS, found at last: these rim stones sat at GR-42 with r=66, poking 24px of collision BEYOND the drawn dome - every cave wore an invisible ring you could crash into from the open meadow. Pulled inward: outer edge now ~10px INSIDE the art */

@@ -49,6 +49,15 @@ button{background:var(--accent);color:#1a0f2e;border:0;border-radius:9px;padding
 </div>
 <div class="attn" id="attn">…</div>
 
+<div class="card" id="capcard"><h2>Capacity — room to grow?</h2>
+ <div class="big" id="cap-head" style="font-size:20px;margin-bottom:9px">…</div>
+ <div style="background:var(--surface2);border-radius:10px;height:15px;overflow:hidden;border:1px solid var(--border)"><div id="cap-bar" style="height:100%;width:0%;background:var(--good);transition:width .4s"></div></div>
+ <div class="hint" id="cap-sub" style="margin-top:8px">…</div>
+ <div class="hood" id="cap-detail" style="margin-top:12px"></div>
+ <div class="attn" id="cap-do" style="margin:12px 0 0">…</div>
+</div>
+
+
 <div class="card"><h2>Messages from your players</h2>
  <div id="kgate">
   <div id="kprompt" class="hint" style="margin:0 0 9px;font-size:13px;color:var(--dim)">…</div>
@@ -97,7 +106,7 @@ function renderHealth(h){
  var tr=$('t-run');tr.textContent=s.word;tr.className='big '+s.cls;
  var items=[];if((h.support||0)>0)items.push((h.support)+' message'+(h.support>1?'s':'')+' from players');if(cT>0)items.push(cT+' crash'+(cT>1?'es':'')+' to check');if((h.rssMB||0)>450)items.push('memory running high ('+h.rssMB+' MB)');
  var a=$('attn');if(items.length){a.className='attn act';a.innerHTML='<b>Needs you:</b> '+esc(items.join(' · '));}else{a.className='attn';a.innerHTML='<b>All quiet</b> · nothing needs you right now';}
- renderHood(h);
+ renderHood(h);renderCapacity(h);
 }
 function renderDown(){var st=$('status');st.className='status bad';st.innerHTML='<span class="dot"></span><div><b>Can\'t reach your hive</b><div class="sub">the server isn\'t answering — it may be restarting, try again in a moment</div></div>';}
 function metric(val,label,caption,tip){return '<div class="metric" title="'+esc(tip)+'"><div class="mv">'+esc(val)+'</div><div class="ml">'+esc(label)+'</div><div class="mc">'+esc(caption)+'</div></div>'}
@@ -112,6 +121,28 @@ function renderHood(h){var ping=playerPing(h),fps=playerFps(h),html='';
  html+=metric(h.dropped||0,'Dropped frames','updates skipped for an overloaded phone; 0 is perfect','Times the server skipped sending an update because a player\'s connection was backed up. 0 is perfect; a few is fine.');
  $('hood').innerHTML=html;
 }
+function capLoad(h){var seats=h.seats||0;if(seats===0)return {idle:true,load:0};
+ var parts=[['CPU per beat',(h.tickAvg||0),22,'ms'],['Worst beats',(h.tickP95||0),33,'ms'],['Clock hitch',(h.elLagMaxMs||0),250,'ms'],['Memory',(h.rssMB||0),700,'MB']];
+ var load=0,worst='';parts.forEach(function(p){var r=p[1]/p[2];if(r>load){load=r;worst=p[0];}});
+ var stalls=(h.stalls&&h.stalls.length)||0;if(stalls>0)load=Math.max(load,0.95);
+ return {load:load,worst:worst,parts:parts,stalls:stalls,seats:seats};}
+function renderCapacity(h){var c=capLoad(h),pct=Math.max(0,Math.min(100,Math.round((1-c.load)*100))),head,cls,sub;
+ if(c.idle){head='Resting — nobody playing';cls='good';pct=100;sub='Open this while friends are in a match to see the real load. Right now the server is idle, so there is nothing to measure.';}
+ else if(c.load<0.5){head='Comfy — plenty of room';cls='good';sub='Your one server is cruising with '+c.seats+' playing. Loads of headroom — invite more.';}
+ else if(c.load<0.75){head='Filling up nicely';cls='good';sub='Still smooth with '+c.seats+' playing, but starting to work. Glance here as you grow.';}
+ else if(c.load<0.9){head='Getting busy';cls='warn';sub='With '+c.seats+' playing the server is working hard ('+esc(c.worst)+' is the tight spot). A good time to plan a bigger engine before a crowd arrives.';}
+ else{head='Maxed out — time to grow';cls='bad';sub='The server is at its limit'+(c.stalls?' — real stutters are happening now':'')+'. This is the lag players feel; the fix is a bigger engine, below.';}
+ $('cap-head').textContent=head;$('cap-head').className='big '+cls;
+ var bar=$('cap-bar');bar.style.width=pct+'%';bar.style.background='var(--'+cls+')';
+ $('cap-sub').innerHTML='<b style="color:var(--text)">'+pct+'% headroom left</b> · '+esc(sub);
+ var d='';if(!c.idle){c.parts.forEach(function(p){var r=Math.round(p[1]/p[2]*100),cl=r<50?'good':r<80?'warn':'bad';d+='<div class="metric"><div class="mv '+cl+'">'+p[1]+' '+p[3]+'</div><div class="ml">'+esc(p[0])+'</div><div class="mc">'+Math.min(r,999)+'% of comfortable</div></div>';});}
+ $('cap-detail').innerHTML=d;
+ var lvl=c.idle?0:c.load<0.75?0:c.load<0.9?1:2,doHtml='<b>Right now:</b> 1 server · 1 shared world.<br>';
+ if(lvl===0){doHtml+='Nothing to do — you have room. When the bar starts filling, come back here.';}
+ else if(lvl===1){doHtml+='<b>Soon:</b> move to a bigger engine — a dedicated-CPU server clears the working-hard feeling with no game changes. Ask me and I\'ll name the exact one.';}
+ else{doHtml+='<b>Do now:</b> a bigger engine (dedicated-CPU server) ends the lag. <b>Later, for Australia-wide:</b> add more worlds so players spread out, then more servers. I\'ll walk you through each step.';}
+ var cd=$('cap-do');cd.className='attn'+(lvl>0?' act':'');cd.innerHTML=doHtml;}
+
 function renderRoster(d){var p=(d&&d.players)||[];if(!p.length){$('roster').innerHTML='<div class="hint">No named players yet — they show up here once people claim a name.</div>';return}
  var h='';for(var i=0;i<Math.min(p.length,6);i++){var r=p[i];h+='<div class="lead"><span><span class="rank">'+(i+1)+'.</span> <span class="nm">'+esc(r.name)+'</span></span><span class="st">'+(r.honey||0).toLocaleString()+' honey · '+(r.queensFelled||0)+' queens felled</span></div>';}
  h+='<div class="hint" style="margin-top:7px">'+d.count+' named player'+(d.count===1?'':'s')+' in all</div>';$('roster').innerHTML=h;

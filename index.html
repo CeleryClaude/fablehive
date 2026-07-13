@@ -4220,7 +4220,8 @@ function drawUnit(s,u,LOD){
   ctx.beginPath();ctx.arc(u.x,u.y,rL,0,TAU);ctx.fill();
   return;}
  const vm=Math.hypot(u.vx,u.vy)||1;
- {const want=(u.faceT>0&&u.faceA!=null)?u.faceA:((u._mv=vm>(u._mv?30:46))?Math.atan2(u.vy,u.vx):Math.atan2(u.y-s.y,u.x-s.x)); /* AIMED beats moving: a unit that just loosed or squared up FACES its mark for a breath - through the same eased turn, never a snap - then the wheel or the sentry post reclaims her */
+ u._fvx=(u._fvx==null?u.vx:u._fvx+(u.vx-u._fvx)*0.2);u._fvy=(u._fvy==null?u.vy:u._fvy+(u.vy-u._fvy)*0.2); /* r89: face along a low-passed velocity so interp jitter under lag stops rotating the face - the circling-lancer and 2-armourer twitch. Body/formation untouched, strikers still snap via faceT */
+ {const want=(u.faceT>0&&u.faceA!=null)?u.faceA:((u._mv=vm>(u._mv?30:46))?Math.atan2(u._fvy,u._fvx):Math.atan2(u.y-s.y,u.x-s.x)); /* AIMED beats moving: a unit that just loosed or squared up FACES its mark for a breath - through the same eased turn, never a snap - then the wheel or the sentry post reclaims her */
   let d9=want-(u.fa===undefined?want:u.fa);
   while(d9>Math.PI)d9-=TAU;while(d9<-Math.PI)d9+=TAU;
   u.fa=(u.fa===undefined?want:u.fa+d9*(u.faceT>0?0.07:0.14));}
@@ -4308,7 +4309,7 @@ function draw(){
  cam.x=lerp(cam.x,M.x+M.vx/lv*look,TUNE.camease);cam.y=lerp(cam.y,M.y+M.vy/lv*look,TUNE.camease);
  let spr9=0;if(M.units)for(const u9 of M.units){if(u9.role==='forager')continue;const ex9=u9.x-M.x,ey9=u9.y-M.y,dd9=ex9*ex9+ey9*ey9;if(dd9>spr9)spr9=dd9;}
  spr9=Math.sqrt(spr9)+(M.R||36)+90; /* frame the SWARM's real spread, not the soul count: a dense ball stays close, silhouettes stay */
- const tz=clamp((Math.min(W,H)*0.45/DPR/spr9)*(isTouch?0.94:1)/(1+(M.spdNow||0)*0.0002),isTouch?0.72:1.15,isTouch?0.95:1.32)*DPR; /* r74 WIDER VIEW: pulled the zoom back (was 0.78-0.95 touch / 1.05-1.2 desk) so players see more of the meadow - playtesters felt too zoomed in. THE STEADY MIDDLE, by decree: the phone holds one honest wider frame that grows a LITTLE as the swarm grows and never runs away - automatic, no dials, no pinch */
+ const tz=clamp((Math.min(W,H)*0.45/DPR/spr9)*(isTouch?0.94:1)/(1+(M.spdNow||0)*0.0002),isTouch?0.72:1.55,isTouch?0.95:1.85)*DPR; /* r74 WIDER VIEW: pulled the zoom back (was 0.78-0.95 touch / 1.05-1.2 desk) so players see more of the meadow - playtesters felt too zoomed in. THE STEADY MIDDLE, by decree: the phone holds one honest wider frame that grows a LITTLE as the swarm grows and never runs away - automatic, no dials, no pinch */
  cam.z=lerp(cam.z,tz*TUNE.zoom,TUNE.zease);
  heat=lerp(heat,(M.war||(elder&&elder.provoked>0&&d2(M.x,M.y,elder.x,elder.y)<800*800))?1:0,0.03);
  shake=shake>0.05?shake*0.85:0; /* r74 ENDLESS-SHAKE FIX: decay lives here in draw() (runs EVERY frame) - online play runs netTick and death/retire stops step(), and the only old decay was inside step(), so an achievement's shake jittered forever. now it always calms to 0 */ctx.translate(W/2+(Math.random()-.5)*shake*0.6,H/2+(Math.random()-.5)*shake*0.6);ctx.scale(cam.z,cam.z);ctx.translate(-cam.x,-cam.y);

@@ -726,7 +726,7 @@ function chooseEvo(role){
  renderBar();return true;
 }
 function canBuy(role){return role==='forager'||role==='soldier'||unlocked[role]||(typeof NET!=='undefined'&&NET&&NET.on);}
-function recruitCost(s,role){let c=ROLES[role].cost;if(role!=='forager'){const n=s.units.length;if(n>44)c=Math.round(c*(1+(n-44)*0.035));c=Math.round(c*(1+(NPLAY-1)*0.12));}return c;} /* DIMINISHING RETURNS (58): a lean warband is cheap; every COMBAT soul past ~45 costs steeply more (roughly 2x by 70, ~3x near the cap). Foragers stay flat so the economy never chokes. The pressure to stay small is the WALLET, not the legs. */
+function recruitCost(s,role){let c=ROLES[role].cost;if(role!=='forager'){const n=s.units.length;if(n>44)c=Math.round(c*(1+(n-44)*0.035));c=Math.round(c*(1+(NPLAY-1)*0.12));if(NPLAY>1){const n2=s.units.length;if(n2<28)c=Math.round(c*(0.60+n2/28*0.40));}}return c;} /* DIMINISHING RETURNS (58): a lean warband is cheap; every COMBAT soul past ~45 costs steeply more (roughly 2x by 70, ~3x near the cap). Foragers stay flat so the economy never chokes. The pressure to stay small is the WALLET, not the legs. */
 function buy(s,role){
  if(s.dead||!canBuy(role))return false;
  if(s.units.length>=soulCap()){if(s===me())sfx('full');return false;} /* THE MUSTER LIMIT: SPLIT to keep growing, don't stack one brood past it */

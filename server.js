@@ -52,7 +52,7 @@ const soulEqOk=q=>{if(!q||typeof q!=='object'||Array.isArray(q))return null;cons
 const fs=require('fs'),vm=require('vm'),path=require('path'),http=require('http');
 /* --- TEMP DIAGNOSTIC TELEMETRY: event-loop lag + GC pauses + heap, to locate the multi-second freezes --- */
 const {PerformanceObserver}=require('perf_hooks');
-const DIAG={gcCount:0,gcTotalMs:0,gcMaxMs:0,elLagMaxMs:0,maxBufBytes:0,dropped:0};
+const DIAG={gcCount:0,gcTotalMs:0,gcMaxMs:0,elLagMaxMs:0,maxBufBytes:0,dropped:0,netMaxMs:0,joinMaxMs:0,genMaxMs:0};
 try{new PerformanceObserver(l=>{for(const e of l.getEntries()){DIAG.gcCount++;DIAG.gcTotalMs+=e.duration;if(e.duration>DIAG.gcMaxMs)DIAG.gcMaxMs=e.duration;}}).observe({entryTypes:['gc']});}catch(e){}
 const STALLS=[],BUYS=[]; /* the SPIKE LEDGER: every event-loop freeze >300ms is logged with its moment, so a live healthz poll during a playtest shows exactly WHEN the world hitched and how hard */
 {let _t=Date.now();setInterval(()=>{const n=Date.now(),lag=n-_t-100;if(lag>DIAG.elLagMaxMs)DIAG.elLagMaxMs=lag;
@@ -104,15 +104,15 @@ function start(port,htmlPath){
    const p95=h.length?h[Math.min(h.length-1,(h.length*0.95)|0)]:0;
    let souls=0;for(const s2 of G.swarms)if(!s2.dead)souls+=s2.units.length;
    const mu=process.memoryUsage();
-   const elLag=DIAG.elLagMaxMs,gcMax=DIAG.gcMaxMs,mbuf=DIAG.maxBufBytes;DIAG.elLagMaxMs=0;DIAG.gcMaxMs=0;DIAG.maxBufBytes=0; /* per-interval maxes since last poll */
+   const elLag=DIAG.elLagMaxMs,gcMax=DIAG.gcMaxMs,mbuf=DIAG.maxBufBytes,netMx=DIAG.netMaxMs,joinMx=DIAG.joinMaxMs,genMx=DIAG.genMaxMs;DIAG.elLagMaxMs=0;DIAG.gcMaxMs=0;DIAG.maxBufBytes=0;DIAG.netMaxMs=0;DIAG.joinMaxMs=0;DIAG.genMaxMs=0; /* per-interval maxes since last poll */
    res.writeHead(200,{'Content-Type':'application/json'});
    res.end(JSON.stringify({ok:1,seats:Object.keys(seats).length,souls,
     tickAvg:+(TICKS.n?TICKS.sum/TICKS.n:0).toFixed(2),tickP95:p95,upMin:((Date.now()-BOOT)/60000)|0,
     ticks:TICKS.n,elLagMaxMs:elLag,gcCount:DIAG.gcCount,gcMaxMs:+gcMax.toFixed(0),gcTotalMs:+DIAG.gcTotalMs.toFixed(0),
-    stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:(()=>{const v9=DIAG.netLateMax||0;DIAG.netLateMax=0;return v9;})(),rateSkips:DIAG.rateSkips||0,
+    stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:(()=>{const v9=DIAG.netLateMax||0;DIAG.netLateMax=0;return v9;})(),rateSkips:DIAG.rateSkips||0,netMaxMs:+netMx.toFixed(0),joinMaxMs:+joinMx.toFixed(0),genMaxMs:+genMx.toFixed(0),
     buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
     seatNet:Object.keys(seats).map(t9=>{const w9=seats[t9],r9=(w9&&w9._rttMax||0)|0;if(w9)w9._rttMax=0;return Object.assign({t:+t9,rtt:(w9&&w9._rttS||0)|0,rttMax:r9,buf:(w9&&w9.bufferedAmount||0)|0},(w9&&w9._cli)||{});}),
-    ver:'r79-the-open-door',keeperSet:(KWH?1:0),souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
+    ver:'r80-the-hunt',keeperSet:(KWH?1:0),souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else if(req.url.indexOf('/crashz')===0){let c='';try{c=_fsS.readFileSync('/opt/fablehive/crash.log','utf8').slice(-4000);}catch(e){c='(no crashes logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* the CONFESSOR reads aloud */
   else if(req.url.indexOf('/deployz')===0){let c='';try{c=_fsS.readFileSync('/var/log/fablehive-deploy.log','utf8').slice(-4000);}catch(e){c='(no deploys logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* and the deploy ledger too - 'updates without updates' becomes a lookup */
@@ -160,7 +160,7 @@ function start(port,htmlPath){
     for(const t of SEATS)if(seats[t]===undefined){team=t;break;}
     if(team===null){ws.send(JSON.stringify({k:'full'}));ws.close();return;}
     seats[team]=ws;
-    if(wasEmpty&&Date.now()-lastEmpty>15000)freshWorld(); /* only reset a LONG-empty room, so devices/friends joining close together SHARE the world */ /* a lone arrival into an empty room begins in a clean, light meadow */
+    if(wasEmpty&&Date.now()-lastEmpty>15000){const _g0=process.hrtime.bigint();freshWorld();const _gd=Number(process.hrtime.bigint()-_g0)/1e6;if(_gd>(DIAG.genMaxMs||0))DIAG.genMaxMs=_gd;} /* only reset a LONG-empty room, so devices/friends joining close together SHARE the world */ /* a lone arrival into an empty room begins in a clean, light meadow */
     const s=G.swarms.find(z=>z.team===team&&!z.ally);
     if(s){s.bot=false;s.name=(''+(m.n||'Queen')).slice(0,16).replace(/[<>&"']/g,'');delete s.forceAim;
      s.dead=false;try{G.reviveSwarm(s);}catch(e){}s.honey=150;
@@ -170,7 +170,7 @@ function start(port,htmlPath){
       s.cosEq=q9;}} /* FRESH QUEEN on join: never the wild bot's grown body - and she arrives with 150 honey, enough for her FIRST SOLDIER or two foragers, so the opening minute is choices, not poverty (30 was famine) */
     let sid=soulOf(m.tok)||ws._soul||soulMint();if(!SOULS[sid])sid=soulMint();ws._soul=sid; /* token first (returning device), then a soul claimed at the menu before RISE, then fresh */SOULS[sid].seen=Date.now();soulDirty=1; /* the meadow remembers you now */
     if(m.ref&&typeof m.ref==='string'&&/^[a-f0-9]{10}$/.test(m.ref)&&!SOULS[sid].ref&&!SOULS[sid].refPaid&&(Date.now()-SOULS[sid].mk)<604800000&&m.ref!==sid.slice(0,10)){SOULS[sid].ref=m.ref;soulDirty=1;} /* r71 THE FRIEND ARRIVES: a soul within its first WEEK may name who sent it - once, never itself (was 1h, too tight for a friend who first tried the game days ago) */
-    ws.send(JSON.stringify({k:'init',you:team,world:G.netWorldInit(),soul:soulPack(sid)}));
+    {const _j0=process.hrtime.bigint();ws.send(JSON.stringify({k:'init',you:team,world:G.netWorldInit(),soul:soulPack(sid)}));const _jd=Number(process.hrtime.bigint()-_j0)/1e6;if(_jd>(DIAG.joinMaxMs||0))DIAG.joinMaxMs=_jd;}
    } else if(m.k==='cmd'&&team!==null){try{
     if(m.c&&m.c.buy){ /* THE BUY LEDGER: every recruit order is receipted - "I paid and nothing spawned" becomes a lookup, not a mystery */
      const s9=G.swarms.find(z=>z.team===team&&!z.ally);const b4=s9?s9.units.length:-1,h4=s9?(s9.honey|0):-1;
@@ -262,7 +262,7 @@ function start(port,htmlPath){
  const AOI2=2400*2400; /* AREA OF INTEREST (#3b): each seat receives the units/drops/shots/wasps within 2400px of HER queen - beyond that lies pure invisible bandwidth. 2400 covers the widest screen at the zoom cap (~1830px half-width) plus the 520px troop leash, with margin. Queens/headers of ALL swarms still flow every frame (minimap + war-sense need them); authority is untouched - the FULL world simulates server-side, culling is presentation only */
  const netI=setInterval(()=>{ if(Object.keys(seats).length===0){_lastNet=Date.now();return;} /* 30Hz heartbeat: souls every beat, the slow world every third */
   {const nn=Date.now(),gp=nn-_lastNet;if(gp>66&&gp<30000&&gp>(DIAG.netLateMax||0))DIAG.netLateMax=gp;_lastNet=nn;} /* how late do net beats actually run? (idle/boot gaps excluded - the first samples used to be garbage) */
-  let base;try{base=(fN++%3===0)?G.netDyn():G.netDynLite();}catch(e){return;}
+  const _n0=process.hrtime.bigint();let base;try{base=(fN++%3===0)?G.netDyn():G.netDynLite();}catch(e){return;}
   for(const t in seats){const _w=seats[t];if(!_w)continue;
    const _b0=_w.bufferedAmount||0,_rt0=_w._rttS||0; /* GRACEFUL DEGRADATION: strain is a backed-up buffer OR a confessed high ping (bufferbloat queues in the router where bufferedAmount cannot see). Strained pipes get FEWER, LIGHTER beats until the ping heals - a crude congestion controller, not a cliff */
    const _lvl=(_b0>40960||_rt0>340)?2:(_b0>16384||_rt0>170)?1:0;
@@ -288,7 +288,7 @@ function start(port,htmlPath){
      f=JSON.stringify({k:'f',...o});}
    }catch(e){try{f=JSON.stringify({k:'f',...base});}catch(e2){continue;}}
    const _b=_w.bufferedAmount||0;if(_b>DIAG.maxBufBytes)DIAG.maxBufBytes=_b;
-   if(_b<65536){try{_w.send(f);}catch(e){}}else{DIAG.dropped++;}}},33); /* BACKPRESSURE GUARD: skip a client whose send buffer is already backed up (>64KB) rather than piling stale frames on it */
+   if(_b<65536){try{_w.send(f);}catch(e){}}else{DIAG.dropped++;}}try{const _nd=Number(process.hrtime.bigint()-_n0)/1e6;if(_nd>(DIAG.netMaxMs||0))DIAG.netMaxMs=_nd;}catch(_){}},33); /* BACKPRESSURE GUARD: skip a client whose send buffer is already backed up (>64KB) rather than piling stale frames on it */
  httpSrv.listen(port,()=>console.log('FABLEHIVE room + page on :'+port));
  return {close(){clearInterval(simI);clearInterval(netI);clearInterval(reapI);try{wss.close();}catch(e){}try{httpSrv.close();}catch(e){}},get G(){return G;},seats};
 }

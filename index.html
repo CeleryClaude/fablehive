@@ -1149,7 +1149,8 @@ function sweepBoulders(ox,oy,nx,ny,rad){ /* CONTINUOUS collision: a fast move or
   const t=(-bq-Math.sqrt(disc))/(2*a);if(t>=0&&t<bestT)bestT=t;}
  if(bestT<1){const t=Math.max(0,bestT-0.002);return[ox+dx*t,oy+dy*t];}
  return[nx,ny];}
-function collideBoulders(o,rad){
+function collideCave(o,rad){for(const g9 of grottos){const dx=o.x-g9.x,dy=o.y-g9.y,d=Math.hypot(dx,dy);if(d<1)continue;const wc=g9.r-76,inner=wc-66-rad,outer=wc+66+rad;if(d<=inner||d>=outer)continue;let da=Math.atan2(dy,dx)-g9.m;while(da>Math.PI)da-=TAU;while(da<-Math.PI)da+=TAU;if(da<0)da=-da;if(da<0.60)continue;const nx=dx/d,ny=dy/d,vn=o.vx*nx+o.vy*ny;if(d<wc){o.x=g9.x+nx*inner;o.y=g9.y+ny*inner;if(vn>0){o.vx-=nx*vn;o.vy-=ny*vn;}}else{o.x=g9.x+nx*outer;o.y=g9.y+ny*outer;if(vn<0){o.vx-=nx*vn;o.vy-=ny*vn;}}}} /* r93 THE SMOOTH DOME: cave wall is one analytic ring, not 40 stacked stones - no ribs/gaps/slips. Door=arc within 0.60rad of g9.m. Verified 200k+tunnel cases in sandbox */
+function collideBoulders(o,rad){collideCave(o,rad);
  /* resolve ONLY the deepest overlap per frame: in a seam of two rocks this slides you out
     along the compound wall instead of ping-ponging you into a stone tomb */
  /* THE STONE GRID: no boulder anywhere exceeds r~150, so a fixed 160+rad net always catches every real overlap */
@@ -1157,7 +1158,7 @@ function collideBoulders(o,rad){
  let bb=null,bd=0,bdist=0;
  boulderNear(o.x,o.y,BR,b=>{
   const dx=o.x-b.x,dy=o.y-b.y,d=Math.hypot(dx,dy),pen=b.r+rad-d;
-  if(pen>bd){bd=pen;bb=b;bdist=d;}
+  if(pen>bd&&!b.cove){bd=pen;bb=b;bdist=d;}
  });
  if(!bb)return;
  const nx=(o.x-bb.x)/(bdist||1),ny=(o.y-bb.y)/(bdist||1);
@@ -1167,7 +1168,7 @@ function collideBoulders(o,rad){
  /* CONCAVE CORNERS: still inside a second rock? two opposing walls eat all velocity -
     eject along the seam's bisector so no soul is ever entombed */
  let done=false;
- boulderNear(o.x,o.y,BR,b=>{if(done||b===bb)return;
+ boulderNear(o.x,o.y,BR,b=>{if(done||b===bb||b.cove)return;
   const dx=o.x-b.x,dy=o.y-b.y,d=Math.hypot(dx,dy),pen=b.r+rad-d;
   if(pen<=0)return;
   done=true;

@@ -5506,7 +5506,7 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
     mirror. If troops still stutter/hitch after this ships, that's the signal this needs to go back UP, not
     down further. */
  const nowR=(typeof performance!=='undefined'?performance.now():Date.now()),
-  interpDelay=Math.min(160,Math.max(65,48+(NET.rtt||0)*0.32+(NET.jit||0)*2.2)),rT=nowR-interpDelay; /* JITTER-AWARE: a lumpy server (GC bursts, timer skew) widens the safety margin automatically, so the starved-extrapolate branch stops firing every few frames - that oscillation was the TWITCH */
+  interpDelay=Math.min(240,Math.max(65,48+(NET.rtt||0)*0.32+(NET.jit||0)*2.2)),rT=nowR-interpDelay; /* JITTER-AWARE: a lumpy server (GC bursts, timer skew) widens the safety margin automatically, so the starved-extrapolate branch stops firing every few frames - that oscillation was the TWITCH */
  let FA=null,FB=null;
  for(let i=NET.buf.length-1;i>=0;i--){if(NET.buf[i].rt<=rT){FA=NET.buf[i];FB=NET.buf[i+1]||NET.buf[i];break;}}
  if(!FA&&NET.buf.length){FA=FB=NET.buf[0];}

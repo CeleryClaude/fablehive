@@ -112,7 +112,7 @@ function start(port,htmlPath){
     stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:(()=>{const v9=DIAG.netLateMax||0;DIAG.netLateMax=0;return v9;})(),rateSkips:DIAG.rateSkips||0,
     buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
     seatNet:Object.keys(seats).map(t9=>{const w9=seats[t9],r9=(w9&&w9._rttMax||0)|0;if(w9)w9._rttMax=0;return Object.assign({t:+t9,rtt:(w9&&w9._rttS||0)|0,rttMax:r9,buf:(w9&&w9.bufferedAmount||0)|0},(w9&&w9._cli)||{});}),
-    ver:'r78-the-clear-eye',keeperSet:(KWH?1:0),souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
+    ver:'r79-the-open-door',keeperSet:(KWH?1:0),souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else if(req.url.indexOf('/crashz')===0){let c='';try{c=_fsS.readFileSync('/opt/fablehive/crash.log','utf8').slice(-4000);}catch(e){c='(no crashes logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* the CONFESSOR reads aloud */
   else if(req.url.indexOf('/deployz')===0){let c='';try{c=_fsS.readFileSync('/var/log/fablehive-deploy.log','utf8').slice(-4000);}catch(e){c='(no deploys logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* and the deploy ledger too - 'updates without updates' becomes a lookup */
@@ -200,7 +200,7 @@ function start(port,htmlPath){
       if(S0&&S0.ref&&!S0.refPaid){S0.refMin=(S0.refMin||0)+Math.max(0,+m.st.m||0);soulDirty=1;} /* r72 SOFTER FRIEND REWARD: minutes accrue ACROSS sittings - the 3-min proof needn't happen in one go */
       if(S0&&S0.ref&&!S0.refPaid&&(S0.refMin||0)>=3){let rid=null;for(const id in SOULS){if(id.slice(0,10)===S0.ref){rid=id;break;}}
        if(rid&&rid!==ws._soul){const R0=SOULS[rid];if(R0.refDay!==deedDay()){R0.refDay=deedDay();R0.refD=0;}
-        if((R0.refD||0)<5){R0.refD=(R0.refD||0)+1;R0.xp=Math.min((R0.xp|0)+2000,5e6);S0.refPaid=1;soulDirty=1;
+        if((R0.refD||0)<3){R0.refD=(R0.refD||0)+1;R0.xp=Math.min((R0.xp|0)+1000,5e6);S0.refPaid=1;soulDirty=1;
          for(const t9 in seats){const w0=seats[t9];if(w0&&w0._soul===rid){try{w0.send(JSON.stringify({k:'refpay',n:(S0.name||'a friend')}));}catch(e){}break;}}}}}}
      try{ws.send(JSON.stringify({k:'deeds',pct:deedPct(m.st),tops:DEEDS.tops,tot:DEEDS.tot,top:deedTop()}));}catch(e){}}}
    else if(m.k==='deeds'){try{ws.send(JSON.stringify({k:'deeds',pct:null,tops:DEEDS.tops,tot:DEEDS.tot,top:deedTop()}));}catch(e){}}

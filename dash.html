@@ -58,6 +58,13 @@ button{background:var(--accent);color:#1a0f2e;border:0;border-radius:9px;padding
 </div>
 
 
+
+
+<div class="card" id="histcard"><h2>Over time — how it's been trending</h2>
+ <div class="hint" style="margin:-4px 0 11px">Live since you opened this page (a point every 5 seconds). Handy while friends are playing — watch how load and ping move together.</div>
+ <div id="histgrid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px"></div>
+</div>
+
 <div class="card"><h2>Messages from your players</h2>
  <div id="kgate">
   <div id="kprompt" class="hint" style="margin:0 0 9px;font-size:13px;color:var(--dim)">…</div>
@@ -106,7 +113,7 @@ function renderHealth(h){
  var tr=$('t-run');tr.textContent=s.word;tr.className='big '+s.cls;
  var items=[];if((h.support||0)>0)items.push((h.support)+' message'+(h.support>1?'s':'')+' from players');if(cT>0)items.push(cT+' crash'+(cT>1?'es':'')+' to check');if((h.rssMB||0)>450)items.push('memory running high ('+h.rssMB+' MB)');
  var a=$('attn');if(items.length){a.className='attn act';a.innerHTML='<b>Needs you:</b> '+esc(items.join(' · '));}else{a.className='attn';a.innerHTML='<b>All quiet</b> · nothing needs you right now';}
- renderHood(h);renderCapacity(h);
+ renderHood(h);renderCapacity(h);pushHist(h);renderHistory();
 }
 function renderDown(){var st=$('status');st.className='status bad';st.innerHTML='<span class="dot"></span><div><b>Can\'t reach your hive</b><div class="sub">the server isn\'t answering — it may be restarting, try again in a moment</div></div>';}
 function metric(val,label,caption,tip){return '<div class="metric" title="'+esc(tip)+'"><div class="mv">'+esc(val)+'</div><div class="ml">'+esc(label)+'</div><div class="mc">'+esc(caption)+'</div></div>'}
@@ -142,6 +149,12 @@ function renderCapacity(h){var c=capLoad(h),pct=Math.max(0,Math.min(100,Math.rou
  else if(lvl===1){doHtml+='<b>Soon:</b> move to a bigger engine — a dedicated-CPU server clears the working-hard feeling with no game changes. Ask me and I\'ll name the exact one.';}
  else{doHtml+='<b>Do now:</b> a bigger engine (dedicated-CPU server) ends the lag. <b>Later, for Australia-wide:</b> add more worlds so players spread out, then more servers. I\'ll walk you through each step.';}
  var cd=$('cap-do');cd.className='attn'+(lvl>0?' act':'');cd.innerHTML=doHtml;}
+
+var HIST=[];
+function pushHist(h){var ping=playerPing(h);HIST.push({t:Date.now(),pl:h.seats||0,ld:h.tickP95||0,mem:h.rssMB||0,pg:ping});if(HIST.length>360)HIST.shift();}
+function sparkCard(id,label,color){return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:9px 11px"><div style="font-size:12px;color:var(--text);margin-bottom:5px">'+label+'</div><canvas id="'+id+'" width="330" height="58" style="width:100%;height:58px;display:block"></canvas></div>';}
+function spark(c,vals,color,unit){var ctx=c.getContext('2d'),W=c.width,Hh=c.height;ctx.clearRect(0,0,W,Hh);var v=[];for(var i=0;i<vals.length;i++)if(vals[i]!=null)v.push(vals[i]);if(v.length<2){ctx.fillStyle='#6f6690';ctx.font='11px system-ui';ctx.fillText('gathering…',6,Hh/2+4);return;}var mx=Math.max.apply(null,v),mn=Math.min.apply(null,v);if(mx===mn)mx=mn+1;var pad=5,gw=W-pad*2,gh=Hh-pad*2-11,n=vals.length;ctx.strokeStyle=color;ctx.lineWidth=2;ctx.beginPath();var started=false;for(var j=0;j<n;j++){if(vals[j]==null){started=false;continue;}var x=pad+(n===1?0:j/(n-1)*gw),y=pad+gh-(vals[j]-mn)/(mx-mn)*gh;if(!started){ctx.moveTo(x,y);started=true;}else ctx.lineTo(x,y);}ctx.stroke();var cur=Math.round(v[v.length-1]);ctx.fillStyle=color;ctx.font='bold 13px system-ui';ctx.textAlign='left';ctx.fillText(cur+(unit||''),pad,Hh-3);ctx.fillStyle='#6f6690';ctx.font='10px system-ui';ctx.textAlign='right';ctx.fillText('peak '+Math.round(mx)+(unit||''),W-pad,Hh-3);ctx.textAlign='left';}
+function renderHistory(){var grid=$('histgrid');if(!grid)return;if(!grid._built){grid.innerHTML=sparkCard('sp-pl','Players online','#4ade80')+sparkCard('sp-ld','Server load · worst beat','#c9a6ff')+sparkCard('sp-mem','Memory','#fbbf24')+sparkCard('sp-pg','Players\' ping','#f87171');grid._built=1;}spark($('sp-pl'),HIST.map(function(x){return x.pl}),'#4ade80','');spark($('sp-ld'),HIST.map(function(x){return x.ld}),'#c9a6ff','ms');spark($('sp-mem'),HIST.map(function(x){return x.mem}),'#fbbf24','MB');spark($('sp-pg'),HIST.map(function(x){return x.pg}),'#f87171','ms');}
 
 function renderRoster(d){var p=(d&&d.players)||[];if(!p.length){$('roster').innerHTML='<div class="hint">No named players yet — they show up here once people claim a name.</div>';return}
  var h='';for(var i=0;i<Math.min(p.length,6);i++){var r=p[i];h+='<div class="lead"><span><span class="rank">'+(i+1)+'.</span> <span class="nm">'+esc(r.name)+'</span></span><span class="st">'+(r.honey||0).toLocaleString()+' honey · '+(r.queensFelled||0)+' queens felled</span></div>';}

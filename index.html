@@ -97,9 +97,9 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
  } /* THE STACK: on a narrow upright phone the buttons wrap into two honest rows - sliding hid half the court */
  html.mob #tip,#tip{bottom:calc(76px + env(safe-area-inset-bottom,0px) + var(--vvlift,0px))}
  #gear{height:46px!important;min-width:92px!important;line-height:46px!important;font-size:16px;border-radius:23px!important}
- #fsBtn{width:42px!important;height:42px!important;line-height:42px!important;font-size:17px;right:120px!important}
+ #fsBtn{width:42px!important;height:42px!important;line-height:42px!important;font-size:17px;right:calc(168px + env(safe-area-inset-right,0px))!important}#chatBtn{top:calc(8px + env(safe-area-inset-top,0px))!important;width:46px!important;height:46px!important;line-height:46px!important;font-size:21px;border-radius:23px!important;right:calc(112px + env(safe-area-inset-right,0px))!important}
  html.mob #lb,#lb{top:calc(54px + env(safe-area-inset-top,0px));font-size:12.5px;line-height:1.45;max-width:46vw}
- #hud{top:calc(8px + env(safe-area-inset-top,0px));font-size:16px;line-height:1.45}
+ #hud{top:calc(8px + env(safe-area-inset-top,0px));left:calc(12px + env(safe-area-inset-left,0px));font-size:16px;line-height:1.45}
  #hud b{font-size:26px}
  #gear{top:calc(8px + env(safe-area-inset-top,0px))!important}
  #fsBtn{top:calc(8px + env(safe-area-inset-top,0px))!important}
@@ -130,8 +130,8 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
 <canvas id="cv"></canvas>
 <div id="hud"></div><div id="lb"></div><div id="hint"></div><div id="toast"></div><div id="warn"></div>
 <div id="bar"></div><div id="tip"></div>
-<div id="gear" style="position:fixed;top:8px;right:8px;z-index:9;height:40px;min-width:80px;border-radius:20px;background:rgba(42,24,44,.75);border:1px solid rgba(255,220,150,.4);text-align:center;line-height:40px;padding:0 14px;font-size:15px;font-weight:700;letter-spacing:.5px;color:#ffe9b8;cursor:pointer;display:none">⚙ MENU</div>
-<div id="fsBtn" style="position:fixed;top:11px;right:112px;z-index:9;width:34px;height:34px;border-radius:50%;background:rgba(42,24,44,.6);border:1px solid rgba(255,220,150,.25);text-align:center;line-height:34px;cursor:pointer;display:none">⛶</div>
+<div id="gear" style="position:fixed;top:8px;right:calc(8px + env(safe-area-inset-right,0px));z-index:9;height:40px;min-width:80px;border-radius:20px;background:rgba(42,24,44,.75);border:1px solid rgba(255,220,150,.4);text-align:center;line-height:40px;padding:0 14px;font-size:15px;font-weight:700;letter-spacing:.5px;color:#ffe9b8;cursor:pointer;display:none">⚙ MENU</div>
+<div id="fsBtn" style="position:fixed;top:11px;right:calc(160px + env(safe-area-inset-right,0px));z-index:9;width:34px;height:34px;border-radius:50%;background:rgba(42,24,44,.6);border:1px solid rgba(255,220,150,.25);text-align:center;line-height:34px;cursor:pointer;display:none">⛶</div>
 <div id="setPanel" style="position:fixed;top:48px;right:8px;z-index:9;background:rgba(30,16,32,.94);border:1px solid rgba(255,220,150,.35);border-radius:12px;padding:12px 14px;display:none;font-size:13px;line-height:2">
  <div id="setX" style="float:right;cursor:pointer;opacity:.8;font-size:15px;margin:-4px -6px 0 12px;padding:2px 8px;color:#ffd75e">✕</div>
  <div>sound <input id="volS" type="range" min="0" max="100" value="100" style="vertical-align:middle;width:110px"></div>
@@ -145,7 +145,7 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
  </div>
 </div>
 <input id="chatIn" maxlength="80" placeholder="say... (Enter sends, Esc closes)" style="position:fixed;left:50%;bottom:84px;transform:translateX(-50%);width:300px;padding:8px 12px;border-radius:16px;border:1.5px solid #ffd75e88;background:rgba(30,16,30,.88);color:#fff2dc;font-size:14px;display:none;z-index:40;outline:none">
-<div id="chatBtn" style="position:fixed;top:8px;left:8px;z-index:9;height:40px;min-width:80px;border-radius:20px;background:rgba(24,34,44,.78);border:1px solid rgba(150,220,255,.45);text-align:center;line-height:40px;padding:0 14px;font-size:15px;font-weight:700;letter-spacing:.5px;color:#bfe9ff;cursor:pointer;display:none">💬 SAY</div>
+<div id="chatBtn" style="position:fixed;top:calc(8px + env(safe-area-inset-top,0px));right:calc(108px + env(safe-area-inset-right,0px));z-index:9;width:40px;height:40px;border-radius:20px;background:rgba(24,34,44,.78);border:1px solid rgba(150,220,255,.5);text-align:center;line-height:40px;font-size:19px;cursor:pointer;display:none">💬</div>
 <div id="start" class="panel">
  <h1>FABLEHIVE</h1>
  <p style="margin-top:-6px;opacity:.55;font-size:13px;letter-spacing:3px">a fable of the honey dusk</p>

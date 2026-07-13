@@ -36,7 +36,7 @@ function deedPct(st){const out={};for(const k in DEDGE){const v=Math.max(0,+st[k
 function deedTop(){const a=[];for(const id in SOULS){const s=SOULS[id],t=s.tot; /* TOP PLAYERS by decree: ranks 1-10, name, TOTAL honey banked, TOTAL queens felled - lifetime, per soul */
  if(!t||!((t.h|0)||(t.qk|0)))continue;a.push([String(s.name||s.user||'a queen').slice(0,16),(t.h||0)|0,(t.qk||0)|0]);}
  a.sort((x,y)=>y[1]-x[1]);return a.slice(0,10);}
-let soulDirty=0;setInterval(()=>{if(!soulDirty)return;soulDirty=0;try{_fsS.writeFileSync(SOULP,JSON.stringify({souls:SOULS,deeds:DEEDS}));}catch(e){}},4000).unref&&setInterval(()=>{},1e9);
+let soulDirty=0;setInterval(()=>{if(!soulDirty)return;soulDirty=0;try{const _s0=process.hrtime.bigint();_fsS.writeFileSync(SOULP,JSON.stringify({souls:SOULS,deeds:DEEDS}));const _sd=Number(process.hrtime.bigint()-_s0)/1e6;if(_sd>(DIAG.saveMaxMs||0))DIAG.saveMaxMs=_sd;}catch(e){}},4000).unref&&setInterval(()=>{},1e9);
 const soulSig=id=>_cr.createHmac('sha256',SKEY).update(id).digest('hex').slice(0,20);
 const soulMint=()=>{const id=_cr.randomBytes(9).toString('hex');SOULS[id]={xp:0,ow:[],eq:null,skin:0,name:'',mk:Date.now(),seen:Date.now()};soulDirty=1;return id;};
 const soulOf=tok=>{if(typeof tok!=='string'||tok.length>80)return null;const i=tok.indexOf('.');if(i<1)return null;const id=tok.slice(0,i);if(!/^[a-f0-9]{18}$/.test(id))return null;if(soulSig(id)!==tok.slice(i+1))return null;return SOULS[id]?id:null;};
@@ -52,7 +52,7 @@ const soulEqOk=q=>{if(!q||typeof q!=='object'||Array.isArray(q))return null;cons
 const fs=require('fs'),vm=require('vm'),path=require('path'),http=require('http');
 /* --- TEMP DIAGNOSTIC TELEMETRY: event-loop lag + GC pauses + heap, to locate the multi-second freezes --- */
 const {PerformanceObserver}=require('perf_hooks');
-const DIAG={gcCount:0,gcTotalMs:0,gcMaxMs:0,elLagMaxMs:0,maxBufBytes:0,dropped:0,netMaxMs:0,joinMaxMs:0,genMaxMs:0};
+const DIAG={gcCount:0,gcTotalMs:0,gcMaxMs:0,elLagMaxMs:0,maxBufBytes:0,dropped:0,netMaxMs:0,joinMaxMs:0,genMaxMs:0,tickMaxMs:0,saveMaxMs:0};
 try{new PerformanceObserver(l=>{for(const e of l.getEntries()){DIAG.gcCount++;DIAG.gcTotalMs+=e.duration;if(e.duration>DIAG.gcMaxMs)DIAG.gcMaxMs=e.duration;}}).observe({entryTypes:['gc']});}catch(e){}
 const STALLS=[],BUYS=[]; /* the SPIKE LEDGER: every event-loop freeze >300ms is logged with its moment, so a live healthz poll during a playtest shows exactly WHEN the world hitched and how hard */
 {let _t=Date.now();setInterval(()=>{const n=Date.now(),lag=n-_t-100;if(lag>DIAG.elLagMaxMs)DIAG.elLagMaxMs=lag;
@@ -104,15 +104,15 @@ function start(port,htmlPath){
    const p95=h.length?h[Math.min(h.length-1,(h.length*0.95)|0)]:0;
    let souls=0;for(const s2 of G.swarms)if(!s2.dead)souls+=s2.units.length;
    const mu=process.memoryUsage();
-   const elLag=DIAG.elLagMaxMs,gcMax=DIAG.gcMaxMs,mbuf=DIAG.maxBufBytes,netMx=DIAG.netMaxMs,joinMx=DIAG.joinMaxMs,genMx=DIAG.genMaxMs;DIAG.elLagMaxMs=0;DIAG.gcMaxMs=0;DIAG.maxBufBytes=0;DIAG.netMaxMs=0;DIAG.joinMaxMs=0;DIAG.genMaxMs=0; /* per-interval maxes since last poll */
+   const elLag=DIAG.elLagMaxMs,gcMax=DIAG.gcMaxMs,mbuf=DIAG.maxBufBytes,netMx=DIAG.netMaxMs,joinMx=DIAG.joinMaxMs,genMx=DIAG.genMaxMs,tickMx=DIAG.tickMaxMs,saveMx=DIAG.saveMaxMs;DIAG.elLagMaxMs=0;DIAG.gcMaxMs=0;DIAG.maxBufBytes=0;DIAG.netMaxMs=0;DIAG.joinMaxMs=0;DIAG.genMaxMs=0;DIAG.tickMaxMs=0;DIAG.saveMaxMs=0; /* per-interval maxes since last poll */
    res.writeHead(200,{'Content-Type':'application/json'});
    res.end(JSON.stringify({ok:1,seats:Object.keys(seats).length,souls,
     tickAvg:+(TICKS.n?TICKS.sum/TICKS.n:0).toFixed(2),tickP95:p95,upMin:((Date.now()-BOOT)/60000)|0,
     ticks:TICKS.n,elLagMaxMs:elLag,gcCount:DIAG.gcCount,gcMaxMs:+gcMax.toFixed(0),gcTotalMs:+DIAG.gcTotalMs.toFixed(0),
-    stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:(()=>{const v9=DIAG.netLateMax||0;DIAG.netLateMax=0;return v9;})(),rateSkips:DIAG.rateSkips||0,netMaxMs:+netMx.toFixed(0),joinMaxMs:+joinMx.toFixed(0),genMaxMs:+genMx.toFixed(0),
+    stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:(()=>{const v9=DIAG.netLateMax||0;DIAG.netLateMax=0;return v9;})(),rateSkips:DIAG.rateSkips||0,netMaxMs:+netMx.toFixed(0),joinMaxMs:+joinMx.toFixed(0),genMaxMs:+genMx.toFixed(0),tickMaxMs:+tickMx.toFixed(0),saveMaxMs:+saveMx.toFixed(0),
     buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
     seatNet:Object.keys(seats).map(t9=>{const w9=seats[t9],r9=(w9&&w9._rttMax||0)|0;if(w9)w9._rttMax=0;return Object.assign({t:+t9,rtt:(w9&&w9._rttS||0)|0,rttMax:r9,buf:(w9&&w9.bufferedAmount||0)|0},(w9&&w9._cli)||{});}),
-    ver:'r80-the-hunt',keeperSet:(KWH?1:0),souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
+    ver:'r81-the-steady-sip',keeperSet:(KWH?1:0),souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else if(req.url.indexOf('/crashz')===0){let c='';try{c=_fsS.readFileSync('/opt/fablehive/crash.log','utf8').slice(-4000);}catch(e){c='(no crashes logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* the CONFESSOR reads aloud */
   else if(req.url.indexOf('/deployz')===0){let c='';try{c=_fsS.readFileSync('/var/log/fablehive-deploy.log','utf8').slice(-4000);}catch(e){c='(no deploys logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* and the deploy ledger too - 'updates without updates' becomes a lookup */
@@ -254,7 +254,7 @@ function start(port,htmlPath){
    const t0=process.hrtime.bigint();
    G.step(DT);
    try{if(G.drainRoomOut){const _ev=G.drainRoomOut();if(_ev)for(const _e of _ev){const _w=seats[_e.seat];if(_w&&_w.readyState===1){try{_w.send(JSON.stringify(_e.m));}catch(_){}}}}}catch(_){} /* R62 THE TRUE CREDIT */
-   const el=Number(process.hrtime.bigint()-t0)/1e6;
+   const el=Number(process.hrtime.bigint()-t0)/1e6;if(el>(DIAG.tickMaxMs||0))DIAG.tickMaxMs=el;
    TICKS.n++;TICKS.sum+=el;TICKS.hist.push(el);if(TICKS.hist.length>300)TICKS.hist.shift();
    acc-=DT;n++;
    if(el>22){acc=Math.min(acc,DT);break;}}},16); /* THE PRESSURE VALVE: a monster brawl can cost 40ms+ per tick (probe: Elder=42ms vs 8 normal). When a tick runs hot, SHED THE SIM BACKLOG, never the net beats - the meadow slows a few percent under an Elder's fury; the wire never chokes behind it */

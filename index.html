@@ -1366,7 +1366,7 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
      gx=s.x-hx*(s.R*0.55+16)-hy*llat;gy=s.y-hy*(s.R*0.55+16)+hx*llat;
      fast=moving;}
     else{
-     if(u.node&&(u.node.dead||u.node.amt<=3||d2(u.node.x,u.node.y,s.x,s.y)>(leash-50)**2))u.node=null; /* a flower the queen left behind is NOT your errand anymore */
+     if(u.node){const _anch=(u.x-u.node.x)*(u.x-u.node.x)+(u.y-u.node.y)*(u.y-u.node.y)<1600,_dropR=_anch?(leash+40):(leash-50);if(u.node.dead||u.node.amt<=3||d2(u.node.x,u.node.y,s.x,s.y)>_dropR*_dropR)u.node=null;} /* a flower the queen left behind is NOT your errand anymore */
      if(!u.node){let bn=null,bs=1e18;
       for(const g of groves){if(g.dead||g.closed||g.amt<=6||g===u.badN)continue;if(grottoOf(g.x,g.y)!==grottoOf(u.x,u.y))continue; /* what sleeps behind stone stays behind stone */
        const q=d2(s.x,s.y,g.x,g.y);if(q>(leash-60)**2)continue; /* only flowers the ROPE can truly reach */

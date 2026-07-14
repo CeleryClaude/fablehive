@@ -5481,7 +5481,7 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
  for(const w9 of worms){if(!w9._net)continue;const kw9=Math.min(1,10*dt);
   if(w9.flash>0)w9.flash-=dt;if(w9.bite>0)w9.bite-=dt; /* the client DECAYS what the wire arms - a struck worm stayed PINK forever online (and it decays ONCE - this line was doubled, halving every flash and bite) */
   if(w9._tx!==undefined){
-   if(Math.hypot(w9._tx-w9.x,w9._ty-w9.y)>120){ /* a resurface or a death-shuffle is a TELEPORT, never a slide: snap the whole body and let the rise-anim carry the moment */
+   const _wt9=(w9.bur>0.02)!==((w9._pb9||0)>0.02);w9._pb9=w9.bur; if(_wt9||Math.hypot(w9._tx-w9.x,w9._ty-w9.y)>360){ /* r99 SPIKE-PROOF WORMS: snap only on a real burrow/resurface transition (or a huge jump); latency-gap slides now GLIDE instead of popping (was >120px, which every ping spike tripped) */
     w9.x=w9._tx;w9.y=w9._ty;for(const sg of w9.seg){if(sg._tx!==undefined){sg.x=sg._tx;sg.y=sg._ty;}}
    }else{w9.x+=(w9._tx-w9.x)*kw9;w9.y+=(w9._ty-w9.y)*kw9;
     for(const sg of w9.seg){if(sg._tx!==undefined){sg.x+=(sg._tx-sg.x)*kw9;sg.y+=(sg._ty-sg.y)*kw9;}}}

@@ -3565,12 +3565,13 @@ function paintPlate(g2,base,t2,pl,col){ /* QUEEN ARMOUR, amended law: trim by de
      g2.beginPath();g2.moveTo(ln*0.12,0);g2.lineTo(ln*0.84,0);g2.stroke();
      g2.restore();}}
    if(C9.thorn&&i9<QSEGS.length-1)for(const sd of [-1,1]){ /* THORNPLATE: recurved HOOKS swept backward - forged, never a childish triangle */
-    const aa=sd*1.45,bx=sg.x+Math.cos(aa)*rr,by=sg.y+Math.sin(aa)*rr,ln=sg.r*0.62;
+    const aa=sd*1.45,bx=sg.x+Math.cos(aa)*rr*0.92,by=sg.y+Math.sin(aa)*rr*0.92,ln=sg.r*0.62,bw=sg.r*0.2;
     g2.fillStyle=C9.thorn;g2.strokeStyle=C9.thornE;g2.lineWidth=1;
-    g2.beginPath();g2.moveTo(bx+3.2,by);
-    g2.quadraticCurveTo(bx+1.5,by+sd*ln*0.85,bx-ln*0.95,by+sd*ln*0.42); /* out, then the tip hooks BACK */
-    g2.quadraticCurveTo(bx-ln*0.25,by+sd*ln*0.28,bx-3.2,by);
-    g2.closePath();g2.fill();g2.stroke();}
+    g2.beginPath();g2.moveTo(bx+bw,by);
+    g2.quadraticCurveTo(bx+bw*0.45,by+sd*ln*0.85,bx-ln*0.95,by+sd*ln*0.42); /* out, then the tip hooks BACK */
+    g2.quadraticCurveTo(bx-ln*0.25,by+sd*ln*0.28,bx-bw,by);
+    g2.closePath();g2.fill();g2.stroke();
+    g2.beginPath();g2.ellipse(bx,by,bw*1.1,bw*0.6,aa,0,TAU);g2.fill();g2.stroke();} /* r111: rooted - the base scales with the SEGMENT (was 6.4 fixed px) and a socket boss sits where hook meets shell */
   }}
  if(C9.wrap)for(const i9 of C9.wrap){const sg=QSEGS[i9];if(!sg)continue;const rr=sg.r*0.92; /* THE CUIRASS PASS: breastplates paint OVER every neighbour's trim */
   g2.fillStyle=C9.c;g2.beginPath();g2.arc(sg.x,sg.y,rr*1.02,0,TAU);g2.fill();
@@ -3587,10 +3588,11 @@ function paintPlate(g2,base,t2,pl,col){ /* QUEEN ARMOUR, amended law: trim by de
     g2.beginPath();for(let h6=0;h6<6;h6++){const ha6=h6/6*TAU+0.52,px6=sg.x+rr*hc6[0]+Math.cos(ha6)*rr*hc6[2]*0.5,py6=sg.y+rr*hc6[1]+Math.sin(ha6)*rr*hc6[2]*0.5;h6?g2.lineTo(px6,py6):g2.moveTo(px6,py6);}g2.closePath();g2.stroke();}
    g2.fillStyle='rgba(255,233,160,'+(0.25+0.15*Math.sin(t2*2.4)).toFixed(3)+')';
    g2.beginPath();g2.arc(sg.x,sg.y,rr*0.17,0,TAU);g2.fill();}
-  if(C9.mspike)for(const sd of [-1,1]){const aa=sd*1.5,bx=sg.x+Math.cos(aa)*rr,by=sg.y+Math.sin(aa)*rr,ln=sg.r*0.55; /* obsidian studs: small recurved, never triangles */
-   g2.fillStyle=C9.lite;g2.beginPath();g2.moveTo(bx+2.2,by);
-   g2.quadraticCurveTo(bx+0.8,by+sd*ln*0.8,bx-ln*0.85,by+sd*ln*0.4);
-   g2.quadraticCurveTo(bx-ln*0.2,by+sd*ln*0.24,bx-2.2,by);g2.closePath();g2.fill();}
+  if(C9.mspike)for(const sd of [-1,1]){const aa=sd*1.5,bx=sg.x+Math.cos(aa)*rr*0.92,by=sg.y+Math.sin(aa)*rr*0.92,ln=sg.r*0.55,bw2=sg.r*0.14; /* obsidian studs: small recurved, never triangles */
+   g2.fillStyle=C9.lite;g2.beginPath();g2.moveTo(bx+bw2,by);
+   g2.quadraticCurveTo(bx+bw2*0.36,by+sd*ln*0.8,bx-ln*0.85,by+sd*ln*0.4);
+   g2.quadraticCurveTo(bx-ln*0.2,by+sd*ln*0.24,bx-bw2,by);g2.closePath();g2.fill();
+   g2.beginPath();g2.ellipse(bx,by,bw2*1.15,bw2*0.65,aa,0,TAU);g2.fill();} /* r111: rooted like the thorns */
   }
  if(!C9.scute){const th=QSEGS[Math.min(1,QSEGS.length-1)]; /* pauldrons: two studs on the thorax RIM */
   g2.fillStyle=C9.c;g2.strokeStyle=C9.e;g2.lineWidth=1.2;
@@ -4031,7 +4033,7 @@ function drawArmour(g,u,FL,col){ /* FLAT, organic armour in the game's own langu
  const r=u.r,R=u.role,M=FL.motif;
  let base,edge,hi;if(FL.bug){base=shade(col,0.14);edge=shade(col,-0.4);hi=shade(col,0.36);}else{base=FL.metal;edge=FL.dark;hi=FL.lite;}
  g.lineJoin='round';g.lineCap='round';
- const claw=(bx,by,ang,L,W,curl,fill)=>{g.save();g.translate(bx,by);g.rotate(ang);g.beginPath();g.moveTo(0,-W);g.quadraticCurveTo(L*0.5,-W*0.35-curl*L*0.45,L,-curl*L);g.quadraticCurveTo(L*0.5,W*0.35-curl*L*0.45,0,W);g.closePath();g.fillStyle=fill;g.fill();g.strokeStyle=edge;g.lineWidth=Math.max(0.5,W*0.45);g.stroke();g.restore();};
+ const claw=(bx,by,ang,L,W,curl,fill)=>{g.save();g.translate(bx,by);g.rotate(ang);g.beginPath();g.moveTo(0,-W);g.quadraticCurveTo(L*0.5,-W*0.35-curl*L*0.45,L,-curl*L);g.quadraticCurveTo(L*0.5,W*0.35-curl*L*0.45,0,W);g.closePath();g.fillStyle=fill;g.fill();g.strokeStyle=edge;g.lineWidth=Math.max(0.5,W*0.45);g.stroke();g.beginPath();g.ellipse(0,0,W*1.3,W*0.85,0,0,TAU);g.fillStyle=fill;g.fill();g.strokeStyle=edge;g.lineWidth=Math.max(0.5,W*0.4);g.stroke();g.restore();}; /* r111 THE GROWN SPIKE: a socket BOSS at the root - every blade emerges from the shell instead of hovering beside it */
  const shell=(cx,cy,SX,SY,ang,fill)=>{g.save();g.translate(cx,cy);g.rotate(ang);g.beginPath();g.moveTo(SX,0);g.quadraticCurveTo(SX*0.2,-SY,-SX*0.7,-SY*0.55);g.quadraticCurveTo(-SX*1.05,0,-SX*0.7,SY*0.55);g.quadraticCurveTo(SX*0.2,SY,SX,0);g.closePath();g.fillStyle=fill;g.fill();g.strokeStyle=edge;g.lineWidth=Math.max(0.6,r*0.06);g.stroke();g.restore();};
  const ridge=(x,hh)=>{g.strokeStyle=edge;g.lineWidth=Math.max(1.1,r*0.14);g.beginPath();g.moveTo(x,-hh);g.lineTo(x,hh);g.stroke();};
  const petal=(bx,by,ang,L,W,fill)=>{g.save();g.translate(bx,by);g.rotate(ang);g.beginPath();g.moveTo(0,0);g.quadraticCurveTo(L*0.35,-W,L*0.82,-W*0.28);g.quadraticCurveTo(L*1.06,0,L*0.82,W*0.28);g.quadraticCurveTo(L*0.35,W,0,0);g.closePath();g.fillStyle=fill||hi;g.fill();g.strokeStyle=edge;g.lineWidth=Math.max(0.5,W*0.26);g.stroke();g.restore();};
@@ -4051,10 +4053,10 @@ function drawArmour(g,u,FL,col){ /* FLAT, organic armour in the game's own langu
  const comb=(cx,cy,s)=>{const dx=s*1.5,dy=s*0.87;hexAt(cx,cy,s);hexAt(cx-dx,cy-dy,s);hexAt(cx-dx,cy+dy,s);hexAt(cx+dx,cy-dy,s*0.9);hexAt(cx+dx,cy+dy,s*0.9);hexAt(cx-dx*2,cy,s*0.85);};
  const helmCap=()=>{g.fillStyle=base;g.beginPath();g.moveTo(r*0.62,-r*0.42);g.quadraticCurveTo(r*0.0,-r*0.62,-r*0.2,-r*0.2);g.lineTo(-r*0.2,r*0.2);g.quadraticCurveTo(r*0.0,r*0.62,r*0.62,r*0.42);g.quadraticCurveTo(r*0.4,0,r*0.62,-r*0.42);g.closePath();g.fill();g.strokeStyle=edge;g.lineWidth=Math.max(0.6,r*0.07);g.stroke();g.strokeStyle=hi;g.lineWidth=Math.max(0.5,r*0.05);g.beginPath();g.moveTo(r*0.5,-r*0.34);g.quadraticCurveTo(r*0.05,-r*0.5,-r*0.14,-r*0.16);g.stroke();};
  const M1=(x,y,ang,sc)=>{
-  if(M==='spike')claw(x,y,ang,r*0.85*sc,r*0.15*sc,0.12*(y<0?1:-1),hi);
-  else if(M==='horn')claw(x,y,ang,r*1.05*sc,r*0.19*sc,0.52*(y<0?1:-1),base); /* r110b: the claw CURL now mirrors with the flank - position and angle mirrored but the curl did not, so horn pairs (curl 0.52) read lopsided even after r108 */
-  else if(M==='mandible')claw(x,y,ang,r*0.95*sc,r*0.2*sc,-0.5,base);
-  else if(M==='crown')claw(x,y,ang,r*0.7*sc,r*0.2*sc,0,hi);
+  if(M==='spike')claw(x*0.86,y*0.86,ang,r*0.85*sc,r*0.15*sc,0.26*(y<0?1:-1),hi); /* r111: bases SINK 14% into the shell + a truer recurve - forged, never a childish triangle (the thornplate law, for the whole host) */
+  else if(M==='horn')claw(x*0.86,y*0.86,ang,r*1.05*sc,r*0.19*sc,0.52*(y<0?1:-1),base); /* r110b: the claw CURL now mirrors with the flank - position and angle mirrored but the curl did not, so horn pairs (curl 0.52) read lopsided even after r108 */
+  else if(M==='mandible')claw(x*0.86,y*0.86,ang,r*0.95*sc,r*0.2*sc,-0.5,base);
+  else if(M==='crown')claw(x*0.86,y*0.86,ang,r*0.7*sc,r*0.2*sc,0.1*(y<0?1:-1),hi);
   else if(M==='wing')shell(x,y,r*0.5*sc,r*0.4*sc,ang,base);
   else if(M==='plate')ridge(x,r*0.44*sc);
   else if(M==='petal')petal(x,y,ang,r*0.7*sc,r*0.34*sc);

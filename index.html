@@ -4064,10 +4064,10 @@ function drawArmour(g,u,FL,col){ /* FLAT, organic armour in the game's own langu
  if(R==='forager'){if(M==='plate'){ridge(-r*0.1,r*0.45);ridge(-r*0.5,r*0.4);}else{M1(-r*0.55,-r*0.2,-2.5,0.7);M1(-r*0.55,r*0.2,2.5,0.7);}}
  else if(R==='soldier'){if(!FL.bug)helmCap();if(M==='plate'){ridge(-r*0.1,r*0.4);ridge(-r*0.5,r*0.34);}else{M1(r*0.05,-r*0.35,-1.9,1.0);if(M!=='mandible')M1(r*0.05,r*0.35,1.9,1.0);}M1(-r*0.4,-r*0.5,-2.6,0.6);M1(-r*0.4,r*0.5,2.6,0.6);}
  else if(R==='lancer'){M1(-r*0.1,-r*0.28,-2.75,0.85);M1(-r*0.1,r*0.28,2.75,0.85);M1(-r*0.55,-r*0.16,-2.85,0.6);M1(-r*0.55,r*0.16,2.85,0.6);if(M==='mandible'||M==='horn'){M1(r*0.55,-r*0.12,-0.15,0.7);M1(r*0.55,r*0.12,0.15,0.7);}}
- else if(R==='spitter'){M1(-r*0.15,-r*0.25,-2.6,0.8);M1(-r*0.5,-r*0.1,-2.8,0.6);if(M==='plate')ridge(-r*0.2,r*0.4);}
- else if(R==='armourer'){ridge(r*0.35,r*0.6);ridge(-r*0.05,r*0.72);ridge(-r*0.45,r*0.6);M1(-r*0.05,-r*0.72,-1.6,1.1);M1(-r*0.5,-r*0.4,-2.3,0.8);M1(-r*0.5,r*0.4,2.3,0.8);}
- else if(R==='nurse'){M1(-r*0.3,-r*0.35,-2.4,0.6);if(FL.bug){g.fillStyle=hi;g.beginPath();g.ellipse(r*0.1,0,r*0.13,r*0.24,0,0,TAU);g.fill();}}
- else if(R==='titan'){M1(r*0.35,-r*0.35,-0.5,1.5);M1(r*0.35,r*0.35,0.5,1.5);for(let i=0;i<4;i++){const x=-r*0.05-i*r*0.28;if(M==='plate')ridge(x,r*0.55);else M1(x,-r*0.02,-1.6-0.12*(i-1.5),0.85-i*0.08);}}
+ else if(R==='spitter'){for(const sd of[-1,1]){M1(-r*0.15,sd*-r*0.25,sd*-2.6,0.8);M1(-r*0.5,sd*-r*0.1,sd*-2.8,0.6);}if(M==='plate')ridge(-r*0.2,r*0.4); /* r108 THE EVEN HOST: the spitter wore both pieces on ONE flank - mirrored now */}
+ else if(R==='armourer'){ridge(r*0.35,r*0.6);ridge(-r*0.05,r*0.72);ridge(-r*0.45,r*0.6);for(const sd of[-1,1]){M1(-r*0.05,sd*-r*0.72,sd*-1.6,1.1);M1(-r*0.5,sd*-r*0.4,sd*-2.3,0.8);}}
+ else if(R==='nurse'){for(const sd of[-1,1])M1(-r*0.3,sd*-r*0.35,sd*-2.4,0.6);if(FL.bug){g.fillStyle=hi;g.beginPath();g.ellipse(r*0.1,0,r*0.13,r*0.24,0,0,TAU);g.fill();}}
+ else if(R==='titan'){M1(r*0.35,-r*0.35,-0.5,1.5);M1(r*0.35,r*0.35,0.5,1.5);for(let i=0;i<4;i++){const x=-r*0.05-i*r*0.28;if(M==='plate')ridge(x,r*0.55);else for(const sd of[-1,1])M1(x,sd*r*0.3,sd*(1.6+0.12*(i-1.5)),0.72-i*0.07);}} /* r108: the titan crest was a single-flank rake - now a mirrored double row rides the spine */
 }
 function drawUnitLocal(g,s,u,a,vm,col,fleetId){ /* the unit's LOCAL-frame art (shapes + armour). shared by the battlefield AND the wardrobe mirror so they always match */
  if(u.shape==='dot'){

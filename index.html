@@ -4189,13 +4189,16 @@ function drawUnitLocal(g,s,u,a,vm,col,fleetId){ /* the unit's LOCAL-frame art (s
  } else { /* TITAN: a walking monument - dark mass, molten core, horns and tusks */
   g.fillStyle=u.flash>0?'#fff':shade(col,-0.45); /* dark hide */
   g.beginPath();for(let k=0;k<6;k++){const aa=k/6*TAU+Math.PI/6;k?g.lineTo(Math.cos(aa)*u.r,Math.sin(aa)*u.r):g.moveTo(Math.cos(aa)*u.r,Math.sin(aa)*u.r);}g.closePath();g.fill();
-  g.lineWidth=2;g.strokeStyle='#3a2415';g.stroke(); /* r66 THE EDGE HARMONY: titan + armourer rims share one dark-amber (#3a2415), so armour clip-ons sit on a matched edge (was near-black rgba(26,13,5,0.95)) */
+  g.lineWidth=2.8;g.strokeStyle='#3a2415';g.stroke(); /* r66 THE EDGE HARMONY: titan + armourer rims share one dark-amber (#3a2415) */ /* r115 THE TITAN PASS: heavier iron rim */
+  g.save();g.beginPath();for(let k=0;k<6;k++){const aa=k/6*TAU+Math.PI/6;k?g.lineTo(Math.cos(aa)*u.r,Math.sin(aa)*u.r):g.moveTo(Math.cos(aa)*u.r,Math.sin(aa)*u.r);}g.closePath();g.clip();
+  g.fillStyle='rgba(26,13,5,0.16)';g.fillRect(-u.r*0.52,-u.r,u.r*0.2,u.r*2);g.fillRect(-u.r*0.92,-u.r,u.r*0.16,u.r*2);g.fillStyle='rgba(255,236,200,0.05)';g.fillRect(u.r*0.1,-u.r,u.r*0.3,u.r*2);g.restore(); /* r115 TONE-BANDING: identity by band and outline, not face (the settled titan direction) - two chitin shadow-bands rearward, one warm band forward */
   g.fillStyle=col; /* horn spikes on every shoulder */
   for(let k=0;k<6;k++){const aa=k/6*TAU+Math.PI/6;
    const bx=Math.cos(aa)*u.r,by=Math.sin(aa)*u.r;
-   g.beginPath();g.moveTo(bx*0.82,by*0.82);
-   g.lineTo(bx*1.3+Math.cos(aa+1.8)*2.5,by*1.3+Math.sin(aa+1.8)*2.5);
-   g.lineTo(bx*0.82+Math.cos(aa+1.57)*4,by*0.82+Math.sin(aa+1.57)*4);g.closePath();g.fill();}
+   g.beginPath();g.moveTo(bx*0.8,by*0.8);
+   g.quadraticCurveTo(bx*1.24+Math.cos(aa+1.8)*u.r*0.085,by*1.24+Math.sin(aa+1.8)*u.r*0.085,bx*1.28+Math.cos(aa+2.1)*u.r*0.115,by*1.28+Math.sin(aa+2.1)*u.r*0.115);
+   g.quadraticCurveTo(bx*0.86+Math.cos(aa+1.57)*u.r*0.13,by*0.86+Math.sin(aa+1.57)*u.r*0.13,bx*0.8+Math.cos(aa+1.57)*u.r*0.155,by*0.8+Math.sin(aa+1.57)*u.r*0.155);g.closePath();g.fill();
+   g.beginPath();g.ellipse(bx*0.84,by*0.84,u.r*0.1,u.r*0.065,aa,0,TAU);g.fill();} /* r115 GROWN shoulder horns: recurved quads with socket bosses, scaled to the body (were straight FIXED-PX triangles - the tack-on sin living in the titan's own art) */
   g.fillStyle=col; /* twin tusks forward - they GNASH on every blow (u.atk already crosses the wire, so online titans bite too) */
   const gn9=(u.atk>0)?(Math.sin(tnow*22)*0.5+0.5)*u.r*0.4:0; /* r66 THE FANGS GNASH: the maw hinges open while striking, mirroring the elder's fury idiom; gn9=0 when idle so the resting shape is byte-identical */
   g.beginPath();g.moveTo(u.r*0.7,-u.r*0.4);g.quadraticCurveTo(u.r*1.5,-u.r*0.5-gn9,u.r*1.6,-u.r*0.1-gn9);g.lineTo(u.r*0.75,-u.r*0.15);g.closePath();g.fill();

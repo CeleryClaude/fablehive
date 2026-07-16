@@ -3524,7 +3524,7 @@ function paintPlate(g2,base,t2,pl,col){ /* QUEEN ARMOUR, amended law: trim by de
      g2.strokeStyle=lh;g2.lineWidth=1.2;
      g2.beginPath();g2.moveTo(bx-ln*0.72,by+sd*ln*1.02+ph9);
      g2.quadraticCurveTo(bx-ln*0.95,by+sd*ln*1.1+ph9,bx-ln*1.15,by+sd*ln*0.95+ph9);g2.stroke();}}
-   else{ /* TENDRILS: she does not walk, she DRIFTS - reaching violet-lit arms with a bud at each tip */
+   else{ if(sg.r>=Math.max.apply(null,QSEGS.map(z=>z.r))*0.99)continue; /* r110: the HEAD keeps no arms - tendrils belong to the body */ /* TENDRILS: she does not walk, she DRIFTS - reaching violet-lit arms with a bud at each tip */
     for(const sd of [-1,1]){const l9=i9%2,aa=sd*(1.05+l9*0.3),bx=sg.x+Math.cos(aa)*rr*0.7,by=sg.y+Math.sin(aa)*rr*0.7;
      const wv=Math.sin(t2*2.8+i9*1.7+sd)*sg.r*0.24,ln=sg.r*1.25;
      g2.strokeStyle=shade(col||'#5a4468',-0.28);g2.lineWidth=2.6;
@@ -3532,8 +3532,8 @@ function paintPlate(g2,base,t2,pl,col){ /* QUEEN ARMOUR, amended law: trim by de
      g2.quadraticCurveTo(bx-ln*0.3,by+sd*ln*0.8+wv,bx-ln*0.95,by+sd*ln*0.55+wv*1.6);g2.stroke();
      g2.strokeStyle=shade(col||'#5a4468',0.3);g2.lineWidth=1.1;
      g2.beginPath();g2.moveTo(bx-ln*0.2,by+sd*ln*0.5+wv*0.7);g2.quadraticCurveTo(bx-ln*0.5,by+sd*ln*0.72+wv,bx-ln*0.9,by+sd*ln*0.53+wv*1.5);g2.stroke();
-     g2.fillStyle='rgba(200,160,255,.75)';
-     g2.beginPath();g2.arc(bx-ln*0.95,by+sd*ln*0.55+wv*1.6,1.7,0,TAU);g2.fill();}}}
+     g2.fillStyle='rgba(216,180,255,.95)';
+     g2.beginPath();g2.arc(bx-ln*0.95,by+sd*ln*0.55+wv*1.6,2.6,0,TAU);g2.fill();} /* r110: the tip-buds finally read against her body */}}
   g2.restore();return;}
  const SP9=[[-2.2,-0.94],[0.94,2.2]]; /* the two rim arcs: dorsal + ventral flanks, face and tail junctions always clear */
  for(let i9=0;i9<QSEGS.length;i9++){const sg=QSEGS[i9],rr=sg.r*0.92;
@@ -3553,10 +3553,10 @@ function paintPlate(g2,base,t2,pl,col){ /* QUEEN ARMOUR, amended law: trim by de
    if(C9.bump)for(const aa of [-2.2,-0.94,0.94,2.2]){g2.fillStyle=C9.c;g2.strokeStyle=C9.e;g2.lineWidth=1;
     g2.beginPath();g2.arc(sg.x+Math.cos(aa)*rr,sg.y+Math.sin(aa)*rr,C9.w*0.85,0,TAU);g2.fill();g2.stroke();} /* WYRMBONE: knuckled joints */
    if(C9.legs)for(const sd of [-1,1])for(let l9=0;l9<3;l9++){ /* MILLIPEDE: little legs in marching rows, alive with the walk */
-    const aa=sd*(0.75+l9*0.5),bx=sg.x+Math.cos(aa)*rr,by=sg.y+Math.sin(aa)*rr,ph9=Math.sin(t2*7+i9*1.3+l9*2.1)*1.6;
+    const aa=sd*(0.75+l9*0.5),bx=sg.x+Math.cos(aa)*rr,by=sg.y+Math.sin(aa)*rr,q9=sg.r/12,ph9=Math.sin(t2*7+i9*1.3+l9*2.1)*1.6*q9;
     g2.strokeStyle='#c8b088';g2.lineWidth=1.5;g2.lineCap='round';
     g2.beginPath();g2.moveTo(bx,by);
-    g2.quadraticCurveTo(bx-2+ph9*0.4,by+sd*4.4,bx-4.6+ph9,by+sd*6.4);g2.stroke();}
+    g2.quadraticCurveTo(bx-2*q9+ph9*0.4,by+sd*4.4*q9,bx-4.6*q9+ph9,by+sd*6.4*q9);g2.stroke();} /* r110 THE POLISH: legs scale with the SEGMENT now (were fixed px - stubble on a grown queen, oversized on a hatchling) */
    if(C9.leafy)for(const sd of [-1,1]){ /* LEAFGUARD: two overlapped leaf-plates on each flank, veined */
     for(let l6=0;l6<2;l6++){const aa=sd*(1.05+l6*0.5),bx=sg.x+Math.cos(aa)*rr*0.9,by=sg.y+Math.sin(aa)*rr*0.9,ln=sg.r*(0.62-l6*0.12);
      g2.save();g2.translate(bx,by);g2.rotate(aa+sd*0.5);
@@ -4062,7 +4062,7 @@ function drawArmour(g,u,FL,col){ /* FLAT, organic armour in the game's own langu
   else if(M==='scale')scaleLap(x,y,ang,r*0.7*sc);
   else if(M==='ember')emberStud(x,y,r*0.34*sc);};
  if(M==='honeycomb'){const hs=r*0.26;comb(-r*0.15,0,hs);if(R==='armourer'||R==='titan'){comb(r*0.42,0,hs*0.9);comb(-r*0.62,0,hs*0.85);}return;}
- if(R==='forager'){if(M==='plate'){ridge(-r*0.1,r*0.45);ridge(-r*0.5,r*0.4);}else{M1(-r*0.55,-r*0.2,-2.5,0.7);M1(-r*0.55,r*0.2,2.5,0.7);}}
+ if(R==='forager'){if(M==='plate'){ridge(-r*0.1,r*0.45);ridge(-r*0.5,r*0.4);}else{M1(-r*0.45,-r*0.24,-2.5,0.9);M1(-r*0.45,r*0.24,2.5,0.9);}} /* r110: the forager kit steps out from under her wings - visible on the most numerous soul */
  else if(R==='soldier'){if(!FL.bug)helmCap();if(M==='plate'){ridge(-r*0.1,r*0.4);ridge(-r*0.5,r*0.34);}else{M1(r*0.05,-r*0.35,-1.9,1.0);if(M!=='mandible')M1(r*0.05,r*0.35,1.9,1.0);}M1(-r*0.4,-r*0.5,-2.6,0.6);M1(-r*0.4,r*0.5,2.6,0.6);}
  else if(R==='lancer'){M1(-r*0.1,-r*0.28,-2.75,0.85);M1(-r*0.1,r*0.28,2.75,0.85);M1(-r*0.55,-r*0.16,-2.85,0.6);M1(-r*0.55,r*0.16,2.85,0.6);if(M==='mandible'||M==='horn'){M1(r*0.55,-r*0.12,-0.15,0.7);M1(r*0.55,r*0.12,0.15,0.7);}}
  else if(R==='spitter'){for(const sd of[-1,1]){M1(-r*0.15,sd*-r*0.25,sd*-2.6,0.8);M1(-r*0.5,sd*-r*0.1,sd*-2.8,0.6);}if(M==='plate')ridge(-r*0.2,r*0.4); /* r108 THE EVEN HOST: the spitter wore both pieces on ONE flank - mirrored now */}

@@ -1352,6 +1352,15 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
    if(u.flash>0)u.flash-=dt;if(u.atk>0)u.atk-=dt;if(u.slow>0)u.slow-=dt;if(u.mend>0)u.mend-=dt;if(u.faceT>0)u.faceT-=dt;
    if(u.fat>0&&u.fatT<=0)u.fat=Math.max(0,u.fat-0.1*dt);
    if(u.fatT>0)u.fatT-=dt;
+   if(u._perch){const t9=s.units.find(z=>z.uid===u._perch&&z.role==='titan'&&z.hp>0); /* r124 THE PERCH: she rides the titan - invulnerable, off the wire, out of the crush */
+    if(!t9){u._perch=null;u._pT=0;} /* the titan fell: she SPILLS where he died, vulnerable again */
+    else{u._pT=(u._pT||0)+dt;
+     if(!s.war&&(u.load<39||u._pT>10)){u._perch=null;u._pT=0;} /* peace: empty bellies hop off at once, full ones ride at most 10s then walk the rest home */
+     else{const sa9=(u._pSlot||0)*1.5708+2.3562;u.x=t9.x+Math.cos(sa9)*t9.r*0.62;u.y=t9.y+Math.sin(sa9)*t9.r*0.62;u.vx=t9.vx||0;u.vy=t9.vy||0;u.hp=Math.min(u.maxHp||22,u.hp+60*dt);u.flash=0;continue;}}}
+   else if(u.role==='forager'&&(s.war||u.load>=39)){if((u._pkT||0)>0)u._pkT-=dt;else{u._pkT=0.4; /* r124: a working forager in danger (or full to the brim) climbs the nearest titan with a free back - 4 slots each */
+    for(const t9 of s.units){if(t9.role!=='titan'||t9.hp<=0)continue;if(d2(u.x,u.y,t9.x,t9.y)>(t9.r+30)*(t9.r+30))continue;
+     let rid9=0;for(const r9 of s.units)if(r9._perch===t9.uid)rid9++;
+     if(rid9<4){u._perch=t9.uid;u._pSlot=rid9;u._pT=0;break;}}}}
    let gx=null,gy=null,fast=false,fight=false;
    const leash=u.role==='forager'?520:(s.war?520:430); /* in war, the rope is war-range - the hunt can finish */
    const dq=Math.hypot(u.x-s.x,u.y-s.y);
@@ -1406,7 +1415,7 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
          Below the cap (ordinary wars) behaviour is untouched: the window covers the whole army. */
       const wu=war.units,wn=wu.length,CAP=60,lim=Math.min(wn,CAP);
       const start=wn>CAP?(Math.random()*wn)|0:0;
-      for(let i9=0;i9<lim;i9++){const eu=wu[(start+i9)%wn];if(eu.slain)continue;
+      for(let i9=0;i9<lim;i9++){const eu=wu[(start+i9)%wn];if(eu.slain||eu._perch)continue; /* r124: a perched rider is no one's target */
        let sc=Math.sqrt(d2(u.x,u.y,eu.x,eu.y))+eu.cl*46;
        if(eu.role==='armourer')sc-=150; /* the ANCHOR draws the blows */
        if(eu.role==='forager')sc+=240; /* first break the LINE, then rob the larder */
@@ -1432,7 +1441,7 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
      gridNear(u.x,u.y,260,eu=>{const es=eu._sw;
       if(!es||es.dead||es.team===s.team||eu.slain)return;
       if(grottoOf(es.x,es.y)!==myGr9)return;
-      const q=d2(u.x,u.y,eu.x,eu.y)*(eu.role==='forager'?0.55:1);
+      if(eu._perch)return;const q=d2(u.x,u.y,eu.x,eu.y)*(eu.role==='forager'?0.55:1);
       if(q<bs2){bs2=q;foe=eu;bswm=es;}});
      if(bswm)u.tgtS=bswm;}
     if(foe){
@@ -1473,7 +1482,7 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
       let hitN=0;
       for(const es of swarms){if(es.dead||es.team===s.team)continue;
        if(d2(s.x,s.y,es.x,es.y)>(s.R+es.R+560)**2)continue;
-       for(const eu of es.units){if(d2(eu.x,eu.y,u.x,u.y)<110*110){
+       for(const eu of es.units){if(eu._perch)continue;if(d2(eu.x,eu.y,u.x,u.y)<110*110){
         const a2=Math.atan2(eu.y-u.y,eu.x-u.x);
         eu.vx+=Math.cos(a2)*430;eu.vy+=Math.sin(a2)*430;
         if(sim){eu.hp-=40;eu.flash=.2;eu.slow=0.5;if(eu.hp<=0)killUnit(es,eu,s);}hitN++;}}}
@@ -1631,9 +1640,9 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
       else if(B.role==='titan'&&A.role!=='titan'){wA=0.96;wB=0.04;}
       else if(A.role==='forager'&&B.role!=='forager'){wA=0.92;wB=0.08;}
       else if(B.role==='forager'&&A.role!=='forager'){wA=0.08;wB=0.92;}
-      const F=(mn-d3)*(inRank?0.3:0.5)/d3;A.x-=ex*F*wA;A.y-=ey*F*wA;B.x+=ex*F*wB;B.y+=ey*F*wB;}});
+      if(A._perch||B._perch)return;const F=(mn-d3)*(inRank?0.3:0.5)/d3;A.x-=ex*F*wA;A.y-=ey*F*wA;B.x+=ex*F*wB;B.y+=ey*F*wB;}});
    } else
-   for(let j=i+1+((i+par)%2);j<arr.length;j+=arr.length>26?2:1){const B=arr[j];
+   for(let j=i+1+((i+par)%2);j<arr.length;j+=arr.length>26?2:1){const B=arr[j];if(A._perch||B._perch)continue;
     const mn=A.r+B.r+3,ex=B.x-A.x,ey=B.y-A.y;
     if(ex>mn||ex<-mn||ey>mn||ey<-mn)continue;
     const d3=Math.hypot(ex,ey)||0.01;
@@ -1691,7 +1700,7 @@ function wormTick(dt){ /* THE BLOOD WORMS: idle they meander and burrow; provoke
   else{w9._st=0;w9._sx=w9._sy=null;}
   if(w9.prov>0&&tgt&&w9.bite<=0){ /* the BITE - it must be FEARED to matter */
    if(d2(w9.x,w9.y,tgt.x,tgt.y)<46*46){tgt.hp-=55;tgt.flash=.12;w9.bite=0.9;if(tgt===me())sfx('hurt');if(tgt.hp<=0)killQueen(tgt,null);}
-   else{for(const u2 of tgt.units){if(d2(w9.x,w9.y,u2.x,u2.y)<38*38){u2.hp-=38;u2.flash=.2;w9.bite=0.7;if(u2.hp<=0)killUnit(tgt,u2,null);break;}}}}
+   else{for(const u2 of tgt.units){if(u2._perch)continue;if(d2(w9.x,w9.y,u2.x,u2.y)<38*38){u2.hp-=38;u2.flash=.2;w9.bite=0.7;if(u2.hp<=0)killUnit(tgt,u2,null);break;}}}}
  }
 }
 function queenRearDist(st,body,base){ /* the TRUE rear edge of the drawn body - mirrors paintQueenBody's segment layout exactly, so trails are born at her tail: not mid-body, not in open air */
@@ -1982,7 +1991,7 @@ function step(dt){NPLAY=humanCount();
   for(const ey of eyes){if(d2(ey.x,ey.y,elder.x,elder.y)<(elder.r+14)*(elder.r+14))ey.hp-=140*dt;}
   if(elder.atk<=0){
    for(const s of swarms){if(s.dead||d2(s.x,s.y,elder.x,elder.y)>(elder.r+200)**2)continue;
-    for(const u of s.units){if(d2(u.x,u.y,elder.x,elder.y)<(elder.r+u.r)**2){
+    for(const u of s.units){if(!u._perch&&d2(u.x,u.y,elder.x,elder.y)<(elder.r+u.r)**2){
      u.hp-=75;u.flash=.15;const a=Math.atan2(u.y-elder.y,u.x-elder.x);
      const kk=(u.role==='armourer'||u.role==='titan')?0.25:1;
      u.vx+=Math.cos(a)*260*kk;u.vy+=Math.sin(a)*260*kk;
@@ -2031,7 +2040,7 @@ function step(dt){NPLAY=humanCount();
   /* her fangs and forelegs, for anything in reach */
   for(const s2 of swarms){if(s2.dead)continue;
    if(d2(s2.x,s2.y,sp5.x,sp5.y)>(sp5.r+320)**2)continue;
-   for(const u2 of s2.units){if(d2(u2.x,u2.y,sp5.x,sp5.y)<(sp5.r+u2.r+6)**2&&Math.random()<dt*3.4){
+   for(const u2 of s2.units){if(u2._perch)continue;if(d2(u2.x,u2.y,sp5.x,sp5.y)<(sp5.r+u2.r+6)**2&&Math.random()<dt*3.4){
     sp5.gnash=0.4;u2.hp-=75;u2.flash=.2;
     const aa=Math.atan2(u2.y-sp5.y,u2.x-sp5.x);
     u2.vx+=Math.cos(aa)*260;u2.vy+=Math.sin(aa)*260;
@@ -2305,7 +2314,7 @@ function step(dt){NPLAY=humanCount();
     if(d2(sh.x,sh.y,eu.x,eu.y)<(eu.r+4)**2){
      let dm=sh.dmg*(eu.braced?0.7:1);
      if(eu.r>=15)dm*=1.6; /* QUARRELS pierce the slow and the huge */
-     eu.hp-=dm;eu.flash=.12;eu.slow=0.5;hit=true;
+     eu.hp-=(eu._perch?0:dm);eu.flash=.12;eu.slow=0.5;hit=true;
      if(eu.hp<=0)killUnit(es,eu,sh.by);}});
    if(hit)break;}
   if(!hit&&elder&&d2(sh.x,sh.y,elder.x,elder.y)<(elder.r*0.85)**2){ /* QUARRELS BITE THE COLOSSI: shots only ever collided with swarms - a spitter army did literally ZERO boss damage, and the healthbar never woke to say so */
@@ -4215,6 +4224,7 @@ function drawUnitLocal(g,s,u,a,vm,col,fleetId){ /* the unit's LOCAL-frame art (s
   g.fillStyle='#ffcf3a'; /* burning SLITS, angled in a glare, scaled to the body */
   g.beginPath();g.ellipse(u.r*0.52,-u.r*0.24,u.r*0.085,u.r*0.03,0.32,0,TAU);g.fill();
   g.beginPath();g.ellipse(u.r*0.52,u.r*0.24,u.r*0.085,u.r*0.03,-0.32,0,TAU);g.fill();
+  if(u._rid)for(let ri9=0;ri9<Math.min(4,u._rid);ri9++){const sa9=ri9*1.5708+2.3562,rx9=Math.cos(sa9)*u.r*0.62,ry9=Math.sin(sa9)*u.r*0.62;g.fillStyle=col;g.beginPath();g.arc(rx9,ry9,u.r*0.11,0,TAU);g.fill();g.strokeStyle='#3a2415';g.lineWidth=1;g.stroke();g.fillStyle='rgba(255,194,62,.85)';g.beginPath();g.arc(rx9,ry9,u.r*0.055,0,TAU);g.fill();} /* r124 THE PERCH: her riders cling to his back - drawn from the count his tuple carries (solo draws the true riders riding) */
   if(g===ctx&&vm>40&&Math.random()<0.12)addP(u.x-Math.cos(a)*u.r,u.y-Math.sin(a)*u.r,'#c8a06a',1,26); /* dust at its heels */
  }
  {const _mf9=(fleetId!==undefined&&fleetId!==null)?fleetId:((typeof NET!=='undefined'&&NET.on)?(s.team===NET.you?META.eq.fleet:(s.cosEq&&s.cosEq.fleet)):(s.team===0?META.eq.fleet:(s.cosEq&&s.cosEq.fleet)));const FL=_mf9&&FLEETS[_mf9];if(FL)drawArmour(g,u,FL,col);} /* r107 THE WORN COLOURS: fleets were gated to team 0 wearing the VIEWER's wardrobe - online, seats 1-5 flew bare while the Wilder wore YOUR kit. Now every swarm wears ITS OWN confessed fleet (cosEq), mine wears META - exactly the queen's garment law. The mirror's explicit fleetId still wins */ /* ARMOUR: role-aware clip-ons over the team-coloured body */
@@ -5442,7 +5452,7 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
     if(fresh9&&typeof addRing==='function')addRing(u.x,u.y,R9.col,20);} /* the recruit POPS the moment truth delivers her - the buy-click ring was the promise, this is the arrival */
    {const cb9=t9[6]||0,hpd8=(u.hp!=null&&t9[3]<u.hp-0.4); /* a hit is an hp DROP (bit as backup) - and an attacker KICKS forward as the blow lands. Nips and lunges, not mush */
     if(u.load!=null&&t9[4]>u.load+0.4)u._sipT=0.6; /* load rising = she is DRINKING: track truth hard for a beat so the sip-dance survives the smoothing */
-    if((cb9&1)&&!(u.atk>0)){u.atk=0.3;const vv8=Math.hypot(u.vx||0,u.vy||0);if(vv8>40){u.x+=(u.vx/vv8)*7;u.y+=(u.vy/vv8)*7;}
+    u._rid=(u.role==='titan'?((cb9>>2)&7):0);if((cb9&1)&&!(u.atk>0)){u.atk=0.3;const vv8=Math.hypot(u.vx||0,u.vy||0);if(vv8>40){u.x+=(u.vx/vv8)*7;u.y+=(u.vy/vv8)*7;}
      try{if(u.role==='spitter'||u.role==='armourer'){let bf8=280*280,fx8=null,fy8=null; /* the wire carries no aim - so on the strike-pulse the client looks for the nearest tale to face. CONFESSION r57: this block once read ANOTHER loop's variable (s2) - the ReferenceError killed frame-apply mid-beat, so every friendly unit was reborn each beat: invisible bodies under a storm of arrival-rings (Celery's exact sighting). The scan now lives in a try: a glance may fail, the FRAME may not */
       const look8=(x8,y8)=>{const q8=(x8-u.x)*(x8-u.x)+(y8-u.y)*(y8-u.y);if(q8<bf8){bf8=q8;fx8=x8;fy8=y8;}};
       for(const w8 of worms){if(!(w8.bur>0))look8(w8.x,w8.y);}
@@ -5641,7 +5651,7 @@ function netSnapshot(slim9){ /* THE WIRE: one compact frame of truth (server -> 
   {const o9={id:s.nid,i:s.team,p:s.prot>0?1:0,sc:s.units.length, /* TRUE soul-count in the header: AoI culls far unit LISTS, and the leaderboard was counting those empty lists - "everybody is 0 except me" */
    x:s.x|0,y:s.y|0,h:s.hp|0,H:s.honey|0,a:s.ally?1:0,y2:s.sayT>0?s.say:0,
    f:(s.flash>0||s.hitT>0)?1:0,w:(s.war&&s.war.nid)||0, /* COMBAT ON THE WIRE: the queen's hit-flash and WHO she wars with - the server has been fighting all along, the client just could not SEE it */
-   u:s.units.map(u=>[u.x|0,u.y|0,ROLE_ID[u.role]||0,u.hp|0,(u.load||0)|0,u.uid||0,((u.atk>0?1:0)|(u.flash>0?2:0))])};
+   u:s.units.filter(u=>!u._perch).map(u=>[u.x|0,u.y|0,ROLE_ID[u.role]||0,u.hp|0,(u.load||0)|0,u.uid||0,((u.atk>0?1:0)|(u.flash>0?2:0)|(u.role==='titan'?(Math.min(7,s.units.reduce((a9,z9)=>a9+(z9._perch===u.uid?1:0),0))<<2):0))])}; /* r124: riders leave the wire; their titan carries the count in bits 2-4 */
    if(!slim9){o9.n=s.name;o9.c=s.col;o9.c2=s.col2||0;o9.q=s.cosEq||0;}
    S9.sw.push(o9);}}
  return S9;}

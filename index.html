@@ -4070,7 +4070,7 @@ function drawArmour(g,u,FL,col){ /* FLAT, organic armour in the game's own langu
  else if(R==='spitter'){for(const sd of[-1,1]){M1(-r*0.15,sd*-r*0.25,sd*-2.6,0.8);M1(-r*0.5,sd*-r*0.1,sd*-2.8,0.6);}if(M==='plate')ridge(-r*0.2,r*0.4); /* r108 THE EVEN HOST: the spitter wore both pieces on ONE flank - mirrored now */}
  else if(R==='armourer'){ridge(r*0.35,r*0.6);ridge(-r*0.05,r*0.72);ridge(-r*0.45,r*0.6);for(const sd of[-1,1]){M1(-r*0.78,sd*-r*0.4,sd*-2.6,0.6);M1(-r*0.42,sd*-r*0.68,sd*-2.0,0.55);}} /* r114 THE FITTED KIT: the dome wore its motifs mid-face like stickers - they ring the REAR RIM now, pauldron-wise, at shield scale (the strapping ridges stay) */
  else if(R==='nurse'){for(const sd of[-1,1])M1(-r*0.3,sd*-r*0.35,sd*-2.4,0.6);if(FL.bug){g.fillStyle=hi;g.beginPath();g.ellipse(r*0.1,0,r*0.13,r*0.24,0,0,TAU);g.fill();}}
- else if(R==='titan'){M1(r*0.12,-r*0.42,-0.6,1.15);M1(r*0.12,r*0.42,0.6,1.15);for(let i=0;i<4;i++){const x=-r*0.22-i*r*0.24;if(M==='plate')ridge(x,r*0.55);else for(const sd of[-1,1])M1(x,sd*r*0.34,sd*(1.6+0.12*(i-1.5)),0.6-i*0.06);}} /* r114: the front pair steps off the pincer roots (0.35->0.12, leaner) and the crest rows shift rearward so the core medallion breathes */ /* r108: the titan crest was a single-flank rake - now a mirrored double row rides the spine */
+ else if(R==='titan'){if(M==='plate'){for(let i=0;i<3;i++)ridge(-r*0.1-i*r*0.3,r*0.55);}else for(let k=0;k<6;k++){const aa=k/6*TAU+Math.PI/6;M1(Math.cos(aa)*r*0.9,Math.sin(aa)*r*0.9,aa,0.9);}} /* r116 THE TITAN'S OWN SOCKETS: kit grows OUT along his six shoulder sockets - armouring his horns, never decorating his back. Pieces mount where anatomy already lives, so no fleet reads as a procedural decal */ /* r114: the front pair steps off the pincer roots (0.35->0.12, leaner) and the crest rows shift rearward so the core medallion breathes */ /* r108: the titan crest was a single-flank rake - now a mirrored double row rides the spine */
 }
 function drawUnitLocal(g,s,u,a,vm,col,fleetId){ /* the unit's LOCAL-frame art (shapes + armour). shared by the battlefield AND the wardrobe mirror so they always match */
  if(u.shape==='dot'){
@@ -4208,9 +4208,12 @@ function drawUnitLocal(g,s,u,a,vm,col,fleetId){ /* the unit's LOCAL-frame art (s
   g.beginPath();g.arc(0,0,u.r*(0.22+0.07*chg)+Math.sin(tnow*5)*0.8,0,TAU);g.fill(); /* r61 de-haze: the molten disc WAS the haze (r 0.34+0.1chg, a 0.5+0.45chg) - now a tight ember, radius -35%, alpha -40%; the SLAM charge still brightens it */
   g.fillStyle='rgba(255,240,200,'+(0.25+0.5*chg)+')';
   g.beginPath();g.arc(0,0,u.r*0.16,0,TAU);g.fill();
-  g.fillStyle='#ffcf3a'; /* eyes */
-  g.beginPath();g.arc(u.r*0.5,-u.r*0.24,2,0,TAU);g.fill();
-  g.beginPath();g.arc(u.r*0.5,u.r*0.24,2,0,TAU);g.fill();
+  g.fillStyle='#1c1006'; /* r116: eye SOCKETS, sunk in the hide - the flat yellow dots read goofy on a monument */
+  g.beginPath();g.ellipse(u.r*0.5,-u.r*0.24,u.r*0.13,u.r*0.07,0.32,0,TAU);g.fill();
+  g.beginPath();g.ellipse(u.r*0.5,u.r*0.24,u.r*0.13,u.r*0.07,-0.32,0,TAU);g.fill();
+  g.fillStyle='#ffcf3a'; /* burning SLITS, angled in a glare, scaled to the body */
+  g.beginPath();g.ellipse(u.r*0.52,-u.r*0.24,u.r*0.085,u.r*0.03,0.32,0,TAU);g.fill();
+  g.beginPath();g.ellipse(u.r*0.52,u.r*0.24,u.r*0.085,u.r*0.03,-0.32,0,TAU);g.fill();
   if(g===ctx&&vm>40&&Math.random()<0.12)addP(u.x-Math.cos(a)*u.r,u.y-Math.sin(a)*u.r,'#c8a06a',1,26); /* dust at its heels */
  }
  {const _mf9=(fleetId!==undefined&&fleetId!==null)?fleetId:((typeof NET!=='undefined'&&NET.on)?(s.team===NET.you?META.eq.fleet:(s.cosEq&&s.cosEq.fleet)):(s.team===0?META.eq.fleet:(s.cosEq&&s.cosEq.fleet)));const FL=_mf9&&FLEETS[_mf9];if(FL)drawArmour(g,u,FL,col);} /* r107 THE WORN COLOURS: fleets were gated to team 0 wearing the VIEWER's wardrobe - online, seats 1-5 flew bare while the Wilder wore YOUR kit. Now every swarm wears ITS OWN confessed fleet (cosEq), mine wears META - exactly the queen's garment law. The mirror's explicit fleetId still wins */ /* ARMOUR: role-aware clip-ons over the team-coloured body */

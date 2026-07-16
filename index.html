@@ -4207,7 +4207,7 @@ function drawUnitLocal(g,s,u,a,vm,col,fleetId){ /* the unit's LOCAL-frame art (s
   g.beginPath();g.arc(u.r*0.5,u.r*0.24,2,0,TAU);g.fill();
   if(g===ctx&&vm>40&&Math.random()<0.12)addP(u.x-Math.cos(a)*u.r,u.y-Math.sin(a)*u.r,'#c8a06a',1,26); /* dust at its heels */
  }
- if(s.team===0){const FL=FLEETS[fleetId||META.eq.fleet];if(FL)drawArmour(g,u,FL,col);} /* ARMOUR: role-aware clip-ons over the team-coloured body */
+ {const _mf9=(fleetId!==undefined&&fleetId!==null)?fleetId:((typeof NET!=='undefined'&&NET.on)?(s.team===NET.you?META.eq.fleet:(s.cosEq&&s.cosEq.fleet)):(s.team===0?META.eq.fleet:(s.cosEq&&s.cosEq.fleet)));const FL=_mf9&&FLEETS[_mf9];if(FL)drawArmour(g,u,FL,col);} /* r107 THE WORN COLOURS: fleets were gated to team 0 wearing the VIEWER's wardrobe - online, seats 1-5 flew bare while the Wilder wore YOUR kit. Now every swarm wears ITS OWN confessed fleet (cosEq), mine wears META - exactly the queen's garment law. The mirror's explicit fleetId still wins */ /* ARMOUR: role-aware clip-ons over the team-coloured body */
 }
 function drawUnit(s,u,LOD){
  {const ck9=u.col+'|'+(s.col||''); /* THE LIVERY LAW, memoized: mixc+sicken hex-parse strings and were paid PER UNIT PER FRAME (~24k string allocs/sec in a big fight - GC food, phone jank). Colour depends only on (unit, queen, wellness step) - compute once, wear forever */

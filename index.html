@@ -73,7 +73,7 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
  .panel h1{font-size:30px;letter-spacing:6px;margin-top:4px}
  #home h1{font-size:24px;letter-spacing:4px}
  #start h1{font-size:38px}
- #qprev{width:min(88vw,360px);height:auto;aspect-ratio:230/120;max-width:none}
+ #qprev{width:min(88vw,360px);height:auto;aspect-ratio:230/150;max-width:none}
  #sizeRow{max-width:100vw;overflow-x:auto;flex-wrap:nowrap;padding:0 6px;justify-content:flex-start!important}
  #tabs{max-width:100vw;flex-wrap:wrap;overflow-x:visible;justify-content:center;padding:2px 8px;row-gap:5px} /* THE STACK, part two: category pills wrap into honest rows like the action bar - the single slide hid most of the wardrobe */
  .tab{flex:0 0 auto;padding:9px 12px;font-size:12.5px;line-height:1.3;white-space:nowrap}
@@ -115,7 +115,7 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
 @media (max-height:460px) and (pointer:coarse){ /* a TRUE landscape phone: shorter crowns, denser court */
  .panel h1,#home h1{font-size:20px;letter-spacing:3px;margin:0}
  #start h1{font-size:26px}
- #qprev{width:min(62vw,300px);height:auto;aspect-ratio:230/120}
+ #qprev{width:min(62vw,300px);height:auto;aspect-ratio:230/150}
  .panel p{font-size:12px;margin:2px 0}
  #xpbar{margin:4px auto 2px}
  #tabs{margin:4px 0 6px}
@@ -183,7 +183,7 @@ html.mob #bar{gap:5px;bottom:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hid
   <div class="subMore" style="opacity:.5;font-size:10px;margin-top:6px">all of it stays earnable, free</div>
  </div>
  <h1 style="font-size:34px">THE NEST</h1>
- <canvas id="qprev" width="230" height="120"></canvas>
+ <canvas id="qprev" width="230" height="150"></canvas>
  <div id="sizeRow" style="display:flex;gap:6px;justify-content:center;margin:2px 0 4px">
   <div class="tab szBtn" data-sz="0">hatchling</div><div class="tab szBtn on" data-sz="1">grown</div>
   <div class="tab szBtn" data-sz="2">great</div><div class="tab szBtn" data-sz="3">TERRIBLE</div>
@@ -2761,8 +2761,8 @@ function deedsInto(){try{const m9=window._deeds;if(!m9||!m9.pct)return;
 function drawNestQueen(){
  const pv=document.getElementById('qprev');if(!pv||!pv.getContext)return;
  const c2=pv.getContext('2d');if(!c2||!c2.clearRect)return;
- try{const rc9=pv.getBoundingClientRect?pv.getBoundingClientRect():null;const cw9=Math.max(200,Math.min(560,(rc9&&rc9.width)||pv.clientWidth||230)); /* THE HD GLASS: the backing store scales with the screen and the pixel ratio - the painter keeps its 230x120 world and the mirror stops being a postage stamp */
-  const K9=Math.min(3,(window.devicePixelRatio||1))*(cw9/230),bw9=Math.round(230*K9),bh9=Math.round(120*K9);
+ try{const rc9=pv.getBoundingClientRect?pv.getBoundingClientRect():null;const cw9=Math.max(200,Math.min(560,(rc9&&rc9.width)||pv.clientWidth||230)); /* THE HD GLASS: the backing store scales with the screen and the pixel ratio - the painter keeps its 230x150 world and the mirror stops being a postage stamp */
+  const K9=Math.min(3,(window.devicePixelRatio||1))*(cw9/230),bw9=Math.round(230*K9),bh9=Math.round(150*K9);
   if(pv.width!==bw9||pv.height!==bh9){pv.width=bw9;pv.height=bh9;}
   if(c2.setTransform)c2.setTransform(K9,0,0,K9,0,0);}catch(e){}
  const SK9=SKINS[tryOn.skin!==undefined?tryOn.skin:META.skin];
@@ -2813,9 +2813,9 @@ function drawNestQueen(){
  c2.restore();
  /* FLEET preview: three little soldiers march below, dressed in your theme */
  {const fs2={team:0}; /* THE MIRROR NOW SHOWS THE REAL TROOPS: same drawUnitLocal as the battlefield + your armour */
-  const mk=(role,x,sc)=>{const R=ROLES[role];const fu={role,shape:R.shape,r:R.r*sc,load:0,fat:0,seed:x*7,zeal:1,sig:3,atk:0,flash:0,hp:1,maxHp:1,x:x,y:104,vx:1,vy:0,fa:0};
-   c2.save();c2.translate(x,104);drawUnitLocal(c2,fs2,fu,0,1,col,(tryOn.fleet||META.eq.fleet));c2.restore();};
-  mk('forager',40,1.25);mk('soldier',82,1.05);mk('lancer',126,1.1);mk('spitter',176,1.15);}
+  const mk=(role,x,sc,y9)=>{y9=y9||102;const R=ROLES[role];const fu={role,shape:R.shape,r:R.r*sc,load:0,fat:0,seed:x*7,zeal:1,sig:3,atk:0,flash:0,hp:1,maxHp:1,x:x,y:y9,vx:1,vy:0,fa:0};
+   c2.save();c2.translate(x,y9);drawUnitLocal(c2,fs2,fu,0,1,col,(tryOn.fleet||META.eq.fleet));c2.restore();};
+  mk('forager',34,1.15);mk('soldier',72,1.0);mk('lancer',112,1.05);mk('spitter',154,1.1);mk('nurse',196,1.05);mk('armourer',78,0.95,134);mk('titan',148,0.7,134); /* r112 THE FULL MIRROR: EVERY soul of the host stands for dress-up - nurse joins the first rank, armourer and the titan hold the second */}
 }
 let nestI=null,nestTab='skins',nestSz=1,nestFxA=[];
 const TABS=[['skins','🎨 COLOURS'],['body','🐝 BODY'],['eye','◉ EYES'],['pattern','◐ PATTERNS'],['crown','♛ CROWNS'],['wings','🦋 WINGS'],['trail','✦ TRAILS'],['tail','〰 TAILS'],['plate','🛡 ARMOUR'],['aura','◎ AURAS'],['fleet','⚔ FLEET']]; /* ONE emoji language: every tab wears its category's own glyph */

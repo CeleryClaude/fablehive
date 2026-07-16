@@ -4051,8 +4051,8 @@ function drawArmour(g,u,FL,col){ /* FLAT, organic armour in the game's own langu
  const comb=(cx,cy,s)=>{const dx=s*1.5,dy=s*0.87;hexAt(cx,cy,s);hexAt(cx-dx,cy-dy,s);hexAt(cx-dx,cy+dy,s);hexAt(cx+dx,cy-dy,s*0.9);hexAt(cx+dx,cy+dy,s*0.9);hexAt(cx-dx*2,cy,s*0.85);};
  const helmCap=()=>{g.fillStyle=base;g.beginPath();g.moveTo(r*0.62,-r*0.42);g.quadraticCurveTo(r*0.0,-r*0.62,-r*0.2,-r*0.2);g.lineTo(-r*0.2,r*0.2);g.quadraticCurveTo(r*0.0,r*0.62,r*0.62,r*0.42);g.quadraticCurveTo(r*0.4,0,r*0.62,-r*0.42);g.closePath();g.fill();g.strokeStyle=edge;g.lineWidth=Math.max(0.6,r*0.07);g.stroke();g.strokeStyle=hi;g.lineWidth=Math.max(0.5,r*0.05);g.beginPath();g.moveTo(r*0.5,-r*0.34);g.quadraticCurveTo(r*0.05,-r*0.5,-r*0.14,-r*0.16);g.stroke();};
  const M1=(x,y,ang,sc)=>{
-  if(M==='spike')claw(x,y,ang,r*0.85*sc,r*0.15*sc,0.12,hi);
-  else if(M==='horn')claw(x,y,ang,r*1.05*sc,r*0.19*sc,0.52,base);
+  if(M==='spike')claw(x,y,ang,r*0.85*sc,r*0.15*sc,0.12*(y<0?1:-1),hi);
+  else if(M==='horn')claw(x,y,ang,r*1.05*sc,r*0.19*sc,0.52*(y<0?1:-1),base); /* r110b: the claw CURL now mirrors with the flank - position and angle mirrored but the curl did not, so horn pairs (curl 0.52) read lopsided even after r108 */
   else if(M==='mandible')claw(x,y,ang,r*0.95*sc,r*0.2*sc,-0.5,base);
   else if(M==='crown')claw(x,y,ang,r*0.7*sc,r*0.2*sc,0,hi);
   else if(M==='wing')shell(x,y,r*0.5*sc,r*0.4*sc,ang,base);

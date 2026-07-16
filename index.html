@@ -4192,8 +4192,9 @@ function drawUnitLocal(g,s,u,a,vm,col,fleetId){ /* the unit's LOCAL-frame art (s
   g.lineWidth=2.8;g.strokeStyle='#3a2415';g.stroke(); /* r66 THE EDGE HARMONY: titan + armourer rims share one dark-amber (#3a2415) */ /* r115 THE TITAN PASS: heavier iron rim */
   g.save();g.beginPath();for(let k=0;k<6;k++){const aa=k/6*TAU+Math.PI/6;k?g.lineTo(Math.cos(aa)*u.r,Math.sin(aa)*u.r):g.moveTo(Math.cos(aa)*u.r,Math.sin(aa)*u.r);}g.closePath();g.clip();
   g.fillStyle='rgba(26,13,5,0.16)';g.fillRect(-u.r*0.52,-u.r,u.r*0.2,u.r*2);g.fillRect(-u.r*0.92,-u.r,u.r*0.16,u.r*2);g.fillStyle='rgba(255,236,200,0.05)';g.fillRect(u.r*0.1,-u.r,u.r*0.3,u.r*2);g.restore(); /* r115 TONE-BANDING: identity by band and outline, not face (the settled titan direction) - two chitin shadow-bands rearward, one warm band forward */
+  const _kf9=(fleetId!==undefined&&fleetId!==null)?fleetId:((typeof NET!=='undefined'&&NET.on)?(s.team===NET.you?META.eq.fleet:(s.cosEq&&s.cosEq.fleet)):(s.team===0?META.eq.fleet:(s.cosEq&&s.cosEq.fleet)));const _kw9=!!(_kf9&&FLEETS[_kf9]&&FLEETS[_kf9].motif!=='plate'&&FLEETS[_kf9].motif!=='honeycomb'); /* r119 ONE SET OF HORNS: a socket-mounted kit REPLACES the rear horns - his own spikes stood at a different angle beneath the kit's pieces, clipping through each other. The front pair is always HIS */
   g.fillStyle=col; /* horn spikes on every shoulder */
-  for(let k=0;k<6;k++){const aa=k/6*TAU+Math.PI/6;
+  for(let k=0;k<6;k++){const aa=k/6*TAU+Math.PI/6;if(_kw9&&Math.cos(aa)<=0.5)continue;
    const bx=Math.cos(aa)*u.r,by=Math.sin(aa)*u.r;
    g.beginPath();g.moveTo(bx*0.8,by*0.8);
    g.quadraticCurveTo(bx*1.24+Math.cos(aa+1.8)*u.r*0.085,by*1.24+Math.sin(aa+1.8)*u.r*0.085,bx*1.28+Math.cos(aa+2.1)*u.r*0.115,by*1.28+Math.sin(aa+2.1)*u.r*0.115);

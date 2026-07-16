@@ -112,7 +112,7 @@ function start(port,htmlPath){
     stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:(()=>{const v9=DIAG.netLateMax||0;DIAG.netLateMax=0;return v9;})(),rateSkips:DIAG.rateSkips||0,netMaxMs:+netMx.toFixed(0),joinMaxMs:+joinMx.toFixed(0),genMaxMs:+genMx.toFixed(0),tickMaxMs:+tickMx.toFixed(0),saveMaxMs:+saveMx.toFixed(0),
     buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
     seatNet:Object.keys(seats).map(t9=>{const w9=seats[t9],r9=(w9&&w9._rttMax||0)|0;if(w9)w9._rttMax=0;return Object.assign({t:+t9,rtt:(w9&&w9._rttS||0)|0,rttMax:r9,buf:(w9&&w9.bufferedAmount||0)|0},(w9&&w9._cli)||{});}),
-    ver:'r104-the-steady-hand',keeperSet:(KWH?1:0),souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
+    ver:'r105-the-restoration',keeperSet:(KWH?1:0),souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else if(req.url.indexOf('/crashz')===0){let c='';try{c=_fsS.readFileSync('/opt/fablehive/crash.log','utf8').slice(-4000);}catch(e){c='(no crashes logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* the CONFESSOR reads aloud */
   else if(req.url.indexOf('/deployz')===0){let c='';try{c=_fsS.readFileSync('/var/log/fablehive-deploy.log','utf8').slice(-4000);}catch(e){c='(no deploys logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* and the deploy ledger too - 'updates without updates' becomes a lookup */
@@ -233,7 +233,7 @@ function start(port,htmlPath){
      else{try{ws.send(JSON.stringify({k:'deny',r:'hive code'}));}catch(e){}}}
     else{try{ws.send(JSON.stringify({k:'deny',r:'hive code'}));}catch(e){}}}
    else if(m.k==='p'){const r9=+m.r||0;if(r9>0&&r9<60000){ws._rttS=(ws._rttS==null?r9:ws._rttS*0.7+r9*0.3);if(r9>(ws._rttMax||0))ws._rttMax=r9;}
-    ws._cli={d:(+m.d||0)|0,f:(+m.f||0)|0,q:(+m.q||0)|0,s:(+m.s||0)|0}; /* the client CONFESSES everything: ping, draw ms, fps, quality, sim - per-seat truth on the ledger */
+    ws._cli={d:(+m.d||0)|0,f:(+m.f||0)|0,q:(+m.q||0)|0,s:(+m.s||0)|0,h:(+m.h||0)|0}; /* the client CONFESSES everything: ping, draw ms, fps, quality, sim - per-seat truth on the ledger */
     try{ws.send(JSON.stringify({k:'p',t:m.t}));}catch(e){}}
   });
   ws.on('close',()=>{if(team!==null){delete seats[team];if(!Object.keys(seats).length)lastEmpty=Date.now();
@@ -245,7 +245,7 @@ function start(port,htmlPath){
   for(const t in seats){const w=seats[t];if(w&&now-(w._seen||0)>45000){try{w.terminate();}catch(e){}}}
  },5000);
  const BOOT=Date.now(),TICKS={n:0,sum:0,hist:[]};
- const DT=1/60;let acc=0,last=Date.now(); /* r101 SIXTY HERTZ: the 30Hz sim was a Fly shared-cpu survival diet (60Hz=~36% CPU -> burst credits drained -> throttle -> the multi-second stalls). The Sydney droplet owns a real core (~10% sustained at 30Hz), so the diet ends: 60Hz halves input-apply + snapshot-sampling quantization (~16ms off every action, everyone). Physics verified dt-robust (4px/3s drift). NET BEATS STAY 30Hz - the client jitter buffer assumes 33ms spacing (NET.clock+=33); only the sim clock doubles. */
+ const DT=1/30;let acc=0,last=Date.now(); /* r105 THE RESTORATION: 60Hz sim (r101) was reverted BY VERDICT - Celery: 'the game feels laggier now than in the past'. The lesson: sim ticks and the 33ms net beat share ONE event loop; at 60Hz a 6-12ms tick collides with the beat timer twice as often, beats run LATE (netLateMax 346ms observed), the client's jitter buffer widens toward its 160ms cap, and the WORLD hitches - the 16ms input gain was invisible, the beat jitter was not. BEAT REGULARITY IS KING. Physics dt-robust either way. */
  const simI=setInterval(()=>{const now=Date.now();
   if(Object.keys(seats).length===0){last=now;acc=0;return;} /* IDLE when the room is empty: no humans, no grind - the meadow simply waits */
   acc+=(now-last)/1000;last=now;
@@ -259,7 +259,7 @@ function start(port,htmlPath){
    TICKS.n++;TICKS.sum+=el;TICKS.hist.push(el);if(TICKS.hist.length>300)TICKS.hist.shift();
    acc-=DT;n++;
    if(el>22){acc=Math.min(acc,DT);break;}}
-  if(n>0){for(const t in seats){const _w=seats[t];if(!_w||_w.readyState!==1)continue;const _hrt=_w._rttS||0;if((_w.bufferedAmount||0)>16384||_hrt>340)continue; /* r104 THE BATTLE GOVERNOR: a drowning pipe gets NO hot beats (the confessed rtt sees the router queue that bufferedAmount cannot) - the client falls back to the buffered path on its own */ /* r102 THE LIVE HAND: own-swarm hot channel - freshest own-unit truth every sim tick (60Hz), tiny, per-seat, strain-skipped (backpressure = silence, and the client falls back to the buffered path on its own). Enemies stay on the buffered 30Hz beats */
+  if(n>0){for(const t in seats){const _w=seats[t];if(!_w||_w.readyState!==1)continue;const _hrt=_w._rttS||0;if(!(_w._cli&&_w._cli.h))continue; /* r105: the hot channel is OPT-IN (?hot=1) until proven net-positive on real last-miles - default flights ride the long-proven beat stack alone */if((_w.bufferedAmount||0)>16384||_hrt>340)continue; /* r104 THE BATTLE GOVERNOR: a drowning pipe gets NO hot beats (the confessed rtt sees the router queue that bufferedAmount cannot) - the client falls back to the buffered path on its own */ /* r102 THE LIVE HAND: own-swarm hot channel - freshest own-unit truth every sim tick (60Hz), tiny, per-seat, strain-skipped (backpressure = silence, and the client falls back to the buffered path on its own). Enemies stay on the buffered 30Hz beats */
    try{const s9=G.swarms.find(z=>z.team===+t&&!z.ally);if(!s9||s9.dead)continue;if((_hrt>170||s9.units.length>24)&&(TICKS.n&1))continue; /* r104: big armies and strained pings ride hot at 30Hz - halves the battle-peak wire+deflate cost exactly when it bites; the pair-interp client renders 30Hz just as smoothly */_w.send(JSON.stringify({k:'o',t:now,q:[s9.x|0,s9.y|0],u:s9.units.map(u=>[u.x|0,u.y|0,u.uid||0])}));}catch(e){}}}},16); /* THE PRESSURE VALVE: a monster brawl can cost 40ms+ per tick (probe: Elder=42ms vs 8 normal). When a tick runs hot, SHED THE SIM BACKLOG, never the net beats - the meadow slows a few percent under an Elder's fury; the wire never chokes behind it */
  let fN=0,_lastNet=Date.now();
  const AOI2=2400*2400; /* AREA OF INTEREST (#3b): each seat receives the units/drops/shots/wasps within 2400px of HER queen - beyond that lies pure invisible bandwidth. 2400 covers the widest screen at the zoom cap (~1830px half-width) plus the 520px troop leash, with margin. Queens/headers of ALL swarms still flow every frame (minimap + war-sense need them); authority is untouched - the FULL world simulates server-side, culling is presentation only */

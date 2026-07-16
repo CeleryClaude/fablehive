@@ -89,7 +89,7 @@ function start(port,htmlPath){
     instead of grinding a bot war for nobody; and the first arrival into an empty room begins in a
     FRESH, light meadow rather than an hours-old, overgrown one no 60Hz tick can hold. */
  function applyWild(){for(const t of SEATS){const sw=G.swarms.find(z=>z.team===t&&!z.ally);
-  if(sw){if(seats[t]!==undefined){sw.bot=false;}else{sw.bot=true;delete sw.forceAim;if(t===0)sw.name='Wilder';}}}}
+  if(sw){if(seats[t]!==undefined){sw.bot=false;}else{sw.bot=true;delete sw.forceAim;sw.cosEq=null;if(t===0)sw.name='Wilder';}}}}
  function freshWorld(){G=makeGame(HTML);G.unlockAll&&G.unlockAll();G.setRoom&&G.setRoom(true);applyWild();} /* the BAKERY is reverted: pre-baking spare worlds cost ~400ms ON THE MAIN LOOP whenever it ran - a stall generator hitting OCCUPIED rooms, plus a permanently-parked spare VM (~100MB RSS). The original "cost" it cured only ever hit an EMPTY room's first joiner, once */
  applyWild();
  const httpSrv=http.createServer((req,res)=>{
@@ -112,7 +112,7 @@ function start(port,htmlPath){
     stalls:STALLS.map(z=>({ago:((Date.now()-z.t)/1000)|0,ms:z.ms,heap:z.heap})),netLateMax:(()=>{const v9=DIAG.netLateMax||0;DIAG.netLateMax=0;return v9;})(),rateSkips:DIAG.rateSkips||0,netMaxMs:+netMx.toFixed(0),joinMaxMs:+joinMx.toFixed(0),genMaxMs:+genMx.toFixed(0),tickMaxMs:+tickMx.toFixed(0),saveMaxMs:+saveMx.toFixed(0),
     buys:BUYS.map(z=>({ago:((Date.now()-z.t)/1000)|0,tm:z.tm,r:z.r,ok:z.ok,u:z.u,h:z.h})),
     seatNet:Object.keys(seats).map(t9=>{const w9=seats[t9],r9=(w9&&w9._rttMax||0)|0;if(w9)w9._rttMax=0;return Object.assign({t:+t9,rtt:(w9&&w9._rttS||0)|0,rttMax:r9,buf:(w9&&w9.bufferedAmount||0)|0},(w9&&w9._cli)||{});}),
-    ver:'r116-his-own-sockets',keeperSet:(KWH?1:0),souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
+    ver:'r117-the-mindful-mount',keeperSet:(KWH?1:0),souls:Object.keys(SOULS).length,support:(()=>{try{return _fsS.readFileSync((process.env.SUPPORT||'/opt/fablehive/support.log'),'utf8').split('\n').filter(Boolean).length;}catch(e){return 0;}})(),
     heapMB:(mu.heapUsed/1048576)|0,rssMB:(mu.rss/1048576)|0,maxBufKB:(mbuf/1024)|0,dropped:DIAG.dropped}));}
   else if(req.url.indexOf('/crashz')===0){let c='';try{c=_fsS.readFileSync('/opt/fablehive/crash.log','utf8').slice(-4000);}catch(e){c='(no crashes logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* the CONFESSOR reads aloud */
   else if(req.url.indexOf('/deployz')===0){let c='';try{c=_fsS.readFileSync('/var/log/fablehive-deploy.log','utf8').slice(-4000);}catch(e){c='(no deploys logged)';}res.writeHead(200,{'Content-Type':'text/plain'});res.end(c);} /* and the deploy ledger too - 'updates without updates' becomes a lookup */
@@ -238,7 +238,7 @@ function start(port,htmlPath){
   });
   ws.on('close',()=>{if(team!==null){delete seats[team];if(!Object.keys(seats).length)lastEmpty=Date.now();
    const s=G.swarms.find(z=>z.team===team&&!z.ally);
-   if(s){s.bot=true;delete s.forceAim;}}});
+   if(s){s.bot=true;delete s.forceAim;s.cosEq=null;s.col2=null;}}}); /* r117: the wardrobe LEAVES with the player - lingering cosEq dressed every bot titan in the departed player's fleet (r107 made every swarm wear its own kit, which exposed this: the honeycomb-on-every-titan glitch) */
  });
  const reapI=setInterval(()=>{ /* GHOST REAPER: a phone that dropped WiFi leaves a socket that never says close - it would HOLD ITS SEAT for minutes while its player rejoins into a second seat, two half-alive queens tangling. 45s of silence (clients ping every 2s on a REAL timer; phones that dim the screen stop ticking for a while and must not be executed for it) = terminate, seat frees, world moves on */
   const now=Date.now();

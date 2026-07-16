@@ -2815,7 +2815,7 @@ function drawNestQueen(){
  {const fs2={team:0}; /* THE MIRROR NOW SHOWS THE REAL TROOPS: same drawUnitLocal as the battlefield + your armour */
   const mk=(role,x,sc,y9)=>{y9=y9||102;const R=ROLES[role];const fu={role,shape:R.shape,r:R.r*sc,load:0,fat:0,seed:x*7,zeal:1,sig:3,atk:0,flash:0,hp:1,maxHp:1,x:x,y:y9,vx:1,vy:0,fa:0};
    c2.save();c2.translate(x,y9);drawUnitLocal(c2,fs2,fu,0,1,col,(tryOn.fleet||META.eq.fleet));c2.restore();};
-  mk('forager',34,1.15);mk('soldier',72,1.0);mk('lancer',112,1.05);mk('spitter',154,1.1);mk('nurse',196,1.05);mk('armourer',78,0.95,134);mk('titan',148,0.7,134); /* r112 THE FULL MIRROR: EVERY soul of the host stands for dress-up - nurse joins the first rank, armourer and the titan hold the second */}
+  mk('forager',34,1.15);mk('soldier',72,1.0);mk('lancer',112,1.05);mk('spitter',154,1.1);mk('nurse',196,1.05);mk('armourer',72,0.7,129);mk('titan',150,0.42,129); /* r113 THE FITTED GLASS: the second rank sized to its shelf - they were oversized and cropped at the 150px floor */ /* r112 THE FULL MIRROR: EVERY soul of the host stands for dress-up - nurse joins the first rank, armourer and the titan hold the second */}
 }
 let nestI=null,nestTab='skins',nestSz=1,nestFxA=[];
 const TABS=[['skins','🎨 COLOURS'],['body','🐝 BODY'],['eye','◉ EYES'],['pattern','◐ PATTERNS'],['crown','♛ CROWNS'],['wings','🦋 WINGS'],['trail','✦ TRAILS'],['tail','〰 TAILS'],['plate','🛡 ARMOUR'],['aura','◎ AURAS'],['fleet','⚔ FLEET']]; /* ONE emoji language: every tab wears its category's own glyph */
@@ -4068,9 +4068,9 @@ function drawArmour(g,u,FL,col){ /* FLAT, organic armour in the game's own langu
  else if(R==='soldier'){if(!FL.bug)helmCap();if(M==='plate'){ridge(-r*0.1,r*0.4);ridge(-r*0.5,r*0.34);}else{M1(r*0.05,-r*0.35,-1.9,1.0);if(M!=='mandible')M1(r*0.05,r*0.35,1.9,1.0);}M1(-r*0.4,-r*0.5,-2.6,0.6);M1(-r*0.4,r*0.5,2.6,0.6);}
  else if(R==='lancer'){M1(-r*0.1,-r*0.28,-2.75,0.85);M1(-r*0.1,r*0.28,2.75,0.85);M1(-r*0.55,-r*0.16,-2.85,0.6);M1(-r*0.55,r*0.16,2.85,0.6);if(M==='mandible'||M==='horn'){M1(r*0.55,-r*0.12,-0.15,0.7);M1(r*0.55,r*0.12,0.15,0.7);}}
  else if(R==='spitter'){for(const sd of[-1,1]){M1(-r*0.15,sd*-r*0.25,sd*-2.6,0.8);M1(-r*0.5,sd*-r*0.1,sd*-2.8,0.6);}if(M==='plate')ridge(-r*0.2,r*0.4); /* r108 THE EVEN HOST: the spitter wore both pieces on ONE flank - mirrored now */}
- else if(R==='armourer'){ridge(r*0.35,r*0.6);ridge(-r*0.05,r*0.72);ridge(-r*0.45,r*0.6);for(const sd of[-1,1]){M1(-r*0.05,sd*-r*0.72,sd*-1.6,1.1);M1(-r*0.5,sd*-r*0.4,sd*-2.3,0.8);}}
+ else if(R==='armourer'){ridge(r*0.35,r*0.6);ridge(-r*0.05,r*0.72);ridge(-r*0.45,r*0.6);for(const sd of[-1,1]){M1(-r*0.78,sd*-r*0.4,sd*-2.6,0.6);M1(-r*0.42,sd*-r*0.68,sd*-2.0,0.55);}} /* r114 THE FITTED KIT: the dome wore its motifs mid-face like stickers - they ring the REAR RIM now, pauldron-wise, at shield scale (the strapping ridges stay) */
  else if(R==='nurse'){for(const sd of[-1,1])M1(-r*0.3,sd*-r*0.35,sd*-2.4,0.6);if(FL.bug){g.fillStyle=hi;g.beginPath();g.ellipse(r*0.1,0,r*0.13,r*0.24,0,0,TAU);g.fill();}}
- else if(R==='titan'){M1(r*0.35,-r*0.35,-0.5,1.5);M1(r*0.35,r*0.35,0.5,1.5);for(let i=0;i<4;i++){const x=-r*0.05-i*r*0.28;if(M==='plate')ridge(x,r*0.55);else for(const sd of[-1,1])M1(x,sd*r*0.3,sd*(1.6+0.12*(i-1.5)),0.72-i*0.07);}} /* r108: the titan crest was a single-flank rake - now a mirrored double row rides the spine */
+ else if(R==='titan'){M1(r*0.12,-r*0.42,-0.6,1.15);M1(r*0.12,r*0.42,0.6,1.15);for(let i=0;i<4;i++){const x=-r*0.22-i*r*0.24;if(M==='plate')ridge(x,r*0.55);else for(const sd of[-1,1])M1(x,sd*r*0.34,sd*(1.6+0.12*(i-1.5)),0.6-i*0.06);}} /* r114: the front pair steps off the pincer roots (0.35->0.12, leaner) and the crest rows shift rearward so the core medallion breathes */ /* r108: the titan crest was a single-flank rake - now a mirrored double row rides the spine */
 }
 function drawUnitLocal(g,s,u,a,vm,col,fleetId){ /* the unit's LOCAL-frame art (shapes + armour). shared by the battlefield AND the wardrobe mirror so they always match */
  if(u.shape==='dot'){

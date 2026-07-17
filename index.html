@@ -1081,7 +1081,7 @@ function setupWorldTail(){ /* the rest of world-gen: caves, maws, oasis, decor -
    if(!hit)break;}
   let bad=boulders.some(b=>Math.hypot(g.x-b.x,g.y-b.y)<b.r+30);
   for(let t=0;t<40&&bad;t++){
-   if(g.mother){g.x=ex+rand(-260,260);g.y=ey+rand(-260,260);}
+   if(g.mother){g.x=g.x+rand(-260,260);g.y=g.y+rand(-260,260);} /* r125 THE MOTHER'S ANCHOR: ex/ey never existed - a mother grove rolled onto a boulder threw a ReferenceError and KILLED THE BOOT (the 17:28 crash, wrongly blamed on a deploy race). She jitters around her own spot now, as the code intended */
    else if(g.web&&spider){g.x=spider.hx+rand(-280,280);g.y=spider.hy+rand(-280,280);}
    else{g.x=rand(300,WORLD.w-300);g.y=rand(300,WORLD.h-300);}
    bad=boulders.some(b=>Math.hypot(g.x-b.x,g.y-b.y)<b.r+30);}
@@ -1638,6 +1638,8 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
       let wA=0.5,wB=0.5;
       if(A.role==='titan'&&B.role!=='titan'){wA=0.04;wB=0.96;}
       else if(B.role==='titan'&&A.role!=='titan'){wA=0.96;wB=0.04;}
+      else if(A.role==='armourer'&&B.role!=='armourer'){wA=0.15;wB=0.85;} /* r125 MAKE WAY FOR THE WALL: the rank scoots for its armourer - she ground at the seams, never able to shove into her own slot (Celery, both idle and moving) */
+      else if(B.role==='armourer'&&A.role!=='armourer'){wA=0.85;wB=0.15;}
       else if(A.role==='forager'&&B.role!=='forager'){wA=0.92;wB=0.08;}
       else if(B.role==='forager'&&A.role!=='forager'){wA=0.08;wB=0.92;}
       if(A._perch||B._perch)return;const F=(mn-d3)*(inRank?0.3:0.5)/d3;A.x-=ex*F*wA;A.y-=ey*F*wA;B.x+=ex*F*wB;B.y+=ey*F*wB;}});
@@ -1650,6 +1652,8 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
      let wA=0.5,wB=0.5; /* MAKE WAY FOR THE MONUMENTS: titans wade through, kin scoot aside */
      if(A.role==='titan'&&B.role!=='titan'){wA=0.04;wB=0.96;}
      else if(B.role==='titan'&&A.role!=='titan'){wA=0.96;wB=0.04;}
+     else if(A.role==='armourer'&&B.role!=='armourer'){wA=0.15;wB=0.85;} /* r125 MAKE WAY FOR THE WALL */
+     else if(B.role==='armourer'&&A.role!=='armourer'){wA=0.85;wB=0.15;}
      else if(A.role==='forager'&&B.role!=='forager'){wA=0.92;wB=0.08;} /* the little workers always yield */
      else if(B.role==='forager'&&A.role!=='forager'){wA=0.08;wB=0.92;}
      const F=(mn-d3)*(inRank?0.3:0.5)/d3;A.x-=ex*F*wA;A.y-=ey*F*wA;B.x+=ex*F*wB;B.y+=ey*F*wB;}}}

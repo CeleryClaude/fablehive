@@ -1356,11 +1356,11 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
     if(!t9){u._perch=null;u._pT=0;} /* the titan fell: she SPILLS where he died, vulnerable again */
     else{u._pT=(u._pT||0)+dt;
      if(!s.war&&(u.load<39||u._pT>10)){u._perch=null;u._pT=0;} /* peace: empty bellies hop off at once, full ones ride at most 10s then walk the rest home */
-     else{const sa9=(u._pSlot||0)*1.5708+2.3562;u.x=t9.x+Math.cos(sa9)*t9.r*0.62;u.y=t9.y+Math.sin(sa9)*t9.r*0.62;u.vx=t9.vx||0;u.vy=t9.vy||0;u.hp=Math.min(u.maxHp||22,u.hp+60*dt);u.flash=0;continue;}}}
+     else{const sa9=1.745+(u._pSlot||0)*0.4;u.x=t9.x+Math.cos(sa9)*t9.r*0.62;u.y=t9.y+Math.sin(sa9)*t9.r*0.62;u.vx=t9.vx||0;u.vy=t9.vy||0;u.hp=Math.min(u.maxHp||22,u.hp+60*dt);u.flash=0;continue;}}}
    else if(u.role==='forager'&&(s.war||u.load>=39)){if((u._pkT||0)>0)u._pkT-=dt;else{u._pkT=0.4; /* r124: a working forager in danger (or full to the brim) climbs the nearest titan with a free back - 4 slots each */
     for(const t9 of s.units){if(t9.role!=='titan'||t9.hp<=0)continue;if(d2(u.x,u.y,t9.x,t9.y)>(t9.r+30)*(t9.r+30))continue;
      let rid9=0;for(const r9 of s.units)if(r9._perch===t9.uid)rid9++;
-     if(rid9<4){u._perch=t9.uid;u._pSlot=rid9;u._pT=0;break;}}}}
+     if(rid9<8){u._perch=t9.uid;u._pSlot=rid9;u._pT=0;break;} /* r126 THE FULLER BACK: eight riders now, by decree */}}}
    let gx=null,gy=null,fast=false,fight=false;
    const leash=u.role==='forager'?520:(s.war?520:430); /* in war, the rope is war-range - the hunt can finish */
    const dq=Math.hypot(u.x-s.x,u.y-s.y);
@@ -1552,7 +1552,7 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
       const lat=(colI-(inRow-1)/2)*(u.r*2+6),ad9=arB+rowI*(u.r*2+8);
       gx=s.x+hx*ad9-hy*lat;gy=s.y+hy*ad9+hx*lat;fast=true;
      } else { /* garrison: concentric rings, evenly filled, never overlapping */
-      const rp=ringPos(u._fi||0,Math.max(s.R*0.4,arB),u.r*2+7,anc),aa=rp[1]+tnow*0.05;
+      const rp=ringPos(u._fi||0,Math.max(s.R*0.3,arB*0.9),u.r*2+7,anc) /* r126 THE CLOSER WALL: the garrison huddles nearer her crown at rest, by decree */,aa=rp[1]+tnow*0.05;
       gx=s.x+Math.cos(aa)*rp[0];gy=s.y+Math.sin(aa)*rp[0];
      }
     }
@@ -4228,7 +4228,7 @@ function drawUnitLocal(g,s,u,a,vm,col,fleetId){ /* the unit's LOCAL-frame art (s
   g.fillStyle='#ffcf3a'; /* burning SLITS, angled in a glare, scaled to the body */
   g.beginPath();g.ellipse(u.r*0.52,-u.r*0.24,u.r*0.085,u.r*0.03,0.32,0,TAU);g.fill();
   g.beginPath();g.ellipse(u.r*0.52,u.r*0.24,u.r*0.085,u.r*0.03,-0.32,0,TAU);g.fill();
-  if(u._rid)for(let ri9=0;ri9<Math.min(4,u._rid);ri9++){const sa9=ri9*1.5708+2.3562,rx9=Math.cos(sa9)*u.r*0.62,ry9=Math.sin(sa9)*u.r*0.62;g.fillStyle=col;g.beginPath();g.arc(rx9,ry9,u.r*0.11,0,TAU);g.fill();g.strokeStyle='#3a2415';g.lineWidth=1;g.stroke();g.fillStyle='rgba(255,194,62,.85)';g.beginPath();g.arc(rx9,ry9,u.r*0.055,0,TAU);g.fill();} /* r124 THE PERCH: her riders cling to his back - drawn from the count his tuple carries (solo draws the true riders riding) */
+  if(u._rid)for(let ri9=0;ri9<Math.min(8,u._rid);ri9++){const sa9=1.745+ri9*0.4,rx9=Math.cos(sa9)*u.r*0.62,ry9=Math.sin(sa9)*u.r*0.62;g.fillStyle=col;g.beginPath();g.arc(rx9,ry9,u.r*0.11,0,TAU);g.fill();g.strokeStyle='#3a2415';g.lineWidth=1;g.stroke();g.fillStyle='rgba(255,194,62,.85)';g.beginPath();g.arc(rx9,ry9,u.r*0.055,0,TAU);g.fill();} /* r124 THE PERCH: her riders cling to his back - drawn from the count his tuple carries (solo draws the true riders riding) */
   if(g===ctx&&vm>40&&Math.random()<0.12)addP(u.x-Math.cos(a)*u.r,u.y-Math.sin(a)*u.r,'#c8a06a',1,26); /* dust at its heels */
  }
  {const _mf9=(fleetId!==undefined&&fleetId!==null)?fleetId:((typeof NET!=='undefined'&&NET.on)?(s.team===NET.you?META.eq.fleet:(s.cosEq&&s.cosEq.fleet)):(s.team===0?META.eq.fleet:(s.cosEq&&s.cosEq.fleet)));const FL=_mf9&&FLEETS[_mf9];if(FL)drawArmour(g,u,FL,col);} /* r107 THE WORN COLOURS: fleets were gated to team 0 wearing the VIEWER's wardrobe - online, seats 1-5 flew bare while the Wilder wore YOUR kit. Now every swarm wears ITS OWN confessed fleet (cosEq), mine wears META - exactly the queen's garment law. The mirror's explicit fleetId still wins */ /* ARMOUR: role-aware clip-ons over the team-coloured body */
@@ -5456,7 +5456,7 @@ function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - 
     if(fresh9&&typeof addRing==='function')addRing(u.x,u.y,R9.col,20);} /* the recruit POPS the moment truth delivers her - the buy-click ring was the promise, this is the arrival */
    {const cb9=t9[6]||0,hpd8=(u.hp!=null&&t9[3]<u.hp-0.4); /* a hit is an hp DROP (bit as backup) - and an attacker KICKS forward as the blow lands. Nips and lunges, not mush */
     if(u.load!=null&&t9[4]>u.load+0.4)u._sipT=0.6; /* load rising = she is DRINKING: track truth hard for a beat so the sip-dance survives the smoothing */
-    u._rid=(u.role==='titan'?((cb9>>2)&7):0);if((cb9&1)&&!(u.atk>0)){u.atk=0.3;const vv8=Math.hypot(u.vx||0,u.vy||0);if(vv8>40){u.x+=(u.vx/vv8)*7;u.y+=(u.vy/vv8)*7;}
+    u._rid=(u.role==='titan'?((cb9>>2)&15):0);if((cb9&1)&&!(u.atk>0)){u.atk=0.3;const vv8=Math.hypot(u.vx||0,u.vy||0);if(vv8>40){u.x+=(u.vx/vv8)*7;u.y+=(u.vy/vv8)*7;}
      try{if(u.role==='spitter'||u.role==='armourer'){let bf8=280*280,fx8=null,fy8=null; /* the wire carries no aim - so on the strike-pulse the client looks for the nearest tale to face. CONFESSION r57: this block once read ANOTHER loop's variable (s2) - the ReferenceError killed frame-apply mid-beat, so every friendly unit was reborn each beat: invisible bodies under a storm of arrival-rings (Celery's exact sighting). The scan now lives in a try: a glance may fail, the FRAME may not */
       const look8=(x8,y8)=>{const q8=(x8-u.x)*(x8-u.x)+(y8-u.y)*(y8-u.y);if(q8<bf8){bf8=q8;fx8=x8;fy8=y8;}};
       for(const w8 of worms){if(!(w8.bur>0))look8(w8.x,w8.y);}
@@ -5655,7 +5655,7 @@ function netSnapshot(slim9){ /* THE WIRE: one compact frame of truth (server -> 
   {const o9={id:s.nid,i:s.team,p:s.prot>0?1:0,sc:s.units.length, /* TRUE soul-count in the header: AoI culls far unit LISTS, and the leaderboard was counting those empty lists - "everybody is 0 except me" */
    x:s.x|0,y:s.y|0,h:s.hp|0,H:s.honey|0,a:s.ally?1:0,y2:s.sayT>0?s.say:0,
    f:(s.flash>0||s.hitT>0)?1:0,w:(s.war&&s.war.nid)||0, /* COMBAT ON THE WIRE: the queen's hit-flash and WHO she wars with - the server has been fighting all along, the client just could not SEE it */
-   u:s.units.filter(u=>!u._perch).map(u=>[u.x|0,u.y|0,ROLE_ID[u.role]||0,u.hp|0,(u.load||0)|0,u.uid||0,((u.atk>0?1:0)|(u.flash>0?2:0)|(u.role==='titan'?(Math.min(7,s.units.reduce((a9,z9)=>a9+(z9._perch===u.uid?1:0),0))<<2):0))])}; /* r124: riders leave the wire; their titan carries the count in bits 2-4 */
+   u:s.units.filter(u=>!u._perch).map(u=>[u.x|0,u.y|0,ROLE_ID[u.role]||0,u.hp|0,(u.load||0)|0,u.uid||0,((u.atk>0?1:0)|(u.flash>0?2:0)|(u.role==='titan'?(Math.min(15,s.units.reduce((a9,z9)=>a9+(z9._perch===u.uid?1:0),0))<<2):0))])}; /* r124: riders leave the wire; their titan carries the count in bits 2-4 */
    if(!slim9){o9.n=s.name;o9.c=s.col;o9.c2=s.col2||0;o9.q=s.cosEq||0;}
    S9.sw.push(o9);}}
  return S9;}

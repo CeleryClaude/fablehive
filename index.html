@@ -923,7 +923,7 @@ function spawnFlower(kind,quiet){
   g={x:p.x,y:p.y,amt:rand(60,110),max:110,vx:rand(-3,3),vy:rand(-3,3),sp:(Math.random()*5)|0,kind:'bloom'};
  }
  if(g&&g.y>WORLD.h*0.58&&kind!=='night'&&kind!=='rock')g.gilt=true; /* the south GILDS its blooms */
- if(g&&MAP==='night'){const hem9=(g.x<WORLD.w*0.48&&g.y<WORLD.h*0.48)||g.x<620||g.y<620||g.x>WORLD.w-620||g.y>WORLD.h-620;if(Math.random()<(hem9?0.16:0.62))g.lumen=true;} /* the night garden BLOOMS IN LIGHT - but the HEMS run dark (r128): safe ground is southern ground, and the eyes know it */
+ if(g&&MAP==='night'){const hem9=(g.x<WORLD.w*0.48&&g.y<WORLD.h*0.48)||g.x<620||g.y<620||g.x>WORLD.w-620||g.y>WORLD.h-620;if(Math.random()<(hem9?0.16:0.62))g.lumen=true;else if(!g.gild&&!g.mother&&!g.web&&g.kind!=='comb'&&Math.random()<0.30)g.veiled=1;} /* r137 THE VEILED GARDEN: a third of the unlit blooms HIDE - real, harvestable, invisible until light is CAST on them. Light is a prospecting tool now, not just armor */ /* the night garden BLOOMS IN LIGHT - but the HEMS run dark (r128): safe ground is southern ground, and the eyes know it */
  groves.push(g);
  if(!quiet)addRing(g.x,g.y,g.gilt?'#ffd75e':'#cfe08a',26);
  return g;
@@ -3432,7 +3432,7 @@ function showHome(){
  {let bb=document.getElementById('bldBadge');if(!bb){bb=document.createElement('div');bb.id='bldBadge';
   bb.style.cssText='position:fixed;left:10px;bottom:8px;z-index:60;font-size:11px;opacity:.55;color:#ffd9a0;pointer-events:none;font-family:inherit;';
   document.body.appendChild(bb);}
-  bb.textContent='r136 · the heartbeat';} /* the keeper's stamp: if this doesn't match /healthz ver, you're playing a stale copy */
+  bb.textContent='r137 · the veiled garden';} /* the keeper's stamp: if this doesn't match /healthz ver, you're playing a stale copy */
  document.getElementById('xpTxt').innerHTML='<b style="color:#ffd75e">✨ '+Math.floor(META.xp)+'</b>'+(typeof RUNXP!=='undefined'&&RUNXP>=1?' <b style="color:#ffe9a0;font-size:13px">(+'+Math.floor(RUNXP)+' this flight)</b>':'')+' <span style="opacity:.6;font-size:12px">nest xp · every treasure is earnable · 👑 sub unlocks all</span>'; /* the FLIGHT's earnings shown beside the hoard - you can finally tell when the trip to the nest was worth it */
  const next=SKINS.find(S=>META.xp<S.xp);
  const fill=document.getElementById('xpfill'),nx=document.getElementById('xpNext');
@@ -3604,7 +3604,7 @@ try{
    try{localStorage.setItem('fh_map',_pick);}catch(e){}
    try{location.reload();}catch(e){}});}
  const _sb=document.getElementById('mapSub');if(_sb)_sb.textContent=MAPS[MAP].name+' · '+MAPS[MAP].sub+(WS_URL?' · THE SHARED MEADOW':(/^https?:$/.test(location.protocol)?' · SOLO FLIGHT':' · OFFLINE'));
- const _mk=document.getElementById('mapMark');if(_mk){_mk.textContent=MAPS[MAP].name+(MAPS[MAP].early?' · EARLY BLOOM':'')+' · r136';_mk.style.color=MAPS[MAP].col+'cc';}
+ const _mk=document.getElementById('mapMark');if(_mk){_mk.textContent=MAPS[MAP].name+(MAPS[MAP].early?' · EARLY BLOOM':'')+' · r137';_mk.style.color=MAPS[MAP].col+'cc';}
  {const go9=document.getElementById('go');if(go9){if(WS_URL)go9.innerHTML='RISE<div style="font-size:10px;letter-spacing:2px;opacity:.85;margin-top:2px">THE SHARED MEADOW · ONLINE</div>';
   else if(/^https?:$/.test(location.protocol)){go9.innerHTML='RISE<div style="font-size:10px;letter-spacing:2px;opacity:.85;margin-top:2px">SOLO FLIGHT · JUST YOU</div>';go9.style.filter='hue-rotate(80deg) saturate(.85)';
    const mr9=document.getElementById('mapRow');if(mr9&&!document.getElementById('soloChip')){const ch9=document.createElement('div');ch9.id='soloChip';ch9.style.cssText='margin:6px auto 0;font-size:11px;letter-spacing:1px;color:#ffd75e;opacity:.9;text-align:center';ch9.textContent='the SHARED MEADOW flies ONLINE — tap it to join the family';if(mr9.parentNode)mr9.parentNode.insertBefore(ch9,mr9.nextSibling);}}}} /* r129 THE HONEST DOOR: the 'server is down' scare was a quiet door - never again */
@@ -6063,6 +6063,7 @@ function draw(){
  const CSPECIES=[['#b4482a','#ff8a5e'],['#8a4432','#c86a4a'],['#d8ccc0','#f0e8e0'],['#c8578f','#e87ab0'],['#ff8a5e','#ffb08a'],['#a89a90','#c8bcb4'],['#ff9a4a','#ffc48a']]; /* CINDER blooms: ember roses, ash-white lilies, fireweed pinks - honey cores stay GOLD (gold is wealth, by law) */
  const NSPECIES=[['#8f7bff','#c8bcff'],['#5ee6d0','#b0fff0'],['#e8e4ff','#ffffff'],['#b48cff','#e0d0ff'],['#7fd4ff','#c8ecff'],['#c8bce8','#eee8ff'],['#c8ff8c','#e8ffc8']]; /* NIGHT: violet, teal and wisp-green - every petal faintly lit */
  for(const g of groves){if(g.x<vx0-60||g.x>vx1+60||g.y<vy0-60||g.y>vy1+60)continue;
+  if(MAP==='night'&&g.veiled&&!inLight(g.x,g.y,60))continue; /* r137: the dark KEEPS its treasures until light finds them (60px grace so they bloom into view, not pop) */
   if((g.kind==='comb'||g.rich||g.kind==='algae')&&g.amt<g.max*0.14){ /* a DRAINED FAUCET is a closed bud, not a husk: these kinds refill by design and must never read as harvestable while empty */
    ctx.save();ctx.globalAlpha=0.55;ctx.fillStyle=MAP==='cinder'?(g.kind==='comb'?'#4a3a28':g.kind==='algae'?'#3a4438':'#564640'):(g.kind==='comb'?'#b98a2e':g.kind==='algae'?'#3e7a5a':'#c95e78'); /* cinder: a drained faucet is a cold clinker */
    ctx.beginPath();ctx.arc(g.x,g.y,7.5,0,TAU);ctx.fill();

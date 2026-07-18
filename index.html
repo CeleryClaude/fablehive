@@ -921,7 +921,7 @@ function spawnFlower(kind,quiet){
   g={x:p.x,y:p.y,amt:rand(60,110),max:110,vx:rand(-3,3),vy:rand(-3,3),sp:(Math.random()*5)|0,kind:'bloom'};
  }
  if(g&&g.y>WORLD.h*0.58&&kind!=='night'&&kind!=='rock')g.gilt=true; /* the south GILDS its blooms */
- if(g&&MAP==='night'&&Math.random()<0.62)g.lumen=true; /* the night garden BLOOMS IN LIGHT */
+ if(g&&MAP==='night'){const hem9=(g.x<WORLD.w*0.48&&g.y<WORLD.h*0.48)||g.x<620||g.y<620||g.x>WORLD.w-620||g.y>WORLD.h-620;if(Math.random()<(hem9?0.16:0.62))g.lumen=true;} /* the night garden BLOOMS IN LIGHT - but the HEMS run dark (r128): safe ground is southern ground, and the eyes know it */
  groves.push(g);
  if(!quiet)addRing(g.x,g.y,g.gilt?'#ffd75e':'#cfe08a',26);
  return g;
@@ -3310,7 +3310,7 @@ function showHome(){
  {let bb=document.getElementById('bldBadge');if(!bb){bb=document.createElement('div');bb.id='bldBadge';
   bb.style.cssText='position:fixed;left:10px;bottom:8px;z-index:60;font-size:11px;opacity:.55;color:#ffd9a0;pointer-events:none;font-family:inherit;';
   document.body.appendChild(bb);}
-  bb.textContent='r127 · the morning after';} /* the keeper's stamp: if this doesn't match /healthz ver, you're playing a stale copy */
+  bb.textContent='r128 · the night shift';} /* the keeper's stamp: if this doesn't match /healthz ver, you're playing a stale copy */
  document.getElementById('xpTxt').innerHTML='<b style="color:#ffd75e">✨ '+Math.floor(META.xp)+'</b>'+(typeof RUNXP!=='undefined'&&RUNXP>=1?' <b style="color:#ffe9a0;font-size:13px">(+'+Math.floor(RUNXP)+' this flight)</b>':'')+' <span style="opacity:.6;font-size:12px">nest xp · every treasure is earnable · 👑 sub unlocks all</span>'; /* the FLIGHT's earnings shown beside the hoard - you can finally tell when the trip to the nest was worth it */
  const next=SKINS.find(S=>META.xp<S.xp);
  const fill=document.getElementById('xpfill'),nx=document.getElementById('xpNext');
@@ -3482,7 +3482,7 @@ try{
    try{localStorage.setItem('fh_map',_pick);}catch(e){}
    try{location.reload();}catch(e){}});}
  const _sb=document.getElementById('mapSub');if(_sb)_sb.textContent=MAPS[MAP].name+' · '+MAPS[MAP].sub+(WS_URL?' · THE SHARED MEADOW':(/^https?:$/.test(location.protocol)?' · SOLO FLIGHT':' · OFFLINE'));
- const _mk=document.getElementById('mapMark');if(_mk){_mk.textContent=MAPS[MAP].name+(MAPS[MAP].early?' · EARLY BLOOM':'')+' · r127';_mk.style.color=MAPS[MAP].col+'cc';}
+ const _mk=document.getElementById('mapMark');if(_mk){_mk.textContent=MAPS[MAP].name+(MAPS[MAP].early?' · EARLY BLOOM':'')+' · r128';_mk.style.color=MAPS[MAP].col+'cc';}
  try{document.title='FABLEHIVE · '+MAPS[MAP].name;}catch(e){}
 }catch(e){}
 document.getElementById('go').onclick=()=>{
@@ -5070,8 +5070,8 @@ function draw(){
  if(draw._bgKey!==bgKey){ /* rebuild the sky only when the REALM actually changes */
   draw._bgKey=bgKey;
   const bg=ctx.createRadialGradient(W/2,H*0.32,90,W/2,H/2,Math.max(W,H)*0.95);
-  bg.addColorStop(0,'hsl('+(hZ+20+hueDrift+gold*(26))+','+sZ+'%,'+(lZ+9+gold*7)+'%)');
-  bg.addColorStop(0.55,'hsl('+(hZ+hueDrift+gold*(20))+','+Math.max(20,sZ-4)+'%,'+(lZ+4+gold*5)+'%)');
+  bg.addColorStop(0,'hsl('+(hZ+20+hueDrift+gold*(MAP==='night'?-52:26))+','+sZ+'%,'+(lZ+9+gold*(MAP==='night'?4:7))+'%)'); /* r128 THE AURORA HOUR: at night the golden hour is an aurora - hue sweeps toward teal-green, light lifts gently */
+  bg.addColorStop(0.55,'hsl('+(hZ+hueDrift+gold*(MAP==='night'?-38:20))+','+Math.max(20,sZ-4)+'%,'+(lZ+4+gold*(MAP==='night'?3:5))+'%)');
   bg.addColorStop(1,'hsl('+(hZ-12+hueDrift)+','+sZ+'%,'+(Math.max(8,lZ-6)+gold*3)+'%)');
   draw._bg=bg;}
  ctx.fillStyle=draw._bg;ctx.fillRect(0,0,W,H);
@@ -5195,7 +5195,7 @@ function draw(){
   for(let th=0;th<3;th++){
    const ph=tnow*(0.7+th*0.23)+th*2.1;
    if(!tapered){ /* one path per thread - cheap */
-    ctx.strokeStyle=(MAP==='cinder'?'rgba(214,204,192,':MAP==='night'?'rgba(200,255,150,':'rgba(210,236,255,')+((0.05+th*0.022)*(1))+')';
+    ctx.strokeStyle=(MAP==='cinder'?'rgba(214,204,192,':MAP==='night'?'rgba(200,255,150,':'rgba(210,236,255,')+(((MAP==='night'?0.16:0.05)+th*(MAP==='night'?0.05:0.022))*(1))+')';
     ctx.lineWidth=2.2-th*0.5;
     ctx.beginPath();
     for(let d=0;d<=L;d+=52){
@@ -5217,12 +5217,12 @@ function draw(){
      {if(!wway._nb)wway._nb=boulders.filter(b9=>{const t9=clamp(((b9.x-wway.x1)*wway.dx+(b9.y-wway.y1)*wway.dy),0,L);return Math.hypot(b9.x-(wway.x1+wway.dx*t9),b9.y-(wway.y1+wway.dy*t9))<b9.r+wway.w+50;});
       for(const b9 of wway._nb){const dx9=px-b9.x,dy9=py-b9.y;if(dx9*dx9+dy9*dy9<(b9.r+8)*(b9.r+8)){rock9=true;break;}}} /* the gust does not blow THROUGH stone - it simply hushes there */
      if(px0!==null&&tp>0.02&&!rock9){
-      ctx.strokeStyle=(MAP==='cinder'?'rgba(214,204,192,':MAP==='night'?'rgba(200,255,150,':'rgba(210,236,255,')+((0.05+th*0.022)*(1)*tp).toFixed(4)+')';
+      ctx.strokeStyle=(MAP==='cinder'?'rgba(214,204,192,':MAP==='night'?'rgba(200,255,150,':'rgba(210,236,255,')+(((MAP==='night'?0.16:0.05)+th*(MAP==='night'?0.05:0.022))*(1)*tp).toFixed(4)+')'; /* r128: at night the road is a LIT ARTERY - it counts as light in the sim, so it must read like light */
       ctx.lineWidth=2.2-th*0.5;
       ctx.beginPath();ctx.moveTo(px0,py0);ctx.lineTo(px,py);ctx.stroke();}
      px0=rock9?null:px;py0=py;}}}
   /* petals riding the gust - fading with the tail */
-  const stp=150,off=(tnow*130)%stp;
+  const stp=MAP==='night'?95:150,off=(tnow*130)%stp;
   for(let d=off;d<L;d+=stp){
    const tp=taper(d);if(tp<0.1)continue;
    const gd=wway.d0+d;
@@ -5231,9 +5231,14 @@ function draw(){
    if(px<vx0||px>vx1||py<vy0||py>vy1)continue;
    {let rk9=false;if(wway._nb)for(const b9 of wway._nb){const dx9=px-b9.x,dy9=py-b9.y;if(dx9*dx9+dy9*dy9<(b9.r+8)*(b9.r+8)){rk9=true;break;}}
     if(rk9)continue;} /* no petals ride through granite */
-   ctx.fillStyle=(MAP==='night'?'rgba(200,255,150,':'rgba(255,235,245,')+((0.2+0.15*Math.sin(d+tnow*4))*tp).toFixed(3)+')';
+   if(MAP==='night'){ /* r128 GLOW-MOTES: green-gold lights FLOWING along the wisp road - the artery reads from anywhere */
+    ctx.fillStyle='rgba(200,255,140,'+(0.10*tp).toFixed(3)+')';
+    ctx.beginPath();ctx.arc(px,py,7.5,0,TAU);ctx.fill();
+    ctx.fillStyle='rgba(232,255,190,'+((0.5+0.22*Math.sin(d*0.7+tnow*4))*tp).toFixed(3)+')';
+    ctx.beginPath();ctx.arc(px,py,2.6,0,TAU);ctx.fill();}
+   else{ctx.fillStyle=('rgba(255,235,245,')+((0.2+0.15*Math.sin(d+tnow*4))*tp).toFixed(3)+')';
    ctx.save();ctx.translate(px,py);ctx.rotate(tnow*2+d);
-   ctx.beginPath();ctx.ellipse(0,0,3.4,1.7,0,0,TAU);ctx.fill();ctx.restore();}
+   ctx.beginPath();ctx.ellipse(0,0,3.4,1.7,0,0,TAU);ctx.fill();ctx.restore();}}
  }
  ctx.lineCap='butt';
  let dw9=0;
@@ -5262,9 +5267,9 @@ function draw(){
   ctx.beginPath();ctx.arc(px,py,p.r,0,TAU);ctx.fill();}
  ctx.strokeStyle=MAP==='cinder'?'rgba(255,150,90,.16)':MAP==='night'?'rgba(150,130,255,.18)':'rgba(255,200,130,.2)';ctx.lineWidth=8;ctx.strokeRect(0,0,WORLD.w,WORLD.h);
  {let rl=realmOf(cam.x,cam.y);if(MAP==='cinder')rl=cam.y>FRONT?'south':(rl==='south'?'mid':rl); /* cinder: the green follows THE FRONT, not the compass */
-  const target=(MAP==='cinder'?({dark:0.18,bad:0.14,south:0.30,oasis:0.14}):MAP==='night'?({dark:0.20,bad:0.16,south:0.15,oasis:0.12}):({dark:0.14,bad:0.09,south:0.08,oasis:0.10}))[rl]||0;
+  const target=(MAP==='cinder'?({dark:0.18,bad:0.14,south:0.30,oasis:0.14}):MAP==='night'?({dark:0.30,bad:0.25,south:0.22,oasis:0.14}):({dark:0.14,bad:0.09,south:0.08,oasis:0.10}))[rl]||0;
   draw._wA=(draw._wA===undefined?target:draw._wA+(target-draw._wA)*0.03);
-  if(draw._wA>0.005){const WC=(MAP==='cinder'?({dark:'#3a3632',bad:'#2a1c14',south:'#0e4a2a',oasis:'#4a1c20'}):MAP==='night'?({dark:'#2a1044',bad:'#301a54',south:'#0e3a34',oasis:'#0e1636'}):({dark:'#241a44',bad:'#4a1c20',south:'#b4841e',oasis:'#0e4a42'}))[rl]||(MAP==='cinder'?'#2a2018':'#241a44'); /* CINDER: ash dunes NW, standing dead NE, THE REGROWTH's green south, hearth-rust heart */
+  if(draw._wA>0.005){const WC=(MAP==='cinder'?({dark:'#3a3632',bad:'#2a1c14',south:'#0e4a2a',oasis:'#4a1c20'}):MAP==='night'?({dark:'#2a1030',bad:'#241a44',south:'#0e3a34',oasis:'#0e1636'}):({dark:'#241a44',bad:'#4a1c20',south:'#b4841e',oasis:'#0e4a42'}))[rl]||(MAP==='cinder'?'#2a2018':'#241a44'); /* CINDER: ash dunes NW, standing dead NE, THE REGROWTH's green south, hearth-rust heart */
    ctx.globalAlpha=draw._wA;ctx.fillStyle=WC;ctx.fillRect(vx0,vy0,vx1-vx0,vy1-vy0);ctx.globalAlpha=1;}}
  for(const tb of thorns){if(tb.x<vx0-200||tb.x>vx1+200||tb.y<vy0-200||tb.y>vy1+200)continue;
   for(let v=0;v<3;v++){ /* three knotted vines make one brake */
@@ -5300,6 +5305,9 @@ function draw(){
  if(OASIS&&!(OASIS.x<vx0-700||OASIS.x>vx1+700||OASIS.y<vy0-700||OASIS.y>vy1+700)){const O=OASIS;
   if(MAP!=='cinder'){ /* the watery heart belongs to the other gardens - the cinder heart is FIRE, whole */
   ctx.fillStyle=MAP==='cinder'?'rgba(230,110,50,0.10)':MAP==='night'?'rgba(20,28,64,0.5)':'rgba(88,190,178,0.16)';ctx.beginPath();ctx.arc(O.x,O.y,O.r*0.52,0,TAU);ctx.fill(); /* caldera · MIRROR POOL · under-ice */
+  if(MAP==='night'){for(let st9=0;st9<16;st9++){const sa9=st9*2.399+1.1,sr9=O.r*(0.12+((st9*73)%53)/53*0.78); /* r128 THE MIRROR POOL: black glass holds painted stars - the sky the night garden never shows you lives in the water */
+    const sx9=O.x+Math.cos(sa9)*sr9,sy9=O.y+Math.sin(sa9)*sr9*0.82,tw9=Math.max(0,Math.sin(tnow*1.3+st9*2.1));
+    ctx.fillStyle='rgba(220,230,255,'+(0.10+0.30*tw9).toFixed(3)+')';ctx.beginPath();ctx.arc(sx9,sy9,tw9>0.85?1.8:1.1,0,TAU);ctx.fill();}}
   ctx.fillStyle=MAP==='cinder'?'rgba(255,150,70,0.16)':MAP==='night'?'rgba(8,12,36,0.6)':'rgba(110,214,196,0.2)';ctx.beginPath();ctx.arc(O.x,O.y,O.r*0.38,0,TAU);ctx.fill();
   for(let k=0;k<3;k++){const rp=((tnow*0.12+k/3)%1); /* ripples breathe outward */
    ctx.strokeStyle=(MAP==='cinder'?'rgba(255,190,130,':MAP==='night'?'rgba(190,210,255,':'rgba(190,240,230,')+((0.22)*(1-rp)).toFixed(3)+')';ctx.lineWidth=1.6;
@@ -5645,19 +5653,20 @@ function draw(){
    const hx5=Math.cos(hipA)*sp5.r*0.5,hy5=Math.sin(hipA)*sp5.r*0.55;
    const kx5=hx5+Math.cos(hipA+sg*0.4)*sp5.r*0.72,ky5=hy5+Math.sin(hipA+sg*0.4)*sp5.r*0.72-lift;
    const fx5=kx5+Math.cos(hipA+sg*0.9)*sp5.r*0.62+swing*0.4,fy5=ky5+Math.sin(hipA+sg*0.9)*sp5.r*0.62+lift;
-   ctx.strokeStyle=sp5.flash>0?'#fff':(MAP==='cinder'?'#26130a':'#141018');ctx.lineWidth=5;ctx.lineCap='round'; /* frost widow · cinder SCORPION · broodmother */
+   ctx.strokeStyle=sp5.flash>0?'#fff':(MAP==='cinder'?'#26130a':MAP==='night'?'#050310':'#141018');ctx.lineWidth=5;ctx.lineCap='round'; /* cinder SCORPION · the WEAVER eats light · broodmother */
    ctx.beginPath();ctx.moveTo(hx5,hy5);ctx.lineTo(kx5,ky5);ctx.stroke();
    ctx.strokeStyle='rgba(210,190,235,.16)';ctx.lineWidth=1.4; /* the gloss walks the femur */
    ctx.beginPath();ctx.moveTo(hx5,hy5);ctx.lineTo(kx5,ky5);ctx.stroke();
    ctx.strokeStyle=sp5.flash>0?'#fff':'#1c1220';ctx.lineWidth=3.4;
    ctx.beginPath();ctx.moveTo(kx5,ky5);ctx.lineTo(fx5,fy5);ctx.stroke();
-   ctx.fillStyle=MAP==='cinder'?'#3c1c10':'#4a3a54';ctx.beginPath();ctx.arc(kx5,ky5,2.8,0,TAU);ctx.fill();
+   ctx.fillStyle=MAP==='cinder'?'#3c1c10':MAP==='night'?'#160e28':'#4a3a54';ctx.beginPath();ctx.arc(kx5,ky5,2.8,0,TAU);ctx.fill();
    ctx.strokeStyle='#0e0a14';ctx.lineWidth=1.6;
    ctx.beginPath();ctx.moveTo(fx5,fy5);ctx.lineTo(fx5+Math.cos(hipA+sg*1.2)*4,fy5+Math.sin(hipA+sg*1.2)*4);ctx.stroke();}
   const pulse=1+Math.sin(tnow*(sp5.provoked>0?4.4:1.8))*0.04;
-  ctx.fillStyle=sp5.flash>0?'#fff':(MAP==='cinder'?'#331711':'#1e1426'); /* the ABDOMEN - baked · FROSTED · night */
+  ctx.fillStyle=sp5.flash>0?'#fff':(MAP==='cinder'?'#331711':MAP==='night'?'#060412':'#1e1426'); /* the ABDOMEN - baked · a hole in the lights · night-violet */
   ctx.beginPath();ctx.ellipse(-sp5.r*0.55,0,sp5.r*(MAP==='cinder'?1.12:0.92)*pulse,sp5.r*(MAP==='cinder'?0.56:0.78)*pulse,0,0,TAU);ctx.fill(); /* cinder: LONG and LEAN - and the skin now runs back far enough that no plate ever floats past it */
   ctx.strokeStyle='#0e0a14';ctx.lineWidth=2.6;ctx.stroke();
+  if(MAP==='night'){ctx.strokeStyle='rgba(150,110,220,'+(0.42+0.18*Math.sin(tnow*1.7)).toFixed(3)+')';ctx.lineWidth=3.4;ctx.stroke();} /* r128 THE VIOLET RIM: she is SEEN as an absence, ringed - the only honest way to paint a thing that eats light */
   ctx.strokeStyle=(MAP==='cinder'?'rgba(255,160,80,':'rgba(200,160,255,')+(0.1+0.08*Math.sin(tnow*2.1)).toFixed(3)+')';ctx.lineWidth=2; /* the gleam per garden */
   ctx.beginPath();ctx.ellipse(-sp5.r*0.55,0,sp5.r*(MAP==='cinder'?0.92:0.8)*pulse,sp5.r*(MAP==='cinder'?0.46:0.66)*pulse,0,3.5,5.2);ctx.stroke();
   if(MAP!=='cinder'){const hw5=sp5.r*0.17,hh5=sp5.r*0.22; /* the HOURGLASS on her back: blood on night - the mark the meadow remembers. The scorpion never wore it */
@@ -5760,7 +5769,7 @@ function draw(){
   ctx.strokeStyle=MAP==='cinder'?'rgba(232,220,248,0)':'rgba(232,220,248,.35)';ctx.lineWidth=2; /* silk marks - the scorpion spins nothing */
   ctx.beginPath();ctx.moveTo(-sp5.r*0.35,-sp5.r*0.22);ctx.lineTo(-sp5.r*0.72,sp5.r*0.22);ctx.stroke();
   ctx.beginPath();ctx.moveTo(-sp5.r*0.72,-sp5.r*0.22);ctx.lineTo(-sp5.r*0.35,sp5.r*0.22);ctx.stroke();
-  if(MAP!=='cinder'){ctx.fillStyle=sp5.flash>0?'#fff':('#241826'); /* the CEPHALOTHORAX per garden */
+  if(MAP!=='cinder'){ctx.fillStyle=sp5.flash>0?'#fff':(MAP==='night'?'#080514':'#241826'); /* the CEPHALOTHORAX per garden */
   ctx.beginPath();ctx.ellipse(sp5.r*0.42,0,sp5.r*0.5,sp5.r*0.42,0,0,TAU);ctx.fill();
   ctx.strokeStyle='#0e0a14';ctx.lineWidth=2;ctx.stroke();}
   if(MAP==='cinder'){ /* THE HEAD, third honest attempt: the old shield's flat top + hard corners WERE the "square brows". A curved carapace now - not one corner on it, not one line across it */
@@ -6789,7 +6798,7 @@ function draw(){
   if(draw._mmKey!==key){draw._mmKey=key;
    const c9=document.createElement('canvas');c9.width=c9.height=S;const g9=c9.getContext('2d');
    const WFC=({cinder:['#181210','rgba(160,152,142,.5)','rgba(60,40,28,.6)','rgba(20,80,48,.55)','rgba(220,120,60,.55)'],
-    night:['#0a0818','rgba(70,50,120,.55)','rgba(120,90,200,.5)','rgba(20,110,96,.55)','rgba(150,170,255,.5)'],
+    night:['#0a0818','rgba(70,50,120,.55)','rgba(120,90,200,.5)','rgba(14,62,56,.6)','rgba(150,170,255,.5)'],
     honey:['#2a1f36','rgba(80,60,140,.55)','rgba(150,60,70,.5)','rgba(210,160,60,.45)','rgba(90,200,180,.6)']})[MAP]; /* each garden's compass wears its own realms */
    g9.fillStyle=WFC[0];g9.fillRect(0,0,S,S);
    g9.fillStyle=WFC[1];g9.fillRect(0,0,S*0.48,S*0.48);

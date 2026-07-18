@@ -1488,10 +1488,15 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
   /* NURSES mend every soul near them, always - attrition is a doctrine you can SEE */
   {const nrs=[];for(const u of s.units)if(u.role==='nurse')nrs.push(u);
    if(nrs.length)for(const u of s.units){if(u.hp>=u.maxHp)continue;
-    for(const n2 of nrs){if(d2(u.x,u.y,n2.x,n2.y)<80*80){
+    for(const n2 of nrs){if(d2(u.x,u.y,n2.x,n2.y)<150*150){ /* r131 THE FIELD HOSPITAL: 80px broke apart the moment the column marched - aid now reaches the whole line, moving or not (Celery's decree) */
      if(sim)u.hp=Math.min(u.maxHp,u.hp+2*dt);u.mend=0.5;
      if(Math.random()<dt*1.4&&fx.length<430)fx.push({x:u.x+rand(-6,6),y:u.y-u.r-4,vx:0,vy:-26,t:0,life:0.8,col:'#a8f0b8',txt:'+'});
      break;}}}}
+  {const nrs2=[];for(const u of s.units)if(u.role==='nurse')nrs2.push(u);
+   if(nrs2.length&&s.hp<s.maxHp&&!s.war)for(const n2 of nrs2){if(d2(s.x,s.y,n2.x,n2.y)<150*150){
+    if(sim)s.hp=Math.min(s.maxHp,s.hp+2*dt);
+    if(Math.random()<dt*1.2&&fx.length<430)fx.push({x:s.x+rand(-8,8),y:s.y-s.R*0.6,vx:0,vy:-26,t:0,life:0.8,col:'#a8f0b8',txt:'+'});
+    break;}} /* r131: the nurses finally tend HER MAJESTY - on the wing, between fights. In WAR the old law holds (no nurse-stack forever-fights): units mend, the queen bleeds true */}
   /* the ARMOURER braces always; soldiers brace in formation. (The old PLATED aura that buffed nearby
      troops - with its bronze ring/halo - is GONE: the armourer is a pure BULWARK for the queen, nothing else.) */
   const anch=[];for(const u of s.units)if(u.role==='armourer')anch.push(u);
@@ -1526,9 +1531,9 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
    if(u._perch){const t9=s.units.find(z=>z.uid===u._perch&&z.role==='titan'&&z.hp>0); /* r124 THE PERCH: she rides the titan - invulnerable, off the wire, out of the crush */
     if(!t9){u._perch=null;u._pT=0;} /* the titan fell: she SPILLS where he died, vulnerable again */
     else{u._pT=(u._pT||0)+dt;
-     if(!s.war&&(u.load<39||u._pT>10)){u._perch=null;u._pT=0;} /* peace: empty bellies hop off at once, full ones ride at most 10s then walk the rest home */
+     if(!s.war&&(u.load<30||u._pT>16)){u._perch=null;u._pT=0;} /* r131: full bellies ride 16s (was 10) */ /* peace: empty bellies hop off at once, full ones ride at most 10s then walk the rest home */
      else{const sa9=1.745+(u._pSlot||0)*0.4;u.x=t9.x+Math.cos(sa9)*t9.r*0.62;u.y=t9.y+Math.sin(sa9)*t9.r*0.62;u.vx=t9.vx||0;u.vy=t9.vy||0;u.hp=Math.min(u.maxHp||22,u.hp+60*dt);u.flash=0;continue;}}}
-   else if(u.role==='forager'&&(s.war||u.load>=39)){if((u._pkT||0)>0)u._pkT-=dt;else{u._pkT=0.4; /* r124: a working forager in danger (or full to the brim) climbs the nearest titan with a free back - 4 slots each */
+   else if(u.role==='forager'&&(s.war||u.load>=30)){ /* r131 THE EAGER SADDLE: mount at 30 (was 39) - by decree, more riders more often */if((u._pkT||0)>0)u._pkT-=dt;else{u._pkT=0.4; /* r124: a working forager in danger (or full to the brim) climbs the nearest titan with a free back - 4 slots each */
     for(const t9 of s.units){if(t9.role!=='titan'||t9.hp<=0)continue;if(d2(u.x,u.y,t9.x,t9.y)>(t9.r+30)*(t9.r+30))continue;
      let rid9=0;for(const r9 of s.units)if(r9._perch===t9.uid)rid9++;
      if(rid9<8){u._perch=t9.uid;u._pSlot=rid9;u._pT=0;break;} /* r126 THE FULLER BACK: eight riders now, by decree */}}}
@@ -3027,7 +3032,7 @@ function near(s2){const M2=me();return !!M2&&(s2===M2||d2(s2.x,s2.y,M2.x,M2.y)<1
 function addTrail(u,col){if(fx.length>(MOB?260:460)||(MOB&&QGOV.q<1))return; /* phones shed vanity smoke first */
  for(let i2=0;i2<5;i2++)fx.push({x:u.x-u.vx*0.01*i2,y:u.y-u.vy*0.01*i2,vx:0,vy:0,t:0,life:0.22+i2*0.03,col,r:2.6-i2*0.35});}
 /* ============ fx ============ */
-function addP(x,y,col,n2,sp){if(fx.length>(MOB?300:460))return;if(MOB&&n2>2)n2=Math.ceil(n2*0.6);for(let i=0;i<n2;i++){const a=rand(0,TAU),sp2=rand(.3,1)*(sp||60);fx.push({x,y,vx:Math.cos(a)*sp2,vy:Math.sin(a)*sp2,t:0,life:rand(.3,.55),col,r:rand(1.8,3.6)});}}
+function addP(x,y,col,n2,sp){if(fx.length>(MOB?240:460))return; /* r131 THE QUIETER PHONE: pool 300->240 on MOB */if(MOB&&n2>2)n2=Math.ceil(n2*0.6);for(let i=0;i<n2;i++){const a=rand(0,TAU),sp2=rand(.3,1)*(sp||60);fx.push({x,y,vx:Math.cos(a)*sp2,vy:Math.sin(a)*sp2,t:0,life:rand(.3,.55),col,r:rand(1.8,3.6)});}}
 function addSpark(x,y,n2){if(fx.length>(MOB?300:460))return;if(MOB&&n2>2)n2=Math.ceil(n2*0.6);for(let i=0;i<n2;i++){const a=rand(0,TAU),sp2=rand(60,220);fx.push({x,y,vx:Math.cos(a)*sp2,vy:Math.sin(a)*sp2,t:0,life:rand(.1,.26),col:Math.random()<.5?'#fff3c4':'#ffcf5e',r:rand(1.1,2)});}}
 /* ONE brush for trail particles - the meadow and the mirror can never disagree */
 function drawTrailFx(g2,e,k,t9){
@@ -3311,7 +3316,7 @@ function showHome(){
  {let bb=document.getElementById('bldBadge');if(!bb){bb=document.createElement('div');bb.id='bldBadge';
   bb.style.cssText='position:fixed;left:10px;bottom:8px;z-index:60;font-size:11px;opacity:.55;color:#ffd9a0;pointer-events:none;font-family:inherit;';
   document.body.appendChild(bb);}
-  bb.textContent='r130 · the closer seat';} /* the keeper's stamp: if this doesn't match /healthz ver, you're playing a stale copy */
+  bb.textContent='r131 · the field hospital';} /* the keeper's stamp: if this doesn't match /healthz ver, you're playing a stale copy */
  document.getElementById('xpTxt').innerHTML='<b style="color:#ffd75e">✨ '+Math.floor(META.xp)+'</b>'+(typeof RUNXP!=='undefined'&&RUNXP>=1?' <b style="color:#ffe9a0;font-size:13px">(+'+Math.floor(RUNXP)+' this flight)</b>':'')+' <span style="opacity:.6;font-size:12px">nest xp · every treasure is earnable · 👑 sub unlocks all</span>'; /* the FLIGHT's earnings shown beside the hoard - you can finally tell when the trip to the nest was worth it */
  const next=SKINS.find(S=>META.xp<S.xp);
  const fill=document.getElementById('xpfill'),nx=document.getElementById('xpNext');
@@ -3483,7 +3488,7 @@ try{
    try{localStorage.setItem('fh_map',_pick);}catch(e){}
    try{location.reload();}catch(e){}});}
  const _sb=document.getElementById('mapSub');if(_sb)_sb.textContent=MAPS[MAP].name+' · '+MAPS[MAP].sub+(WS_URL?' · THE SHARED MEADOW':(/^https?:$/.test(location.protocol)?' · SOLO FLIGHT':' · OFFLINE'));
- const _mk=document.getElementById('mapMark');if(_mk){_mk.textContent=MAPS[MAP].name+(MAPS[MAP].early?' · EARLY BLOOM':'')+' · r130';_mk.style.color=MAPS[MAP].col+'cc';}
+ const _mk=document.getElementById('mapMark');if(_mk){_mk.textContent=MAPS[MAP].name+(MAPS[MAP].early?' · EARLY BLOOM':'')+' · r131';_mk.style.color=MAPS[MAP].col+'cc';}
  {const go9=document.getElementById('go');if(go9){if(WS_URL)go9.innerHTML='RISE<div style="font-size:10px;letter-spacing:2px;opacity:.85;margin-top:2px">THE SHARED MEADOW · ONLINE</div>';
   else if(/^https?:$/.test(location.protocol)){go9.innerHTML='RISE<div style="font-size:10px;letter-spacing:2px;opacity:.85;margin-top:2px">SOLO FLIGHT · JUST YOU</div>';go9.style.filter='hue-rotate(80deg) saturate(.85)';
    const mr9=document.getElementById('mapRow');if(mr9&&!document.getElementById('soloChip')){const ch9=document.createElement('div');ch9.id='soloChip';ch9.style.cssText='margin:6px auto 0;font-size:11px;letter-spacing:1px;color:#ffd75e;opacity:.9;text-align:center';ch9.textContent='the SHARED MEADOW flies ONLINE — tap it to join the family';if(mr9.parentNode)mr9.parentNode.insertBefore(ch9,mr9.nextSibling);}}}} /* r129 THE HONEST DOOR: the 'server is down' scare was a quiet door - never again */
@@ -4737,7 +4742,7 @@ function drawUnitLocal(g,s,u,a,vm,col,fleetId){ /* the unit's LOCAL-frame art (s
   g.fillStyle='#ffcf3a'; /* burning SLITS, angled in a glare, scaled to the body */
   g.beginPath();g.ellipse(u.r*0.52,-u.r*0.24,u.r*0.085,u.r*0.03,0.32,0,TAU);g.fill();
   g.beginPath();g.ellipse(u.r*0.52,u.r*0.24,u.r*0.085,u.r*0.03,-0.32,0,TAU);g.fill();
-  if(u._rid)for(let ri9=0;ri9<Math.min(8,u._rid);ri9++){const sa9=1.745+ri9*0.4,rx9=Math.cos(sa9)*u.r*0.62,ry9=Math.sin(sa9)*u.r*0.62;g.fillStyle=col;g.beginPath();g.arc(rx9,ry9,u.r*0.11,0,TAU);g.fill();g.strokeStyle='#3a2415';g.lineWidth=1;g.stroke();g.fillStyle='rgba(255,194,62,.85)';g.beginPath();g.arc(rx9,ry9,u.r*0.055,0,TAU);g.fill();} /* r124 THE PERCH: her riders cling to his back - drawn from the count his tuple carries (solo draws the true riders riding) */
+  if(u._rid)for(let ri9=0;ri9<Math.min(8,u._rid);ri9++){const sa9=1.745+ri9*0.4,rx9=Math.cos(sa9)*u.r*0.62,ry9=Math.sin(sa9)*u.r*0.62;g.fillStyle=col;g.beginPath();g.arc(rx9,ry9,u.r*0.16,0,TAU);g.fill();g.strokeStyle='#3a2415';g.lineWidth=1.4;g.stroke();g.fillStyle='rgba(255,194,62,.9)';g.beginPath();g.arc(rx9,ry9,u.r*0.085,0,TAU);g.fill(); /* r131: riders read HALF AGAIN BIGGER - by decree, you should SEE the wagon */} /* r124 THE PERCH: her riders cling to his back - drawn from the count his tuple carries (solo draws the true riders riding) */
   if(g===ctx&&vm>40&&Math.random()<0.12)addP(u.x-Math.cos(a)*u.r,u.y-Math.sin(a)*u.r,'#c8a06a',1,26); /* dust at its heels */
  }
  {const _mf9=(fleetId!==undefined&&fleetId!==null)?fleetId:((typeof NET!=='undefined'&&NET.on)?(s.team===NET.you?META.eq.fleet:(s.cosEq&&s.cosEq.fleet)):(s.team===0?META.eq.fleet:(s.cosEq&&s.cosEq.fleet)));const FL=_mf9&&FLEETS[_mf9];if(FL)drawArmour(g,u,FL,col);} /* r107 THE WORN COLOURS: fleets were gated to team 0 wearing the VIEWER's wardrobe - online, seats 1-5 flew bare while the Wilder wore YOUR kit. Now every swarm wears ITS OWN confessed fleet (cosEq), mine wears META - exactly the queen's garment law. The mirror's explicit fleetId still wins */ /* ARMOUR: role-aware clip-ons over the team-coloured body */
@@ -6393,7 +6398,7 @@ function draw(){
  { /* THE AIR ITSELF knows its realm: fireflies south, ash in the badlands, spores in the dark */
   const vw=(vx1-vx0),vh=(vy1-vy0);
   let _afN=0;if(MAP==='cinder')for(const a9 of ambient)if(a9.ty==='afairy')_afN++;
-  while(ambient.length<(MAP==='cinder'?96:MAP==='night'?60:44)){const ax=vx0+Math.random()*vw,ay=vy0+Math.random()*vh;
+  while(ambient.length<(((MAP==='cinder'?96:MAP==='night'?60:44)*(MOB?0.8:1))|0)){const ax=vx0+Math.random()*vw,ay=vy0+Math.random()*vh;
    const rl=realmOf(ax,ay);let ty=null;
    if(MAP==='cinder'){ty=rl==='south'?'fire':(((rl==='dark'||rl==='bad')&&Math.random()<0.30)?((Math.random()<0.82||_afN>=4)?'sprite':(_afN++,'afairy')):'ash'); /* sprites own the north; fairies are RARE - four at most, each worth catching */} /* THE ASHFALL - and the north keeps stranger company */
    

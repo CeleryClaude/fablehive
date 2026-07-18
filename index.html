@@ -639,7 +639,7 @@ let NID=1,UIDN=1,swarms=[],groves=[],boulders=[],coves=[],ways=[],drops=[],fx=[]
 let tnow=0,running=false,shake=0,warnT=0,goldT=-1,goldNext=170;
 let NWATCH=0,BURNY0=-1,BURNY1=-1;
 let shades=[],NLIGHTS=null,SHDRT=0; /* night: the dark's own hunters · the static light map · respawn clock */
-let thresher=null,THRT=420,GOLRT=75;
+let thresher=null,THRT=420,GOLRT=75,PYREB=1; /* r132: the pyre's breath - cinder only, 75s cycle */
 let magma=[],mpools=[]; /* golem-thrown globs in flight · the molten pools they leave */
 let GRADC={}; /* built-once gradients: the fire was rebuilding two screen-wide gradients EVERY frame */
 function cachedGrad(key,build){let g=GRADC[key];if(!g){g=build();GRADC[key]=g;}return g;}
@@ -856,7 +856,7 @@ function flowerSpot(edgeBias){
     else if(Math.random()<0.5)y=rand(WORLD.h*0.58,WORLD.h-300);}
    else if(Math.random()<0.32)y=rand(WORLD.h*0.58,WORLD.h-300);} /* the south runs sweetest */
   if(MAP==='cinder'&&y<FRONT-350&&Math.random()<0.8)continue; /* little grows north of the greenline */
-  if(MAP==='cinder'&&d2(x,y,WORLD.w/2,WORLD.h/2)<540*540)continue; /* and NOTHING grows in the bonfire */
+  if(MAP==='cinder'&&d2(x,y,WORLD.w/2,WORLD.h/2)<(540*PYREB)*(540*PYREB))continue; /* and NOTHING grows in the bonfire - the exclusion breathes with it (r132) */
   if(MAP==='cinder'&&x<WORLD.w*0.48&&y<WORLD.h*0.48&&Math.random()<0.5)continue; /* and the dunes stay lean */
   if(boulders.some(b=>Math.hypot(x-b.x,y-b.y)<b.r+46))continue;
   if(fieldMaws.some(m=>Math.hypot(x-m.x,y-m.y)<150))continue; /* flowers refuse to grow in a maw's shadow */
@@ -1235,7 +1235,7 @@ function setupWorldTail(){ /* the rest of world-gen: caves, maws, oasis, decor -
    if(g.mother){g.x=g.x+rand(-260,260);g.y=g.y+rand(-260,260);} /* r125 THE MOTHER'S ANCHOR: ex/ey never existed - a mother grove rolled onto a boulder threw a ReferenceError and KILLED THE BOOT (the 17:28 crash, wrongly blamed on a deploy race). She jitters around her own spot now, as the code intended */
    else if(g.web&&spider){g.x=spider.hx+rand(-280,280);g.y=spider.hy+rand(-280,280);}
    else{g.x=rand(300,WORLD.w-300);g.y=rand(300,WORLD.h-300);}
-   bad=boulders.some(b=>Math.hypot(g.x-b.x,g.y-b.y)<b.r+30)||(MAP==='cinder'&&d2(g.x,g.y,WORLD.w/2,WORLD.h/2)<540*540);} /* relocation may not dump a bloom onto the fire either */
+   bad=boulders.some(b=>Math.hypot(g.x-b.x,g.y-b.y)<b.r+30)||(MAP==='cinder'&&d2(g.x,g.y,WORLD.w/2,WORLD.h/2)<(540*PYREB)*(540*PYREB));} /* relocation may not dump a bloom onto the fire either */
  }
  moss=[];for(let i=0;i<30;i++){const b=boulders[(Math.random()*boulders.length)|0];
   if(b){const a=rand(0,TAU);moss.push({x:b.x+Math.cos(a)*(b.r*rand(0.2,0.85)),y:b.y+Math.sin(a)*(b.r*rand(0.2,0.85)),r:rand(9,20),ph:rand(0,TAU),glow:0});}}
@@ -1248,7 +1248,7 @@ function setupWorldTail(){ /* the rest of world-gen: caves, maws, oasis, decor -
  bonefae=[];if(MAP==='cinder')for(let bf=0;bf<5;bf++){const bx0=rand(600,WORLD.w*0.38),by0=rand(500,WORLD.h*0.38);
   bonefae.push({x:bx0,y:by0,hx:bx0,hy:by0,vx:0,vy:0,hp:44,maxHp:44,flash:0,cd:rand(1,2.5),_bf:1,seed:rand(0,TAU),wgx:bx0,wgy:by0,wanT:0});}
  golems=[];if(MAP==='cinder')for(let gg=0;gg<3;gg++){const gx0=rand(700,WORLD.w-700),gy0=rand(500,WORLD.h*0.34);
-  golems.push({x:gx0,y:gy0,hx:gx0,hy:gy0,r:30,hp:620,maxHp:620,flash:0,_gol:1,wgx:gx0,wgy:gy0,wanT:0,gait:rand(0,TAU),seed:rand(0,TAU),glare:0,ha:0,tr:[],trT:0});}
+  golems.push({x:gx0,y:gy0,hx:gx0,hy:gy0,r:38,hp:780,maxHp:780,flash:0,_gol:1,wgx:gx0,wgy:gy0,wanT:0,gait:rand(0,TAU),seed:rand(0,TAU),glare:0,ha:0,tr:[],trT:0});} /* r132: a BRUTE now (r30->38) */
  if(!ROOM){const w0=ways[(Math.random()*Math.min(8,ways.length))|0]; /* r127: THE THRESHER flies SOLO ONLY for now - she has no wire fields yet, and an unseen hull flailing a shared room is the husk disease reborn. The rooms round gives her to the wire. */
   const thx=(w0.x1+w0.x2)/2,thy=(w0.y1+w0.y2)/2;
   thresher={x:thx,y:thy,hx:thx,hy:thy,vx:0,vy:0,fa:rand(0,TAU),r:26,hp:3200,maxHp:3200,rage:0,atk:0,flash:0,press:0,calm:0,tgx:thx,tgy:thy,wanT:0,hitT:0,seed:rand(0,TAU)};}
@@ -2303,7 +2303,7 @@ function step(dt){NPLAY=humanCount();
    worms.push(w9);}}else WMRT=90;
   if(MAP==='cinder'){if(golems.length<3){GOLRT-=dt;if(GOLRT<=0){GOLRT=75;
     const gx0=rand(700,WORLD.w-700),gy0=rand(500,WORLD.h*0.34);
-    golems.push({x:gx0,y:gy0,hx:gx0,hy:gy0,r:30,hp:620,maxHp:620,flash:0,_gol:1,wgx:gx0,wgy:gy0,wanT:0,gait:rand(0,TAU),seed:rand(0,TAU),glare:0,ha:0,tr:[],trT:0});}}
+    golems.push({x:gx0,y:gy0,hx:gx0,hy:gy0,r:38,hp:780,maxHp:780,flash:0,_gol:1,wgx:gx0,wgy:gy0,wanT:0,gait:rand(0,TAU),seed:rand(0,TAU),glare:0,ha:0,tr:[],trT:0});}}
    else GOLRT=75;}}
  wormTick(dt);
  flowerTick(dt);
@@ -2737,21 +2737,21 @@ function step(dt){NPLAY=humanCount();
  for(let mi=magma.length-1;mi>=0;mi--){const mg=magma[mi];mg.t+=dt/0.85;
   if(mg.t>=1){ /* SPLASH: the ground remembers, and so will they */
    for(const s8 of swarms){if(s8.dead)continue;
-    if(s8.prot<=0&&d2(s8.x,s8.y,mg.tx,mg.ty)<70*70){s8.hp-=30;s8.hitT=.15;if(s8===me())sfx('hurt');if(s8.hp<=0)killQueen(s8,null);}
-    for(const u8 of s8.units){if(d2(u8.x,u8.y,mg.tx,mg.ty)<70*70){u8.hp-=26;u8.flash=.1;if(u8.hp<=0)killUnit(s8,u8);}}}
+    if(s8.prot<=0&&d2(s8.x,s8.y,mg.tx,mg.ty)<110*110){s8.hp-=38; /* r132: the splash is REAL now (70->110px) */s8.hitT=.15;if(s8===me())sfx('hurt');if(s8.hp<=0)killQueen(s8,null);}
+    for(const u8 of s8.units){if(d2(u8.x,u8.y,mg.tx,mg.ty)<110*110){u8.hp-=30;u8.flash=.1;if(u8.hp<=0)killUnit(s8,u8);}}}
    for(let f8=0;f8<14;f8++)fx.push({x:mg.tx+rand(-26,26),y:mg.ty+rand(-20,20),vx:rand(-70,70),vy:rand(-90,-10),t:0,life:0.8,col:f8%2?'#ff6a1e':'#ffb04d',r:rand(2.2,4),kind:'ember',rot:rand(0,TAU),rv:rand(-5,5)});
    addRing(mg.tx,mg.ty,'#ff7a30',80);
    if(me()&&d2(me().x,me().y,mg.tx,mg.ty)<600*600)shake=Math.min(10,shake+3);
-   mpools.push({x:mg.tx,y:mg.ty,t:0,life:3.2,r:54}); /* the ground stays MOLTEN - stand off it */
+   mpools.push({x:mg.tx,y:mg.ty,t:0,life:7,r:78}); /* r132: the ground says NO for SEVEN seconds across 78px */ /* the ground stays MOLTEN - stand off it */
    magma.splice(mi,1);continue;}
   mg.x=mg.sx+(mg.tx-mg.sx)*mg.t;mg.y=mg.sy+(mg.ty-mg.sy)*mg.t;
   if(Math.random()<0.5)fx.push({x:mg.x+rand(-4,4),y:mg.y-Math.sin(mg.t*Math.PI)*170+rand(-4,4),vx:rand(-14,14),vy:rand(-8,18),t:0,life:0.4,col:'#ff9a3c',r:rand(1.2,2),kind:'ember',rot:0,rv:2});}
  for(let pi=mpools.length-1;pi>=0;pi--){const mp=mpools[pi];mp.t+=dt; /* the molten pool: a patch of ground that says NO */
   if(mp.t>=mp.life){mpools.splice(pi,1);continue;}
   for(const s8 of swarms){if(s8.dead)continue;
-   if(s8.prot<=0&&d2(s8.x,s8.y,mp.x,mp.y)<(mp.r+s8.R*0.5)*(mp.r+s8.R*0.5)){s8.hp-=9*dt;s8.hitT=0.15;if(s8.hp<=0)killQueen(s8,null);}
+   if(s8.prot<=0&&d2(s8.x,s8.y,mp.x,mp.y)<(mp.r+s8.R*0.5)*(mp.r+s8.R*0.5)){s8.hp-=(s8.bot?7:14)*dt; /* r132: hotter for players, mercy for the dim wild */s8.hitT=0.15;if(s8.hp<=0)killQueen(s8,null);}
    if(Math.abs(s8.x-mp.x)>400||Math.abs(s8.y-mp.y)>400)continue;
-   for(const u8 of s8.units){if(d2(u8.x,u8.y,mp.x,mp.y)<mp.r*mp.r){u8.hp-=8*dt;u8.flash=0.1;if(u8.hp<=0)killUnit(s8,u8);}}}}
+   for(const u8 of s8.units){if(d2(u8.x,u8.y,mp.x,mp.y)<mp.r*mp.r){u8.hp-=12*dt;u8.flash=0.1;if(u8.hp<=0)killUnit(s8,u8);}}}}
  if(thresher&&thresher.hp>0){const th=thresher; /* THE THRESHER v2: one state at a time, doors between them - the twitch was branch-flap + per-tick retargeting, not temper */
   if(th.flash>0)th.flash-=dt;if(th.atk>0)th.atk-=dt;if(th.hitT>0)th.hitT-=dt;
   th.st=th.st||'graze';
@@ -2805,7 +2805,8 @@ function step(dt){NPLAY=humanCount();
     if(u7.hp<=0)killUnit(s7,u7);}}}}
  if(MAP==='cinder'&&goldT<0)BURNY0=BURNY1=-1;
  if(MAP==='cinder'&&OASIS){ /* THE GREAT BONFIRE BURNS: queens and broods take fire inside the ring; the wild FLEES it */
-  const BR=400,BR2=BR*BR,FR2=720*720; /* the pyre grew - so did its law */
+  PYREB=1+0.42*Math.sin(tnow*(TAU/75)); /* r132 THE PYRE BREATHES: 75s cycle, 0.58..1.42 - the ring is the telegraph, watch it walk */
+  const BR=400*PYREB,BR2=BR*BR,FR2=(720*PYREB)*(720*PYREB);
   for(const s6 of swarms){if(s6.dead)continue;
    const dq=d2(s6.x,s6.y,OASIS.x,OASIS.y);
    if(dq<BR2&&s6.prot<=0){s6.hp-=26*dt;s6.hitT=0.2;
@@ -3316,7 +3317,7 @@ function showHome(){
  {let bb=document.getElementById('bldBadge');if(!bb){bb=document.createElement('div');bb.id='bldBadge';
   bb.style.cssText='position:fixed;left:10px;bottom:8px;z-index:60;font-size:11px;opacity:.55;color:#ffd9a0;pointer-events:none;font-family:inherit;';
   document.body.appendChild(bb);}
-  bb.textContent='r131 · the field hospital';} /* the keeper's stamp: if this doesn't match /healthz ver, you're playing a stale copy */
+  bb.textContent='r132 · the coals rekindled';} /* the keeper's stamp: if this doesn't match /healthz ver, you're playing a stale copy */
  document.getElementById('xpTxt').innerHTML='<b style="color:#ffd75e">✨ '+Math.floor(META.xp)+'</b>'+(typeof RUNXP!=='undefined'&&RUNXP>=1?' <b style="color:#ffe9a0;font-size:13px">(+'+Math.floor(RUNXP)+' this flight)</b>':'')+' <span style="opacity:.6;font-size:12px">nest xp · every treasure is earnable · 👑 sub unlocks all</span>'; /* the FLIGHT's earnings shown beside the hoard - you can finally tell when the trip to the nest was worth it */
  const next=SKINS.find(S=>META.xp<S.xp);
  const fill=document.getElementById('xpfill'),nx=document.getElementById('xpNext');
@@ -3488,7 +3489,7 @@ try{
    try{localStorage.setItem('fh_map',_pick);}catch(e){}
    try{location.reload();}catch(e){}});}
  const _sb=document.getElementById('mapSub');if(_sb)_sb.textContent=MAPS[MAP].name+' · '+MAPS[MAP].sub+(WS_URL?' · THE SHARED MEADOW':(/^https?:$/.test(location.protocol)?' · SOLO FLIGHT':' · OFFLINE'));
- const _mk=document.getElementById('mapMark');if(_mk){_mk.textContent=MAPS[MAP].name+(MAPS[MAP].early?' · EARLY BLOOM':'')+' · r131';_mk.style.color=MAPS[MAP].col+'cc';}
+ const _mk=document.getElementById('mapMark');if(_mk){_mk.textContent=MAPS[MAP].name+(MAPS[MAP].early?' · EARLY BLOOM':'')+' · r132';_mk.style.color=MAPS[MAP].col+'cc';}
  {const go9=document.getElementById('go');if(go9){if(WS_URL)go9.innerHTML='RISE<div style="font-size:10px;letter-spacing:2px;opacity:.85;margin-top:2px">THE SHARED MEADOW · ONLINE</div>';
   else if(/^https?:$/.test(location.protocol)){go9.innerHTML='RISE<div style="font-size:10px;letter-spacing:2px;opacity:.85;margin-top:2px">SOLO FLIGHT · JUST YOU</div>';go9.style.filter='hue-rotate(80deg) saturate(.85)';
    const mr9=document.getElementById('mapRow');if(mr9&&!document.getElementById('soloChip')){const ch9=document.createElement('div');ch9.id='soloChip';ch9.style.cssText='margin:6px auto 0;font-size:11px;letter-spacing:1px;color:#ffd75e;opacity:.9;text-align:center';ch9.textContent='the SHARED MEADOW flies ONLINE — tap it to join the family';if(mr9.parentNode)mr9.parentNode.insertBefore(ch9,mr9.nextSibling);}}}} /* r129 THE HONEST DOOR: the 'server is down' scare was a quiet door - never again */
@@ -5348,13 +5349,13 @@ function draw(){
      g9.addColorStop(0,'rgba(255,190,88,.64)');g9.addColorStop(0.13,'rgba(255,160,62,.36)');
      g9.addColorStop(0.30,'rgba(255,135,48,.16)');g9.addColorStop(0.62,'rgba(255,125,42,.06)');g9.addColorStop(1,'rgba(255,120,40,0)');return g9;});
     ctx.globalAlpha=0.92+0.08*Math.sin(tnow*1.8); /* the whole glow breathes as one */
-    ctx.fillStyle=pg;
-    ctx.fillRect(Math.max(vx0,bx-3200),Math.max(vy0,by-3200),Math.min(vx1,bx+3200)-Math.max(vx0,bx-3200),Math.min(vy1,by+3200)-Math.max(vy0,by-3200));
+    ctx.save();ctx.translate(bx,by);ctx.scale(PYREB,PYREB);ctx.translate(-bx,-by); /* r132: as the pyre swells, MORE OF THE MAP GLOWS - one cached gradient, scaled, never rebuilt */
+    ctx.fillStyle=pg;ctx.fillRect(bx-3200,by-3200,6400,6400);ctx.restore();
     ctx.globalAlpha=1;}
    if(bx+520>vx0&&bx-520<vx1&&by+560>vy0&&by-520<vy1){ /* the burning theatre only plays when watched */
    ctx.fillStyle='rgba(16,10,8,.85)';ctx.beginPath();ctx.arc(bx,by,380,0,TAU);ctx.fill(); /* the char bed, widened */
    ctx.strokeStyle='rgba(255,120,45,'+(0.30+0.14*Math.sin(tnow*1.8)).toFixed(3)+')';ctx.lineWidth=8;
-   ctx.beginPath();ctx.arc(bx,by,400,0,TAU);ctx.stroke(); /* THE BURN RING matches the law (BR=400) */
+   ctx.beginPath();ctx.arc(bx,by,400*PYREB,0,TAU);ctx.stroke(); /* THE BURN RING matches the law - and BREATHES with it (r132) */
    for(let k=0;k<8;k++){const la=k/8*TAU+0.4; /* the log teepee: GREAT timbers now, eight of them */
     ctx.save();ctx.translate(bx+Math.cos(la)*165,by+Math.sin(la)*165);ctx.rotate(la+Math.PI/2+0.5);
     ctx.fillStyle=k%2?'#1c120c':'#241812';ctx.beginPath();
@@ -6493,9 +6494,9 @@ function draw(){
  for(const mg of magma){ /* the glob in flight - and the RING where it will land, growing as it falls */
   const arc=Math.sin(mg.t*Math.PI)*170;
   ctx.strokeStyle='rgba(255,80,25,'+(0.25+0.45*mg.t).toFixed(2)+')';ctx.lineWidth=2;
-  ctx.beginPath();ctx.arc(mg.tx,mg.ty,70*(0.3+0.7*mg.t),0,TAU);ctx.stroke();
+  ctx.beginPath();ctx.arc(mg.tx,mg.ty,110*(0.3+0.7*mg.t),0,TAU);ctx.stroke(); /* r132: the warning matches the new blast */
   ctx.fillStyle='rgba(255,80,25,'+(0.10*mg.t).toFixed(2)+')';
-  ctx.beginPath();ctx.arc(mg.tx,mg.ty,70*(0.3+0.7*mg.t),0,TAU);ctx.fill();
+  ctx.beginPath();ctx.arc(mg.tx,mg.ty,110*(0.3+0.7*mg.t),0,TAU);ctx.fill();
   ctx.fillStyle='#00000044';ctx.beginPath();ctx.ellipse(mg.x,mg.y,12,6.5,0,0,TAU);ctx.fill();
   {const gg2=cachedGrad('magmaglob',()=>{const g9=ctx.createRadialGradient(0,0,3,0,0,26);
     g9.addColorStop(0,'#fff0c8');g9.addColorStop(0.4,'#ff7a20');g9.addColorStop(1,'rgba(255,90,30,0)');return g9;});
@@ -6522,10 +6523,6 @@ function draw(){
    ctx.beginPath();ctx.ellipse(tp.x,tp.y,9,5,0,0,TAU);ctx.fill();
    ctx.fillStyle='rgba(255,70,25,'+(tp.a*0.35).toFixed(2)+')';
    ctx.beginPath();ctx.ellipse(tp.x,tp.y,4,2.2,0,0,TAU);ctx.fill();}
-  {const hg=cachedGrad('golhalo',()=>{const g9=ctx.createRadialGradient(0,0,gl.r*0.4,0,0,gl.r*2.8);
-    g9.addColorStop(0,'rgba(255,70,20,.34)');g9.addColorStop(0.5,'rgba(255,60,20,.13)');g9.addColorStop(1,'rgba(255,60,20,0)');return g9;});
-   ctx.save();ctx.translate(gl.x,gl.y);ctx.globalAlpha=Math.min(1,0.45+0.45*pu*gr+wind9*0.4);
-   ctx.fillStyle=hg;ctx.beginPath();ctx.arc(0,0,gl.r*2.8,0,TAU);ctx.fill();ctx.globalAlpha=1;ctx.restore();}
   ctx.fillStyle='#00000066';ctx.beginPath();ctx.ellipse(gl.x+4,gl.y+9,gl.r*1.3,gl.r*0.62,0,0,TAU);ctx.fill();
   const gait2=Math.sin(gl.gait);
   for(const sd8 of [-1,1]){ /* stub LEGS alternate under the mass - it WALKS, it doesn't float */

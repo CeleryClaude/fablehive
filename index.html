@@ -3434,7 +3434,7 @@ function showHome(){
  {let bb=document.getElementById('bldBadge');if(!bb){bb=document.createElement('div');bb.id='bldBadge';
   bb.style.cssText='position:fixed;left:10px;bottom:8px;z-index:60;font-size:11px;opacity:.55;color:#ffd9a0;pointer-events:none;font-family:inherit;';
   document.body.appendChild(bb);}
-  bb.textContent='r138 · the culling';} /* the keeper's stamp: if this doesn't match /healthz ver, you're playing a stale copy */
+  bb.textContent='r139 · the smooth step';} /* the keeper's stamp: if this doesn't match /healthz ver, you're playing a stale copy */
  document.getElementById('xpTxt').innerHTML='<b style="color:#ffd75e">✨ '+Math.floor(META.xp)+'</b>'+(typeof RUNXP!=='undefined'&&RUNXP>=1?' <b style="color:#ffe9a0;font-size:13px">(+'+Math.floor(RUNXP)+' this flight)</b>':'')+' <span style="opacity:.6;font-size:12px">nest xp · every treasure is earnable · 👑 sub unlocks all</span>'; /* the FLIGHT's earnings shown beside the hoard - you can finally tell when the trip to the nest was worth it */
  const next=SKINS.find(S=>META.xp<S.xp);
  const fill=document.getElementById('xpfill'),nx=document.getElementById('xpNext');
@@ -3606,7 +3606,7 @@ try{
    try{localStorage.setItem('fh_map',_pick);}catch(e){}
    try{location.reload();}catch(e){}});}
  const _sb=document.getElementById('mapSub');if(_sb)_sb.textContent=MAPS[MAP].name+' · '+MAPS[MAP].sub+(WS_URL?' · THE SHARED MEADOW':(/^https?:$/.test(location.protocol)?' · SOLO FLIGHT':' · OFFLINE'));
- const _mk=document.getElementById('mapMark');if(_mk){_mk.textContent=MAPS[MAP].name+(MAPS[MAP].early?' · EARLY BLOOM':'')+' · r138';_mk.style.color=MAPS[MAP].col+'cc';}
+ const _mk=document.getElementById('mapMark');if(_mk){_mk.textContent=MAPS[MAP].name+(MAPS[MAP].early?' · EARLY BLOOM':'')+' · r139';_mk.style.color=MAPS[MAP].col+'cc';}
  {const go9=document.getElementById('go');if(go9){if(WS_URL)go9.innerHTML='RISE<div style="font-size:10px;letter-spacing:2px;opacity:.85;margin-top:2px">THE SHARED MEADOW · ONLINE</div>';
   else if(/^https?:$/.test(location.protocol)){go9.innerHTML='RISE<div style="font-size:10px;letter-spacing:2px;opacity:.85;margin-top:2px">SOLO FLIGHT · JUST YOU</div>';go9.style.filter='hue-rotate(80deg) saturate(.85)';
    const mr9=document.getElementById('mapRow');if(mr9&&!document.getElementById('soloChip')){const ch9=document.createElement('div');ch9.id='soloChip';ch9.style.cssText='margin:6px auto 0;font-size:11px;letter-spacing:1px;color:#ffd75e;opacity:.9;text-align:center';ch9.textContent='the SHARED MEADOW flies ONLINE — tap it to join the family';if(mr9.parentNode)mr9.parentNode.insertBefore(ch9,mr9.nextSibling);}}}} /* r129 THE HONEST DOOR: the 'server is down' scare was a quiet door - never again */
@@ -7445,7 +7445,7 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
       const bx=wx8+(lh8?NET._hox:OX)*u._of8,by=wy8+(lh8?NET._hoy:OY)*u._of8;
       const ox9=u.x,oy9=u.y,jx9=bx-u.x,jy9=by-u.y,jd9=Math.hypot(jx9,jy9),cap9=150+(u.spd||300)*dt;
       if(jd9>cap9){u.x+=jx9/jd9*cap9;u.y+=jy9/jd9*cap9;}
-      else{const k8=Math.min(1,(hot8?70:(lh8?45:26))*dt);u.x+=jx9*k8;u.y+=jy9*k8;} /* r102: hot-lane troops bite at 45/s - data this fresh needs no heavy padding */ /* OUTPUT FILTER, combat-adaptive: fighters bite, roamers glide */
+      else{const k8=Math.min(1,(((u.atk>0||u.flash>0)?70:hot8?38:(lh8?45:26)))*dt);u.x+=jx9*k8;u.y+=jy9*k8;} /* r139 THE SMOOTH STEP (Celery: 'troops stutter even at 40ms'): near-queen troops kept NEWEST-TRUTH targets but bit at 70/s - visible 33ms HOPS through the tight lens. Now only ACTIVE STRIKERS snap; peaceful escorts glide at 38/s toward the same fresh truth. Honesty kept, staircase gone */ /* r102: hot-lane troops bite at 45/s - data this fresh needs no heavy padding */ /* OUTPUT FILTER, combat-adaptive: fighters bite, roamers glide */
       u.vx=(u.x-ox9)/Math.max(dt,0.001);u.vy=(u.y-oy9)/Math.max(dt,0.001);}
      else if(u.tx!==undefined){const k9=Math.min(1,6*dt);u.vx=(u.tx-u.x)*8;u.vy=(u.ty-u.y)*8;u.x+=(u.tx-u.x)*k9;u.y+=(u.ty-u.y)*k9;}}
     else if(tB){const hot8=(u.atk>0||u.flash>0||(MP&&!MP.dead&&Math.hypot(u.x-MP.x,u.y-MP.y)<150)); /* fighters - and ANYTHING crowding your queen - render at the NEWEST truth: a mob mid-swing-cooldown used to smooth into idle drifters while its damage landed as ghosts */
@@ -7456,7 +7456,7 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
       if(ul8>60){const ld8=Math.min(60,Math.min(ul8,rl8)*(hot8?0.05:(interpDelay/1000)*0.85));bx+=u._pvx/ul8*ld8;by+=u._pvy/ul8*ld8;}} /* lead magnitude obeys the RAW speed: a decelerating forager STOPS at her flower instead of ghosting past it (the smoothed lead lagged every stop) */
      const ox9=u.x,oy9=u.y,jx9=bx-u.x,jy9=by-u.y,jd9=Math.hypot(jx9,jy9),cap9=150+(u.spd||300)*dt;
      if(jd9>cap9){u.x+=jx9/jd9*cap9;u.y+=jy9/jd9*cap9;} /* glide over teleport-scale snaps (post-stall), never a jarring jump */
-     else{const k8=Math.min(1,(hot8?70:26)*dt);u.x+=jx9*k8;u.y+=jy9*k8;} /* same spring, combat-adaptive: a striking or struck troop snaps to truth, the rest glide */
+     else{const k8=Math.min(1,(((u.atk>0||u.flash>0)?70:hot8?38:26))*dt);u.x+=jx9*k8;u.y+=jy9*k8;} /* r139: same split for rivals crowding your crown - strikers snap, loiterers glide */ /* same spring, combat-adaptive: a striking or struck troop snaps to truth, the rest glide */
      u.vx=(u.x-ox9)/Math.max(dt,0.001);u.vy=(u.y-oy9)/Math.max(dt,0.001);}
     else{const k9=Math.min(1,6*dt);
      u.vx=(u.tx-u.x)*8;u.vy=(u.ty-u.y)*8;u.x+=(u.tx-u.x)*k9;u.y+=(u.ty-u.y)*k9;}}}

@@ -306,7 +306,7 @@ function music(){const c=ac();if(!c||musI||typeof setInterval==='undefined')retu
  musI=setInterval(()=>{const c2=ac();if(!c2||muted)return;
   const M9=me&&me();
   let eyeNear=false;if(M9&&!M9.dead)for(const ey of eyes){if(d2(M9.x,M9.y,ey.x,ey.y)<820*820){eyeNear=true;break;}}
-  const want9=(goldT>=0)?(MAP==='cinder'?9:MAP==='night'?7:4):eyeNear?7:(M9&&!M9.dead&&(M9.war||heat>0.5))?3:(MAP==='cinder'?[8,5,8]:MAP==='night'?[10,6,10]:[0,5,6])[Math.floor(tnow/60)%3]; /* every garden sings its own calm */
+  const want9=(goldT>=0)?(MAP==='cinder'?9:MAP==='night'?7:4):(eyeNear||(MAP==='night'&&HARV.ph>0))?7:(M9&&!M9.dead&&(M9.war||heat>0.5))?3:(MAP==='cinder'?[8,5,8]:MAP==='night'?[10,6,10]:[0,5,6])[Math.floor(tnow/60)%3]; /* every garden sings its own calm */
   if(want9!==musWant){musWant=want9;musWantT=tnow;}
   if(mood!==musWant&&tnow-musWantT>2.2&&bt%16===0){mood=musWant; /* moods turn at PHRASE ends, after settling - never a jarring snap */
    try{musGain.gain.cancelScheduledValues(c2.currentTime);
@@ -638,7 +638,7 @@ function equipItem(id){const it=itemById(id);if(!it||!ownsItem(id))return false;
 let NID=1,UIDN=1,swarms=[],groves=[],boulders=[],coves=[],ways=[],drops=[],fx=[],flies=[],grass=[],elder=null,shots=[],spider=null,webshots=[];
 let tnow=0,running=false,shake=0,warnT=0,goldT=-1,goldNext=170;
 let NWATCH=0,BURNY0=-1,BURNY1=-1;
-let shades=[],NLIGHTS=null,SHDRT=0; /* night: the dark's own hunters · the static light map · respawn clock */
+let shades=[],NLIGHTS=null,SHDRT=0,HARV={t:80,ph:0,pt:0,eye:0,_told:0}; /* night: the dark's own hunters · the static light map · respawn clock · THE HARVESTER BENEATH (r133): ph 0 sleeps · 1 wakes (6s telegraph) · 2 HARVESTS the middle third (12s) */
 let thresher=null,THRT=420,GOLRT=75,PYREB=1; /* r132: the pyre's breath - cinder only, 75s cycle */
 let magma=[],mpools=[]; /* golem-thrown globs in flight · the molten pools they leave */
 let GRADC={}; /* built-once gradients: the fire was rebuilding two screen-wide gradients EVERY frame */
@@ -2609,6 +2609,23 @@ function step(dt){NPLAY=humanCount();
  if(MAP==='night')for(const s4 of swarms){if(s4._markT>0){s4._markT-=dt;if(s4._markT<=0){delete s4._marked;delete s4._markT;}}}
  if(MAP==='night'){ /* THE SHADE: the dark, given teeth. It cannot cross a light's edge; everything outside one is food */
   if(!NLIGHTS)buildNLights();
+  {const hv=HARV; /* r133 THE HARVESTER BENEATH: it owns the middle third when its eyes are open. Escape outruns it; the LAND'S light (roads, lumen ground) halves its grip; its leavings pay the brave */
+   if(hv.ph===0){hv.t-=dt;if(hv.t<=0){hv.ph=1;hv.pt=6;hv.eye=0;sfx('alarm');
+    if(!hv._told){hv._told=1;toast('THE HARVESTER WAKES - the middle third belongs to IT. Fly clear, or stand in the land\'s light and pay half.','#b48cff',8);}else toast('THE HARVESTER WAKES','#b48cff',4);}}
+   else if(hv.ph===1){hv.pt-=dt;hv.eye=1-hv.pt/6;if(hv.pt<=0){hv.ph=2;hv.pt=12;hv.eye=1;}}
+   else if(hv.ph===2){hv.pt-=dt;
+    const R9=1200,R2=R9*R9;
+    for(const s5 of swarms){if(s5.dead)continue;const dq=d2(s5.x,s5.y,OASIS.x,OASIS.y);if(dq>R2)continue;
+     const dd=Math.sqrt(dq)||1,k5=1-dd/R9;
+     const mul=((typeof inLight==='function'&&NLIGHTS&&inLight(s5.x,s5.y,0))?0.5:1)*(s5.bot?0.45:1); /* the land's light is HALF-MERCY; the dim wild suffers less (it cannot read) */
+     if(s5.prot<=0){s5.hp-=(10+22*k5)*mul*dt;s5.hitT=0.15;if(s5.hp<=0)killQueen(s5,null);} /* r133b: the grip must OUT-MUSCLE the queen's 8/s regen everywhere inside the third - 10/s at the rim, 32/s at the pool, halved by the land's light */
+     const pull=(26+30*k5)*dt;s5.x+=(OASIS.x-s5.x)/dd*pull;s5.y+=(OASIS.y-s5.y)/dd*pull; /* THE TIDE: it draws you in - flying out IS the counterplay */
+     for(const u5 of s5.units){if(u5._perch)continue;u5.hp-=(6+14*k5)*mul*dt;if(u5.hp<=0)killUnit(s5,u5);}}
+    step._hvG=(step._hvG||0)+1;if(step._hvG%3===0)for(const g5 of groves){if(g5.gild||g5.mother||g5.web)continue;
+     if(g5.amt>0&&d2(g5.x,g5.y,OASIS.x,OASIS.y)<R2)g5.amt=Math.max(0,g5.amt-3.6);} /* it harvests the GARDEN too */
+    if(hv.pt<=0){hv.ph=0;hv.t=rand(90,140);hv.eye=0;
+     for(let d5=0;d5<12;d5++)drops.push({x:OASIS.x+Math.cos(d5/12*TAU)*rand(180,420),y:OASIS.y+Math.sin(d5/12*TAU)*rand(160,380),amt:rand(6,11),t:30});
+     toast('THE HARVESTER SLEEPS · ITS LEAVINGS GLITTER','#ffd75e',4);}}}
   if(shades.length<7){SHDRT-=dt;if(SHDRT<=0){SHDRT=45;
    for(let t9=0;t9<30;t9++){const sx0=rand(600,WORLD.w-600),sy0=rand(500,WORLD.h-500);
     if(inLight(sx0,sy0,120))continue; /* born only in true dark */
@@ -3317,7 +3334,7 @@ function showHome(){
  {let bb=document.getElementById('bldBadge');if(!bb){bb=document.createElement('div');bb.id='bldBadge';
   bb.style.cssText='position:fixed;left:10px;bottom:8px;z-index:60;font-size:11px;opacity:.55;color:#ffd9a0;pointer-events:none;font-family:inherit;';
   document.body.appendChild(bb);}
-  bb.textContent='r132 · the coals rekindled';} /* the keeper's stamp: if this doesn't match /healthz ver, you're playing a stale copy */
+  bb.textContent='r133 · the harvester beneath';} /* the keeper's stamp: if this doesn't match /healthz ver, you're playing a stale copy */
  document.getElementById('xpTxt').innerHTML='<b style="color:#ffd75e">✨ '+Math.floor(META.xp)+'</b>'+(typeof RUNXP!=='undefined'&&RUNXP>=1?' <b style="color:#ffe9a0;font-size:13px">(+'+Math.floor(RUNXP)+' this flight)</b>':'')+' <span style="opacity:.6;font-size:12px">nest xp · every treasure is earnable · 👑 sub unlocks all</span>'; /* the FLIGHT's earnings shown beside the hoard - you can finally tell when the trip to the nest was worth it */
  const next=SKINS.find(S=>META.xp<S.xp);
  const fill=document.getElementById('xpfill'),nx=document.getElementById('xpNext');
@@ -3489,7 +3506,7 @@ try{
    try{localStorage.setItem('fh_map',_pick);}catch(e){}
    try{location.reload();}catch(e){}});}
  const _sb=document.getElementById('mapSub');if(_sb)_sb.textContent=MAPS[MAP].name+' · '+MAPS[MAP].sub+(WS_URL?' · THE SHARED MEADOW':(/^https?:$/.test(location.protocol)?' · SOLO FLIGHT':' · OFFLINE'));
- const _mk=document.getElementById('mapMark');if(_mk){_mk.textContent=MAPS[MAP].name+(MAPS[MAP].early?' · EARLY BLOOM':'')+' · r132';_mk.style.color=MAPS[MAP].col+'cc';}
+ const _mk=document.getElementById('mapMark');if(_mk){_mk.textContent=MAPS[MAP].name+(MAPS[MAP].early?' · EARLY BLOOM':'')+' · r133';_mk.style.color=MAPS[MAP].col+'cc';}
  {const go9=document.getElementById('go');if(go9){if(WS_URL)go9.innerHTML='RISE<div style="font-size:10px;letter-spacing:2px;opacity:.85;margin-top:2px">THE SHARED MEADOW · ONLINE</div>';
   else if(/^https?:$/.test(location.protocol)){go9.innerHTML='RISE<div style="font-size:10px;letter-spacing:2px;opacity:.85;margin-top:2px">SOLO FLIGHT · JUST YOU</div>';go9.style.filter='hue-rotate(80deg) saturate(.85)';
    const mr9=document.getElementById('mapRow');if(mr9&&!document.getElementById('soloChip')){const ch9=document.createElement('div');ch9.id='soloChip';ch9.style.cssText='margin:6px auto 0;font-size:11px;letter-spacing:1px;color:#ffd75e;opacity:.9;text-align:center';ch9.textContent='the SHARED MEADOW flies ONLINE — tap it to join the family';if(mr9.parentNode)mr9.parentNode.insertBefore(ch9,mr9.nextSibling);}}}} /* r129 THE HONEST DOOR: the 'server is down' scare was a quiet door - never again */
@@ -5318,7 +5335,30 @@ function draw(){
   ctx.fillStyle=MAP==='cinder'?'rgba(230,110,50,0.10)':MAP==='night'?'rgba(20,28,64,0.5)':'rgba(88,190,178,0.16)';ctx.beginPath();ctx.arc(O.x,O.y,O.r*0.52,0,TAU);ctx.fill(); /* caldera · MIRROR POOL · under-ice */
   if(MAP==='night'){for(let st9=0;st9<16;st9++){const sa9=st9*2.399+1.1,sr9=O.r*(0.12+((st9*73)%53)/53*0.78); /* r128 THE MIRROR POOL: black glass holds painted stars - the sky the night garden never shows you lives in the water */
     const sx9=O.x+Math.cos(sa9)*sr9,sy9=O.y+Math.sin(sa9)*sr9*0.82,tw9=Math.max(0,Math.sin(tnow*1.3+st9*2.1));
-    ctx.fillStyle='rgba(220,230,255,'+(0.10+0.30*tw9).toFixed(3)+')';ctx.beginPath();ctx.arc(sx9,sy9,tw9>0.85?1.8:1.1,0,TAU);ctx.fill();}}
+    ctx.fillStyle='rgba(220,230,255,'+(0.10+0.30*tw9).toFixed(3)+')';ctx.beginPath();ctx.arc(sx9,sy9,tw9>0.85?1.8:1.1,0,TAU);ctx.fill();}
+   if(HARV.ph>0){const ey9=HARV.eye; /* r133 THE HARVESTER BENEATH, seen: the pool blackens, the arms breach, the eyes open. Fills and strokes only - the QGOV law holds */
+    ctx.fillStyle='rgba(4,2,10,'+(0.55*ey9).toFixed(2)+')';ctx.beginPath();ctx.arc(O.x,O.y,O.r*0.52,0,TAU);ctx.fill();
+    for(let k9=0;k9<7;k9++){const aa9=k9/7*TAU+Math.sin(tnow*0.7+k9*2.1)*0.22; /* seven arms sweep the rim */
+     const L9=(O.r*0.45+150*ey9)*(0.8+0.2*Math.sin(tnow*1.3+k9));
+     const bx9=O.x+Math.cos(aa9)*O.r*0.5,by9=O.y+Math.sin(aa9)*O.r*0.42;
+     const tx9=O.x+Math.cos(aa9+0.35)*(O.r*0.5+L9),ty9=O.y+Math.sin(aa9+0.35)*(O.r*0.42+L9);
+     ctx.strokeStyle='rgba(6,4,14,'+(0.85*ey9).toFixed(2)+')';ctx.lineWidth=13-k9%3*3;ctx.lineCap='round';
+     ctx.beginPath();ctx.moveTo(bx9,by9);ctx.quadraticCurveTo(O.x+Math.cos(aa9+0.9)*O.r*0.9,O.y+Math.sin(aa9+0.9)*O.r*0.8,tx9,ty9);ctx.stroke();
+     ctx.strokeStyle='rgba(150,110,220,'+(0.30*ey9).toFixed(2)+')';ctx.lineWidth=2.2;
+     ctx.beginPath();ctx.moveTo(bx9,by9);ctx.quadraticCurveTo(O.x+Math.cos(aa9+0.9)*O.r*0.9,O.y+Math.sin(aa9+0.9)*O.r*0.8,tx9,ty9);ctx.stroke();
+     ctx.fillStyle='rgba(200,180,255,'+(0.5*ey9).toFixed(2)+')';ctx.beginPath();ctx.arc(tx9,ty9,3.4,0,TAU);ctx.fill();}
+    ctx.lineCap='butt';
+    if(HARV.ph===2){const M9=typeof me==='function'?me():null; /* THE EYES: three, and they look AT YOU */
+     for(let e9=0;e9<3;e9++){const ea9=e9/3*TAU+1.1,ex9=O.x+Math.cos(ea9)*O.r*0.26,eyy9=O.y+Math.sin(ea9)*O.r*0.22;
+      const wa9=M9?Math.atan2(M9.y-eyy9,M9.x-ex9):ea9;
+      ctx.fillStyle='rgba(216,224,255,.92)';ctx.beginPath();ctx.ellipse(ex9,eyy9,15,8.5,ea9*0.3,0,TAU);ctx.fill();
+      ctx.fillStyle='#2a1044';ctx.beginPath();ctx.ellipse(ex9+Math.cos(wa9)*4.5,eyy9+Math.sin(wa9)*3,4.2,7,wa9,0,TAU);ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.8)';ctx.beginPath();ctx.arc(ex9+Math.cos(wa9)*6,eyy9+Math.sin(wa9)*4-2,1.3,0,TAU);ctx.fill();}
+     ctx.strokeStyle='rgba(150,110,220,'+(0.10+0.08*Math.sin(tnow*2.2)).toFixed(3)+')';ctx.lineWidth=3;ctx.setLineDash([26,34]); /* the harvest line at 1200 - the range is READABLE, always */
+     ctx.beginPath();ctx.arc(O.x,O.y,1200,0,TAU);ctx.stroke();ctx.setLineDash([]);
+     for(let m9=0;m9<10;m9++){const ma9=(m9*0.628+tnow*0.10)%TAU,mr9=1150-((tnow*230+m9*137)%1000); /* the stolen light streams home */
+      ctx.fillStyle='rgba(180,160,255,'+(0.14+0.10*Math.sin(tnow*3+m9)).toFixed(3)+')';
+      ctx.beginPath();ctx.arc(O.x+Math.cos(ma9)*mr9,O.y+Math.sin(ma9)*mr9,2.6,0,TAU);ctx.fill();}}}}
   ctx.fillStyle=MAP==='cinder'?'rgba(255,150,70,0.16)':MAP==='night'?'rgba(8,12,36,0.6)':'rgba(110,214,196,0.2)';ctx.beginPath();ctx.arc(O.x,O.y,O.r*0.38,0,TAU);ctx.fill();
   for(let k=0;k<3;k++){const rp=((tnow*0.12+k/3)%1); /* ripples breathe outward */
    ctx.strokeStyle=(MAP==='cinder'?'rgba(255,190,130,':MAP==='night'?'rgba(190,210,255,':'rgba(190,240,230,')+((0.22)*(1-rp)).toFixed(3)+')';ctx.lineWidth=1.6;
@@ -6981,7 +7021,7 @@ function netApplyWorld(D){ /* the STATIC world takes the client's stage - and SC
   pricks:g.pk.map(p=>({x:p[0],y:p[1],rot:0,cd:0,vx:0,vy:0}))}));
  fieldMaws=D.fm.map(m=>({x:m[0],y:m[1],rot:m[2],big:m[3],cd:0,anim:0}));
  OASIS=D.oa;decor=D.dc.map(d=>({x:d[0],y:d[1],ty:['tuft','rubble','swirl'][d[2]],ph:d[3]}));
- thorns=D.th;groves=[];drops=[];shots=[];orbs=[];wasps=[];eyes=[];elder=null;spider=null;worms=[];golems=[];magma=[];mpools=[];bonefae=[];bspears=[];huskC=[];shades=[];thresher=null;NLIGHTS=null;FRONT=1e9;NWATCH=0; /* r129 THE FULLER PURGE: the husk disease's THIRD visit (dead boulders r67, worm husks r62-era, now gen 4's wildlife) - the menu-world's golems/pools/fae/shades/thresher lingered invisibly in the room, and Celery walked into them. EVERY local array the wire does not re-dress gets scrubbed at the door, and the winter of this lesson is: when you ADD an array, ADD IT HERE */ /* THE HUSK PURGE: worms were the ONE creature this scrub forgot (the scrub predates r30's worms). The menu-world's local worms squatted in the array, the wire re-dressed them by index every beat, and the glide loop skipped them - no _net stamp - so they stood as LIFELESS HUSKS near the den while the TRUE worm hunted soldiers unseen. Celery's exact sighting, Jul 11 */
+ thorns=D.th;groves=[];drops=[];shots=[];orbs=[];wasps=[];eyes=[];elder=null;spider=null;worms=[];golems=[];magma=[];mpools=[];bonefae=[];bspears=[];huskC=[];shades=[];thresher=null;NLIGHTS=null;FRONT=1e9;NWATCH=0;HARV.ph=0;HARV.eye=0;HARV.t=80; /* r129 THE FULLER PURGE: the husk disease's THIRD visit (dead boulders r67, worm husks r62-era, now gen 4's wildlife) - the menu-world's golems/pools/fae/shades/thresher lingered invisibly in the room, and Celery walked into them. EVERY local array the wire does not re-dress gets scrubbed at the door, and the winter of this lesson is: when you ADD an array, ADD IT HERE */ /* THE HUSK PURGE: worms were the ONE creature this scrub forgot (the scrub predates r30's worms). The menu-world's local worms squatted in the array, the wire re-dressed them by index every beat, and the glide loop skipped them - no _net stamp - so they stood as LIFELESS HUSKS near the den while the TRUE worm hunted soldiers unseen. Celery's exact sighting, Jul 11 */
  for(const s2 of swarms){s2.dead=true;s2.gone=true;}swarms=[];
  try{boulderGridBuild();}catch(e){} /* THE STONE GRID was only ever built inside step(), which never runs online - collideBoulders searched an EMPTY net, so the predicted queen sailed through rocks and cove rims until the server yanked her back. The invisible walls, and half the drift-shove */}
 function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - stamped by OUR clock, not the server's lumpy one */

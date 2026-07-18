@@ -1151,6 +1151,7 @@ function makeWorld(){
  setupWorldTail();
 }
 function spawnElder(){
+ if(MAP==='night')return; /* r138 THE CULLING, by decree ('no reskinned laziness'): the Pale Stag was the meadow Elder in borrowed bones - he leaves the night. The original bestiary (moth-kin, eldritch kin) inherits his range; until then the god and its wildlife hold the dark alone */
  let ex,ey,tr=0,bex9=0,bey9=0,bq9=-1;
  do{if(MAP==='cinder'){ex=rand(700,WORLD.w*0.40);ey=rand(700,WORLD.h*0.40);}else if(MAP==='night'){ex=rand(WORLD.w*0.52,WORLD.w*0.80);ey=rand(WORLD.h*0.44,WORLD.h*0.66);}else{ex=rand(700,WORLD.w*0.42);ey=rand(WORLD.h*0.58,WORLD.h-700);}tr++; /* cinder: the lonely realm earns its dread */ /* THE ELDER'S HAUNT IS THE SOUTH-WEST by decree: each corner keeps its nightmare - spider NW, elder SW, the eyes' eldritch garden NE-adjacent, honey vale SE */
   const q9=Math.min(d2(ex,ey,WORLD.w/2,WORLD.h/2),d2(ex,ey,(MAP==='cinder'?5300:2900),(MAP==='cinder'?1500:2900)));
@@ -1161,6 +1162,7 @@ function spawnElder(){
  if(groves.filter(g9=>g9.mother).length<6)for(let g=0;g<4;g++){const ga4=g/4*TAU+rand(-0.25,0.25),gr4=rand(185,235);groves.push({x:ex+Math.cos(ga4)*gr4,y:ey+Math.sin(ga4)*gr4,amt:210,max:210,vx:0,vy:0,mother:true,sp:6});}
 }
 function spawnSpider(){
+ if(MAP==='night')return; /* r138 THE CULLING: the Weaver of Lights was the Broodmother re-rimmed - she leaves too. The web zone (anchor-strung, original arachnids) will claim the hems properly, per the docket */
  const ex=elder?elder.hx:1e9,ey=elder?elder.hy:1e9; /* she dens far from HIM, wherever he haunts */
  /* THE BROODMOTHER: the meadow's other nightmare - patient, webbed, surrounded by her young */
  {let sx2,sy2,tr3=0,bsx9=1425,bsy9=1425,bsd9=-1;
@@ -3432,7 +3434,7 @@ function showHome(){
  {let bb=document.getElementById('bldBadge');if(!bb){bb=document.createElement('div');bb.id='bldBadge';
   bb.style.cssText='position:fixed;left:10px;bottom:8px;z-index:60;font-size:11px;opacity:.55;color:#ffd9a0;pointer-events:none;font-family:inherit;';
   document.body.appendChild(bb);}
-  bb.textContent='r137 · the veiled garden';} /* the keeper's stamp: if this doesn't match /healthz ver, you're playing a stale copy */
+  bb.textContent='r138 · the culling';} /* the keeper's stamp: if this doesn't match /healthz ver, you're playing a stale copy */
  document.getElementById('xpTxt').innerHTML='<b style="color:#ffd75e">✨ '+Math.floor(META.xp)+'</b>'+(typeof RUNXP!=='undefined'&&RUNXP>=1?' <b style="color:#ffe9a0;font-size:13px">(+'+Math.floor(RUNXP)+' this flight)</b>':'')+' <span style="opacity:.6;font-size:12px">nest xp · every treasure is earnable · 👑 sub unlocks all</span>'; /* the FLIGHT's earnings shown beside the hoard - you can finally tell when the trip to the nest was worth it */
  const next=SKINS.find(S=>META.xp<S.xp);
  const fill=document.getElementById('xpfill'),nx=document.getElementById('xpNext');
@@ -3604,7 +3606,7 @@ try{
    try{localStorage.setItem('fh_map',_pick);}catch(e){}
    try{location.reload();}catch(e){}});}
  const _sb=document.getElementById('mapSub');if(_sb)_sb.textContent=MAPS[MAP].name+' · '+MAPS[MAP].sub+(WS_URL?' · THE SHARED MEADOW':(/^https?:$/.test(location.protocol)?' · SOLO FLIGHT':' · OFFLINE'));
- const _mk=document.getElementById('mapMark');if(_mk){_mk.textContent=MAPS[MAP].name+(MAPS[MAP].early?' · EARLY BLOOM':'')+' · r137';_mk.style.color=MAPS[MAP].col+'cc';}
+ const _mk=document.getElementById('mapMark');if(_mk){_mk.textContent=MAPS[MAP].name+(MAPS[MAP].early?' · EARLY BLOOM':'')+' · r138';_mk.style.color=MAPS[MAP].col+'cc';}
  {const go9=document.getElementById('go');if(go9){if(WS_URL)go9.innerHTML='RISE<div style="font-size:10px;letter-spacing:2px;opacity:.85;margin-top:2px">THE SHARED MEADOW · ONLINE</div>';
   else if(/^https?:$/.test(location.protocol)){go9.innerHTML='RISE<div style="font-size:10px;letter-spacing:2px;opacity:.85;margin-top:2px">SOLO FLIGHT · JUST YOU</div>';go9.style.filter='hue-rotate(80deg) saturate(.85)';
    const mr9=document.getElementById('mapRow');if(mr9&&!document.getElementById('soloChip')){const ch9=document.createElement('div');ch9.id='soloChip';ch9.style.cssText='margin:6px auto 0;font-size:11px;letter-spacing:1px;color:#ffd75e;opacity:.9;text-align:center';ch9.textContent='the SHARED MEADOW flies ONLINE — tap it to join the family';if(mr9.parentNode)mr9.parentNode.insertBefore(ch9,mr9.nextSibling);}}}} /* r129 THE HONEST DOOR: the 'server is down' scare was a quiet door - never again */

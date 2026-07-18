@@ -638,7 +638,7 @@ function equipItem(id){const it=itemById(id);if(!it||!ownsItem(id))return false;
 let NID=1,UIDN=1,swarms=[],groves=[],boulders=[],coves=[],ways=[],drops=[],fx=[],flies=[],grass=[],elder=null,shots=[],spider=null,webshots=[];
 let tnow=0,running=false,shake=0,warnT=0,goldT=-1,goldNext=170;
 let NWATCH=0,BURNY0=-1,BURNY1=-1;
-let shades=[],NLIGHTS=null,SHDRT=0,HARV={t:80,ph:0,pt:0,eye:0,_told:0},lbearers=[],gdivers=[],ldrops=[]; /* r134 THE NIGHT'S OWN: lantern-bearers (walking TRUE light) · gloom-divers (hem ambushers) · fallen lanterns (standing light, 30s) */ /* night: the dark's own hunters · the static light map · respawn clock · THE HARVESTER BENEATH (r133): ph 0 sleeps · 1 wakes (6s telegraph) · 2 HARVESTS the middle third (12s) */
+let shades=[],NLIGHTS=null,SHDRT=0,HARV={t:80,ph:0,pt:0,eye:0,_told:0,arms:[],grabs:0},lbearers=[],gdivers=[],ldrops=[]; /* r134 THE NIGHT'S OWN: lantern-bearers (walking TRUE light) · gloom-divers (hem ambushers) · fallen lanterns (standing light, 30s) */ /* night: the dark's own hunters · the static light map · respawn clock · THE HARVESTER BENEATH (r133): ph 0 sleeps · 1 wakes (6s telegraph) · 2 HARVESTS the middle third (12s) */
 let thresher=null,THRT=420,GOLRT=75,PYREB=1; /* r132: the pyre's breath - cinder only, 75s cycle */
 let magma=[],mpools=[]; /* golem-thrown globs in flight · the molten pools they leave */
 let GRADC={}; /* built-once gradients: the fire was rebuilding two screen-wide gradients EVERY frame */
@@ -2580,7 +2580,8 @@ function step(dt){NPLAY=humanCount();
   if(!hit&&thresher&&thresher.rage>0.25&&d2(sh.x,sh.y,thresher.x,thresher.y)<(thresher.r*1.1)**2){thresher.hp-=sh.dmg||8;thresher.flash=.1;thresher.calm=0;hit=true;if(thresher.hp<=0)threshDie();}
   if(!hit)for(const gl9 of golems){if(d2(sh.x,sh.y,gl9.x,gl9.y)<(gl9.r*1.15)**2){gl9.hp-=sh.dmg||8;gl9.flash=.1;hit=true;if(gl9.hp<=0)golemDie(gl9);break;}}
   if(!hit)for(const lb9 of lbearers){if(d2(sh.x,sh.y,lb9.x,lb9.y)<20*20){lb9.hp-=sh.dmg||8;lb9.flash=.12;hit=true;break;}}
-  if(!hit)for(const gd9 of gdivers){if(gd9.st===1&&d2(sh.x,sh.y,gd9.x,gd9.y)<18*18){gd9.hp-=sh.dmg||8;gd9.flash=.12;hit=true;break;}} /* r134: quarrels answer the night's own - the diver only while ERUPTED */
+  if(!hit)for(const gd9 of gdivers){if(gd9.st===1&&d2(sh.x,sh.y,gd9.x,gd9.y)<18*18){gd9.hp-=sh.dmg||8;gd9.flash=.12;hit=true;break;}}
+  if(!hit&&MAP==='night'&&HARV.ph>0)for(const ar9 of HARV.arms){if(ar9.dead)continue;const tp9=ar9.segs[ar9.segs.length-1];if(d2(sh.x,sh.y,tp9.x,tp9.y)<26*26){ar9.dmg+=sh.dmg||8;hit=true;break;}} /* r135: SHOOT THE ARM - 120 damage severs the grip */ /* r134: quarrels answer the night's own - the diver only while ERUPTED */
   if(!hit)for(const sh9 of shades){if(d2(sh.x,sh.y,sh9.x,sh9.y)<26*26){sh9.hp-=sh.dmg||8;sh9.flash=.1;hit=true;if(sh9.hp<=0)shadeDie(sh9);break;}}
   if(!hit)for(const bf9 of bonefae){if(d2(sh.x,sh.y,bf9.x,bf9.y)<18*18){bf9.hp-=sh.dmg||8;bf9.flash=.1;hit=true;if(bf9.hp<=0){const bi9=bonefae.indexOf(bf9);if(bi9>=0)bonefae.splice(bi9,1);}break;}}
   if(!hit&&elder&&d2(sh.x,sh.y,elder.x,elder.y)<(elder.r*0.85)**2){ /* QUARRELS BITE THE COLOSSI: shots only ever collided with swarms - a spitter army did literally ZERO boss damage, and the healthbar never woke to say so */
@@ -2652,10 +2653,58 @@ function step(dt){NPLAY=humanCount();
    if(gd.hp<=0){for(let d9=0;d9<4;d9++)drops.push({x:gd.x+rand(-18,18),y:gd.y+rand(-14,14),amt:rand(6,10),t:20});
     addRing(gd.x,gd.y,'#b48cff',44);gdivers.splice(gdivers.indexOf(gd),1);}}
   {const hv=HARV; /* r133 THE HARVESTER BENEATH: it owns the middle third when its eyes are open. Escape outruns it; the LAND'S light (roads, lumen ground) halves its grip; its leavings pay the brave */
-   if(hv.ph===0){hv.t-=dt;if(hv.t<=0){hv.ph=1;hv.pt=6;hv.eye=0;sfx('alarm');
+   if(hv.ph===0){hv.t-=dt;if(hv.t<=0){hv.ph=1;hv.pt=6;hv.eye=0;sfx('alarm');hv.grabs=0;
+     hv.arms=[];for(let a9=0;a9<7;a9++){const ba9=a9/7*TAU+rand(-0.1,0.1),segs9=[];
+      for(let g9=0;g9<12;g9++)segs9.push({x:OASIS.x+Math.cos(ba9)*(OASIS.r*0.35+g9*8),y:OASIS.y+Math.sin(ba9)*(OASIS.r*0.30+g9*7)});
+      hv.arms.push({ba:ba9,segs:segs9,st:0,tx:0,ty:0,lash:0,tel:0,grab:null,gsw:null,gt:0,dmg:0,ngrab:0,dead:0,seed:rand(0,TAU)});} /* r135 THE ARMS: seven, each owns its sector - they never tangle, and the pattern can be LEARNED */
     if(!hv._told){hv._told=1;toast('THE HARVESTER WAKES - the middle third belongs to IT. Fly clear, or stand in the land\'s light and pay half.','#b48cff',8);}else toast('THE HARVESTER WAKES','#b48cff',4);}}
    else if(hv.ph===1){hv.pt-=dt;hv.eye=1-hv.pt/6;if(hv.pt<=0){hv.ph=2;hv.pt=12;hv.eye=1;}}
-   else if(hv.ph===2){hv.pt-=dt;
+   if(hv.ph>0&&hv.arms.length){const AR9=1150; /* THE ARMS, alive: coil -> quest -> seize -> crush -> gulp. Constraint chains: a want, never a snap */
+    for(const ar of hv.arms){if(ar.dead){ /* a severed arm sulks home */
+      for(let g9=ar.segs.length-1;g9>0;g9--){const p9=ar.segs[g9-1];const s9=ar.segs[g9];s9.x+=(p9.x-s9.x)*Math.min(1,dt*3);s9.y+=(p9.y-s9.y)*Math.min(1,dt*3);}continue;}
+     const tip=ar.segs[ar.segs.length-1];
+     if(ar.lash>0)ar.lash-=dt;if(ar.tel>0)ar.tel-=dt;
+     if(hv.ph===1){ar.st=0;} /* breach and sway - the warning */
+     if(ar.st===0&&hv.ph===2){ /* QUEST: seek prey in MY sector */
+      let best=null,bq=AR9*AR9;
+      for(const s5 of swarms){if(s5.dead)continue;
+       for(const u5 of s5.units){if(u5._perch)continue;
+        const dq=d2(u5.x,u5.y,OASIS.x,OASIS.y);if(dq>bq||dq<OASIS.r*OASIS.r*0.2)continue;
+        let da=Math.atan2(u5.y-OASIS.y,u5.x-OASIS.x)-ar.ba;while(da>Math.PI)da-=TAU;while(da<-Math.PI)da+=TAU;
+        if(Math.abs(da)>0.48)continue; /* my sector only */
+        if(dq<bq){bq=dq;best=u5;ar.gsw=s5;}}}
+      if(best&&hv.grabs<10&&ar.ngrab<2){ar.tx=best.x;ar.ty=best.y;ar._prey=best;
+       const dd9=Math.hypot(tip.x-best.x,tip.y-best.y);
+       if(dd9<120&&ar.lash<=0&&ar.tel<=0){ar.tel=0.5;} /* THE TELL: it rears half a breath before the strike */
+       if(ar.tel>0&&ar.tel<=dt*1.5){ar.st=2;}}
+      else{ar.tx=OASIS.x+Math.cos(ar.ba+Math.sin(tnow*0.4+ar.seed)*0.3)*(OASIS.r+220);ar.ty=OASIS.y+Math.sin(ar.ba+Math.sin(tnow*0.4+ar.seed)*0.3)*(OASIS.r+200);}}
+     else if(ar.st===2){ /* SEIZE: the lash itself */
+      const p5=ar._prey;
+      if(!p5||p5.hp<=0||p5._perch){ar.st=0;ar.lash=1.2;}
+      else{ar.tx=p5.x;ar.ty=p5.y;
+       if(Math.hypot(tip.x-p5.x,tip.y-p5.y)<34){ /* CAUGHT - and gone from the world's ledgers */
+        const sw5=ar.gsw;const ix5=sw5?sw5.units.indexOf(p5):-1;
+        if(ix5>=0){sw5.units.splice(ix5,1);ar.grab=p5;ar.gt=2.8;ar.st=3;ar.ngrab++;hv.grabs++;ar.lash=1.4;
+         if(sw5===((typeof me==='function')?me():null))toast('THE ARM HAS ONE OF YOURS - SHOOT IT to force the grip','#ff9aa8',5);sfx('hurt');}
+        else{ar.st=0;ar.lash=1.2;}}}}
+     else if(ar.st===3){ /* CRUSH: drag it to the maw */
+      ar.gt-=dt;ar.tx=OASIS.x;ar.ty=OASIS.y;
+      if(ar.grab){ar.grab.x=tip.x;ar.grab.y=tip.y;}
+      if(ar.gt<=0){if(ar.grab){addRing(OASIS.x,OASIS.y,'#b48cff',60);sfx('die');}ar.grab=null;ar.st=0;ar.lash=1.0;}} /* THE GULP: no corpse, no return */
+     /* the tip moves toward its want - light SLOWS the arm (the one law, again) */
+     {const spd=(ar.st===2?520:ar.st===3?300:210)*((typeof inLight==='function'&&NLIGHTS&&inLight(tip.x,tip.y,0))?0.55:1);
+      const dx9=ar.tx-tip.x,dy9=ar.ty-tip.y,dd9=Math.hypot(dx9,dy9)||1;const mv9=Math.min(dd9,spd*dt);
+      tip.x+=dx9/dd9*mv9;tip.y+=dy9/dd9*mv9;}
+     /* chain constraint: tip-anchored back pass, base-anchored forward pass - one each, stable and cheap */
+     const base={x:OASIS.x+Math.cos(ar.ba)*OASIS.r*0.35,y:OASIS.y+Math.sin(ar.ba)*OASIS.r*0.30};
+     for(let g9=ar.segs.length-2;g9>=0;g9--){const c9=ar.segs[g9],n9=ar.segs[g9+1];const dx9=c9.x-n9.x,dy9=c9.y-n9.y,dd9=Math.hypot(dx9,dy9)||1;c9.x=n9.x+dx9/dd9*95;c9.y=n9.y+dy9/dd9*95;} /* r135b: 12 segs x 95px = ~1140px of REACH - the whole third is graspable */
+     ar.segs[0].x=base.x;ar.segs[0].y=base.y;
+     for(let g9=1;g9<ar.segs.length;g9++){const c9=ar.segs[g9],p9=ar.segs[g9-1];const dx9=c9.x-p9.x,dy9=c9.y-p9.y,dd9=Math.hypot(dx9,dy9)||1;c9.x=p9.x+dx9/dd9*95;c9.y=p9.y+dy9/dd9*95;}
+     if(ar.dmg>=120&&!ar.dead){ar.dead=1; /* SEVERED: the grip opens, the catch lives */
+      if(ar.grab&&ar.gsw){ar.grab.x=tip.x;ar.grab.y=tip.y;ar.gsw.units.push(ar.grab);ar.grab=null;toast('THE GRIP BREAKS','#8fe0c0',4);}
+      addRing(tip.x,tip.y,'#8fe0c0',50);}}
+    if(hv.ph===2&&hv.pt<=0){hv.arms=[];}}
+   if(hv.ph===2){hv.pt-=dt; /* the drain + tide + harvest continue beneath the arms */
     const R9=1200,R2=R9*R9;
     for(const s5 of swarms){if(s5.dead)continue;const dq=d2(s5.x,s5.y,OASIS.x,OASIS.y);if(dq>R2)continue;
      const dd=Math.sqrt(dq)||1,k5=1-dd/R9;
@@ -3376,7 +3425,7 @@ function showHome(){
  {let bb=document.getElementById('bldBadge');if(!bb){bb=document.createElement('div');bb.id='bldBadge';
   bb.style.cssText='position:fixed;left:10px;bottom:8px;z-index:60;font-size:11px;opacity:.55;color:#ffd9a0;pointer-events:none;font-family:inherit;';
   document.body.appendChild(bb);}
-  bb.textContent='r134 · the night&#39;s own';} /* the keeper's stamp: if this doesn't match /healthz ver, you're playing a stale copy */
+  bb.textContent='r135 · the arms';} /* the keeper's stamp: if this doesn't match /healthz ver, you're playing a stale copy */
  document.getElementById('xpTxt').innerHTML='<b style="color:#ffd75e">✨ '+Math.floor(META.xp)+'</b>'+(typeof RUNXP!=='undefined'&&RUNXP>=1?' <b style="color:#ffe9a0;font-size:13px">(+'+Math.floor(RUNXP)+' this flight)</b>':'')+' <span style="opacity:.6;font-size:12px">nest xp · every treasure is earnable · 👑 sub unlocks all</span>'; /* the FLIGHT's earnings shown beside the hoard - you can finally tell when the trip to the nest was worth it */
  const next=SKINS.find(S=>META.xp<S.xp);
  const fill=document.getElementById('xpfill'),nx=document.getElementById('xpNext');
@@ -3548,7 +3597,7 @@ try{
    try{localStorage.setItem('fh_map',_pick);}catch(e){}
    try{location.reload();}catch(e){}});}
  const _sb=document.getElementById('mapSub');if(_sb)_sb.textContent=MAPS[MAP].name+' · '+MAPS[MAP].sub+(WS_URL?' · THE SHARED MEADOW':(/^https?:$/.test(location.protocol)?' · SOLO FLIGHT':' · OFFLINE'));
- const _mk=document.getElementById('mapMark');if(_mk){_mk.textContent=MAPS[MAP].name+(MAPS[MAP].early?' · EARLY BLOOM':'')+' · r134';_mk.style.color=MAPS[MAP].col+'cc';}
+ const _mk=document.getElementById('mapMark');if(_mk){_mk.textContent=MAPS[MAP].name+(MAPS[MAP].early?' · EARLY BLOOM':'')+' · r135';_mk.style.color=MAPS[MAP].col+'cc';}
  {const go9=document.getElementById('go');if(go9){if(WS_URL)go9.innerHTML='RISE<div style="font-size:10px;letter-spacing:2px;opacity:.85;margin-top:2px">THE SHARED MEADOW · ONLINE</div>';
   else if(/^https?:$/.test(location.protocol)){go9.innerHTML='RISE<div style="font-size:10px;letter-spacing:2px;opacity:.85;margin-top:2px">SOLO FLIGHT · JUST YOU</div>';go9.style.filter='hue-rotate(80deg) saturate(.85)';
    const mr9=document.getElementById('mapRow');if(mr9&&!document.getElementById('soloChip')){const ch9=document.createElement('div');ch9.id='soloChip';ch9.style.cssText='margin:6px auto 0;font-size:11px;letter-spacing:1px;color:#ffd75e;opacity:.9;text-align:center';ch9.textContent='the SHARED MEADOW flies ONLINE — tap it to join the family';if(mr9.parentNode)mr9.parentNode.insertBefore(ch9,mr9.nextSibling);}}}} /* r129 THE HONEST DOOR: the 'server is down' scare was a quiet door - never again */
@@ -5380,15 +5429,26 @@ function draw(){
     ctx.fillStyle='rgba(220,230,255,'+(0.10+0.30*tw9).toFixed(3)+')';ctx.beginPath();ctx.arc(sx9,sy9,tw9>0.85?1.8:1.1,0,TAU);ctx.fill();}
    if(HARV.ph>0){const ey9=HARV.eye; /* r133 THE HARVESTER BENEATH, seen: the pool blackens, the arms breach, the eyes open. Fills and strokes only - the QGOV law holds */
     ctx.fillStyle='rgba(4,2,10,'+(0.55*ey9).toFixed(2)+')';ctx.beginPath();ctx.arc(O.x,O.y,O.r*0.52,0,TAU);ctx.fill();
-    for(let k9=0;k9<7;k9++){const aa9=k9/7*TAU+Math.sin(tnow*0.7+k9*2.1)*0.22; /* seven arms sweep the rim */
-     const L9=(O.r*0.45+150*ey9)*(0.8+0.2*Math.sin(tnow*1.3+k9));
-     const bx9=O.x+Math.cos(aa9)*O.r*0.5,by9=O.y+Math.sin(aa9)*O.r*0.42;
-     const tx9=O.x+Math.cos(aa9+0.35)*(O.r*0.5+L9),ty9=O.y+Math.sin(aa9+0.35)*(O.r*0.42+L9);
-     ctx.strokeStyle='rgba(6,4,14,'+(0.85*ey9).toFixed(2)+')';ctx.lineWidth=13-k9%3*3;ctx.lineCap='round';
-     ctx.beginPath();ctx.moveTo(bx9,by9);ctx.quadraticCurveTo(O.x+Math.cos(aa9+0.9)*O.r*0.9,O.y+Math.sin(aa9+0.9)*O.r*0.8,tx9,ty9);ctx.stroke();
-     ctx.strokeStyle='rgba(150,110,220,'+(0.30*ey9).toFixed(2)+')';ctx.lineWidth=2.2;
-     ctx.beginPath();ctx.moveTo(bx9,by9);ctx.quadraticCurveTo(O.x+Math.cos(aa9+0.9)*O.r*0.9,O.y+Math.sin(aa9+0.9)*O.r*0.8,tx9,ty9);ctx.stroke();
-     ctx.fillStyle='rgba(200,180,255,'+(0.5*ey9).toFixed(2)+')';ctx.beginPath();ctx.arc(tx9,ty9,3.4,0,TAU);ctx.fill();}
+    {const gg9=cachedGrad('godglow',()=>{const g9=ctx.createRadialGradient(O.x,O.y,60,O.x,O.y,2600); /* r135 THE GOD-GLOW: the abyss answers the pyre - its own colour, waxing with the waking */
+      g9.addColorStop(0,'rgba(60,30,110,.50)');g9.addColorStop(0.2,'rgba(40,60,120,.26)');g9.addColorStop(0.5,'rgba(30,80,110,.10)');g9.addColorStop(1,'rgba(30,60,110,0)');return g9;});
+     const gs9=0.45+0.75*ey9;ctx.save();ctx.translate(O.x,O.y);ctx.scale(gs9,gs9);ctx.translate(-O.x,-O.y);
+     ctx.globalAlpha=0.85+0.15*Math.sin(tnow*1.4);ctx.fillStyle=gg9;ctx.fillRect(O.x-2600,O.y-2600,5200,5200);ctx.restore();ctx.globalAlpha=1;}
+    ctx.lineCap='round';
+    for(const ar of HARV.arms){const n9=ar.segs.length; /* THE TRUE ARMS: flesh, not paint - drawn from the same chain the sim moves */
+     const a9=ar.dead?0.4*ey9:ey9;
+     for(let g9=1;g9<n9;g9++){const p9=ar.segs[g9-1],c9=ar.segs[g9];
+      ctx.strokeStyle='rgba(6,4,14,'+(0.9*a9).toFixed(2)+')';ctx.lineWidth=Math.max(3,16-g9*1.05);
+      ctx.beginPath();ctx.moveTo(p9.x,p9.y);ctx.lineTo(c9.x,c9.y);ctx.stroke();}
+     for(let g9=1;g9<n9;g9+=2){const p9=ar.segs[g9-1],c9=ar.segs[g9];
+      ctx.strokeStyle='rgba(150,110,220,'+(0.30*a9).toFixed(2)+')';ctx.lineWidth=1.8;
+      ctx.beginPath();ctx.moveTo(p9.x,p9.y);ctx.lineTo(c9.x,c9.y);ctx.stroke();}
+     const tp9=ar.segs[n9-1];
+     if(ar.tel>0){ctx.fillStyle='rgba(232,224,255,'+(0.55+0.35*Math.sin(tnow*24)).toFixed(2)+')';ctx.beginPath();ctx.arc(tp9.x,tp9.y,7.5,0,TAU);ctx.fill();} /* THE TELL: the pale underside flashes */
+     else{ctx.fillStyle='rgba(200,180,255,'+(0.55*a9).toFixed(2)+')';ctx.beginPath();ctx.arc(tp9.x,tp9.y,4.6,0,TAU);ctx.fill();}
+     if(ar.grab){ctx.strokeStyle='rgba(216,224,255,.85)';ctx.lineWidth=2; /* the caught one, wrapped and going home */
+      ctx.beginPath();ctx.arc(tp9.x,tp9.y,9,0,TAU);ctx.stroke();
+      ctx.fillStyle='rgba(255,154,168,.9)';ctx.beginPath();ctx.arc(tp9.x,tp9.y,3.4,0,TAU);ctx.fill();}
+     if(ar.dmg>30&&!ar.dead){ctx.fillStyle='rgba(143,224,192,'+(0.25+0.006*ar.dmg).toFixed(2)+')';ctx.beginPath();ctx.arc(tp9.x,tp9.y,11,0,TAU);ctx.stroke();}}
     ctx.lineCap='butt';
     if(HARV.ph===2){const M9=typeof me==='function'?me():null; /* THE EYES: three, and they look AT YOU */
      for(let e9=0;e9<3;e9++){const ea9=e9/3*TAU+1.1,ex9=O.x+Math.cos(ea9)*O.r*0.26,eyy9=O.y+Math.sin(ea9)*O.r*0.22;
@@ -7090,7 +7150,7 @@ function netApplyWorld(D){ /* the STATIC world takes the client's stage - and SC
   pricks:g.pk.map(p=>({x:p[0],y:p[1],rot:0,cd:0,vx:0,vy:0}))}));
  fieldMaws=D.fm.map(m=>({x:m[0],y:m[1],rot:m[2],big:m[3],cd:0,anim:0}));
  OASIS=D.oa;decor=D.dc.map(d=>({x:d[0],y:d[1],ty:['tuft','rubble','swirl'][d[2]],ph:d[3]}));
- thorns=D.th;groves=[];drops=[];shots=[];orbs=[];wasps=[];eyes=[];elder=null;spider=null;worms=[];golems=[];magma=[];mpools=[];bonefae=[];bspears=[];huskC=[];shades=[];thresher=null;NLIGHTS=null;FRONT=1e9;NWATCH=0;HARV.ph=0;HARV.eye=0;HARV.t=80;lbearers=[];gdivers=[];ldrops=[]; /* r129 THE FULLER PURGE: the husk disease's THIRD visit (dead boulders r67, worm husks r62-era, now gen 4's wildlife) - the menu-world's golems/pools/fae/shades/thresher lingered invisibly in the room, and Celery walked into them. EVERY local array the wire does not re-dress gets scrubbed at the door, and the winter of this lesson is: when you ADD an array, ADD IT HERE */ /* THE HUSK PURGE: worms were the ONE creature this scrub forgot (the scrub predates r30's worms). The menu-world's local worms squatted in the array, the wire re-dressed them by index every beat, and the glide loop skipped them - no _net stamp - so they stood as LIFELESS HUSKS near the den while the TRUE worm hunted soldiers unseen. Celery's exact sighting, Jul 11 */
+ thorns=D.th;groves=[];drops=[];shots=[];orbs=[];wasps=[];eyes=[];elder=null;spider=null;worms=[];golems=[];magma=[];mpools=[];bonefae=[];bspears=[];huskC=[];shades=[];thresher=null;NLIGHTS=null;FRONT=1e9;NWATCH=0;HARV.ph=0;HARV.eye=0;HARV.t=80;HARV.arms=[];HARV.grabs=0;lbearers=[];gdivers=[];ldrops=[]; /* r129 THE FULLER PURGE: the husk disease's THIRD visit (dead boulders r67, worm husks r62-era, now gen 4's wildlife) - the menu-world's golems/pools/fae/shades/thresher lingered invisibly in the room, and Celery walked into them. EVERY local array the wire does not re-dress gets scrubbed at the door, and the winter of this lesson is: when you ADD an array, ADD IT HERE */ /* THE HUSK PURGE: worms were the ONE creature this scrub forgot (the scrub predates r30's worms). The menu-world's local worms squatted in the array, the wire re-dressed them by index every beat, and the glide loop skipped them - no _net stamp - so they stood as LIFELESS HUSKS near the den while the TRUE worm hunted soldiers unseen. Celery's exact sighting, Jul 11 */
  for(const s2 of swarms){s2.dead=true;s2.gone=true;}swarms=[];
  try{boulderGridBuild();}catch(e){} /* THE STONE GRID was only ever built inside step(), which never runs online - collideBoulders searched an EMPTY net, so the predicted queen sailed through rocks and cove rims until the server yanked her back. The invisible walls, and half the drift-shove */}
 function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - stamped by OUR clock, not the server's lumpy one */

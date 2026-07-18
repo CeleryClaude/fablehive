@@ -923,6 +923,7 @@ function spawnFlower(kind,quiet){
   g={x:p.x,y:p.y,amt:rand(60,110),max:110,vx:rand(-3,3),vy:rand(-3,3),sp:(Math.random()*5)|0,kind:'bloom'};
  }
  if(g&&g.y>WORLD.h*0.58&&kind!=='night'&&kind!=='rock')g.gilt=true; /* the south GILDS its blooms */
+ if(g&&MAP==='night'&&OASIS&&d2(g.x,g.y,OASIS.x,OASIS.y)<430*430){const ag8=Math.atan2(g.y-OASIS.y,g.x-OASIS.x)||rand(0,TAU),rg8=430+rand(0,90);g.x=OASIS.x+Math.cos(ag8)*rg8;g.y=OASIS.y+Math.sin(ag8)*rg8;} /* r140f: nothing roots ON the sleeper - the body is terrain, not soil */
  if(g&&MAP==='night'){const hem9=(g.x<WORLD.w*0.48&&g.y<WORLD.h*0.48)||g.x<620||g.y<620||g.x>WORLD.w-620||g.y>WORLD.h-620;if(Math.random()<(hem9?0.16:0.62))g.lumen=true;else if(!g.gild&&!g.mother&&!g.web&&g.kind!=='comb'&&Math.random()<0.30)g.veiled=1;} /* r137 THE VEILED GARDEN: a third of the unlit blooms HIDE - real, harvestable, invisible until light is CAST on them. Light is a prospecting tool now, not just armor */ /* the night garden BLOOMS IN LIGHT - but the HEMS run dark (r128): safe ground is southern ground, and the eyes know it */
  groves.push(g);
  if(!quiet)addRing(g.x,g.y,g.gilt?'#ffd75e':'#cfe08a',26);
@@ -1295,11 +1296,12 @@ function setupWorldTail(){ /* the rest of world-gen: caves, maws, oasis, decor -
  for(let k=0;k<45;k++)decor.push({x:rand(450,WORLD.w*0.45),y:rand(450,WORLD.h*0.45),ty:'swirl',ph:rand(0,TAU)});
  /* ===== THE OASIS: the meadow's soft green heart - bountiful, whimsical, and absolutely worth fighting for ===== */
  OASIS={x:WORLD.w/2,y:WORLD.h/2,r:560,lilies:[],reeds:[],fish:[],stones:[]};
- for(let k=0;k<7;k++){const aa=k/7*TAU+rand(-0.3,0.3),rr9=rand(60,180);
+ if(MAP==='night'){OASIS.dry=1;OASIS.r=330;} /* r140 THE SLEEPER (Celery: 'between A and B'): the water is GONE from the night's heart - what coils there now is a colossal SLEEPING BODY of true void */
+ if(!OASIS.dry)for(let k=0;k<7;k++){const aa=k/7*TAU+rand(-0.3,0.3),rr9=rand(60,180);
   OASIS.lilies.push({x:OASIS.x+Math.cos(aa)*rr9,y:OASIS.y+Math.sin(aa)*rr9,r:rand(14,24),rot:rand(0,TAU),fl:Math.random()<0.55});}
- for(let k=0;k<12;k++){const aa=k/12*TAU+rand(-0.2,0.2),rr9=OASIS.r*0.42+rand(-20,26);
+ if(!OASIS.dry)for(let k=0;k<12;k++){const aa=k/12*TAU+rand(-0.2,0.2),rr9=OASIS.r*0.42+rand(-20,26);
   OASIS.reeds.push({x:OASIS.x+Math.cos(aa)*rr9,y:OASIS.y+Math.sin(aa)*rr9,ph:rand(0,TAU),h:rand(16,30)});}
- for(let k=0;k<3;k++)OASIS.fish.push({a:rand(0,TAU),rr:rand(60,150),sp:rand(0.5,0.9),hue:[14,182,318][k]});
+ if(!OASIS.dry)for(let k=0;k<3;k++)OASIS.fish.push({a:rand(0,TAU),rr:rand(60,150),sp:rand(0.5,0.9),hue:[14,182,318][k]});
  for(let k=0;k<9;k++){const aa=k/9*TAU+rand(-0.2,0.2),rr9=OASIS.r*0.86+rand(-14,20);
   OASIS.stones.push({x:OASIS.x+Math.cos(aa)*rr9,y:OASIS.y+Math.sin(aa)*rr9,r:rand(10,20)});}
  if(MAP==='cinder'){ /* THE CALDERA RIM: the heart wears a broken ring of char - three wide doors, one arena */
@@ -1965,7 +1967,7 @@ function step(dt){NPLAY=humanCount();
    {const rl=realmOf(M3.x,M3.y); /* the realm HERALDS itself, once, softly */
     if(rl!=='mid'&&!herald[rl]){herald[rl]=true;
      const RN=({cinder:{south:['THE REGROWTH','#8cd47a'],dark:['THE ASH DUNES','#c8beb4'],bad:['THE STANDING DEAD','#c86a4a'],oasis:['THE CALDERA','#ff9a5e']},
-      night:{south:['THE LUMEN TERRACES','#2ee6c8'],dark:['THE ROOT DARK','#8f7bff'],bad:['THE CRYSTAL FIELDS','#b48cff'],oasis:['THE MIRROR POOL','#c8d8ff']},
+      night:{south:['THE LUMEN TERRACES','#2ee6c8'],dark:['THE ROOT DARK','#8f7bff'],bad:['THE CRYSTAL FIELDS','#b48cff'],oasis:['THE SLEEPER','#b48cff']},
       honey:{south:['THE GOLDEN VALE','#ffd75e'],dark:['THE UMBRAL REACH','#8a7ae0'],bad:['THE SHATTERED SHELF','#c8574a'],oasis:['THE OASIS','#7fe0c8']}}[MAP]||{})[rl];
      if(RN)toast(RN[0],RN[1],3.5);}}
    if(MAP==='night'&&!nudged.glow&&tnow>20){nudged.glow=true;toast('THE DARK IS HONEST - honey is light. Carry more: SEE further, BE SEEN further.','#2ee6c8',7);}
@@ -2658,7 +2660,7 @@ function step(dt){NPLAY=humanCount();
    if(hv.ph===0){hv.t-=dt;
     hv._bt=(hv._bt||0)-dt;if(hv._bt<=0){hv._bt=6; /* r136 THE HEARTBEAT: while it sleeps, its light LEAKS - lumen honey blooms in rings around the pool. Greed has a clock */
      let bn9=0;for(const dr9 of drops)if(dr9.lum)bn9++;
-     if(bn9<14){const ba9=rand(0,TAU),br9=rand(200,650);
+     if(bn9<14){const ba9=rand(0,TAU),br9=rand(430,720);
       drops.push({x:OASIS.x+Math.cos(ba9)*br9,y:OASIS.y+Math.sin(ba9)*br9*0.85,amt:rand(8,13),t:999,lum:1});
       addRing(OASIS.x+Math.cos(ba9)*br9,OASIS.y+Math.sin(ba9)*br9*0.85,'#7fe8ff',26);}}
     if(hv.t<=0){hv.ph=1;hv.pt=6;hv.eye=0;sfx('alarm');hv.grabs=0;
@@ -2724,7 +2726,7 @@ function step(dt){NPLAY=humanCount();
     step._hvG=(step._hvG||0)+1;if(step._hvG%3===0)for(const g5 of groves){if(g5.gild||g5.mother||g5.web)continue;
      if(g5.amt>0&&d2(g5.x,g5.y,OASIS.x,OASIS.y)<R2)g5.amt=Math.max(0,g5.amt-3.6);} /* it harvests the GARDEN too */
     if(hv.pt<=0){hv.ph=0;hv.t=rand(90,140);hv.eye=0;
-     for(let d5=0;d5<12;d5++)drops.push({x:OASIS.x+Math.cos(d5/12*TAU)*rand(180,420),y:OASIS.y+Math.sin(d5/12*TAU)*rand(160,380),amt:rand(6,11),t:30});
+     for(let d5=0;d5<12;d5++)drops.push({x:OASIS.x+Math.cos(d5/12*TAU)*rand(410,640),y:OASIS.y+Math.sin(d5/12*TAU)*rand(390,580),amt:rand(6,11),t:30});
      toast('THE HARVESTER SLEEPS · ITS LEAVINGS GLITTER','#ffd75e',4);}}}
   if(shades.length<7){SHDRT-=dt;if(SHDRT<=0){SHDRT=45;
    for(let t9=0;t9<30;t9++){const sx0=rand(600,WORLD.w-600),sy0=rand(500,WORLD.h-500);
@@ -3434,7 +3436,7 @@ function showHome(){
  {let bb=document.getElementById('bldBadge');if(!bb){bb=document.createElement('div');bb.id='bldBadge';
   bb.style.cssText='position:fixed;left:10px;bottom:8px;z-index:60;font-size:11px;opacity:.55;color:#ffd9a0;pointer-events:none;font-family:inherit;';
   document.body.appendChild(bb);}
-  bb.textContent='r139 · the smooth step';} /* the keeper's stamp: if this doesn't match /healthz ver, you're playing a stale copy */
+  bb.textContent='r140 · the sleeper';} /* the keeper's stamp: if this doesn't match /healthz ver, you're playing a stale copy */
  document.getElementById('xpTxt').innerHTML='<b style="color:#ffd75e">✨ '+Math.floor(META.xp)+'</b>'+(typeof RUNXP!=='undefined'&&RUNXP>=1?' <b style="color:#ffe9a0;font-size:13px">(+'+Math.floor(RUNXP)+' this flight)</b>':'')+' <span style="opacity:.6;font-size:12px">nest xp · every treasure is earnable · 👑 sub unlocks all</span>'; /* the FLIGHT's earnings shown beside the hoard - you can finally tell when the trip to the nest was worth it */
  const next=SKINS.find(S=>META.xp<S.xp);
  const fill=document.getElementById('xpfill'),nx=document.getElementById('xpNext');
@@ -3606,7 +3608,7 @@ try{
    try{localStorage.setItem('fh_map',_pick);}catch(e){}
    try{location.reload();}catch(e){}});}
  const _sb=document.getElementById('mapSub');if(_sb)_sb.textContent=MAPS[MAP].name+' · '+MAPS[MAP].sub+(WS_URL?' · THE SHARED MEADOW':(/^https?:$/.test(location.protocol)?' · SOLO FLIGHT':' · OFFLINE'));
- const _mk=document.getElementById('mapMark');if(_mk){_mk.textContent=MAPS[MAP].name+(MAPS[MAP].early?' · EARLY BLOOM':'')+' · r139';_mk.style.color=MAPS[MAP].col+'cc';}
+ const _mk=document.getElementById('mapMark');if(_mk){_mk.textContent=MAPS[MAP].name+(MAPS[MAP].early?' · EARLY BLOOM':'')+' · r140';_mk.style.color=MAPS[MAP].col+'cc';}
  {const go9=document.getElementById('go');if(go9){if(WS_URL)go9.innerHTML='RISE<div style="font-size:10px;letter-spacing:2px;opacity:.85;margin-top:2px">THE SHARED MEADOW · ONLINE</div>';
   else if(/^https?:$/.test(location.protocol)){go9.innerHTML='RISE<div style="font-size:10px;letter-spacing:2px;opacity:.85;margin-top:2px">SOLO FLIGHT · JUST YOU</div>';go9.style.filter='hue-rotate(80deg) saturate(.85)';
    const mr9=document.getElementById('mapRow');if(mr9&&!document.getElementById('soloChip')){const ch9=document.createElement('div');ch9.id='soloChip';ch9.style.cssText='margin:6px auto 0;font-size:11px;letter-spacing:1px;color:#ffd75e;opacity:.9;text-align:center';ch9.textContent='the SHARED MEADOW flies ONLINE — tap it to join the family';if(mr9.parentNode)mr9.parentNode.insertBefore(ch9,mr9.nextSibling);}}}} /* r129 THE HONEST DOOR: the 'server is down' scare was a quiet door - never again */
@@ -5432,10 +5434,77 @@ function draw(){
    ctx.beginPath();ctx.arc(dc.x,dc.y,6+2*Math.sin(tnow+dc.ph),dc.ph,dc.ph+4.6);ctx.stroke();}}
  if(OASIS&&!(OASIS.x<vx0-700||OASIS.x>vx1+700||OASIS.y<vy0-700||OASIS.y>vy1+700)){const O=OASIS;
   if(MAP!=='cinder'){ /* the watery heart belongs to the other gardens - the cinder heart is FIRE, whole */
-  ctx.fillStyle=MAP==='cinder'?'rgba(230,110,50,0.10)':MAP==='night'?'rgba(20,28,64,0.5)':'rgba(88,190,178,0.16)';ctx.beginPath();ctx.arc(O.x,O.y,O.r*0.52,0,TAU);ctx.fill(); /* caldera · MIRROR POOL · under-ice */
-  if(MAP==='night'){for(let st9=0;st9<16;st9++){const sa9=st9*2.399+1.1,sr9=O.r*(0.12+((st9*73)%53)/53*0.78); /* r128 THE MIRROR POOL: black glass holds painted stars - the sky the night garden never shows you lives in the water */
+  ctx.fillStyle=MAP==='cinder'?'rgba(230,110,50,0.10)':MAP==='night'?'rgba(0,0,0,0)':'rgba(88,190,178,0.16)';ctx.beginPath();ctx.arc(O.x,O.y,O.r*0.52,0,TAU);ctx.fill(); /* r140: night draws no water - the body owns the heart */ /* caldera · MIRROR POOL · under-ice */
+  if(MAP==='night'){if(!O.dry)for(let st9=0;st9<16;st9++){const sa9=st9*2.399+1.1,sr9=O.r*(0.12+((st9*73)%53)/53*0.78); /* r128 THE MIRROR POOL: black glass holds painted stars - the sky the night garden never shows you lives in the water */
     const sx9=O.x+Math.cos(sa9)*sr9,sy9=O.y+Math.sin(sa9)*sr9*0.82,tw9=Math.max(0,Math.sin(tnow*1.3+st9*2.1));
     ctx.fillStyle='rgba(220,230,255,'+(0.10+0.30*tw9).toFixed(3)+')';ctx.beginPath();ctx.arc(sx9,sy9,tw9>0.85?1.8:1.1,0,TAU);ctx.fill();}
+   if(MAP==='night'){const br9=1+0.015*Math.sin(tnow*0.55)+(HARV.ph>0?0.05*HARV.eye:0); /* r140 THE SLEEPER: between A and B - a colossus-SHAPED HOLE in the garden. Silhouette of rim-light, substance of absence, eyes everywhere */
+    {const bd8=cachedGrad('sleepbed',()=>{const g8=ctx.createRadialGradient(O.x,O.y,40,O.x,O.y,O.r*2.6);
+      g8.addColorStop(0,'rgba(58,38,105,.42)');g8.addColorStop(0.35,'rgba(44,52,110,.22)');g8.addColorStop(0.7,'rgba(30,60,110,.08)');g8.addColorStop(1,'rgba(30,60,110,0)');return g8;});
+     ctx.fillStyle=bd8;ctx.fillRect(O.x-O.r*2.6,O.y-O.r*2.6,O.r*5.2,O.r*5.2);} /* r140b THE BED: the body needed a floor of faint abyss to be VOID against - the contrast lesson, answered at cause */
+    ctx.save();ctx.translate(O.x,O.y);ctx.scale(br9,br9);ctx.translate(-O.x,-O.y);
+    { /* r140f THE PAINTED SLEEPER: the arms' own flesh dialect at colossus scale - ONE unbroken silhouette, volume from layered dorsal light (no outlines anywhere), a soft contact shadow where the neck lies over its own coil, the head grown from the ribbon itself */
+     const CP8=[[1.34,-0.10],[1.26,0.30],[0.98,0.68],[0.45,0.98],[-0.30,0.94],[-0.90,0.56],[-1.05,-0.10],[-0.72,-0.72],[0.00,-1.00],[0.72,-0.72],[1.00,-0.06],[0.80,0.40],[0.28,0.64],[-0.35,0.54],[-0.62,0.00],[-0.35,-0.50],[0.25,-0.54],[0.56,-0.16],[0.55,0.26],[0.88,0.55],[1.06,0.74],[1.28,0.88]];
+     const PT8=[];for(const c8 of CP8)PT8.push({x:O.x+c8[0]*O.r,y:O.y+c8[1]*O.r*0.88});
+     const SP8=[];const M8=7;
+     for(let k8=0;k8<PT8.length-3;k8++){const p0=PT8[k8],p1=PT8[k8+1],p2=PT8[k8+2],p3=PT8[k8+3];
+      for(let t8=0;t8<M8;t8++){const u8=t8/M8,u2=u8*u8,u3=u2*u8;
+       SP8.push({x:0.5*((2*p1.x)+(-p0.x+p2.x)*u8+(2*p0.x-5*p1.x+4*p2.x-p3.x)*u2+(-p0.x+3*p1.x-3*p2.x+p3.x)*u3),
+                 y:0.5*((2*p1.y)+(-p0.y+p2.y)*u8+(2*p0.y-5*p1.y+4*p2.y-p3.y)*u2+(-p0.y+3*p1.y-3*p2.y+p3.y)*u3)});}}
+     const N8=SP8.length,H8=12,WD8=[];const br8=1+0.012*Math.sin(tnow*0.5); /* it breathes, gently */
+     for(let k8=0;k8<N8;k8++){const f8=k8/(N8-1);let w8;const ih8=k8-(N8-1-H8);
+      if(ih8<=0)w8=11+41*Math.sin(Math.PI*Math.min(0.93,f8*1.06)); /* tail whisper -> full bulk -> a pinched throat */
+      else{const fh8=ih8/H8;w8=fh8<0.38?26+24*(fh8/0.38):50-36*((fh8-0.38)/0.62);} /* broad skull -> short snout */
+      WD8.push(w8*br8);}
+     const L8=[],R8=[];
+     for(let k8=0;k8<N8;k8++){const p8=SP8[Math.max(0,k8-1)],q8=SP8[Math.min(N8-1,k8+1)];
+      let nx8=-(q8.y-p8.y),ny8=q8.x-p8.x;const nl8=Math.hypot(nx8,ny8)||1;nx8/=nl8;ny8/=nl8;
+      L8.push({x:SP8[k8].x+nx8*WD8[k8],y:SP8[k8].y+ny8*WD8[k8],nx:nx8,ny:ny8});R8.push({x:SP8[k8].x-nx8*WD8[k8],y:SP8[k8].y-ny8*WD8[k8]});}
+     for(const um8 of[[0.52,0.16],[0.40,0.22],[0.28,0.26]]){ctx.fillStyle='rgba(8,5,20,'+um8[1]+')'; /* the under-mass: more of it below than you can see */
+      ctx.beginPath();ctx.ellipse(O.x-O.r*0.06,O.y+O.r*0.04,O.r*um8[0]*1.15,O.r*um8[0]*0.9,0.3,0,TAU);ctx.fill();}
+     const cut8=N8-1-H8-8;
+     const flesh8=(s8,e8)=>{ /* fill + broad value-bands + layered dorsal light: paint, not ink */
+      ctx.fillStyle='rgba(17,11,36,.985)';ctx.beginPath();ctx.moveTo(L8[s8].x,L8[s8].y);
+      for(let k8=s8+1;k8<=e8;k8++)ctx.lineTo(L8[k8].x,L8[k8].y);
+      for(let k8=e8;k8>=s8;k8--)ctx.lineTo(R8[k8].x,R8[k8].y);
+      ctx.closePath();ctx.fill();
+      ctx.lineCap='round';ctx.strokeStyle='rgba(6,4,16,.20)';ctx.lineWidth=12;
+      for(let k8=s8+5;k8<e8-3;k8+=6){ctx.beginPath();ctx.moveTo(L8[k8].x,L8[k8].y);ctx.lineTo(R8[k8].x,R8[k8].y);ctx.stroke();}
+      let hs8=-1;
+      for(let k8=s8;k8<=e8;k8++){const on8=WD8[k8]>=18&&k8<e8;
+       if(on8&&hs8<0)hs8=k8;
+       if((!on8||k8===e8)&&hs8>=0){if(k8-hs8>3){
+        for(const pass8 of[[Math.min(30,WD8[(hs8+k8)>>1]*1.0),'rgba(150,120,220,.10)'],[16,'rgba(165,135,235,.10)'],[7,'rgba(190,160,250,.12)']]){
+         ctx.strokeStyle=pass8[1];ctx.lineWidth=pass8[0];ctx.lineJoin='round';
+         ctx.beginPath();ctx.moveTo(SP8[hs8].x,SP8[hs8].y);
+         for(let m8=hs8+1;m8<k8;m8++)ctx.lineTo(SP8[m8].x,SP8[m8].y);ctx.stroke();}}
+        hs8=-1;}}};
+     flesh8(0,cut8);
+     {let last8=-9; /* the crossings: wherever the neck-and-head chunk lies over an earlier wrap, the under-wrap takes a soft shadow - depth is drawn, never outlined */
+      for(let k8=cut8;k8<N8;k8+=3){let bj8=-1,bd8=1e9;
+       for(let m8=6;m8<cut8-8;m8+=2){const dd8=d2(SP8[k8].x,SP8[k8].y,SP8[m8].x,SP8[m8].y);if(dd8<bd8){bd8=dd8;bj8=m8;}}
+       if(bj8<0)continue;const rr8=WD8[k8]+WD8[bj8]+26;
+       if(bd8<rr8*rr8&&k8-last8>=6){last8=k8;const t8=SP8[Math.min(cut8-1,bj8+1)],u8=SP8[Math.max(0,bj8-1)],ta8=Math.atan2(t8.y-u8.y,t8.x-u8.x);
+        for(const sh8 of[[2.1,0.10],[1.5,0.15],[1.05,0.19]]){ctx.fillStyle='rgba(3,2,10,'+sh8[1]+')';
+         ctx.beginPath();ctx.ellipse(SP8[bj8].x,SP8[bj8].y,WD8[bj8]*sh8[0]+WD8[k8]*0.6,WD8[bj8]*sh8[0]*0.6,ta8,0,TAU);ctx.fill();}}}}
+     flesh8(cut8,N8-1);
+     {const tt8=Math.max(0,HARV.t),bp8=HARV.ph>0?0.4:Math.min(3.5,Math.max(0.5,tt8/20)); /* the eyes: six along the bulk, two primaries on the skull - lidded slits on the r136 quickening clock, never fully forgotten */
+      let placed8=0;
+      for(let e9=0;e9<6;e9++){const k8=8+Math.floor(e9*(cut8-16)/5);if(WD8[k8]<24)continue;placed8++;
+       const sd8=e9%2?1:-1,ex9=SP8[k8].x+L8[k8].nx*sd8*WD8[k8]*0.34,ey8=SP8[k8].y+L8[k8].ny*sd8*WD8[k8]*0.34,es9=6.5+((e9*53)%17)/17*4.5;
+       const tq8=SP8[Math.min(N8-1,k8+1)],tp8=SP8[Math.max(0,k8-1)],tg8=Math.atan2(tq8.y-tp8.y,tq8.x-tp8.x);
+       const bw9=((tnow+e9*0.7)%bp8)/bp8,op9=HARV.ph>0?1:Math.max(0.5,(bw9>0.86?Math.sin((bw9-0.86)/0.14*Math.PI):0));
+       ctx.fillStyle='rgba(218,226,255,'+(0.72*op9).toFixed(2)+')';
+       ctx.beginPath();ctx.ellipse(ex9,ey8,es9,es9*0.42*(HARV.ph>0?1:op9),tg8,0,TAU);ctx.fill();
+       ctx.fillStyle='rgba(30,12,52,'+(0.85*op9).toFixed(2)+')';
+       ctx.beginPath();ctx.ellipse(ex9,ey8,es9*0.30,es9*0.38*(HARV.ph>0?1:op9),tg8,0,TAU);ctx.fill();}
+      const ks8=N8-1-Math.floor(H8*0.62); /* the primaries ride the skull */
+      for(let e9=0;e9<2;e9++){const sd8=e9?1:-1,px8=SP8[ks8].x+L8[ks8].nx*sd8*WD8[ks8]*0.52,py8=SP8[ks8].y+L8[ks8].ny*sd8*WD8[ks8]*0.52;
+       const tq8=SP8[Math.min(N8-1,ks8+1)],tp8=SP8[Math.max(0,ks8-1)],tg8=Math.atan2(tq8.y-tp8.y,tq8.x-tp8.x);
+       const bw9=((tnow+e9*1.3)%bp8)/bp8,op9=HARV.ph>0?1:Math.max(0.55,(bw9>0.83?Math.sin((bw9-0.83)/0.17*Math.PI):0));
+       ctx.fillStyle='rgba(230,236,255,'+(0.9*op9).toFixed(2)+')';ctx.beginPath();ctx.ellipse(px8,py8,10,5.5*(HARV.ph>0?1:op9),tg8,0,TAU);ctx.fill();
+       ctx.fillStyle='rgba(30,12,52,'+(0.92*op9).toFixed(2)+')';ctx.beginPath();ctx.ellipse(px8,py8,3.4,4.6*(HARV.ph>0?1:op9),tg8,0,TAU);ctx.fill();}}}
+    ctx.restore();}
    if(HARV.ph===0){const tt9=Math.max(0,HARV.t); /* r136: the sleeper's small eyes BLINK - quicker as the waking nears; those who watch, know */
     const bp9=clamp(tt9/20,0.5,3.5),bw9=(tnow%bp9)/bp9;
     if(bw9>0.86){const bo9=Math.sin((bw9-0.86)/0.14*Math.PI);
@@ -5495,8 +5564,8 @@ function draw(){
      for(let m9=0;m9<10;m9++){const ma9=(m9*0.628+tnow*0.10)%TAU,mr9=1150-((tnow*230+m9*137)%1000); /* the stolen light streams home */
       ctx.fillStyle='rgba(180,160,255,'+(0.14+0.10*Math.sin(tnow*3+m9)).toFixed(3)+')';
       ctx.beginPath();ctx.arc(O.x+Math.cos(ma9)*mr9,O.y+Math.sin(ma9)*mr9,2.6,0,TAU);ctx.fill();}}}}
-  ctx.fillStyle=MAP==='cinder'?'rgba(255,150,70,0.16)':MAP==='night'?'rgba(8,12,36,0.6)':'rgba(110,214,196,0.2)';ctx.beginPath();ctx.arc(O.x,O.y,O.r*0.38,0,TAU);ctx.fill();
-  for(let k=0;k<3;k++){const rp=((tnow*0.12+k/3)%1); /* ripples breathe outward */
+  ctx.fillStyle=MAP==='cinder'?'rgba(255,150,70,0.16)':MAP==='night'?'rgba(0,0,0,0)':'rgba(110,214,196,0.2)';ctx.beginPath();ctx.arc(O.x,O.y,O.r*0.38,0,TAU);ctx.fill();
+  if(!O.dry)for(let k=0;k<3;k++){const rp=((tnow*0.12+k/3)%1); /* ripples breathe outward (never on the dry heart) */
    ctx.strokeStyle=(MAP==='cinder'?'rgba(255,190,130,':MAP==='night'?'rgba(190,210,255,':'rgba(190,240,230,')+((0.22)*(1-rp)).toFixed(3)+')';ctx.lineWidth=1.6;
    ctx.beginPath();ctx.arc(O.x,O.y,O.r*0.1+rp*O.r*0.42,0,TAU);ctx.stroke();}
   for(const f9 of O.fish){f9.a+=f9.sp*0.016; /* shimmer-fish circle the pool */

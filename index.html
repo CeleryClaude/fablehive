@@ -1269,7 +1269,8 @@ function setupWorldTail(){ /* the rest of world-gen: caves, maws, oasis, decor -
   if(_e3===0){ex3=rand(360,880);ey3=rand(600,WORLD.h-900);}else if(_e3===1){ex3=rand(WORLD.w-880,WORLD.w-360);ey3=rand(600,WORLD.h*0.72);}else{ex3=rand(700,WORLD.w-700);ey3=rand(340,740);}
   eyes.push({x:ex3,y:ey3,r:rand(15,22),hp:300,maxHp:300,wa:rand(0,TAU),cd:0,blink:0,seed:rand(0,TAU)});} /* the night garden's hems WATCH */ /* THE WATCHING: the far corner has grown eyes */
  worms=[];if(MAP!=='night')for(let k=0;k<(MAP==='cinder'?1:3);k++){ /* cinder: ONE vast ember centipede owns the plains */const wx=MAP==='cinder'?rand(WORLD.w*0.20,WORLD.w*0.62):rand(WORLD.w*0.76,WORLD.w-460),wy=MAP==='cinder'?rand(WORLD.h*0.16,WORLD.h*0.42):rand(430,WORLD.h*0.24); /* cinder: the plains belong to the worms */ /* THE BLOOD WORMS: the far NE belongs to something segmented. Three, corner-locked, burrowing - the mirror of the Watching. Built to Celery's gate: cheap ticks, tiny wire */
-  const w9={x:wx,y:wy,hx:wx,hy:wy,r:MAP==='cinder'?25:13,a:rand(0,TAU),hp:MAP==='cinder'?1400:260,maxHp:MAP==='cinder'?1400:260,prov:0,flash:0,bur:0,burT:rand(10,22),bite:0,seed:rand(0,TAU),_worm:1,seg:[]};
+  const w9={x:wx,y:wy,hx:wx,hy:wy,r:MAP==='cinder'?25:13,a:rand(0,TAU),hp:MAP==='cinder'?1400:260,maxHp:MAP==='cinder'?1400:260,prov:0,flash:0,bur:0,burT:rand(10,22),bite:0,seed:rand(0,TAU),_worm:1,seg:[],
+   bx0:MAP==='cinder'?WORLD.w*0.14:WORLD.w*0.64,bx1:MAP==='cinder'?WORLD.w*0.68:WORLD.w-140,by0:MAP==='cinder'?WORLD.h*0.10:140,by1:MAP==='cinder'?WORLD.h*0.48:WORLD.h*0.36}; /* r146 THE FREED CENTIPEDE, found at cause: wormTick's clamps were the HONEY corner's constants (x>=0.64w) - the cinder centipede spawns in the WEST plains, so every tick snapped its x to the honey boundary (up/down only, 'so weird') and every eruption re-clamped it to the same spot (the under/above cycling). Each worm now carries ITS OWN region gate, stamped at birth */
   for(let s9=0;s9<(MAP==='cinder'?18:7);s9++)w9.seg.push({x:wx-s9*(MAP==='cinder'?17:16),y:wy});
   worms.push(w9);}
  /* THORN BRAKES: bramble ribbons knotted along the WILD edges - the gentle south stays open */
@@ -1638,7 +1639,8 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
      for(const gl9 of golems){const q=d2(u.x,u.y,gl9.x,gl9.y);if(q<bq9&&q<360*360){bq9=q;foe=gl9;}}
      for(const bf9 of bonefae){const q=d2(u.x,u.y,bf9.x,bf9.y);if(q<bq9){bq9=q;foe=bf9;}}
      for(const sh9 of shades){const q=d2(u.x,u.y,sh9.x,sh9.y);if(q<bq9){bq9=q;foe=sh9;}}
-     for(const ed9 of edemons){const q=d2(u.x,u.y,ed9.x,ed9.y);if(q<bq9){bq9=q;foe=ed9;}}} /* r143c THE ANSWERING FLEET (decree): the brood is fair game - troops fight BACK */ /* raging threshers and walking fire are both fair game */ /* SURFACED worms are fair game - the prov gate made armies look pacifist the instant the queen kited away */
+     for(const ed9 of edemons){const q=d2(u.x,u.y,ed9.x,ed9.y);if(q<bq9){bq9=q;foe=ed9;}}
+     for(const gd9 of gdivers){if(gd9.st!==1)continue;const q=d2(u.x,u.y,gd9.x,gd9.y);if(q<bq9){bq9=q;foe=gd9;}}} /* r146 THE ANSWERING FLEET, audit round: a REVEALED gloom-diver (mid-bite) is fair game - it bit units for three seconds and nothing ever answered. Ambushing (st 0) it stays unanswerable: it IS the dark then, and the dark is fought with light */ /* r143c THE ANSWERING FLEET (decree): the brood is fair game - troops fight BACK */ /* raging threshers and walking fire are both fair game */ /* SURFACED worms are fair game - the prov gate made armies look pacifist the instant the queen kited away */
     if(!foe&&u.role==='armourer'){let bq8=1e9; /* THE SHIELD OATH: anchors were never invited against the wild at all ("armourers ignore worms and certain mobs"). They answer now - but as BODYGUARDS: only a threat pressing THE QUEEN, or one already at the anchor's own reach, is answered. Hunters they are not */
      const nearQ8=(s.R+250)*(s.R+250);
      const scan8=t8=>{const qq8=d2(t8.x,t8.y,s.x,s.y),qa8=d2(t8.x,t8.y,u.x,u.y);if((qq8<nearQ8||qa8<170*170)&&qa8<bq8){bq8=qa8;foe=t8;}};
@@ -1647,7 +1649,10 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
      for(const gl9 of golems)scan8(gl9);
      for(const bf9 of bonefae)scan8(bf9);
      for(const w9 of worms){if(w9.bur>0)continue;scan8(w9);}
-     for(const ed9 of edemons)scan8(ed9);} /* r143c: anchors answer the brood pressing the queen */
+     for(const ed9 of edemons)scan8(ed9);
+     for(const sh9 of shades)scan8(sh9);
+     for(const gd9 of gdivers){if(gd9.st===1)scan8(gd9);}
+     if(thresher&&thresher.hp>0&&thresher.rage>0.25)scan8(thresher);} /* r143c: anchors answer the brood pressing the queen */ /* r146 audit: the SHIELD OATH had three blind spots - a shade burning at the queen's light, a revealed gloom-diver mid-bite, and a RAGING thresher were all invisible to her own bodyguard. No spectator combat, ever */
     if(!foe&&((u.role==='lancer'&&u._fi%5<3)||(u.role==='spitter'&&u._fi%3===0))){ /* FREEBLADES: lancers hunt freely (~60%), spitters a third - war or no war */
      let bs2=260*260,bswm=null;const myGr9=grottoOf(s.x,s.y);
      gridNear(u.x,u.y,260,eu=>{const es=eu._sw;
@@ -1882,8 +1887,8 @@ function wormTick(dt){ /* THE BLOOD WORMS: idle they meander and burrow; provoke
    addP(w9.x,w9.y,'#e84848',14,190);addRing(w9.x,w9.y,'#e84848',64);if(near(w9))sfx('die');
    worms.splice(wi,1);continue;}
   if(w9.bur>0){w9.bur-=dt; /* under the soil: untouchable, unseen */
-   if(w9.bur<=0){const h2=w9.hunt2;w9.hunt2=null;
-    w9.x=h2?h2.x:clamp(w9.hx+rand(-240,240),WORLD.w*0.64,WORLD.w-140);w9.y=h2?h2.y:clamp(w9.hy+rand(-180,180),140,WORLD.h*0.36);
+   if(w9.bur<=0){const h2=w9.hunt2;w9.hunt2=null; /* r146: eruptions obey the worm's OWN region gate, not the honey corner's */
+    w9.x=h2?h2.x:clamp(w9.hx+rand(-240,240),w9.bx0||WORLD.w*0.64,w9.bx1||WORLD.w-140);w9.y=h2?h2.y:clamp(w9.hy+rand(-180,180),w9.by0||140,w9.by1||WORLD.h*0.36);
     for(const sg of w9.seg){sg.x=w9.x;sg.y=w9.y;}
     addP(w9.x,w9.y,'#7a4432',10,150);addRing(w9.x,w9.y,'#7a4432',30);} /* it ERUPTS, it does not arrive */
    continue;}
@@ -1906,7 +1911,7 @@ function wormTick(dt){ /* THE BLOOD WORMS: idle they meander and burrow; provoke
   let da9=ta9-w9.a;while(da9>Math.PI)da9-=TAU;while(da9<-Math.PI)da9+=TAU;
   w9.a+=clamp(da9,-2.6*dt,2.6*dt);
   w9.x+=Math.cos(w9.a)*sp9*dt;w9.y+=Math.sin(w9.a)*sp9*dt;
-  w9.x=clamp(w9.x,WORLD.w*0.64,WORLD.w-140);w9.y=clamp(w9.y,140,WORLD.h*0.36); /* the corner is their WHOLE world, by the gate */
+  w9.x=clamp(w9.x,w9.bx0||WORLD.w*0.64,w9.bx1||WORLD.w-140);w9.y=clamp(w9.y,w9.by0||140,w9.by1||WORLD.h*0.36); /* the REGION is their whole world, by each worm's own gate (r146: the honey constants pinned the cinder centipede to a boundary it never lived on) */
   {let px9=w9.x,py9=w9.y,si9=0;
    for(const sg of w9.seg){const ln9=Math.max(7,14-si9*1.1),dx9=sg.x-px9,dy9=sg.y-py9,dd9=Math.hypot(dx9,dy9)||0.01;
     if(dd9>ln9){sg.x=px9+dx9/dd9*ln9;sg.y=py9+dy9/dd9*ln9;}
@@ -1914,7 +1919,7 @@ function wormTick(dt){ /* THE BLOOD WORMS: idle they meander and burrow; provoke
   if(w9.prov>0&&tgt){w9._st=(w9._st||0)+dt; /* WEDGE-WATCH: a hunter pinned by hedge or wall does not spin - it DIVES, and the soil erupts beside you */
    if(w9._st>1.2){
     if(d2(w9.x,w9.y,(w9._sx==null?w9.x:w9._sx),(w9._sy==null?w9.y:w9._sy))<34*34&&d2(w9.x,w9.y,tgt.x,tgt.y)>64*64){
-     w9.bur=rand(0.7,1.1);w9.hunt2={x:clamp(tgt.x+rand(-64,64),WORLD.w*0.64,WORLD.w-140),y:clamp(tgt.y+rand(-64,64),140,WORLD.h*0.36)};
+     w9.bur=rand(0.7,1.1);w9.hunt2={x:clamp(tgt.x+rand(-64,64),w9.bx0||WORLD.w*0.64,w9.bx1||WORLD.w-140),y:clamp(tgt.y+rand(-64,64),w9.by0||140,w9.by1||WORLD.h*0.36)}; /* r146: the dive obeys the same gate */
      addP(w9.x,w9.y,'#7a4432',8,120);}
     w9._sx=w9.x;w9._sy=w9.y;w9._st=0;}}
   else{w9._st=0;w9._sx=w9._sy=null;}
@@ -2848,24 +2853,25 @@ function step(dt){NPLAY=humanCount();
    if(gl.wind>0){gl.wind-=dt;
     if(gl.wind<=0&&gl._wtx!==undefined){ /* THE LOB: slow, ruinous, and you watched it coming */
      magma.push({x:gl.x+Math.cos(gl.ha)*gl.r*0.6,y:gl.y+Math.sin(gl.ha)*gl.r*0.6-gl.r*0.4,sx:gl.x,sy:gl.y,tx:gl._wtx,ty:gl._wty,t:0});}}
-   else if(gl.mW>0){gl.mW-=dt; /* THE RAISED FIST: half a second of promise */
+   else if(gl.mW>0){gl.mW-=dt; /* THE RAISED FIST: nearly a second of promise now - the raise IS the warning (r146 GOLEM DELEGRAPH, by decree: 'legibility through animation, never UI markers') */
     if(tq)gl._ma=Math.atan2(tq.y-gl.y,tq.x-gl.x);
-    if(gl.mW<=0){gl.slam=0.3;gl.swingT=1.8; /* THE SLAB FALLS: everything in the front arc breaks */
+    if(gl.mW<=0){gl.slam=0.45;gl.swingT=1.8; /* THE SLAB FALLS, slower and wider: a SLOW VISIBLE SWING that smears fire */
      const ix9=gl.x+Math.cos(gl._ma)*(gl.r+52),iy9=gl.y+Math.sin(gl._ma)*(gl.r+52);
      addRing(ix9,iy9,'#ff9a5e',64);
+     for(const k8 of[-1,0,1])mpools.push({x:gl.x+Math.cos(gl._ma+k8*0.6)*(gl.r+58),y:gl.y+Math.sin(gl._ma+k8*0.6)*(gl.r+58),t:0,life:3.5,r:46}); /* r146 THE FIRE SMEAR: the punch paints three brief molten patches across its arc - the wider AoE lives on the GROUND, in fire, not in a marker */
      for(let f8=0;f8<10;f8++)fx.push({x:ix9+rand(-26,26),y:iy9+rand(-20,20),vx:rand(-70,70),vy:rand(-80,-10),t:0,life:0.6,col:f8%2?'#ff6a1e':'#8a8078',r:rand(2,3.6),kind:'ember',rot:rand(0,TAU),rv:rand(-6,6)});
      if(me()&&d2(me().x,me().y,gl.x,gl.y)<700*700)shake=Math.min(10,shake+4);
      for(const s8 of swarms){if(s8.dead)continue;
       const qa9=Math.atan2(s8.y-gl.y,s8.x-gl.x);let qd9=qa9-gl._ma;while(qd9>Math.PI)qd9-=TAU;while(qd9<-Math.PI)qd9+=TAU;
-      if(s8.prot<=0&&Math.abs(qd9)<1.25&&d2(s8.x,s8.y,gl.x,gl.y)<(gl.r+100)*(gl.r+100)){s8.hp-=34;s8.hitT=.15;
+      if(s8.prot<=0&&Math.abs(qd9)<1.45&&d2(s8.x,s8.y,gl.x,gl.y)<(gl.r+118)*(gl.r+118)){s8.hp-=34;s8.hitT=.15;
        const dd8=Math.hypot(s8.x-gl.x,s8.y-gl.y)||1;s8.x+=(s8.x-gl.x)/dd8*90;s8.y+=(s8.y-gl.y)/dd8*90;
        if(s8===me())sfx('hurt');if(s8.hp<=0)killQueen(s8,null);}
       for(const u8 of s8.units){const ua9=Math.atan2(u8.y-gl.y,u8.x-gl.x);let ud9=ua9-gl._ma;while(ud9>Math.PI)ud9-=TAU;while(ud9<-Math.PI)ud9+=TAU;
-       if(Math.abs(ud9)<1.25&&d2(u8.x,u8.y,gl.x,gl.y)<(gl.r+96)*(gl.r+96)){u8.hp-=30;u8.flash=.1;
+       if(Math.abs(ud9)<1.45&&d2(u8.x,u8.y,gl.x,gl.y)<(gl.r+114)*(gl.r+114)){u8.hp-=30;u8.flash=.1;
         const dd8=Math.hypot(u8.x-gl.x,u8.y-gl.y)||1;u8.x+=(u8.x-gl.x)/dd8*95;u8.y+=(u8.y-gl.y)/dd8*95;
         if(u8.hp<=0)killUnit(s8,u8);}}}}}
    else if(tq){
-    if(tqd<(gl.r+72)*(gl.r+72)){if(gl.swingT<=0&&!(gl.mW>0)){gl.mW=0.5;gl._ma=Math.atan2(tq.y-gl.y,tq.x-gl.x);}} /* it does not bump - it WINDS UP */
+    if(tqd<(gl.r+72)*(gl.r+72)){if(gl.swingT<=0&&!(gl.mW>0)){gl.mW=0.9;gl._ma=Math.atan2(tq.y-gl.y,tq.x-gl.x);}} /* it does not bump - it WINDS UP, long enough to READ */
     else if(gl.atkCd<=0&&tqd>200*200){gl.atkCd=3.6;gl.wind=1.0;gl._wtx=tq.x;gl._wty=tq.y;}}}
   if(gl.slam>0)gl.slam-=dt;
   for(const tp of gl.tr)tp.a-=dt*0.05;
@@ -5208,23 +5214,26 @@ function drawMaw(mw){ /* THE MAW: a deliberate garden horror - hinged V-jaws, th
     ctx.lineTo(Math.cos(a9+0.45)*7,Math.sin(a9+0.45)*7);ctx.closePath();ctx.fill();}}
   ctx.restore();return;}
  /* (the hunger-glow halo is GONE by Celery's decree - the plant's own jaws are the warning) */
- ctx.fillStyle='#2e6a2c'; /* base rosette: it GROWS here, on purpose */
+ const NB9=MAP==='night'; /* r146 THE LANTERN TRAP (no-borrowed-skins law, docketed r143): the night's flytrap was the honey garden's green plant verbatim. Night-native now: void-violet jaws in the weaver's palette, a violet rim - and the golden lure becomes the whole STORY: in a garden where light is the one law of safety, this thing FAKES a light. The horror is native */
+ ctx.fillStyle=NB9?'#1c1234':'#2e6a2c'; /* base rosette: it GROWS here, on purpose */
  for(const la of [-0.8,0,0.8]){ctx.save();ctx.translate(0,11);ctx.rotate(la);
   ctx.beginPath();ctx.ellipse(0,4,3,6.5,0,0,TAU);ctx.fill();ctx.restore();}
- ctx.strokeStyle='#3a7a34';ctx.lineWidth=3.2;ctx.lineCap='round'; /* the stem, sprung */
+ ctx.strokeStyle=NB9?'#2a1a4a':'#3a7a34';ctx.lineWidth=3.2;ctx.lineCap='round'; /* the stem, sprung */
  ctx.beginPath();ctx.moveTo(0,12);ctx.quadraticCurveTo(2.5,7,0,2);ctx.stroke();ctx.lineCap='butt';
  for(const sg of [-1,1]){ /* two lobes hinged at the throat, opening like a V */
   ctx.save();ctx.translate(0,2);ctx.rotate(sg*(0.4+open*0.8));
-  ctx.fillStyle=mw.anim>0?'#8a2438':'#3f8a34'; /* leaf-back */
+  ctx.fillStyle=mw.anim>0?(NB9?'#5a2454':'#8a2438'):(NB9?'#251444':'#3f8a34'); /* leaf-back */
   ctx.beginPath();ctx.ellipse(sg*1.2,-9,5,10,sg*0.12,0,TAU);ctx.fill();
-  ctx.fillStyle=mw.anim>0?'#e05a6a':'#c23a56'; /* wet inner face */
+  if(NB9){ctx.strokeStyle='rgba(150,110,220,'+(0.30+0.14*Math.sin(tnow*1.7+mw.rot)).toFixed(2)+')';ctx.lineWidth=1.1;ctx.stroke();} /* the violet rim: seen as an absence, ringed - the night's one honest way to paint a light-eater */
+  ctx.fillStyle=mw.anim>0?(NB9?'#a04ab0':'#e05a6a'):(NB9?'#42205c':'#c23a56'); /* wet inner face */
   ctx.beginPath();ctx.ellipse(sg*-0.4,-9,3.2,8.4,sg*0.12,0,TAU);ctx.fill();
-  ctx.strokeStyle='#f4eed0';ctx.lineWidth=0.9; /* THIN cilia rooted ON the lip itself, curving inward */
+  ctx.strokeStyle=NB9?'#c8b4f0':'#f4eed0';ctx.lineWidth=0.9; /* THIN cilia rooted ON the lip itself, curving inward */
   for(let t9=0;t9<6;t9++){const ty=-3.5-t9*2.5;
    const lip=-(0.4+3.2*Math.sqrt(Math.max(0.06,1-((ty+9)/8.4)*((ty+9)/8.4))));
    ctx.beginPath();ctx.moveTo(sg*lip,ty);
    ctx.quadraticCurveTo(sg*(lip-3.4),ty-1.4,sg*(lip-4.8),ty+0.4);ctx.stroke();}
   ctx.restore();}
+ if(NB9){ctx.fillStyle='rgba(255,236,160,'+(0.10+0.07*Math.sin(tnow*3.2+mw.rot)).toFixed(2)+')';ctx.beginPath();ctx.arc(0,-3,7.5,0,TAU);ctx.fill();} /* the FALSE LIGHT breathes a soft halo - just enough to read as safety from afar */
  ctx.fillStyle='rgba(255,220,90,'+(0.7+0.3*Math.sin(tnow*3.2+mw.rot))+')'; /* the golden lure at the throat */
  ctx.beginPath();ctx.arc(0,-3,2.4,0,TAU);ctx.fill();
  ctx.restore();
@@ -5980,7 +5989,7 @@ function draw(){
   ctx.save();ctx.translate(sp5.x,sp5.y);ctx.rotate(fa5);
   ctx.fillStyle='rgba(16,8,20,.22)'; /* a modest ground-shadow, not an umbrella */
   ctx.beginPath();ctx.ellipse(3,7,sp5.r*0.95,sp5.r*0.6,0,0,TAU);ctx.fill();
-  for(const sg of [-1,1])for(let k=0;k<4;k++){ /* HER LEGS, raised to the fang standard: glossy night-chitin, a light-line down each femur, violet joints */
+  for(const sg of [-1,1])for(let k=0;k<4;k++){if(MAP==='cinder'&&k===0)continue; /* r146 THE HONEST COUNT (decree: 'the scorpion loses its two front legs - with pincers it reads as 10 limbs'): the front pair yields to the chelicerae - six walking legs + two shears, the true scorpion silhouette */ /* HER LEGS, raised to the fang standard: glossy night-chitin, a light-line down each femur, violet joints */
    const ph5=sp5.gait*(sp5.gnash>0?3.4:2.2)+k*1.57+(sg>0?0.785:0);
    const lift=Math.max(0,Math.sin(ph5))*8,swing=Math.cos(ph5)*10;
    const hipA=sg*(0.5+k*0.42);
@@ -6816,13 +6825,9 @@ function draw(){
     ctx.beginPath();ctx.moveTo(mp.x+Math.cos(va)*mp.r*0.2,mp.y+Math.sin(va)*mp.r*0.2);
     ctx.quadraticCurveTo(mp.x+Math.cos(va+0.4)*mp.r*0.6,mp.y+Math.sin(va+0.4)*mp.r*0.6,mp.x+Math.cos(va+0.2)*mp.r*0.92,mp.y+Math.sin(va+0.2)*mp.r*0.92);ctx.stroke();}
    if(Math.random()<0.10*fd)fx.push({x:mp.x+rand(-mp.r*0.7,mp.r*0.7),y:mp.y+rand(-mp.r*0.5,mp.r*0.5),vx:rand(-8,8),vy:rand(-30,-12),t:0,life:0.5,col:'#ff8c3c',r:rand(1.2,2),kind:'ember',rot:0,rv:2});}
- for(const mg of magma){ /* the glob in flight - and the RING where it will land, growing as it falls */
+ for(const mg of magma){ /* the glob in flight - r146 GOLEM DELEGRAPH, by decree: 'the thrown glob's landing reticle KILLS the fear - remove it'. The RING is DEAD. What warns you now is the world itself: the glob's arc, and its shadow racing along the ground to where it will fall - legibility through animation, never UI markers */
   const arc=Math.sin(mg.t*Math.PI)*170;
-  ctx.strokeStyle='rgba(255,80,25,'+(0.25+0.45*mg.t).toFixed(2)+')';ctx.lineWidth=2;
-  ctx.beginPath();ctx.arc(mg.tx,mg.ty,110*(0.3+0.7*mg.t),0,TAU);ctx.stroke(); /* r132: the warning matches the new blast */
-  ctx.fillStyle='rgba(255,80,25,'+(0.10*mg.t).toFixed(2)+')';
-  ctx.beginPath();ctx.arc(mg.tx,mg.ty,110*(0.3+0.7*mg.t),0,TAU);ctx.fill();
-  ctx.fillStyle='#00000044';ctx.beginPath();ctx.ellipse(mg.x,mg.y,12,6.5,0,0,TAU);ctx.fill();
+  ctx.fillStyle='rgba(0,0,0,'+(0.22+0.25*mg.t).toFixed(2)+')';ctx.beginPath();ctx.ellipse(mg.x,mg.y,12+8*mg.t,6.5+4*mg.t,0,0,TAU);ctx.fill(); /* the shadow GROWS as the glob comes down - the honest reticle */
   {const gg2=cachedGrad('magmaglob',()=>{const g9=ctx.createRadialGradient(0,0,3,0,0,26);
     g9.addColorStop(0,'#fff0c8');g9.addColorStop(0.4,'#ff7a20');g9.addColorStop(1,'rgba(255,90,30,0)');return g9;});
    ctx.save();ctx.translate(mg.x,mg.y-arc);ctx.fillStyle=gg2;ctx.beginPath();ctx.arc(0,0,26,0,TAU);ctx.fill();ctx.restore();}
@@ -6830,14 +6835,11 @@ function draw(){
   ctx.fillStyle='#ff6a1e';ctx.beginPath();ctx.arc(mg.x,mg.y-arc,6.8,0,TAU);ctx.fill();
   ctx.fillStyle='rgba(255,230,170,.9)';ctx.beginPath();ctx.arc(mg.x-3,mg.y-arc-3,2.6,0,TAU);ctx.fill();}
  for(const gl of golems){if(gl.x<vx0-100||gl.x>vx1+100||gl.y<vy0-100||gl.y>vy1+100)continue;
-  const pu=0.45+0.3*Math.sin(tnow*1.6+gl.seed),gr=0.35+(gl.glare||0)*0.65,wind9=gl.wind>0?(1-gl.wind):0,mW9=gl.mW>0?(1-gl.mW/0.5):0,slam9=gl.slam>0?gl.slam/0.3:0,sw9=slam9;
-  if(gl.mW>0){ctx.strokeStyle='rgba(255,90,30,'+(0.20+0.25*mW9).toFixed(2)+')';ctx.lineWidth=3; /* the fist rises: the ground it will break is SHOWN */
-   ctx.beginPath();ctx.arc(gl.x,gl.y,gl.r+96,gl._ma-1.25,gl._ma+1.25);ctx.stroke();
-   ctx.fillStyle='rgba(255,90,30,'+(0.05+0.07*mW9).toFixed(2)+')';
-   ctx.beginPath();ctx.moveTo(gl.x,gl.y);ctx.arc(gl.x,gl.y,gl.r+96,gl._ma-1.25,gl._ma+1.25);ctx.closePath();ctx.fill();}
-  if(gl.slam>0){const ix9=gl.x+Math.cos(gl._ma)*(gl.r+52),iy9=gl.y+Math.sin(gl._ma)*(gl.r+52); /* the SLAM: a swath of fire and a broken floor */
+  const pu=0.45+0.3*Math.sin(tnow*1.6+gl.seed),gr=0.35+(gl.glare||0)*0.65,wind9=gl.wind>0?(1-gl.wind):0,mW9=gl.mW>0?(1-gl.mW/0.9):0,slam9=gl.slam>0?gl.slam/0.45:0,sw9=slam9;
+  /* r146 GOLEM DELEGRAPH: the coloured warning arc is DEAD, by decree. The warning is the BODY: the slab arm rises for nearly a second, and the fist itself catches fire as it climbs (painted at the fist in the arm pass below) */
+  if(gl.slam>0){const ix9=gl.x+Math.cos(gl._ma)*(gl.r+52),iy9=gl.y+Math.sin(gl._ma)*(gl.r+52); /* the SLAM: a swath of fire and a broken floor - the aftermath may burn, that is the world speaking, not a marker */
    ctx.strokeStyle='rgba(255,150,60,'+(0.65*slam9).toFixed(2)+')';ctx.lineWidth=10*slam9+3;
-   ctx.beginPath();ctx.arc(gl.x,gl.y,gl.r+62,gl._ma-1.1,gl._ma+1.1);ctx.stroke();
+   ctx.beginPath();ctx.arc(gl.x,gl.y,gl.r+62,gl._ma-1.3,gl._ma+1.3);ctx.stroke();
    ctx.strokeStyle='rgba(30,16,10,'+(0.8*slam9).toFixed(2)+')';ctx.lineWidth=2.4;ctx.lineCap='round';
    for(let c8=0;c8<5;c8++){const ca8=gl._ma+(c8-2)*0.42;
     ctx.beginPath();ctx.moveTo(ix9,iy9);
@@ -6870,9 +6872,9 @@ function draw(){
    ctx.beginPath();
    ctx.moveTo(fx8+gl.r*0.3,fy8);ctx.lineTo(fx8+gl.r*0.08,fy8-gl.r*0.26);ctx.lineTo(fx8-gl.r*0.26,fy8-gl.r*0.14);
    ctx.lineTo(fx8-gl.r*0.3,fy8+gl.r*0.12);ctx.lineTo(fx8-gl.r*0.02,fy8+gl.r*0.28);ctx.closePath();ctx.fill();
-   if(raise>0.3){const mg9=ctx.createRadialGradient(fx8,fy8,2,fx8,fy8,gl.r*0.5); /* the glob forming in the raised fist */
-    mg9.addColorStop(0,'#fff0c8');mg9.addColorStop(0.4,'rgba(255,110,30,.9)');mg9.addColorStop(1,'rgba(255,90,30,0)');
-    ctx.fillStyle=mg9;ctx.beginPath();ctx.arc(fx8,fy8,gl.r*0.5,0,TAU);ctx.fill();}}
+   if(raise>0.3){const fg2=cachedGrad('golfist'+((gl.r)|0),()=>{const g9=ctx.createRadialGradient(0,0,2,0,0,gl.r*0.5); /* the fire forming in the raised fist - with the warning arc dead this glow IS the punch telegraph, so it earns its paint */
+    g9.addColorStop(0,'#fff0c8');g9.addColorStop(0.4,'rgba(255,110,30,.9)');g9.addColorStop(1,'rgba(255,90,30,0)');return g9;});
+    ctx.save();ctx.translate(fx8,fy8);ctx.fillStyle=fg2;ctx.beginPath();ctx.arc(0,0,gl.r*0.5,0,TAU);ctx.fill();ctx.restore();}} /* r146 BLOAT CUT: this gradient was rebuilt EVERY FRAME while any golem wound up (QGOV: cachedGrad only) - cached now, translated into place like the core below it */
   {const cg2=cachedGrad('golcore',()=>{const g9=ctx.createRadialGradient(0,0,2,0,0,gl.r*0.9); /* THE CORE: red, not yellow */
     g9.addColorStop(0,'rgba(255,150,60,1)');g9.addColorStop(0.55,'rgba(235,60,15,.85)');g9.addColorStop(1,'rgba(180,30,10,0.3)');return g9;});
    ctx.save();ctx.translate(gl.x,gl.y);ctx.globalAlpha=0.72+0.28*pu*gr;

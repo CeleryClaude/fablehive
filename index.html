@@ -1627,7 +1627,8 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
      if(thresher&&thresher.rage>0.25){const q=d2(u.x,u.y,thresher.x,thresher.y);if(q<bq9&&q<420*420){bq9=q;foe=thresher;}}
      for(const gl9 of golems){const q=d2(u.x,u.y,gl9.x,gl9.y);if(q<bq9&&q<360*360){bq9=q;foe=gl9;}}
      for(const bf9 of bonefae){const q=d2(u.x,u.y,bf9.x,bf9.y);if(q<bq9){bq9=q;foe=bf9;}}
-     for(const sh9 of shades){const q=d2(u.x,u.y,sh9.x,sh9.y);if(q<bq9){bq9=q;foe=sh9;}}} /* raging threshers and walking fire are both fair game */ /* SURFACED worms are fair game - the prov gate made armies look pacifist the instant the queen kited away */
+     for(const sh9 of shades){const q=d2(u.x,u.y,sh9.x,sh9.y);if(q<bq9){bq9=q;foe=sh9;}}
+     for(const ed9 of edemons){const q=d2(u.x,u.y,ed9.x,ed9.y);if(q<bq9){bq9=q;foe=ed9;}}} /* r143c THE ANSWERING FLEET (decree): the brood is fair game - troops fight BACK */ /* raging threshers and walking fire are both fair game */ /* SURFACED worms are fair game - the prov gate made armies look pacifist the instant the queen kited away */
     if(!foe&&u.role==='armourer'){let bq8=1e9; /* THE SHIELD OATH: anchors were never invited against the wild at all ("armourers ignore worms and certain mobs"). They answer now - but as BODYGUARDS: only a threat pressing THE QUEEN, or one already at the anchor's own reach, is answered. Hunters they are not */
      const nearQ8=(s.R+250)*(s.R+250);
      const scan8=t8=>{const qq8=d2(t8.x,t8.y,s.x,s.y),qa8=d2(t8.x,t8.y,u.x,u.y);if((qq8<nearQ8||qa8<170*170)&&qa8<bq8){bq8=qa8;foe=t8;}};
@@ -1635,7 +1636,8 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
      for(const ey of eyes)scan8(ey);
      for(const gl9 of golems)scan8(gl9);
      for(const bf9 of bonefae)scan8(bf9);
-     for(const w9 of worms){if(w9.bur>0)continue;scan8(w9);}}
+     for(const w9 of worms){if(w9.bur>0)continue;scan8(w9);}
+     for(const ed9 of edemons)scan8(ed9);} /* r143c: anchors answer the brood pressing the queen */
     if(!foe&&((u.role==='lancer'&&u._fi%5<3)||(u.role==='spitter'&&u._fi%3===0))){ /* FREEBLADES: lancers hunt freely (~60%), spitters a third - war or no war */
      let bs2=260*260,bswm=null;const myGr9=grottoOf(s.x,s.y);
      gridNear(u.x,u.y,260,eu=>{const es=eu._sw;
@@ -2669,13 +2671,13 @@ function step(dt){NPLAY=humanCount();
     if(hv.t<25&&hv.t>0){let sk8=null,ss8=-1; /* r143 THE SEEK: the sliver is looking. Stay in its sight and it will not wait for the clock */
      for(const s5 of swarms){if(s5.dead)continue;const dd5=Math.hypot(s5.x-OASIS.x,s5.y-OASIS.y);
       if(dd5>1100)continue;const sc5=(s5.units.length+6)*1400/(500+dd5);if(sc5>ss8){ss8=sc5;sk8=s5;}}
-     if(sk8){hv.irk+=dt;if(hv.irk>6){hv.t=0.01;hv.irk=0;if(!hv._toldF){hv._toldF=1;toast('THE EYE FINDS YOU','#ffb347',5);}}}
+     if(sk8){hv.irk+=dt;if(hv.irk>6){hv.t=0.01;hv.irk=0;/* silent: the early-open is its own announcement */}}
      else hv.irk=Math.max(0,hv.irk-dt*1.5);}
     if(hv.t<=0){hv.ph=1;hv.pt=6;hv.eye=0;sfx('alarm');hv.grabs=0;
      for(let di9=drops.length-1;di9>=0;di9--)if(drops[di9].lum)drops.splice(di9,1); /* the bounty SINKS as it stirs - take it before it wakes or not at all */
      hv.arms=[]; /* r143: THE LIMBS ARE RETIRED by decree ('maybe remove the limbs') - the machinery sleeps empty; the BROOD does the reaching now */
      hv.expo=0;hv.rage=0;hv.opT=0;hv.saw=9;hv.spT=0.5;
-    if(!hv._told){hv._told=1;toast('THE EYE OPENS - its gaze owns the middle third. Fly clear, or stand in the land\'s light and pay half.','#b48cff',8);} /* r143b: ONCE, ever - the gold does the announcing (Celery: no event-text spam) */}}
+    /* r143c THE SILENT GOD: no event text at all, by decree - the glow, the gold and the red ARE the announcements */}}
    else if(hv.ph===1){hv.pt-=dt;hv.eye=1-hv.pt/6;if(hv.pt<=0){hv.ph=2;hv.pt=12;hv.eye=1;}}
    if(hv.ph>0&&hv.arms.length){const AR9=1150; /* THE ARMS, alive: coil -> quest -> seize -> crush -> gulp. Constraint chains: a want, never a snap */
     for(const ar of hv.arms){if(ar.dead){ /* a severed arm sulks home */
@@ -2741,7 +2743,7 @@ function step(dt){NPLAY=humanCount();
        const sa8=Math.atan2(tg8.y-OASIS.y,tg8.x-OASIS.x)+rand(-0.5,0.5);
        edemons.push({x:OASIS.x+Math.cos(sa8)*OASIS.r*0.9,y:OASIS.y+Math.sin(sa8)*OASIS.r*0.75,vx:0,vy:0,hp:60,maxHp:60,big:0,tsw:tg8,bt:0,seed:rand(0,TAU),flash:0});
        addRing(OASIS.x+Math.cos(sa8)*OASIS.r*0.9,OASIS.y+Math.sin(sa8)*OASIS.r*0.75,'#ffb347',34);sfx('pop');}
-      if(hv.expo>10&&!hv.rage){hv.rage=1;if(!hv._toldR){hv._toldR=1;toast('THE EYE REDDENS - FLEE, OR BE OVERRUN','#ff6a3c',7);}sfx('alarm'); /* THE BLOODSHOT: you were warned */
+      if(hv.expo>10&&!hv.rage){hv.rage=1;sfx('alarm'); /* silent reddening - the whole map turns the colour of the warning */ /* THE BLOODSHOT: you were warned */
        for(let gb8=0;gb8<2;gb8++){const ga8=Math.atan2(tg8.y-OASIS.y,tg8.x-OASIS.x)+(gb8?0.7:-0.7);
         edemons.push({x:OASIS.x+Math.cos(ga8)*OASIS.r,y:OASIS.y+Math.sin(ga8)*OASIS.r*0.8,vx:0,vy:0,hp:220,maxHp:220,big:1,tsw:tg8,bt:0,seed:rand(0,TAU),flash:0});
         addRing(OASIS.x+Math.cos(ga8)*OASIS.r,OASIS.y+Math.sin(ga8)*OASIS.r*0.8,'#ff6a3c',50);}}
@@ -2984,7 +2986,7 @@ function step(dt){NPLAY=humanCount();
   if(spider&&d2(spider.x,spider.y,OASIS.x,OASIS.y)<FR2){const dd=Math.hypot(spider.x-OASIS.x,spider.y-OASIS.y)||1;
    spider.x+=(spider.x-OASIS.x)/dd*130*dt;spider.y+=(spider.y-OASIS.y)/dd*130*dt;}}
  /* the golden hour drifts through, unannounced - in the cinder garden it is THE BURN */
- if(goldT<0){goldNext-=dt;if(goldNext<=0){goldT=0;goldNext=rand(150,260);if(MAP==='cinder')doBurn();else if(MAP==='night'){NWATCH=20;for(const s4 of swarms)delete s4._marked;if(!step._eyeTold){step._eyeTold=true;toast('THE POOL OPENS ITS EYE - its gaze finds BRIGHT things. Bank your honey or break its line.','#c8d8ff',6);}}}}
+ if(goldT<0){goldNext-=dt;if(goldNext<=0){goldT=0;goldNext=rand(150,260);if(MAP==='cinder')doBurn();else if(MAP==='night'){NWATCH=20;for(const s4 of swarms)delete s4._marked;/* r143c: the watcher teach-toast dies with the rest */}}}
  else{goldT+=dt;if(goldT>22)goldT=-1;}
  metaSaveT-=dt;if(metaSaveT<=0){metaSaveT=8;metaSave();}
 }
@@ -5498,8 +5500,14 @@ function draw(){
      for(const fd8 of[-0.66,-0.38,0.38,0.66]){ /* lid folds */
       ctx.beginPath();ctx.moveTo(O.x-EA*0.88,O.y+EB*fd8*0.9);
       ctx.quadraticCurveTo(O.x,O.y+EB*fd8*1.7,O.x+EA*0.88,O.y+EB*fd8*0.9);ctx.stroke();}
-     const bp8=HARV.ph>0?0.4:Math.min(3.5,Math.max(0.5,tt9/20)),bw8=(tnow%bp8)/bp8,urg8=Math.max(0,1-tt9/60);
-     const sliv8=HARV.ph>0?(0.30+0.70*ey9):(bw8>0.82?Math.sin((bw8-0.82)/0.18*Math.PI)*(0.05+0.16*urg8):0.012+0.02*urg8); /* the r136 quickening clock lives in the LID now: sleep-blinks are slivers of leaking light, faster and wider as the waking nears */
+     const urg8=Math.max(0,1-tt9/60);let tgt8; /* r143c THE SOLEMN LID (Celery: the twitching looked silly) - a lid this size does not twitch. Long calm cycles, ONE slow swell each, deeper and nearer as the waking comes; a steady held slit while it SEEKS; and everything rides an eased smoother so nothing ever snaps */
+     if(HARV.ph>0)tgt8=0.30+0.70*ey9;
+     else{const bp9=10-7*urg8,bw9=(tnow%bp9)/bp9;
+      tgt8=0.012+0.02*urg8+((bw9>0.75)?Math.sin((bw9-0.75)/0.25*Math.PI)*(0.07+0.15*urg8):0);
+      if(tt9<25)tgt8=Math.max(tgt8,0.055+0.02*Math.sin(tnow*0.7));}
+     const fdt8=Math.min(0.06,Math.max(0,tnow-(HARV._lt||tnow)));HARV._lt=tnow;
+     HARV._slv=(HARV._slv==null?tgt8:HARV._slv+(tgt8-HARV._slv)*Math.min(1,3.0*fdt8));
+     const sliv8=HARV._slv;
      if(sliv8>0.015){const LH=EB*sliv8;
       ctx.save();ctx.beginPath();ctx.moveTo(O.x-EA,O.y);
       ctx.quadraticCurveTo(O.x,O.y-LH*2,O.x+EA,O.y);
@@ -5513,7 +5521,10 @@ function draw(){
        g9.addColorStop(0.65,'rgba(235,140,40,.55)');g9.addColorStop(1,'rgba(110,55,15,0)');return g9;});
       let tg8=null,ts8=-1;for(const s5 of swarms){if(s5.dead)continue;const dd5=Math.hypot(s5.x-O.x,s5.y-O.y); /* the pupil hunts: nearest BIGGEST */
        const sc5=(s5.units.length+6)*1400/(500+dd5);if(sc5>ts8){ts8=sc5;tg8=s5;}}
-      const ta8=tg8?Math.atan2(tg8.y-O.y,tg8.x-O.x):0,po8=HARV.ph>0?Math.min(1,ey9*1.2):0.25;
+      let ra8=HARV._aim==null?0.9:HARV._aim; /* r143c THE STILL GAZE: the aim is EASED, with a dead zone over the pupil - a swarm right on top of it spun atan2 every frame (Celery: 'freaks out and goes twitchy when you are right on top of it') */
+      if(tg8){const dxa8=tg8.x-O.x,dya8=tg8.y-O.y;
+       if(dxa8*dxa8+dya8*dya8>120*120){const na8=Math.atan2(dya8,dxa8);let da8=na8-ra8;while(da8>Math.PI)da8-=TAU;while(da8<-Math.PI)da8+=TAU;ra8+=da8*Math.min(1,4*fdt8);}}
+      HARV._aim=ra8;const ta8=ra8,po8=HARV.ph>0?Math.min(1,ey9*1.2):0.25;
       const px8=O.x+Math.cos(ta8)*EA*0.20*po8,py8=O.y+Math.sin(ta8)*EB*0.34*po8;
       ctx.globalAlpha=HARV.ph>0?(0.55+0.45*ey9):(0.5+0.3*urg8);
       ctx.save();ctx.translate(px8-O.x,py8-O.y);ctx.fillStyle=ir8;ctx.fillRect(O.x-EB,O.y-EB,EB*2,EB*2);ctx.restore();

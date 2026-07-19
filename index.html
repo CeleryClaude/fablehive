@@ -638,7 +638,7 @@ function equipItem(id){const it=itemById(id);if(!it||!ownsItem(id))return false;
 let NID=1,UIDN=1,swarms=[],groves=[],boulders=[],coves=[],ways=[],drops=[],fx=[],flies=[],grass=[],elder=null,shots=[],spider=null,webshots=[];
 let tnow=0,running=false,shake=0,warnT=0,goldT=-1,goldNext=170;
 let NWATCH=0,BURNY0=-1,BURNY1=-1;
-let shades=[],NLIGHTS=null,SHDRT=0,HARV={t:80,ph:0,pt:0,eye:0,_told:0,arms:[],grabs:0,irk:0,expo:0,rage:0,opT:0,saw:9,spT:0},edemons=[],lbearers=[],gdivers=[],ldrops=[],lmoths=[]; /* r147 THE MOTH-KIN: lamp-moths (light-scaled aggro), glimmer-moths (bank thieves), and THE MOTH MATRIARCH - the thin night gets residents (his repeated pressure, THE GOD'S SECOND COMING docket §IV) */ /* r143 THE EYE'S BROOD: edemons = the gaze's spawned horrors · irk = seek irritation · expo = how long its target has stayed in sight · rage = the BLOODSHOT state */ /* r134 THE NIGHT'S OWN: lantern-bearers (walking TRUE light) · gloom-divers (hem ambushers) · fallen lanterns (standing light, 30s) */ /* night: the dark's own hunters · the static light map · respawn clock · THE HARVESTER BENEATH (r133): ph 0 sleeps · 1 wakes (6s telegraph) · 2 HARVESTS the middle third (12s) */
+let shades=[],NLIGHTS=null,SHDRT=0,HARV={t:80,ph:0,pt:0,eye:0,_told:0,arms:[],grabs:0,irk:0,expo:0,rage:0,opT:0,saw:9,spT:0},edemons=[],lbearers=[],gdivers=[],ldrops=[],lmoths=[],nwebs=[],skaters=[]; /* r147 THE MOTH-KIN: lamp-moths (light-scaled aggro), glimmer-moths (bank thieves), and THE MOTH MATRIARCH - the thin night gets residents (his repeated pressure, THE GOD'S SECOND COMING docket §IV) */ /* r148 THE WEB REALM: silk strands anchor-to-anchor between stones, and the ORB-SKATERS that run them - original arachnids, not broodmother knockoffs, by decree */ /* r143 THE EYE'S BROOD: edemons = the gaze's spawned horrors · irk = seek irritation · expo = how long its target has stayed in sight · rage = the BLOODSHOT state */ /* r134 THE NIGHT'S OWN: lantern-bearers (walking TRUE light) · gloom-divers (hem ambushers) · fallen lanterns (standing light, 30s) */ /* night: the dark's own hunters · the static light map · respawn clock · THE HARVESTER BENEATH (r133): ph 0 sleeps · 1 wakes (6s telegraph) · 2 HARVESTS the middle third (12s) */
 let thresher=null,THRT=420,GOLRT=75,PYREB=1; /* r132: the pyre's breath - cinder only, 75s cycle */
 let magma=[],mpools=[]; /* golem-thrown globs in flight · the molten pools they leave */
 let GRADC={}; /* built-once gradients: the fire was rebuilding two screen-wide gradients EVERY frame */
@@ -827,7 +827,7 @@ function doBurn(){ /* THE BURN, pared by verdict: no wall, no zone - the sky fla
  FRONT=Math.min(WORLD.h*0.62,FRONT+1500);}
 function lightR(s){ /* THE LIGHT LAW: how far a swarm's light reaches - the fog draws THIS circle and the shade respects THIS circle. One number, seen and obeyed */
  const base=(typeof me==='function'&&s===me())?560+Math.min(480,(s.honey||0)*0.55):150+Math.min(330,(s.honey||0)*0.35);
- return (s._marked?0.55:1)*base;}
+ return (s._marked?0.55:1)*(s._dimM||1)*base;} /* r148 MOVING DARKNESS, the light-law surgery done once: the matriarch's wing-scale dust THINS the light of whoever flies beneath it (_dimM eases toward 0.68 under her wake, back to 1 in clean air). The fog draws the thinned circle, the shades respect the thinned circle - her weather is darkness now, as the docket decreed. The mark still owns its own 0.55 and the two never stack past honesty */
 function buildNLights(){ /* the standing lights, gathered once per world */
  NLIGHTS=[];
  for(const g of groves){if(g.lumen||g.gild)NLIGHTS.push([g.x,g.y,g.gild?260:150]);}
@@ -1270,7 +1270,32 @@ function setupWorldTail(){ /* the rest of world-gen: caves, maws, oasis, decor -
   for(let gm9=0;gm9<2;gm9++){const gx9=rand(900,WORLD.w-900),gy9=rand(900,WORLD.h-900); /* GLIMMER-MOTHS: the bank thieves */
    lmoths.push({x:gx9,y:gy9,hx:gx9,hy:gy9,vx:0,vy:0,hp:55,maxHp:55,_mk:1,kind:'glim',seed:rand(0,TAU),flash:0,cd:0,loot:0,wa:rand(0,TAU)});}
   {const mx9=WORLD.w*(Math.random()<0.5?0.18:0.82),my9=WORLD.h*0.78; /* THE MOTH MATRIARCH roosts a far southern realm - a resident weather, not an event */
-   lmoths.push({x:mx9,y:my9,hx:mx9,hy:my9,vx:0,vy:0,hp:1500,maxHp:1500,_mk:1,kind:'mat',seed:rand(0,TAU),flash:0,cd:0,gustT:0,dtr:[],dtT:0,wa:rand(0,TAU)});}}
+   lmoths.push({x:mx9,y:my9,hx:mx9,hy:my9,vx:0,vy:0,hp:1500,maxHp:1500,_mk:1,kind:'mat',seed:rand(0,TAU),flash:0,cd:0,gustT:0,dtr:[],dtT:0,wa:rand(0,TAU)});}
+  const wCenters9=[]; /* r148 THE WEB REALMS, third weaving (his verdict on the second: 'alone its a bit underwhelming... will there be many') - THREE hollows now, strung across the night's quarters, each grotto-tested and held 1600px off its sisters. The spiders were never alone */
+  for(let wr9=0;wr9<3;wr9++){let wcx=WORLD.w*(0.2+wr9*0.29),wcy=WORLD.h*0.26;
+   for(let tc9=0;tc9<30;tc9++){const cx9=rand(WORLD.w*0.14,WORLD.w*0.86),cy9=rand(WORLD.h*0.12,WORLD.h*0.62);
+    let ok9=d2(cx9,cy9,WORLD.w/2,WORLD.h/2)>1500*1500;
+    if(ok9)for(const gr9 of grottos){if(d2(cx9,cy9,gr9.x,gr9.y)<(gr9.r+430)*(gr9.r+430)){ok9=false;break;}}
+    if(ok9)for(const pc9 of wCenters9){if(d2(cx9,cy9,pc9[0],pc9[1])<1600*1600){ok9=false;break;}}
+    if(ok9){wcx=cx9;wcy=cy9;break;}}
+   wCenters9.push([wcx,wcy]);
+   const anch9=[];
+   for(let as9=0;as9<7;as9++){const aa9=as9/7*TAU+rand(-0.25,0.25),ar9=as9?rand(150,340):0; /* one HEART STONE + a ring - orb-web anatomy, not harp strings */
+    const b9={x:wcx+Math.cos(aa9)*ar9,y:wcy+Math.sin(aa9)*ar9*0.82,r:rand(24,36),kind:(Math.random()*3)|0,_wa:1};
+    boulders.push(b9);anch9.push(b9);}
+   const spk9=[];
+   for(let i9=1;i9<anch9.length;i9++){const A9=anch9[i9]; /* SPOKES: every ring stone ties to the heart... */
+    const st9={x1:A9.x,y1:A9.y,x2:anch9[0].x,y2:anch9[0].y,rip:0,ph:rand(0,TAU)};nwebs.push(st9);spk9.push(st9);}
+   for(let i9=1;i9<anch9.length;i9++){const j9=i9===anch9.length-1?1:i9+1; /* ...and the RING closes stone-to-stone */
+    const A9=anch9[i9],B9=anch9[j9],dd9=Math.hypot(A9.x-B9.x,A9.y-B9.y);
+    if(dd9>60&&dd9<560)nwebs.push({x1:A9.x,y1:A9.y,x2:B9.x,y2:B9.y,rip:0,ph:rand(0,TAU)});}
+   for(let k9=0;k9<spk9.length;k9++){const s19=spk9[k9],s29=spk9[(k9+1)%spk9.length]; /* THE INNER ROUNDS: chords bridge THIS realm's spokes at mid-flight - the concentric look that says WEB, never harp (realm-local, so no strand ever bridges two hollows) */
+    const t19=0.45,x19=s19.x1+(s19.x2-s19.x1)*t19,y19=s19.y1+(s19.y2-s19.y1)*t19;
+    const x29=s29.x1+(s29.x2-s29.x1)*t19,y29=s29.y1+(s29.y2-s29.y1)*t19;
+    if(Math.hypot(x19-x29,y19-y29)<420)nwebs.push({x1:x19,y1:y19,x2:x29,y2:y29,rip:0,ph:rand(0,TAU)});}
+   for(let sk9=0;sk9<4;sk9++){const si9=nwebs.length-1-((Math.random()*(anch9.length*2))|0),st9=nwebs[Math.max(0,si9)];
+    skaters.push({x:(st9.x1+st9.x2)/2,y:(st9.y1+st9.y2)/2,si:Math.max(0,si9),t:rand(0.2,0.8),dir:Math.random()<0.5?1:-1,hp:60,maxHp:60,_sk:1,st:0,cd:0,cd2:0,seed:rand(0,TAU),flash:0});}}
+  for(const g of groves){if(g.lumen||g.gild||Math.random()>=0.22)continue;g.veiled=1;g.amt=Math.min(g.max||g.amt*1.6,g.amt*1.6);} /* r148 THE VEILED GARDEN (docket §III.1): a fifth of the night's blooms exist but cannot be SEEN - or worked - outside cast light. Light becomes a prospecting tool, and the hidden blooms run RICHER for the finding */}
  eyes=[];if(MAP==='honey')for(let k=0;k<4;k++)eyes.push({x:rand(380,1050),y:rand(380,1050),r:rand(15,22),hp:300,maxHp:300,wa:rand(0,TAU),cd:0,blink:0,seed:rand(0,TAU)});
  else if(MAP==='night')for(let k=0;k<8;k++){const _e3=k%3;let ex3,ey3;
   if(_e3===0){ex3=rand(360,880);ey3=rand(600,WORLD.h-900);}else if(_e3===1){ex3=rand(WORLD.w-880,WORLD.w-360);ey3=rand(600,WORLD.h*0.72);}else{ex3=rand(700,WORLD.w-700);ey3=rand(340,740);}
@@ -1551,6 +1576,7 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
   s._rdC=s._rdA||0;s._rdW=s._rdL||0;s._rdV=s._rdN||0;s._rdA=0;s._rdN=0;s._rdL=0; /* r144: last tick's saddle census is PUBLISHED (true count + carried load + seated count) before this tick recounts - placement and the laden drawing read the committed values, never half-counted ones. _rdA counts EVERY rider; _rdN hands out only the SHELTERED (visible) berths; _rdV lets the last rank seat itself symmetric */
   for(const u of s.units){
    if(u.flash>0)u.flash-=dt;if(u.atk>0)u.atk-=dt;if(u.slow>0)u.slow-=dt;if(u.mend>0)u.mend-=dt;if(u.faceT>0)u.faceT-=dt;
+   if(u._webT>0)u._webT-=dt; /* r148: the silk lets go in under a second - unless the strand re-snares */
    if(u.fat>0&&u.fatT<=0)u.fat=Math.max(0,u.fat-0.1*dt);
    if(u.fatT>0)u.fatT-=dt;
    if(u._perch){ /* r144 THE QUEEN'S SADDLE: she rides HER MAJESTY - untargetable, out of the crush, the larder worn openly on the wing. Replaces r124's titan perch by decree (recorded r134; the rooms-coupling was a filing error two gens deep - this is the FEEL half, pure local sim, the wire never moves). The r58 law holds: the saddle moves DRAWN geometry only, never a hitbox */
@@ -1591,7 +1617,7 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
     else{
      if(u.node){const _anch=(u.x-u.node.x)*(u.x-u.node.x)+(u.y-u.node.y)*(u.y-u.node.y)<1600,_dropR=_anch?(leash+40):(leash-50);if(u.node.dead||u.node.amt<=3||d2(u.node.x,u.node.y,s.x,s.y)>_dropR*_dropR)u.node=null;} /* a flower the queen left behind is NOT your errand anymore */
      if(!u.node){let bn=null,bs=1e18;
-      for(const g of groves){if(g.dead||g.closed||g.amt<=6||g===u.badN)continue;if(grottoOf(g.x,g.y)!==grottoOf(u.x,u.y))continue; /* what sleeps behind stone stays behind stone */
+      for(const g of groves){if(g.dead||g.closed||g.amt<=6||g===u.badN)continue;if(g.veiled&&!inLight(g.x,g.y,40))continue; /* r148 THE VEILED GARDEN: a bloom no light has found is no one's errand - light is the prospecting tool, by the docket */if(grottoOf(g.x,g.y)!==grottoOf(u.x,u.y))continue; /* what sleeps behind stone stays behind stone */
        const q=d2(s.x,s.y,g.x,g.y);if(q>(leash-60)**2)continue; /* only flowers the ROPE can truly reach */
        let crowd=0;for(const w of s.units){if(w.role==='forager'&&w.node===g)crowd++;}
        const sc=Math.sqrt(d2(u.x,u.y,g.x,g.y))-g.amt*0.8+Math.max(0,crowd-2)*70; /* disperse: a crowded flower loses its charm */
@@ -1648,7 +1674,8 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
      for(const sh9 of shades){const q=d2(u.x,u.y,sh9.x,sh9.y);if(q<bq9){bq9=q;foe=sh9;}}
      for(const ed9 of edemons){const q=d2(u.x,u.y,ed9.x,ed9.y);if(q<bq9){bq9=q;foe=ed9;}}
      for(const gd9 of gdivers){if(gd9.st!==1)continue;const q=d2(u.x,u.y,gd9.x,gd9.y);if(q<bq9){bq9=q;foe=gd9;}}
-     for(const mk9 of lmoths){const q=d2(u.x,u.y,mk9.x,mk9.y);if(q<bq9){bq9=q;foe=mk9;}}} /* r147: the moth-kin are fair game from birth - lamp, glimmer and matriarch alike. The ANSWERING FLEET is a birthright, not a patch */ /* r146 THE ANSWERING FLEET, audit round: a REVEALED gloom-diver (mid-bite) is fair game - it bit units for three seconds and nothing ever answered. Ambushing (st 0) it stays unanswerable: it IS the dark then, and the dark is fought with light */ /* r143c THE ANSWERING FLEET (decree): the brood is fair game - troops fight BACK */ /* raging threshers and walking fire are both fair game */ /* SURFACED worms are fair game - the prov gate made armies look pacifist the instant the queen kited away */
+     for(const mk9 of lmoths){const q=d2(u.x,u.y,mk9.x,mk9.y);if(q<bq9){bq9=q;foe=mk9;}}
+     for(const sk9 of skaters){const q=d2(u.x,u.y,sk9.x,sk9.y);if(q<bq9){bq9=q;foe=sk9;}}} /* r147: the moth-kin are fair game from birth - lamp, glimmer and matriarch alike. The ANSWERING FLEET is a birthright, not a patch */ /* r148: the orb-skaters too, from birth */ /* r146 THE ANSWERING FLEET, audit round: a REVEALED gloom-diver (mid-bite) is fair game - it bit units for three seconds and nothing ever answered. Ambushing (st 0) it stays unanswerable: it IS the dark then, and the dark is fought with light */ /* r143c THE ANSWERING FLEET (decree): the brood is fair game - troops fight BACK */ /* raging threshers and walking fire are both fair game */ /* SURFACED worms are fair game - the prov gate made armies look pacifist the instant the queen kited away */
     if(!foe&&u.role==='armourer'){let bq8=1e9; /* THE SHIELD OATH: anchors were never invited against the wild at all ("armourers ignore worms and certain mobs"). They answer now - but as BODYGUARDS: only a threat pressing THE QUEEN, or one already at the anchor's own reach, is answered. Hunters they are not */
      const nearQ8=(s.R+250)*(s.R+250);
      const scan8=t8=>{const qq8=d2(t8.x,t8.y,s.x,s.y),qa8=d2(t8.x,t8.y,u.x,u.y);if((qq8<nearQ8||qa8<170*170)&&qa8<bq8){bq8=qa8;foe=t8;}};
@@ -1661,7 +1688,8 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
      for(const sh9 of shades)scan8(sh9);
      for(const gd9 of gdivers){if(gd9.st===1)scan8(gd9);}
      for(const mk9 of lmoths)scan8(mk9);
-     if(thresher&&thresher.hp>0&&thresher.rage>0.25)scan8(thresher);} /* r147: moth-kin pressing the queen are answered by her bodyguard too */ /* r143c: anchors answer the brood pressing the queen */ /* r146 audit: the SHIELD OATH had three blind spots - a shade burning at the queen's light, a revealed gloom-diver mid-bite, and a RAGING thresher were all invisible to her own bodyguard. No spectator combat, ever */
+     for(const sk9 of skaters)scan8(sk9);
+     if(thresher&&thresher.hp>0&&thresher.rage>0.25)scan8(thresher);} /* r147: moth-kin pressing the queen are answered by her bodyguard too */ /* r148: and skaters */ /* r143c: anchors answer the brood pressing the queen */ /* r146 audit: the SHIELD OATH had three blind spots - a shade burning at the queen's light, a revealed gloom-diver mid-bite, and a RAGING thresher were all invisible to her own bodyguard. No spectator combat, ever */
     if(!foe&&((u.role==='lancer'&&u._fi%5<3)||(u.role==='spitter'&&u._fi%3===0))){ /* FREEBLADES: lancers hunt freely (~60%), spitters a third - war or no war */
      let bs2=260*260,bswm=null;const myGr9=grottoOf(s.x,s.y);
      gridNear(u.x,u.y,260,eu=>{const es=eu._sw;
@@ -2615,6 +2643,7 @@ function step(dt){NPLAY=humanCount();
   if(!hit)for(const lb9 of lbearers){if(d2(sh.x,sh.y,lb9.x,lb9.y)<20*20){lb9.hp-=sh.dmg||8;lb9.flash=.12;hit=true;break;}}
   if(!hit)for(const gd9 of gdivers){if(gd9.st===1&&d2(sh.x,sh.y,gd9.x,gd9.y)<18*18){gd9.hp-=sh.dmg||8;gd9.flash=.12;hit=true;break;}}
   if(!hit)for(const mk9 of lmoths){const rr9=mk9.kind==='mat'?34:16;if(d2(sh.x,sh.y,mk9.x,mk9.y)<rr9*rr9){mk9.hp-=sh.dmg||8;mk9.flash=.12;hit=true;break;}} /* r147: quarrels answer the moth-kin */
+  if(!hit)for(const sk9 of skaters){if(d2(sh.x,sh.y,sk9.x,sk9.y)<15*15){sk9.hp-=sh.dmg||8;sk9.flash=.12;hit=true;break;}} /* r148: and the skaters */
   if(!hit&&MAP==='night'&&edemons.length)for(const ed9 of edemons){const rr9=ed9.big?26:17;if(d2(sh.x,sh.y,ed9.x,ed9.y)<rr9*rr9+140){ed9.hp-=sh.dmg||8;ed9.flash=0.2;hit=true;break;}} /* r143: quarrels answer THE BROOD (the arm-sever line retired with the arms) */ /* r134: quarrels answer the night's own - the diver only while ERUPTED */
   if(!hit)for(const sh9 of shades){if(d2(sh.x,sh.y,sh9.x,sh9.y)<26*26){sh9.hp-=sh.dmg||8;sh9.flash=.1;hit=true;if(sh9.hp<=0)shadeDie(sh9);break;}}
   if(!hit)for(const bf9 of bonefae){if(d2(sh.x,sh.y,bf9.x,bf9.y)<18*18){bf9.hp-=sh.dmg||8;bf9.flash=.1;hit=true;if(bf9.hp<=0){const bi9=bonefae.indexOf(bf9);if(bi9>=0)bonefae.splice(bi9,1);}break;}}
@@ -2723,6 +2752,7 @@ function step(dt){NPLAY=humanCount();
     m.dtT-=dt;if(m.dtT<=0){m.dtT=0.4;m.dtr.push({x:m.x,y:m.y,t:6});if(m.dtr.length>16)m.dtr.shift();}
     for(let di9=m.dtr.length-1;di9>=0;di9--){const dp9=m.dtr[di9];dp9.t-=dt;if(dp9.t<=0){m.dtr.splice(di9,1);continue;}
      for(const s9 of swarms){if(s9.dead)continue;if(Math.abs(s9.x-dp9.x)>420||Math.abs(s9.y-dp9.y)>420)continue;
+      if(d2(s9.x,s9.y,dp9.x,dp9.y)<110*110)s9._dimT=0.6; /* r148 MOVING DARKNESS: a queen under her wake carries the dimming with her - the light-law reads it below */
       for(const u9 of s9.units){if(u9._perch)continue;if(d2(u9.x,u9.y,dp9.x,dp9.y)<88*88){u9.slow=Math.max(u9.slow||0,0.3);u9.hp-=6*dt;if(u9.hp<=0)killUnit(s9,u9,null);}}}}
     let pr9=0;for(const s9 of swarms){if(s9.dead)continue;if(d2(s9.x,s9.y,m.x,m.y)>700*700)continue;
      for(const u9 of s9.units){if(u9._perch)continue;if(d2(u9.x,u9.y,m.x,m.y)<170*170)pr9++;}}
@@ -2734,6 +2764,37 @@ function step(dt){NPLAY=humanCount();
    m.x+=m.vx*dt;m.y+=m.vy*dt;m.x=clamp(m.x,120,WORLD.w-120);m.y=clamp(m.y,120,WORLD.h-120);
    if(m.kind!=='mat'&&!m._tg&&(m.loot||0)===0&&d2(m.x,m.y,m.hx,m.hy)>900*900)m.wa=Math.atan2(m.hy-m.y,m.hx-m.x); /* the leash home, gentle */
   }
+  for(const s9 of swarms){if(s9._dimT>0)s9._dimT-=dt;const tg9=(s9._dimT>0)?0.68:1;s9._dimM=(s9._dimM||1)+(tg9-(s9._dimM||1))*Math.min(1,dt*2.5);} /* r148: the dimming EASES in and out - darkness arrives like weather, not like a switch */
+  for(const wb of nwebs)if(wb.rip>0)wb.rip-=dt*1.4;
+  {const segd=(px,py,x1,y1,x2,y2)=>{const vx9=x2-x1,vy9=y2-y1,L9=vx9*vx9+vy9*vy9||1;let t9=((px-x1)*vx9+(py-y1)*vy9)/L9;t9=t9<0?0:t9>1?1:t9;const qx9=x1+vx9*t9-px,qy9=y1+vy9*t9-py;return qx9*qx9+qy9*qy9;};
+   for(const wb of nwebs){const mx9=(wb.x1+wb.x2)/2,my9=(wb.y1+wb.y2)/2; /* r148 SLOW-WALK + RIPPLE, by decree: silk catches the small. Queens tear through (a ripple, never a snare - she is the one sacred head) */
+    for(const s9 of swarms){if(s9.dead)continue;if(Math.abs(s9.x-mx9)>640||Math.abs(s9.y-my9)>640)continue;
+     if(segd(s9.x,s9.y,wb.x1,wb.y1,wb.x2,wb.y2)<14*14)wb.rip=1;
+     for(const u9 of s9.units){if(u9._perch)continue;if(segd(u9.x,u9.y,wb.x1,wb.y1,wb.x2,wb.y2)<10*10){u9.slow=Math.max(u9.slow||0,0.55);u9._webT=0.9;wb.rip=1;}}}}
+   for(let ki=skaters.length-1;ki>=0;ki--){const sk=skaters[ki]; /* THE ORB-SKATERS: they RUN THE LINES - long-legged, glossy, quick on silk and awkward off it. A ripple is a dinner bell */
+    if(sk.flash>0)sk.flash-=dt;if(sk.cd>0)sk.cd-=dt;if(sk.cd2>0)sk.cd2-=dt;
+    if(sk.hp<=0){for(let k9=0;k9<3;k9++)dropAt(sk.x+rand(-14,14),sk.y+rand(-10,10),rand(5,9),18,1);
+     addRing(sk.x,sk.y,'#d8d0f0',30);if(near(sk))sfx('die');skaters.splice(ki,1);continue;}
+    if(sk.st===0){const wb=nwebs[sk.si];if(!wb){sk.st=0;continue;}
+     const L9=Math.hypot(wb.x2-wb.x1,wb.y2-wb.y1)||1;
+     sk.t+=sk.dir*(150/L9)*dt;
+     if(sk.t>1||sk.t<0){const ex9=sk.t>1?wb.x2:wb.x1,ey9=sk.t>1?wb.y2:wb.y1;sk.t=sk.t>1?1:0; /* r148.3: at a strand's end it hops only to silk SHARING that anchor - a skater walks its own web and can never teleport to a sister hollow */
+      const op9=[];for(let oi9=0;oi9<nwebs.length;oi9++){const ow9=nwebs[oi9];if(ow9===wb)continue;
+       if(Math.hypot(ow9.x1-ex9,ow9.y1-ey9)<6)op9.push([oi9,1]);else if(Math.hypot(ow9.x2-ex9,ow9.y2-ey9)<6)op9.push([oi9,-1]);}
+      if(op9.length&&Math.random()<0.6){const p9=op9[(Math.random()*op9.length)|0];sk.si=p9[0];sk.dir=p9[1];sk.t=p9[1]>0?0:1;}
+      else sk.dir*=-1;}
+     sk.x=wb.x1+(wb.x2-wb.x1)*sk.t;sk.y=wb.y1+(wb.y2-wb.y1)*sk.t;
+     if(sk.cd<=0){sk.cd=0.4;sk._pr=null;let bq9=340*340;
+      for(const s9 of swarms){if(s9.dead)continue;if(Math.abs(s9.x-sk.x)>620||Math.abs(s9.y-sk.y)>620)continue;
+       for(const u9 of s9.units){if(u9._perch||!(u9._webT>0))continue;const q9=d2(u9.x,u9.y,sk.x,sk.y);if(q9<bq9){bq9=q9;sk._pr=u9;sk._prs=s9;}}}
+      if(sk._pr)sk.st=1;}}
+    else{const p9=sk._pr;
+     if(!p9||p9.slain){sk.st=0;sk._pr=null;}
+     else{const dd9=Math.hypot(p9.x-sk.x,p9.y-sk.y)||1;
+      const sp9=(p9._webT>0)?185:120; /* fast while the prey is still snared, slower on the loose */
+      sk.x+=(p9.x-sk.x)/dd9*sp9*dt;sk.y+=(p9.y-sk.y)/dd9*sp9*dt;
+      if(dd9<16+p9.r&&sk.cd2<=0){sk.cd2=0.66;p9.hp-=13;p9.flash=.15;if(p9.hp<=0){killUnit(sk._prs,p9,null);sk.st=0;sk._pr=null;}}
+      if(dd9>430){sk.st=0;sk._pr=null;}}}}}
   {const hv=HARV; /* r133 THE HARVESTER BENEATH: it owns the middle third when its eyes are open. Escape outruns it; the LAND'S light (roads, lumen ground) halves its grip; its leavings pay the brave */
    if(hv.ph===0){hv.t-=dt;
     hv._bt=(hv._bt||0)-dt;if(hv._bt<=0){hv._bt=6; /* r136 THE HEARTBEAT: while it sleeps, its light LEAKS - lumen honey blooms in rings around the pool. Greed has a clock */
@@ -7083,6 +7144,32 @@ function draw(){
   ctx.beginPath();ctx.moveTo(-9,0);ctx.lineTo(-12,0);ctx.lineTo(-9,1.4);ctx.closePath();ctx.fill();
   ctx.fillStyle='rgba(255,60,60,.9)';ctx.beginPath();ctx.arc(5.5,-1.4,1,0,TAU);ctx.fill();
   ctx.restore();}
+ for(const wb of nwebs){ /* r148 THE WEB REALM: silk anchor-to-anchor, sagging true, RIPPLING where something walked it */
+  const mx8=(wb.x1+wb.x2)/2,my8=(wb.y1+wb.y2)/2;
+  if(mx8<vx0-320||mx8>vx1+320||my8<vy0-320||my8>vy1+320)continue;
+  const rp8=Math.max(0,wb.rip),sagY=14+Math.sin(tnow*0.7+wb.ph)*2,wob=rp8>0?Math.sin(tnow*26+wb.ph)*9*rp8:0;
+  const cx8=mx8+wob*0.4,cy8=my8+sagY+wob;
+  ctx.strokeStyle='rgba(214,206,236,'+(0.20+0.16*rp8).toFixed(2)+')';ctx.lineWidth=2.6;
+  ctx.beginPath();ctx.moveTo(wb.x1,wb.y1);ctx.quadraticCurveTo(cx8,cy8,wb.x2,wb.y2);ctx.stroke();
+  ctx.strokeStyle='rgba(240,236,255,'+(0.28+0.22*rp8).toFixed(2)+')';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(wb.x1,wb.y1);ctx.quadraticCurveTo(cx8,cy8,wb.x2,wb.y2);ctx.stroke();
+  for(const tt8 of[0.3,0.5,0.7]){const dx8=wb.x1+(wb.x2-wb.x1)*tt8+(cx8-mx8)*0.5,dy8=wb.y1+(wb.y2-wb.y1)*tt8+(cy8-my8)*0.6; /* dew beads on the line - the night's own jewellery */
+   ctx.fillStyle='rgba(200,220,255,'+(0.30+0.25*Math.sin(tnow*1.3+wb.ph+tt8*9)).toFixed(2)+')';
+   ctx.beginPath();ctx.arc(dx8,dy8,1.5,0,TAU);ctx.fill();}}
+ for(const sk of skaters){ /* THE ORB-SKATER: a droplet body on eight hair-legs - built for the lines, original to the realm */
+  if(sk.x<vx0-80||sk.x>vx1+80||sk.y<vy0-80||sk.y>vy1+80)continue;
+  const ha8=sk.st===1&&sk._pr?Math.atan2(sk._pr.y-sk.y,sk._pr.x-sk.x):Math.sin(tnow*0.8+sk.seed);
+  ctx.save();ctx.translate(sk.x,sk.y);ctx.rotate(ha8);
+  ctx.strokeStyle=sk.flash>0?'#fff':'rgba(30,20,48,.9)';ctx.lineWidth=1.1;ctx.lineCap='round';
+  for(const sd8 of[-1,1])for(let k8=0;k8<4;k8++){const la8=sd8*(0.5+k8*0.5),ph8=Math.sin(tnow*18+k8*1.57+(sd8>0?0.7:0))*2.4; /* the legs RUN */
+   ctx.beginPath();ctx.moveTo(0,0);
+   ctx.quadraticCurveTo(Math.cos(la8)*7,Math.sin(la8)*7-2,Math.cos(la8)*12+ph8*0.3,Math.sin(la8)*12+ph8);ctx.stroke();}
+  ctx.fillStyle=sk.flash>0?'#fff':'#241838';ctx.beginPath();ctx.ellipse(-2,0,4.6,3.4,0,0,TAU);ctx.fill(); /* abdomen: a dark droplet */
+  ctx.strokeStyle='rgba(200,190,235,.5)';ctx.lineWidth=0.8;ctx.stroke();
+  ctx.fillStyle='#2e2246';ctx.beginPath();ctx.arc(2.6,0,2,0,TAU);ctx.fill(); /* cephalothorax */
+  ctx.fillStyle='rgba(220,240,255,.9)';ctx.beginPath();ctx.arc(3.4,-0.8,0.7,0,TAU);ctx.fill();ctx.beginPath();ctx.arc(3.4,0.8,0.7,0,TAU);ctx.fill(); /* eye glints */
+  ctx.restore();
+  if(sk.hp<sk.maxHp)drawBar(sk.x,sk.y+14,30,sk.hp/sk.maxHp,false);}
  for(const mk of lmoths){ /* r147 THE MOTH-KIN - top-down identity by the titan law: outline + banding + motion. Lamp = moon-dust pale; glimmer = small, and GLOWING GOLD when laden with your money; matriarch = a realm's weather, eye-spotted, shedding the dust that drags */
   if(mk.kind==='mat')for(const dp of mk.dtr){
    ctx.fillStyle='rgba(18,10,32,'+(0.30*Math.min(1,dp.t/3)).toFixed(2)+')';
@@ -7444,7 +7531,7 @@ function netApplyWorld(D){ /* the STATIC world takes the client's stage - and SC
   pricks:g.pk.map(p=>({x:p[0],y:p[1],rot:0,cd:0,vx:0,vy:0}))}));
  fieldMaws=D.fm.map(m=>({x:m[0],y:m[1],rot:m[2],big:m[3],cd:0,anim:0}));
  OASIS=D.oa;decor=D.dc.map(d=>({x:d[0],y:d[1],ty:['tuft','rubble','swirl'][d[2]],ph:d[3]}));
- thorns=D.th;groves=[];drops=[];shots=[];orbs=[];wasps=[];eyes=[];elder=null;spider=null;worms=[];golems=[];magma=[];mpools=[];bonefae=[];bspears=[];huskC=[];shades=[];thresher=null;NLIGHTS=null;FRONT=1e9;NWATCH=0;HARV.ph=0;HARV.eye=0;HARV.t=80;HARV.arms=[];HARV.grabs=0;HARV.irk=0;HARV.expo=0;HARV.rage=0;HARV.opT=0;HARV.saw=9;HARV._tg=null;edemons=[];lbearers=[];gdivers=[];ldrops=[];lmoths=[]; /* r147: the moth-kin join the purge the day they are born - the law */ /* r129 THE FULLER PURGE: the husk disease's THIRD visit (dead boulders r67, worm husks r62-era, now gen 4's wildlife) - the menu-world's golems/pools/fae/shades/thresher lingered invisibly in the room, and Celery walked into them. EVERY local array the wire does not re-dress gets scrubbed at the door, and the winter of this lesson is: when you ADD an array, ADD IT HERE */ /* THE HUSK PURGE: worms were the ONE creature this scrub forgot (the scrub predates r30's worms). The menu-world's local worms squatted in the array, the wire re-dressed them by index every beat, and the glide loop skipped them - no _net stamp - so they stood as LIFELESS HUSKS near the den while the TRUE worm hunted soldiers unseen. Celery's exact sighting, Jul 11 */
+ thorns=D.th;groves=[];drops=[];shots=[];orbs=[];wasps=[];eyes=[];elder=null;spider=null;worms=[];golems=[];magma=[];mpools=[];bonefae=[];bspears=[];huskC=[];shades=[];thresher=null;NLIGHTS=null;FRONT=1e9;NWATCH=0;HARV.ph=0;HARV.eye=0;HARV.t=80;HARV.arms=[];HARV.grabs=0;HARV.irk=0;HARV.expo=0;HARV.rage=0;HARV.opT=0;HARV.saw=9;HARV._tg=null;edemons=[];lbearers=[];gdivers=[];ldrops=[];lmoths=[];nwebs=[];skaters=[]; /* r147: the moth-kin join the purge the day they are born - the law */ /* r148: the web realm too */ /* r129 THE FULLER PURGE: the husk disease's THIRD visit (dead boulders r67, worm husks r62-era, now gen 4's wildlife) - the menu-world's golems/pools/fae/shades/thresher lingered invisibly in the room, and Celery walked into them. EVERY local array the wire does not re-dress gets scrubbed at the door, and the winter of this lesson is: when you ADD an array, ADD IT HERE */ /* THE HUSK PURGE: worms were the ONE creature this scrub forgot (the scrub predates r30's worms). The menu-world's local worms squatted in the array, the wire re-dressed them by index every beat, and the glide loop skipped them - no _net stamp - so they stood as LIFELESS HUSKS near the den while the TRUE worm hunted soldiers unseen. Celery's exact sighting, Jul 11 */
  for(const s2 of swarms){s2.dead=true;s2.gone=true;}swarms=[];
  try{boulderGridBuild();}catch(e){} /* THE STONE GRID was only ever built inside step(), which never runs online - collideBoulders searched an EMPTY net, so the predicted queen sailed through rocks and cove rims until the server yanked her back. The invisible walls, and half the drift-shove */}
 function netApplyFrame(F){if(F&&F.np)NPLAY=F.np; /* the LIVING world flows in - stamped by OUR clock, not the server's lumpy one */

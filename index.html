@@ -1540,19 +1540,29 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
   const nearDr9=[];{const rr9=(s.R+580)*(s.R+580); /* THE DROP SHORTLIST: foragers used to scan EVERY drop on the map with a grotto lookup PER PAIR, every tick - O(foragers*drops*grottos). The pop-payout nuggets swelled the drop count and tickAvg crept from 7ms toward the valve. One cheap prefilter per swarm; foragers scan only what they could actually reach */
    for(let i2=0;i2<drops.length;i2++){const dr=drops[i2];const ddx=dr.x-s.x,ddy=dr.y-s.y;
     if(ddx*ddx+ddy*ddy<rr9)nearDr9.push(dr);}}
+  s._rdC=s._rdA||0;s._rdW=s._rdL||0;s._rdV=s._rdN||0;s._rdA=0;s._rdN=0;s._rdL=0; /* r144: last tick's saddle census is PUBLISHED (true count + carried load + seated count) before this tick recounts - placement and the laden drawing read the committed values, never half-counted ones. _rdA counts EVERY rider; _rdN hands out only the SHELTERED (visible) berths; _rdV lets the last rank seat itself symmetric */
   for(const u of s.units){
    if(u.flash>0)u.flash-=dt;if(u.atk>0)u.atk-=dt;if(u.slow>0)u.slow-=dt;if(u.mend>0)u.mend-=dt;if(u.faceT>0)u.faceT-=dt;
    if(u.fat>0&&u.fatT<=0)u.fat=Math.max(0,u.fat-0.1*dt);
    if(u.fatT>0)u.fatT-=dt;
-   if(u._perch){const t9=s.units.find(z=>z.uid===u._perch&&z.role==='titan'&&z.hp>0); /* r124 THE PERCH: she rides the titan - invulnerable, off the wire, out of the crush */
-    if(!t9){u._perch=null;u._pT=0;} /* the titan fell: she SPILLS where he died, vulnerable again */
-    else{u._pT=(u._pT||0)+dt;
-     if(!s.war&&(u.load<30||u._pT>16)){u._perch=null;u._pT=0;} /* r131: full bellies ride 16s (was 10) */ /* peace: empty bellies hop off at once, full ones ride at most 10s then walk the rest home */
-     else{const sa9=1.745+(u._pSlot||0)*0.4;u.x=t9.x+Math.cos(sa9)*t9.r*0.62;u.y=t9.y+Math.sin(sa9)*t9.r*0.62;u.vx=t9.vx||0;u.vy=t9.vy||0;u.hp=Math.min(u.maxHp||22,u.hp+60*dt);u.flash=0;continue;}}}
-   else if(u.role==='forager'&&(s.war||u.load>=30)){ /* r131 THE EAGER SADDLE: mount at 30 (was 39) - by decree, more riders more often */if((u._pkT||0)>0)u._pkT-=dt;else{u._pkT=0.4; /* r124: a working forager in danger (or full to the brim) climbs the nearest titan with a free back - 4 slots each */
-    for(const t9 of s.units){if(t9.role!=='titan'||t9.hp<=0)continue;if(d2(u.x,u.y,t9.x,t9.y)>(t9.r+30)*(t9.r+30))continue;
-     let rid9=0;for(const r9 of s.units)if(r9._perch===t9.uid)rid9++;
-     if(rid9<8){u._perch=t9.uid;u._pSlot=rid9;u._pT=0;break;} /* r126 THE FULLER BACK: eight riders now, by decree */}}}
+   if(u._perch){ /* r144 THE QUEEN'S SADDLE: she rides HER MAJESTY - untargetable, out of the crush, the larder worn openly on the wing. Replaces r124's titan perch by decree (recorded r134; the rooms-coupling was a filing error two gens deep - this is the FEEL half, pure local sim, the wire never moves). The r58 law holds: the saddle moves DRAWN geometry only, never a hitbox */
+    u._pT=(u._pT||0)+dt;
+    if(!s.war&&u.load<30){u._perch=null;u._pT=0;u._pG=0;u._pHid=0;} /* peace: an emptied belly slides off at once and goes back to the flowers; a FULL belly stays in the saddle - the queen IS the wagon now, and the 16s eviction died with the titan (freeloading was the titan's problem: his riders healed in cover. Hers ARE the cargo) */
+    else{const ha4=Math.atan2(s.vy,s.vx)||0,st4=s.ally?0:queenStage(s),qb4=(12+st4*3+(st4===3?2:0))*ladenMul(s); /* THE HUDDLE BENEATH (his decrees, verbatim across three boards: 'fit three abreast... ranks all the way up to her head... huddle under the queen not on top' + 'around the tail dont look sheltered' + 'symmetry is important, especially dynamic symmetry') */
+     const shC4=Math.max(6,3*((qb4*1.52/9)|0)); /* SHELTER BERTHS: only the ranks her body actually covers are seated - a bigger queen shelters more */
+     s._rdA=(s._rdA||0)+1;s._rdL+=(u.load||0);u.vx=s.vx||0;u.vy=s.vy||0;u.hp=Math.min(u.maxHp||22,u.hp+60*dt);u.flash=0;
+     if(s._rdN>=shC4){u._pHid=1;u.x=s.x;u.y=s.y;continue;} /* past capacity they TUCK DEEPEST under her - still riding, still safe, mechanically uncapped (the decree stands), but they stop adding to the appearance entirely (his third verdict). Nothing around the tail can ever look unsheltered again */
+     u._pHid=0;const ri4=s._rdN,V4=Math.min(s._rdV||0,shC4),F4=((V4/3)|0)*3;let rank4,col4;
+     if(ri4<F4){rank4=(ri4/3)|0;col4=(ri4%3)-1;} /* full ranks: left, centre, right - symmetric by construction */
+     else{const rem4=V4-F4;rank4=(F4/3)|0;col4=(rem4===1)?0:((ri4-F4)===0?-1:1);} /* THE LAST RANK SEATS ITSELF SYMMETRIC AT EVERY COUNT: one rider takes the spine, two ride as a mirrored pair, and the whole rank re-balances live as bellies board and leave - dynamic symmetry, by decree */
+     const bk4=qb4*0.50-rank4*9,lt4=col4*qb4*0.42; /* head-start at +0.50 of her grown length, 9px rank pitch, outer columns riding her FLANK LINE so the wealth still reads from above */
+     const tx4=s.x+Math.cos(ha4)*bk4-Math.sin(ha4)*lt4,ty4=s.y+Math.sin(ha4)*bk4+Math.cos(ha4)*lt4;
+     if((u._pG=Math.min(1,(u._pG||0)+dt*2.4))<1){u.x+=(tx4-u.x)*Math.min(1,dt*7);u.y+=(ty4-u.y)*Math.min(1,dt*7);} /* THE BOARDING GLIDE: the mount ring is wide on a grown swarm - she FLUTTERS aboard over a breath instead of teleporting to the saddle */
+     else{u.x=tx4;u.y=ty4;}
+     s._rdN=ri4+1;continue;}}
+   else if(u.role==='forager'&&(s.war||u.load>=30)){ /* the r131 eager trigger, retargeted at the CROWN: full to the brim OR the horns of war - climb aboard. NO rider cap, by decree. The old scan (find titan + count riders, two O(units) passes per attempt, plus a find() per rider per tick) is GONE: the queen is s itself, mounting is O(1) - this round's measured cut */
+    if((u._pkT||0)>0)u._pkT-=dt;else{u._pkT=0.4;
+     if(d2(u.x,u.y,s.x,s.y)<(s.R*0.55+40)**2){u._perch='Q';u._pT=0;u._pG=0;}}}
    let gx=null,gy=null,fast=false,fight=false;
    const leash=u.role==='forager'?520:(s.war?520:430); /* in war, the rope is war-range - the hunt can finish */
    const dq=Math.hypot(u.x-s.x,u.y-s.y);
@@ -1565,7 +1575,7 @@ function moveUnits(s,dt,drive,dx,dy,dd,spd,sepPar,M,sim){ /* THE SWARM BRAIN, li
     for(const dr of nearDr9){if(dr._gone)continue;
      if(d2(dr.x,dr.y,u.x,u.y)<16*16){if(grottoOf(dr.x,dr.y)!==grottoOf(u.x,u.y))continue; /* the grotto test runs on HITS only now, never per pair */
       if(sim){dr._gone=1;const ix9=drops.indexOf(dr);if(ix9>=0)drops.splice(ix9,1);if(dr.war)s.honey+=dr.amt;else gainHoney(s,dr.amt);}addSpark(u.x,u.y,2);break;}}
-    if(u.load>=39||s.honey>=honeyCap(s)){ /* FULL BELLY (or full house): fall in beside the queen, a fat larder on the wing */
+    if(u.load>=39||s.honey>=honeyCap(s)||s.war){ /* FULL BELLY (or full house, or WAR): fall in beside the queen, a fat larder on the wing - r144: in war the flowers can wait, by decree ('foragers mount the queen when full or in combat'). The approach goal sits inside the mount ring, so falling in BECOMES boarding */
      u.node=null;
      const llat=(((u._fi||0)%2)?22:-22)*(1+Math.floor((u._fi||0)/2)*0.5);
      gx=s.x-hx*(s.R*0.55+16)-hy*llat;gy=s.y-hy*(s.R*0.55+16)+hx*llat;
@@ -3018,8 +3028,8 @@ function killUnit(s,u,by){
 function killQueen(s,by){if(by&&!by.ally&&by.team===0&&s.team!==0)flightStat('qk');if(s===me()&&!NET.on)flightSend(); /* the ledger sees the regicide - and the fall */
  if(s.dead)return;
  s.dead=true;
- for(const u of s.units){u.slain=true;dropAt(u.x,u.y,(ROLES[u.role]?ROLES[u.role].cost*0.5:20),24,1);}
- {const total=24+s.honey*0.8,n3=10+Math.min(16,Math.floor(total/16)); /* THE FOUNTAIN OF SPOILS */
+ for(const u of s.units){u.slain=true;dropAt(u.x,u.y,(ROLES[u.role]?ROLES[u.role].cost*0.5:20)+(u.load||0),24,1);} /* r144 THE SADDLE SPILLS: every belly she carried bursts where it rode - riders are loot on her death, by decree. The load pays at FULL value here (killUnit's 100%, not the fountain's 80%): cracking the guarded larder is the counterplay and it must pay like one */
+ {const total=24+Math.min(s.honey,500)*0.8,n3=10+Math.min(16,Math.floor(total/16)); /* THE FOUNTAIN OF SPOILS */ /* r144: the fountain pays her OWN 500-purse; the overflow rains from the bellies above - never both, never double */
   for(let k=0;k<n3;k++){const aa=k/n3*TAU+rand(-0.2,0.2);
    dropAt(s.x+Math.cos(aa)*rand(18,110),s.y+Math.sin(aa)*rand(18,110),total/n3,26,1);}
   addRing(s.x,s.y,'#ffdf7e',s.R*2.2);addRing(s.x,s.y,'#fff3c4',s.R*1.2);
@@ -3709,20 +3719,7 @@ function paintQueenBody(g2,base,st,col,t2,body,flash,col2){
  /* stage 3 carries NO built-in regalia - the wardrobe alone crowns her */
 }
 function paintTail(g2,base,t2,tail,col,st){
- if(!tail||tail==='notail'){ /* THE DEFAULT STING, at last: a segmented taper and a curved royal dagger - grows with her stage. Every cosmetic tail still replaces it whole */
-  const last9=QSEGS.length?QSEGS[QSEGS.length-1]:{x:-base*1.05,y:0,r:base*0.45};
-  const sc8=Math.max(0.8,last9.r/(base*0.45)),sg8=1+st*0.22;
-  g2.save();g2.translate(last9.x-last9.r+base*1.05*sc8,last9.y);g2.scale(sc8,sc8);
-  g2.fillStyle=shade(col,-0.35);
-  for(let k8=0;k8<2;k8++){const sx8=-base*(1.06+k8*0.17),sr8=base*(0.20-k8*0.06)*sg8; /* two dark tail-plates narrowing */
-   g2.beginPath();g2.ellipse(sx8,0,sr8*1.15,sr8,0,0,TAU);g2.fill();}
-  g2.fillStyle='#1c1208';g2.strokeStyle='rgba(255,255,255,.25)';g2.lineWidth=0.8;
-  g2.beginPath();g2.moveTo(-base*1.34,-base*0.075*sg8); /* the dagger: long, slightly DOWN-CURVED, needle-tipped */
-  g2.quadraticCurveTo(-base*1.66,-base*0.10*sg8,-base*(1.86+st*0.10),base*0.05*sg8);
-  g2.quadraticCurveTo(-base*1.58,base*0.015*sg8,-base*1.34,base*0.075*sg8);g2.closePath();g2.fill();g2.stroke();
-  g2.fillStyle='rgba(255,255,255,.5)'; /* venom bead at the point */
-  g2.beginPath();g2.arc(-base*(1.84+st*0.10),base*0.04*sg8,base*0.035,0,TAU);g2.fill();
-  g2.restore();return;}
+ if(!tail||tail==='notail'){g2.beginPath();return;} /* r144 THE STING RECALLED (Celery: 'why does she have a stinger tail? that was in an error update and was never meant to be shipped') - the default paints NOTHING: her body's own segment taper ends the silhouette, as it did before the error. The beginPath() is LOAD-BEARING: drawQueen strokes the CURRENT path right after paintTail, and the sting's venom bead had been silently absorbing that stroke - a bare return re-aimed it at the body painter's last path and drew a white triangle on her head. An empty path gives the stray stroke nothing to bite */
  const last=QSEGS.length?QSEGS[QSEGS.length-1]:{x:-base*1.05,y:0,r:base*0.45};
  const sc9=Math.max(0.8,last.r/(base*0.45));
  g2.save();g2.translate(last.x-last.r+base*1.05*sc9,last.y);g2.scale(sc9,sc9); /* the authored rear (-1.05b) lands EXACTLY on her true rear edge - stingers stick OUT */
@@ -4693,8 +4690,9 @@ function queenStage(s){const n=teamSize(s.team);const raw=n>=70?3:n>=34?2:n>=15?
  if(s._vst===undefined||raw>s._vst)s._vst=raw;
  else if(raw<s._vst){const dn=[0,12,28,60][s._vst];if(n<dn)s._vst=raw;}
  return s._vst;}
+function ladenMul(s){return 1+Math.min(0.68,(s._rdC||0)*0.085+(s._rdW||0)/2600);} /* r144 THE LADEN LAW, third fitting (his words: 'a little too fat now... once there is a certain number of foragers underneath her the rest dont have to add to the appearance'): growth SATURATES ~1.68x by around eight riders - enough for three abreast - and every rider past that only lengthens the huddle's trail, never the queen. Purely visual, read by the painter AND the huddle placement. No hitbox, leash, shot or collision radius ever reads this (the r58 retune trap) */
 function drawQueen(s){
- const a=Math.atan2(s.vy,s.vx)||0,st=s.ally?0:queenStage(s),base=(12+st*3+(st===3?2:0))*(1+Math.max(0,s.gulp||0)*0.45); /* kin stay humble-looking; only the TRUE queen wears her power */
+ const a=Math.atan2(s.vy,s.vx)||0,st=s.ally?0:queenStage(s),base=(12+st*3+(st===3?2:0))*(1+Math.max(0,s.gulp||0)*0.45)*ladenMul(s); /* kin stay humble-looking; only the TRUE queen wears her power */ /* r144: and a LADEN queen wears her wealth - the whole drawn family (wings, tail, crown, plate) grows together */
  if(!s.ally){const st9p=s._st9; /* THE EVOLUTION BURST: one ring, a handful of sparks, gone - a stage-up should ring like a bell and cost nothing */
   if(st9p===undefined)s._st9=st;
   else if(st>st9p){s._st9=st;addRing(s.x,s.y,s.col,base*3.4);addRing(s.x,s.y,'#fff8e0',base*2.2);addP(s.x,s.y,s.col,10,200);if(near(s))sfx('evolve');}
@@ -6640,7 +6638,8 @@ function draw(){
  /* swarms */
  for(const s of swarms){if(s.dead)continue;
   if(s.x<vx0-600||s.x>vx1+600||s.y<vy0-600||s.y>vy1+600)continue;
-  for(const u of s.units)drawUnit(s,u,LOD);
+  for(const u of s.units){if(!u._perch||u._pHid)continue;const rr4=u.r;u.r*=0.62;drawUnit(s,u,LOD);u.r=rr4;} /* r144: the HUDDLE draws FIRST, at 0.62 - riders cling UNDER the queen (his verdict: 'huddle under the queen not on top'), her grown body covers the mass and the bulges read at her flanks. Deep-tucked riders (past shelter capacity) draw NOTHING. The shrink is DRAW-ONLY and restored same-line: no sim tick can ever see it (the r58 law, kept to the letter) */
+  for(const u of s.units){if(u._perch)continue;drawUnit(s,u,LOD);}
   drawQueen(s);
   ctx.fillStyle=s.team===0?(s.ally?'rgba(255,207,94,.7)':'#ffcf5e'):'rgba(255,244,224,.85)';
   ctx.font='bold 12.5px Trebuchet MS';ctx.textAlign='center';

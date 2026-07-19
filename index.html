@@ -2928,13 +2928,13 @@ function step(dt){NPLAY=humanCount();
   const BR=400*PYREB,BR2=BR*BR,FR2=(720*PYREB)*(720*PYREB);
   for(const s6 of swarms){if(s6.dead)continue;
    const dq=d2(s6.x,s6.y,OASIS.x,OASIS.y);
-   if(dq<BR2&&s6.prot<=0){s6.hp-=26*dt;s6.hitT=0.2;
-    if(Math.random()<dt*8)fx.push({x:s6.x+rand(-14,14),y:s6.y+rand(-10,10),vx:rand(-12,12),vy:rand(-40,-16),t:0,life:0.5,col:'#ff8c3c',r:rand(2,3),kind:'ember',rot:0,rv:3});
+   if(dq<BR2&&s6.prot<=0){const k6=Math.pow(1-Math.sqrt(dq)/BR,1.5);s6.hp-=(16+84*k6)*dt;s6.hitT=0.2; /* r141 THE DAMAGE GRADIENT: the rim singes (16/s), the heart INCINERATES (100/s) - dancing the edge is a gamble, walking the centre is an answered prayer */
+    if(Math.random()<dt*(6+18*k6))fx.push({x:s6.x+rand(-14,14),y:s6.y+rand(-10,10),vx:rand(-12,12),vy:rand(-40,-16),t:0,life:0.5,col:k6>0.5?'#ffd75e':'#ff8c3c',r:rand(2,3+k6*2),kind:'ember',rot:0,rv:3});
     if(s6.hp<=0)killQueen(s6,null);}
    if(s6.bot&&dq<FR2){const dd=Math.sqrt(dq)||1,pw=(1-dd/620)*150*dt; /* the wild remembers fire */
     s6.x+=(s6.x-OASIS.x)/dd*pw;s6.y+=(s6.y-OASIS.y)/dd*pw;}
    for(const u6 of s6.units){const du=d2(u6.x,u6.y,OASIS.x,OASIS.y);
-    if(du<BR2){u6.hp-=18*dt;u6.flash=0.1;
+    if(du<BR2){const k7=Math.pow(1-Math.sqrt(du)/BR,1.5);u6.hp-=(12+60*k7)*dt;u6.flash=0.1;
      const dd=Math.sqrt(du)||1;u6.x+=(u6.x-OASIS.x)/dd*90*dt;u6.y+=(u6.y-OASIS.y)/dd*90*dt;
      if(u6.hp<=0)killUnit(s6,u6);}}}
   if(elder&&d2(elder.x,elder.y,OASIS.x,OASIS.y)<FR2){const dd=Math.hypot(elder.x-OASIS.x,elder.y-OASIS.y)||1;
@@ -5593,20 +5593,24 @@ function draw(){
     const pg=cachedGrad('pyreglow',()=>{const g9=ctx.createRadialGradient(bx,by,90,bx,by,3200);
      g9.addColorStop(0,'rgba(255,190,88,.64)');g9.addColorStop(0.13,'rgba(255,160,62,.36)');
      g9.addColorStop(0.30,'rgba(255,135,48,.16)');g9.addColorStop(0.62,'rgba(255,125,42,.06)');g9.addColorStop(1,'rgba(255,120,40,0)');return g9;});
-    ctx.globalAlpha=0.92+0.08*Math.sin(tnow*1.8); /* the whole glow breathes as one */
+    ctx.globalAlpha=Math.min(1,(0.58+0.52*((PYREB-0.58)/0.84))*(0.92+0.08*Math.sin(tnow*1.8))); /* r141: the LAND rides the breath - full swell washes the map in fire-light, the ebb dims it toward char */
     ctx.save();ctx.translate(bx,by);ctx.scale(PYREB,PYREB);ctx.translate(-bx,-by); /* r132: as the pyre swells, MORE OF THE MAP GLOWS - one cached gradient, scaled, never rebuilt */
     ctx.fillStyle=pg;ctx.fillRect(bx-3200,by-3200,6400,6400);ctx.restore();
-    ctx.globalAlpha=1;}
-   if(bx+520>vx0&&bx-520<vx1&&by+560>vy0&&by-520<vy1){ /* the burning theatre only plays when watched */
+    ctx.globalAlpha=1;
+    if(PYREB>1){ctx.fillStyle='rgba(255,150,70,'+(0.05*(PYREB-1)/0.42).toFixed(3)+')';ctx.fillRect(vx0,vy0,vx1-vx0,vy1-vy0);}}
+   if(bx+1250>vx0&&bx-1250<vx1&&by+1250>vy0&&by-1250<vy1){ /* the burning theatre only plays when watched - box sized for the FULL swell (r141) */
    ctx.fillStyle='rgba(16,10,8,.85)';ctx.beginPath();ctx.arc(bx,by,380,0,TAU);ctx.fill(); /* the char bed, widened */
-   ctx.strokeStyle='rgba(255,120,45,'+(0.30+0.14*Math.sin(tnow*1.8)).toFixed(3)+')';ctx.lineWidth=8;
-   ctx.beginPath();ctx.arc(bx,by,400*PYREB,0,TAU);ctx.stroke(); /* THE BURN RING matches the law - and BREATHES with it (r132) */
+   {const sb=cachedGrad('pyresear',()=>{const g9=ctx.createRadialGradient(bx,by,40,bx,by,400); /* r141 THE SEARING LIGHT: the ring is dead - the burn is a POOL of light that fades to NOTHING exactly at the law's edge. Bright = die fast, dim = die slow, dark = live. The telegraph is the light itself */
+     g9.addColorStop(0,'rgba(255,236,180,.42)');g9.addColorStop(0.4,'rgba(255,180,90,.26)');g9.addColorStop(0.75,'rgba(255,140,60,.12)');g9.addColorStop(1,'rgba(255,125,48,0)');return g9;});
+    ctx.save();ctx.translate(bx,by);ctx.scale(PYREB,PYREB);ctx.translate(-bx,-by);
+    ctx.globalAlpha=0.85+0.15*Math.sin(tnow*2.2);ctx.fillStyle=sb;ctx.fillRect(bx-400,by-400,800,800);ctx.restore();ctx.globalAlpha=1;}
    for(let k=0;k<8;k++){const la=k/8*TAU+0.4; /* the log teepee: GREAT timbers now, eight of them */
     ctx.save();ctx.translate(bx+Math.cos(la)*165,by+Math.sin(la)*165);ctx.rotate(la+Math.PI/2+0.5);
     ctx.fillStyle=k%2?'#1c120c':'#241812';ctx.beginPath();
     ctx.moveTo(-19,-140);ctx.lineTo(19,-140);ctx.lineTo(27,140);ctx.lineTo(-27,140);ctx.closePath();ctx.fill();
     ctx.strokeStyle='rgba(255,130,50,'+(0.24+0.18*Math.sin(tnow*1.4+k)).toFixed(3)+')';ctx.lineWidth=2.6;
     ctx.beginPath();ctx.moveTo(-8,-105);ctx.lineTo(3,90);ctx.stroke();ctx.restore();}
+   ctx.save();ctx.translate(bx,by);ctx.scale(PYREB,PYREB);ctx.translate(-bx,-by); /* r141: THE FIRE ITSELF breathes - flames, heart and embers ride the cycle the dead ring once hinted at. The logs stay planted; the burning does not */
    for(let ly=0;ly<3;ly++){const fr=[330,235,145][ly],fc=['rgba(230,80,30,','rgba(255,150,50,','rgba(255,220,140,'][ly]; /* the flames: a COLOSSAL PYRE, three walls of it */
     for(let t5=0;t5<7;t5++){const fa=t5/7*TAU+tnow*(0.5+ly*0.3)+ly;
      const fl=1+0.32*Math.sin(tnow*(6+ly*3)+t5*2.1);
@@ -5620,15 +5624,16 @@ function draw(){
    for(let e5=0;e5<16;e5++){const et=(tnow*(0.45+(e5%4)*0.19)+e5*0.61)%1; /* embers climb high into the night */
     const ex5=bx+Math.sin(e5*2.7+tnow*0.8)*(60+et*210),ey5=by-60-et*720;
     ctx.fillStyle='rgba(255,'+(150+(e5%3)*30)+',60,'+((1-et)*0.85).toFixed(3)+')';
-    ctx.beginPath();ctx.arc(ex5,ey5,3.2*(1-et*0.6),0,TAU);ctx.fill();}}}}
+    ctx.beginPath();ctx.arc(ex5,ey5,3.2*(1-et*0.6),0,TAU);ctx.fill();}
+   ctx.restore();}}}
  if(MAP==='night'&&OASIS){ /* THE WATCHER: always faintly there; terribly there when it wakes */
   const O=OASIS;
   if(NWATCH<=0){ctx.strokeStyle='rgba(150,170,255,'+(0.10+0.05*Math.sin(tnow*0.8)).toFixed(3)+')';ctx.lineWidth=2;
    ctx.beginPath();ctx.arc(O.x,O.y,O.r*0.30,0,TAU);ctx.stroke();} /* the mirror has an iris, if you look */
   else{const ga=tnow*0.5,op=Math.min(1,(20-NWATCH)*2)*Math.min(1,NWATCH*1.5);
-   const cg=ctx.createRadialGradient(O.x,O.y,120,O.x,O.y,2400);
-   cg.addColorStop(0,'rgba(220,230,255,'+(0.16*op).toFixed(3)+')');cg.addColorStop(1,'rgba(220,230,255,0)');
-   ctx.fillStyle=cg;ctx.beginPath();ctx.moveTo(O.x,O.y);ctx.arc(O.x,O.y,2400,ga-0.15,ga+0.15);ctx.closePath();ctx.fill();
+   const cg=cachedGrad('nwatchbeam',()=>{const g9=ctx.createRadialGradient(O.x,O.y,120,O.x,O.y,2400); /* r141 BLOAT CUT: this gradient was born and thrown away EVERY frame the eye was open - cached now, globalAlpha animates (QGOV law) */
+    g9.addColorStop(0,'rgba(220,230,255,0.16)');g9.addColorStop(1,'rgba(220,230,255,0)');return g9;});
+   ctx.globalAlpha=op;ctx.fillStyle=cg;ctx.beginPath();ctx.moveTo(O.x,O.y);ctx.arc(O.x,O.y,2400,ga-0.15,ga+0.15);ctx.closePath();ctx.fill();ctx.globalAlpha=1;
    ctx.strokeStyle='rgba(200,215,255,'+(0.35*op).toFixed(3)+')';ctx.lineWidth=2;
    ctx.beginPath();ctx.moveTo(O.x+Math.cos(ga-0.15)*220,O.y+Math.sin(ga-0.15)*220);ctx.lineTo(O.x+Math.cos(ga-0.15)*2400,O.y+Math.sin(ga-0.15)*2400);ctx.stroke();
    ctx.beginPath();ctx.moveTo(O.x+Math.cos(ga+0.15)*220,O.y+Math.sin(ga+0.15)*220);ctx.lineTo(O.x+Math.cos(ga+0.15)*2400,O.y+Math.sin(ga+0.15)*2400);ctx.stroke();
@@ -5756,14 +5761,31 @@ function draw(){
    ctx.strokeStyle='rgba(255,110,45,'+(0.15+0.12*Math.sin(tnow*1.5+b.x*0.03)).toFixed(2)+')';ctx.lineWidth=1.4;
    ctx.beginPath();ctx.moveTo(-b.r*0.6,b.r*0.28);ctx.lineTo(b.r*0.5,b.r*0.3);ctx.stroke();
    ctx.restore();}
-  if(MAP==='cinder'&&b.spire){ /* an ASH SPIRE: wind-carved, ring on ring, pale against the char */
-   for(let k8=4;k8>=0;k8--){const sr8=b.r*(0.34+k8*0.17),sy8=-b.r*(0.9-k8*0.22);
-    ctx.fillStyle=k8%2?'#8f867c':'#a89e92';
-    ctx.beginPath();ctx.ellipse(b.x+Math.sin(b.x*0.1+k8)*b.r*0.05,b.y+sy8,sr8,sr8*0.5,0,0,TAU);ctx.fill();}
-   ctx.fillStyle='rgba(255,255,255,.35)';
-   ctx.beginPath();ctx.ellipse(b.x,b.y-b.r*0.94,b.r*0.16,b.r*0.08,0,0,TAU);ctx.fill();
-   ctx.fillStyle='rgba(60,50,44,.4)';
-   ctx.beginPath();ctx.ellipse(b.x,b.y+b.r*0.14,b.r*0.9,b.r*0.34,0,0,TAU);ctx.fill();}
+  if(MAP==='cinder'&&b.spire){ /* r141 THE HOODOO: a wind-carved ash column - tall, leaning, strata like pages, a sunlit crown shedding a breath of ash. The beanie is dead */
+   let _ss=((b.x*19349663)^(b.y*73856093))>>>0;const _sr=()=>((_ss=(_ss*1103515245+12345)>>>0)/4294967296);
+   const H9=b.r*(2.2+_sr()*0.9),ln9=(_sr()-0.5)*b.r*0.5,seg9=5;
+   ctx.fillStyle='rgba(20,12,8,.5)';
+   ctx.beginPath();ctx.ellipse(b.x,b.y+b.r*0.18,b.r*1.05,b.r*0.4,0,0,TAU);ctx.fill(); /* its own char skirt buries the old base */
+   const LX9=[],RX9=[];
+   for(let k8=0;k8<=seg9;k8++){const f9=k8/seg9,wy9=b.y+b.r*0.1-H9*f9,wx9=b.x+ln9*f9*f9;
+    const hw9=b.r*(0.62-0.40*f9)*(1+(_sr()-0.5)*0.22);
+    LX9.push({x:wx9-hw9,y:wy9});RX9.push({x:wx9+hw9,y:wy9});}
+   ctx.fillStyle='#8a8078';ctx.beginPath();ctx.moveTo(LX9[0].x,LX9[0].y);
+   for(let k8=1;k8<=seg9;k8++)ctx.lineTo(LX9[k8].x,LX9[k8].y);
+   for(let k8=seg9;k8>=0;k8--)ctx.lineTo(RX9[k8].x,RX9[k8].y);
+   ctx.closePath();ctx.fill();
+   ctx.fillStyle='rgba(35,26,20,.42)';ctx.beginPath();ctx.moveTo((LX9[0].x+RX9[0].x)/2+(RX9[0].x-LX9[0].x)*0.12,RX9[0].y); /* the lee side falls dark */
+   for(let k8=1;k8<=seg9;k8++)ctx.lineTo((LX9[k8].x+RX9[k8].x)/2+(RX9[k8].x-LX9[k8].x)*0.12,RX9[k8].y);
+   for(let k8=seg9;k8>=0;k8--)ctx.lineTo(RX9[k8].x,RX9[k8].y);
+   ctx.closePath();ctx.fill();
+   ctx.strokeStyle='rgba(46,36,28,.5)';ctx.lineWidth=1.6; /* strata: the wind reads in lines */
+   for(let k8=1;k8<seg9;k8++){ctx.beginPath();ctx.moveTo(LX9[k8].x+1,LX9[k8].y);
+    ctx.quadraticCurveTo((LX9[k8].x+RX9[k8].x)/2,LX9[k8].y+b.r*0.09,RX9[k8].x-1,RX9[k8].y);ctx.stroke();}
+   ctx.fillStyle='rgba(214,206,196,.5)';
+   ctx.beginPath();ctx.ellipse((LX9[seg9].x+RX9[seg9].x)/2,LX9[seg9].y,b.r*0.24,b.r*0.10,0,0,TAU);ctx.fill(); /* sunlit crown */
+   ctx.strokeStyle='rgba(190,182,172,'+(0.20+0.12*Math.sin(tnow*1.1+b.x)).toFixed(3)+')';ctx.lineWidth=1.4; /* a breath of ash leaves the tip */
+   ctx.beginPath();ctx.moveTo((LX9[seg9].x+RX9[seg9].x)/2+b.r*0.1,LX9[seg9].y-2);
+   ctx.quadraticCurveTo(b.x+b.r*0.8+ln9,LX9[seg9].y-b.r*0.24,b.x+b.r*1.5+ln9,LX9[seg9].y-b.r*0.1);ctx.stroke();}
   if(MAP==='night'&&b.cry){ /* amethyst spires */
    for(let k=0;k<3;k++){const aa=b.x*0.1+k*2.1,bx5=b.x+Math.cos(aa)*b.r*0.34,by5=b.y+Math.sin(aa)*b.r*0.34,hh=b.r*(0.9+0.35*((k+1)%3));
     ctx.fillStyle=k%2?'#8f6ae8':'#b48cff';
@@ -7506,7 +7528,7 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
     const tA=uA&&uA.get(u.uid),tB=uB&&uB.get(u.uid);
     if(s2===MP&&!s2.ally){ /* OWN troops interpolate from the wire like everyone else, offset by OX/OY so they sit around your PREDICTED queen - NO per-frame local swarm-brain (that pinned weak phones) */
      if(tB){const hot8=(u.atk>0||u.flash>0||u._sipT>0); /* a FIGHTER - or a DRINKING forager - renders at the NEWEST truth, not the padded past */
-      let wx8=hot8?tB[0]:(tA?tA[0]+(tB[0]-tA[0])*al:tB[0]),wy8=hot8?tB[1]:(tA?tA[1]+(tB[1]-tA[1])*al:tB[1]),lh8=0;if(NET._hox!=null){if(NET._ohv!==NET._oh){NET._ohm=new Map(NET._oh.u.map(z=>[z[2],z]));NET._ohm2=(NET._oh2&&NET._oh2.u)?new Map(NET._oh2.u.map(z=>[z[2],z])):null;NET._ohv=NET._oh;}const hz8=NET._ohm.get(u.uid);if(hz8&&isFinite(hz8[0])){const pz8=NET._ohm2&&NET._ohm2.get(u.uid);if(pz8&&isFinite(pz8[0])){wx8=pz8[0]+(hz8[0]-pz8[0])*NET._hal;wy8=pz8[1]+(hz8[1]-pz8[1])*NET._hal;}else{wx8=hz8[0];wy8=hz8[1];}lh8=1;}} /* r102 THE LIVE HAND: fresh own-unit truth replaces the padded past; misses fall through to the buffer */
+      let wx8=(tA?tA[0]+(tB[0]-tA[0])*al:tB[0]),wy8=(tA?tA[1]+(tB[1]-tA[1])*al:tB[1]),lh8=0; /* r142 THE STEADY HAND (Celery: 'still stuttering EVEN at low ms'): the stutter was never latency - HOT units targeted the NEWEST BEAT, a point frozen between beats: spring converges, PARKS, next beat teleports the target - park-jump-park at beat cadence. Everyone now tracks the continuously-advancing buffered truth; hot units keep their FAST spring so combat stays crisp. The staircase's true root, cut */if(NET._hox!=null){if(NET._ohv!==NET._oh){NET._ohm=new Map(NET._oh.u.map(z=>[z[2],z]));NET._ohm2=(NET._oh2&&NET._oh2.u)?new Map(NET._oh2.u.map(z=>[z[2],z])):null;NET._ohv=NET._oh;}const hz8=NET._ohm.get(u.uid);if(hz8&&isFinite(hz8[0])){const pz8=NET._ohm2&&NET._ohm2.get(u.uid);if(pz8&&isFinite(pz8[0])){wx8=pz8[0]+(hz8[0]-pz8[0])*NET._hal;wy8=pz8[1]+(hz8[1]-pz8[1])*NET._hal;}else{wx8=hz8[0];wy8=hz8[1];}lh8=1;}} /* r102 THE LIVE HAND: fresh own-unit truth replaces the padded past; misses fall through to the buffer */
       const dq8=Math.hypot(wx8-(NET._sqx!=null?NET._sqx:s2.x),wy8-(NET._sqy!=null?NET._sqy:s2.y));
       let of8=dq8<=170?1:dq8>=430?0:1-(dq8-170)/260;
       if(u._sipT>0)of8=0; /* r88: a DRINKING forager belongs to her flower, not the queen slipstream - she stays perched when the queen flies past instead of being dragged off the bloom */
@@ -7518,11 +7540,11 @@ function netTick(dt){ /* THE BUFFER: your queen is PREDICTED; all else glides in
       u.vx=(u.x-ox9)/Math.max(dt,0.001);u.vy=(u.y-oy9)/Math.max(dt,0.001);}
      else if(u.tx!==undefined){const k9=Math.min(1,6*dt);u.vx=(u.tx-u.x)*8;u.vy=(u.ty-u.y)*8;u.x+=(u.tx-u.x)*k9;u.y+=(u.ty-u.y)*k9;}}
     else if(tB){const hot8=(u.atk>0||u.flash>0||(MP&&!MP.dead&&Math.hypot(u.x-MP.x,u.y-MP.y)<150)); /* fighters - and ANYTHING crowding your queen - render at the NEWEST truth: a mob mid-swing-cooldown used to smooth into idle drifters while its damage landed as ghosts */
-     let bx=hot8?tB[0]:(tA?tA[0]+(tB[0]-tA[0])*al:tB[0]),by=hot8?tB[1]:(tA?tA[1]+(tB[1]-tA[1])*al:tB[1]);
+     let bx=(tA?tA[0]+(tB[0]-tA[0])*al:tB[0]),by=(tA?tA[1]+(tB[1]-tA[1])*al:tB[1]); /* r142: rivals de-pinned from the frozen beat too */
      if(tA&&FB.rt>FA.rt){const fdt8=(FB.rt-FA.rt)/1000,rvx8=(tB[0]-tA[0])/fdt8,rvy8=(tB[1]-tA[1])/fdt8; /* enemy TROOPS project forward like their queen - through a LOW-PASS, because raw frame-pair velocity wobbles with every shove, and that wobble was the residual TWITCH */
       u._pvx=(u._pvx==null?rvx8:u._pvx+(rvx8-u._pvx)*Math.min(1,9*dt));u._pvy=(u._pvy==null?rvy8:u._pvy+(rvy8-u._pvy)*Math.min(1,9*dt));
       const ul8=Math.hypot(u._pvx,u._pvy),rl8=Math.hypot(rvx8,rvy8);
-      if(ul8>60){const ld8=Math.min(60,Math.min(ul8,rl8)*(hot8?0.05:(interpDelay/1000)*0.85));bx+=u._pvx/ul8*ld8;by+=u._pvy/ul8*ld8;}} /* lead magnitude obeys the RAW speed: a decelerating forager STOPS at her flower instead of ghosting past it (the smoothed lead lagged every stop) */
+      if(ul8>60){const ld8=Math.min(60,Math.min(ul8,rl8)*((interpDelay/1000)*0.85)); /* r142: fighters ride the same lead - the buffer's delay is projected away smoothly instead of pinned away jaggedly */bx+=u._pvx/ul8*ld8;by+=u._pvy/ul8*ld8;}} /* lead magnitude obeys the RAW speed: a decelerating forager STOPS at her flower instead of ghosting past it (the smoothed lead lagged every stop) */
      const ox9=u.x,oy9=u.y,jx9=bx-u.x,jy9=by-u.y,jd9=Math.hypot(jx9,jy9),cap9=150+(u.spd||300)*dt;
      if(jd9>cap9){u.x+=jx9/jd9*cap9;u.y+=jy9/jd9*cap9;} /* glide over teleport-scale snaps (post-stall), never a jarring jump */
      else{const k8=Math.min(1,(((u.atk>0||u.flash>0)?70:hot8?38:26))*dt);u.x+=jx9*k8;u.y+=jy9*k8;} /* r139: same split for rivals crowding your crown - strikers snap, loiterers glide */ /* same spring, combat-adaptive: a striking or struck troop snaps to truth, the rest glide */
